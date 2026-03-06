@@ -15,6 +15,7 @@ fn main() {
         Commands::Check {
             paths,
             fix,
+            dry_run,
             fail_on_stale,
             fail_on_unreviewed,
             fail_on_req_changed,
@@ -33,7 +34,8 @@ fn main() {
                 fail_on_req_changed,
             };
 
-            let (diagnostics, exit_code) = liyi::check::run_check(&repo_root, &paths, fix, &flags);
+            let (diagnostics, exit_code) =
+                liyi::check::run_check(&repo_root, &paths, fix, dry_run, &flags);
 
             for d in &diagnostics {
                 if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {

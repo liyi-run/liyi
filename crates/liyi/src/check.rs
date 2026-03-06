@@ -35,6 +35,7 @@ pub fn run_check(
     root: &Path,
     scope_paths: &[PathBuf],
     fix: bool,
+    dry_run: bool,
     flags: &CheckFlags,
 ) -> (Vec<Diagnostic>, LiyiExitCode) {
     let disc = discover(root, scope_paths);
@@ -129,6 +130,7 @@ pub fn run_check(
             &mut source_cache,
             &requirements,
             fix,
+            dry_run,
         );
     }
 
@@ -153,6 +155,7 @@ fn check_sidecar(
     source_cache: &mut HashMap<PathBuf, String>,
     requirements: &HashMap<String, RequirementRecord>,
     fix: bool,
+    dry_run: bool,
 ) {
     let sidecar_path = &entry.sidecar_path;
 
@@ -647,8 +650,8 @@ fn check_sidecar(
         }
     }
 
-    // Write back if --fix produced changes.
-    if fix && modified {
+    // Write back if --fix produced changes (skip if --dry-run).
+    if fix && modified && !dry_run {
         let output = write_sidecar(&sidecar);
         let _ = fs::write(sidecar_path, output);
     }

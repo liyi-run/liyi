@@ -23,6 +23,10 @@ pub enum Commands {
         #[arg(long)]
         fix: bool,
 
+        /// Preview --fix corrections without writing files
+        #[arg(long, requires = "fix")]
+        dry_run: bool,
+
         /// Fail if any reviewed spec is stale
         #[arg(long, default_value_t = true, action = ArgAction::Set)]
         fail_on_stale: bool,

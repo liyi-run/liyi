@@ -69,10 +69,10 @@ fn basic_pass() {
     let flags = default_flags();
 
     // First run: fix to fill in source_hash / source_anchor.
-    let _ = run_check(&root, &[], true, &flags);
+    let _ = run_check(&root, &[], true, false, &flags);
 
     // Second run: everything should be clean.
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 
     let failures: Vec<_> = diagnostics
         .iter()
@@ -95,7 +95,7 @@ fn basic_pass() {
 fn stale_hash() {
     let root = fixture_path("stale_hash");
     let flags = default_flags();
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 
     let has_stale = diagnostics
         .iter()
@@ -119,10 +119,10 @@ fn unreviewed_lenient() {
     };
 
     // Fix hashes first
-    let _ = run_check(&root, &[], true, &flags);
+    let _ = run_check(&root, &[], true, false, &flags);
 
     // Check: Unreviewed should appear but exit code should be Clean
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let has_unreviewed = diagnostics
         .iter()
         .any(|d| matches!(d.kind, DiagnosticKind::Unreviewed));
@@ -144,14 +144,14 @@ fn unreviewed_strict() {
         fail_on_req_changed: true,
     };
     // Fix hashes first
-    let _ = run_check(&root, &[], true, &flags_fix);
+    let _ = run_check(&root, &[], true, false, &flags_fix);
 
     let flags_strict = CheckFlags {
         fail_on_stale: true,
         fail_on_unreviewed: true,
         fail_on_req_changed: true,
     };
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags_strict);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags_strict);
     let has_unreviewed = diagnostics
         .iter()
         .any(|d| matches!(d.kind, DiagnosticKind::Unreviewed));
@@ -163,7 +163,7 @@ fn unreviewed_strict() {
 fn orphaned_source() {
     let root = fixture_path("orphaned_source");
     let flags = default_flags();
-    let (diagnostics, _exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, _exit_code) = run_check(&root, &[], false, false, &flags);
 
     let has_orphaned = diagnostics
         .iter()
@@ -178,7 +178,7 @@ fn orphaned_source() {
 fn malformed_jsonc() {
     let root = fixture_path("malformed_jsonc");
     let flags = default_flags();
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 
     let has_parse_error = diagnostics
         .iter()
@@ -194,7 +194,7 @@ fn malformed_jsonc() {
 fn trivial_ignore() {
     let (_tmp, root) = fixture_in_tmp("trivial_ignore");
     let flags = default_flags();
-    let (diagnostics, _) = run_check(&root, &[], true, &flags);
+    let (diagnostics, _) = run_check(&root, &[], true, false, &flags);
 
     let has_trivial = diagnostics
         .iter()
@@ -216,7 +216,7 @@ fn trivial_ignore() {
 fn span_past_eof() {
     let root = fixture_path("span_past_eof");
     let flags = default_flags();
-    let (diagnostics, _) = run_check(&root, &[], false, &flags);
+    let (diagnostics, _) = run_check(&root, &[], false, false, &flags);
 
     let has_span_err = diagnostics
         .iter()
@@ -235,7 +235,7 @@ fn fullwidth_markers() {
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
     };
-    let (diagnostics, _) = run_check(&root, &[], true, &flags);
+    let (diagnostics, _) = run_check(&root, &[], true, false, &flags);
 
     let has_trivial = diagnostics
         .iter()
@@ -254,7 +254,7 @@ fn multilingual_aliases() {
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
     };
-    let (diagnostics, _) = run_check(&root, &[], true, &flags);
+    let (diagnostics, _) = run_check(&root, &[], true, false, &flags);
 
     let has_ignored = diagnostics
         .iter()
@@ -273,7 +273,7 @@ fn shifted_span() {
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
     };
-    let (diagnostics, _) = run_check(&root, &[], false, &flags);
+    let (diagnostics, _) = run_check(&root, &[], false, false, &flags);
 
     let has_shifted = diagnostics.iter().any(|d| {
         matches!(
@@ -299,9 +299,9 @@ fn shifted_span_fix() {
         fail_on_req_changed: false,
     };
     // Fix should auto-correct the span
-    let _ = run_check(&root, &[], true, &flags);
+    let _ = run_check(&root, &[], true, false, &flags);
     // Re-check should be clean
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 
     let has_current = diagnostics
         .iter()
@@ -321,7 +321,7 @@ fn tree_path_recovery() {
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
     };
-    let (diagnostics, _) = run_check(&root, &[], false, &flags);
+    let (diagnostics, _) = run_check(&root, &[], false, false, &flags);
 
     // tree_path should recover the span from [1,3] to [5,7]
     let has_shifted = diagnostics.iter().any(|d| {
@@ -348,9 +348,9 @@ fn tree_path_recovery_fix() {
         fail_on_req_changed: false,
     };
     // Fix should auto-correct the span via tree_path
-    let _ = run_check(&root, &[], true, &flags);
+    let _ = run_check(&root, &[], true, false, &flags);
     // Re-check should be clean
-    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 
     let has_current = diagnostics
         .iter()
