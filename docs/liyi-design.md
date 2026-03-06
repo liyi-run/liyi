@@ -825,7 +825,7 @@ Sends old source, new source, and spec to an LLM. Asks "does this change affect 
 
 ### Implementation
 
-~500–800 lines of Rust (core check logic ~250, plus CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, and `reanchor`). Dependencies: `clap`, `serde_jsonc`, `sha2`, `ignore`.
+~2000–3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~500 lines; the remainder covers CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `reanchor`, and `approve`. Dependencies: `clap`, `serde`, `serde_json`, `sha2`, `ignore`.
 
 No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are a post-MVP consideration.
 
@@ -938,7 +938,66 @@ Candidate tools:
 
 ~100 lines wrapping the CLI. Same stability dependency as LSP — the protocol must be settled first.
 
-### Challenge: on-demand semantic verification
+### `liyi approve` — interactive review
+
+`liyi approve` marks one or more sidecar specs as reviewed by a human. It is the primary mechanism for transitioning intent from "agent-inferred" to "human-approved."
+
+**Interactive mode** (default when stdin is a TTY):
+
+For each unapproved item in the target file(s), display:
+- Item name + source span
+- Inferred intent text
+- Source code in the span
+- Diff since last `source_hash`, if any
+
+Prompt: `approve? [y]es / [n]o / [e]dit intent / [s]kip`
+
+- **y** — set `"reviewed": true`, update `source_hash` and `source_anchor` via reanchor.
+- **n** — set `"reviewed": false` (explicit rejection). Leave hash unchanged.
+- **e** — open `$EDITOR` with the intent text. After save, re-display and re-prompt.
+- **s** — skip without changing anything.
+
+**Batch mode** (`--yes` or non-TTY):
+
+```bash
+liyi approve --yes src/money.rs              # approve all items in sidecar
+liyi approve --yes src/money.rs "add_money"  # approve specific item
+liyi approve --yes .                         # approve all sidecars under cwd
+```
+
+Sets `"reviewed": true` and reanchors without prompting.
+
+**Flags:**
+- `--yes` — non-interactive, approve all matched items.
+- `--dry-run` — print what would be approved, don't write.
+- `--item <name>` — filter to specific item(s) within a sidecar.
+
+**Exit codes:** same as `liyi check`.
+
+### `liyi init` — scaffold sidecars and agent instructions
+
+`liyi init` bootstraps 立意 adoption for a repository or individual files.
+
+**Repository initialization:**
+
+```bash
+liyi init              # scaffold AGENTS.md with the 立意 instruction paragraph
+liyi init --force      # overwrite existing AGENTS.md
+```
+
+Appends the ~12-line agent instruction to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
+
+**File initialization:**
+
+```bash
+liyi init src/money.rs   # create money.rs.liyi.jsonc with empty specs array
+```
+
+Creates a skeleton `.liyi.jsonc` sidecar with `version`, `source`, and an empty `specs` array. The agent (or human) populates specs afterwards.
+
+### Challenge: on-demand semantic verification (post-MVP)
+
+> **Note:** Challenge is explicitly deferred to post-0.1. The `liyi approve` workflow must be established first — challenge verifies edges that only exist after humans have reviewed intent.
 
 `liyi challenge` is a human- or agent-initiated action that asks a second model to verify whether an artifact satisfies its upstream — code against intent, intent against requirement, or requirement against parent requirement. It is not a source annotation or a linter marker. It works on any edge in the intent graph:
 
@@ -1058,7 +1117,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 | Agent instruction (AGENTS.md paragraph) | 1 hour | 15 minutes |
 | `@liyi:module` convention + examples | 30 minutes | 10 minutes |
 | `.liyi.jsonc` examples for a demo repo | 1–2 hours | 20 minutes |
-| CI linter (`liyi check` + `liyi reanchor`, ~500–800 lines) | 2–3 days | 1–2 hours |
+| CI linter (`liyi check` + `liyi reanchor` + `liyi approve` + `liyi init`, ~2000–3000 lines) | 3–5 days | 2–4 hours |
 | Blog post explaining the practice | 1 day | 2–3 hours |
 | **Total** | **3–5 days** | **Half a day** |
 

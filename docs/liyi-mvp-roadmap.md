@@ -134,6 +134,8 @@ A single Rust binary with subcommands:
 |---|---|
 | `liyi check [paths...]` | Lint: staleness, review status, requirement tracking |
 | `liyi check --fix` | Lint + auto-correct shifted spans, fill missing hashes |
+| `liyi approve [paths...] [--yes]` | Interactive review: mark specs as human-approved |
+| `liyi init [source-file]` | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
 | `liyi reanchor <sidecar> [--item <name> --span <s,e>]` | Manual span re-hashing for targeted fixes |
 | `liyi reanchor --migrate` | Schema version migration (no-op in 0.1, scaffolded) |
 
@@ -771,19 +773,37 @@ All `source_span` values are 1-indexed closed intervals matching editor line num
 
 ### Must-have
 
-#### R1. Wire up remaining diagnostics (~1 hour)
+#### R1. `liyi approve` — interactive review command (~2 hours)
+
+The primary mechanism for transitioning intent from "agent-inferred" to "human-approved." Without this, "reviewable" is aspirational — users must hand-edit JSON to set `"reviewed": true`.
+
+- Interactive by default when stdin is a TTY: show intent + source span, prompt `[y]es / [n]o / [e]dit / [s]kip`.
+- Batch mode via `--yes` or when non-TTY.
+- `--dry-run`, `--item <name>` flags.
+- Reanchors on approval (fills `source_hash`, `source_anchor`).
+- See design doc (`docs/liyi-design.md`) for full specification.
+
+#### R2. `liyi init` — scaffold command (~1 hour)
+
+Without this, bootstrapping requires hand-writing JSONC. Critical for first-run experience.
+
+- `liyi init` — append agent instruction to `AGENTS.md`.
+- `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
+- `--force` flag for overwriting existing files.
+
+#### R3. Wire up remaining diagnostics (~1 hour)
 
 1. **`RequirementCycle`**: In pass 2, when resolving `related` edges, track visited requirement names. If a cycle is detected, emit `RequirementCycle` diagnostic with the cycle path and stop traversing.
 2. **`Untracked`**: After pass 1, for each requirement found in source markers that has no corresponding `Spec::Requirement` in any sidecar, emit `Untracked` diagnostic.
 3. **`ReqNoRelated`**: After pass 2, for each requirement in the pass-1 map that no `Spec::Item` references via `related`, emit `ReqNoRelated` diagnostic (informational).
 4. **`MalformedHash`**: During sidecar parsing or check, validate that `source_hash` values match `^sha256:[0-9a-f]+$`. Emit `MalformedHash` on mismatch.
 
-#### R2. Missing golden-file fixtures (~30 min)
+#### R4. Missing golden-file fixtures (~30 min)
 
 1. **`req_changed/`**: Source file with a `@liyi:requirement`, sidecar with a `Spec::Item` referencing it via `related` with a stale hash. Expect `ReqChanged` diagnostic, exit 1.
-2. **`req_cycle/`**: Two requirements referencing each other transitively. Expect `RequirementCycle` diagnostic. (Depends on R1.)
+2. **`req_cycle/`**: Two requirements referencing each other transitively. Expect `RequirementCycle` diagnostic. (Depends on R3.)
 
-#### R3. CI setup (~30 min)
+#### R5. CI setup (~30 min)
 
 1. GitHub Actions workflow: `cargo test` on push/PR.
 2. Build `liyi` binary and run `liyi check --root .` as a CI step (dogfooding).
@@ -791,15 +811,15 @@ All `source_span` values are 1-indexed closed intervals matching editor line num
 
 ### Nice-to-have before 0.1
 
-#### R4. Summary line output
+#### R6. Summary line output
 
 Print a one-line summary after diagnostics: e.g., `12 current, 3 stale, 1 unreviewed`.
 
-#### R5. Property-based tests for shift detection
+#### R7. Property-based tests for shift detection
 
 `shift_proptest.rs`: generate random file content, insert/delete lines, verify shift detection correctness and delta propagation.
 
-#### R6. `liyiignore/` golden fixture
+#### R8. `liyiignore/` golden fixture
 
 A dedicated golden fixture for `.liyiignore` behavior (currently only tested by unit test).
 
