@@ -1,5 +1,7 @@
 <!-- @liyi:module -->
 
+> ⚠️ **Work in progress** — the spec format and CLI are under active development. Expect breaking changes.
+
 > 中文版：[README.zh.md](README.zh.md)
 
 # 《立意》Lìyì — *Establish intent before execution*

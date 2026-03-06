@@ -1,6 +1,8 @@
 <!-- @liyi:module -->
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
 
+> ⚠️ **开发中** — 规格格式与 CLI 工具正在积极开发，预期会有破坏性变更。
+
 > English version: [README.md](README.md)
 
 # 《立意》Lìyì — *意在笔先*
