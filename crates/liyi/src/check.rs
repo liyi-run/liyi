@@ -351,16 +351,50 @@ fn check_sidecar(
                         }
                     }
                     Err(SpanError::PastEof { end, total }) => {
-                        diagnostics.push(Diagnostic {
-                            file: entry.source_path.clone(),
-                            item_or_req: label.clone(),
-                            kind: DiagnosticKind::SpanPastEof {
-                                span: item.source_span,
-                                file_lines: total,
-                            },
-                            severity: Severity::Error,
-                            message: format!("span end {end} exceeds file length {total}"),
-                        });
+                        // Try tree-path recovery before giving up
+                        let lang = detect_language(&entry.source_path);
+                        let recovered = if !item.tree_path.is_empty() {
+                            lang.and_then(|l| resolve_tree_path(&source_content, &item.tree_path, l))
+                        } else {
+                            None
+                        };
+
+                        if let Some(new_span) = recovered {
+                            let old_span = item.source_span;
+                            let delta = new_span[0] as i64 - old_span[0] as i64;
+                            if fix {
+                                item.source_span = new_span;
+                                if let Ok((h, a)) = hash_span(&source_content, new_span) {
+                                    item.source_hash = Some(h);
+                                    item.source_anchor = Some(a);
+                                }
+                                modified = true;
+                            }
+                            diagnostics.push(Diagnostic {
+                                file: entry.source_path.clone(),
+                                item_or_req: label.clone(),
+                                kind: DiagnosticKind::Shifted {
+                                    from: old_span,
+                                    to: new_span,
+                                },
+                                severity: Severity::Warning,
+                                message: format!(
+                                    "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+                                    new_span[0], new_span[1]
+                                ),
+                            });
+                        } else {
+                            diagnostics.push(Diagnostic {
+                                file: entry.source_path.clone(),
+                                item_or_req: label.clone(),
+                                kind: DiagnosticKind::SpanPastEof {
+                                    span: item.source_span,
+                                    file_lines: total,
+                                },
+                                severity: Severity::Error,
+                                message: format!("span end {end} exceeds file length {total}"),
+                            });
+                        }
                     }
                     Err(SpanError::Inverted { .. } | SpanError::Empty) => {
                         diagnostics.push(Diagnostic {
@@ -497,16 +531,50 @@ fn check_sidecar(
                         }
                     }
                     Err(SpanError::PastEof { end, total }) => {
-                        diagnostics.push(Diagnostic {
-                            file: entry.source_path.clone(),
-                            item_or_req: label,
-                            kind: DiagnosticKind::SpanPastEof {
-                                span: req.source_span,
-                                file_lines: total,
-                            },
-                            severity: Severity::Error,
-                            message: format!("span end {end} exceeds file length {total}"),
-                        });
+                        // Try tree-path recovery before giving up
+                        let lang = detect_language(&entry.source_path);
+                        let recovered = if !req.tree_path.is_empty() {
+                            lang.and_then(|l| resolve_tree_path(&source_content, &req.tree_path, l))
+                        } else {
+                            None
+                        };
+
+                        if let Some(new_span) = recovered {
+                            let old_span = req.source_span;
+                            let delta = new_span[0] as i64 - old_span[0] as i64;
+                            if fix {
+                                req.source_span = new_span;
+                                if let Ok((h, a)) = hash_span(&source_content, new_span) {
+                                    req.source_hash = Some(h);
+                                    req.source_anchor = Some(a);
+                                }
+                                modified = true;
+                            }
+                            diagnostics.push(Diagnostic {
+                                file: entry.source_path.clone(),
+                                item_or_req: label,
+                                kind: DiagnosticKind::Shifted {
+                                    from: old_span,
+                                    to: new_span,
+                                },
+                                severity: Severity::Warning,
+                                message: format!(
+                                    "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+                                    new_span[0], new_span[1]
+                                ),
+                            });
+                        } else {
+                            diagnostics.push(Diagnostic {
+                                file: entry.source_path.clone(),
+                                item_or_req: label,
+                                kind: DiagnosticKind::SpanPastEof {
+                                    span: req.source_span,
+                                    file_lines: total,
+                                },
+                                severity: Severity::Error,
+                                message: format!("span end {end} exceeds file length {total}"),
+                            });
+                        }
                     }
                     Err(SpanError::Inverted { .. } | SpanError::Empty) => {
                         diagnostics.push(Diagnostic {
