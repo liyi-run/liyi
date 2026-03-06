@@ -20,9 +20,9 @@
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         30,
-        144
+        143
       ],
-      "source_hash": "sha256:db3fd3e34dced08e14f184cdf523a36be9d2eee9a976113fd240fe176e55fb62",
+      "source_hash": "sha256:f3cdfe147bf08f0c563c97c65f247ce0c30b6c474465fb4c5b5ab563713fdb02",
       "source_anchor": "/// Run the two-pass check and optionally apply `--fix` corrections."
     },
     {
@@ -30,10 +30,10 @@
       "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        150,
-        507
+        149,
+        485
       ],
-      "source_hash": "sha256:e39d1426fbc42e9927db6a77b2d0d06ac75d2fc1bcdd478fd088f3008aff2ada",
+      "source_hash": "sha256:e2f35259fc86b10fc1b3a37e75c5cf336ea0f9fe815ada6449a3a5e894035c45",
       "source_anchor": "fn check_sidecar("
     },
     {
@@ -41,8 +41,8 @@
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        513,
-        525
+        491,
+        503
       ],
       "source_hash": "sha256:b20544303bdf44801e41b81d30584f313f93e85397eb142ce4874fd96a556ae1",
       "source_anchor": "/// Read a file into the cache and return a clone of its contents."

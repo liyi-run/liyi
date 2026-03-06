@@ -33,7 +33,7 @@
         21,
         45
       ],
-      "source_hash": "sha256:2f385bbd6662fb1143ee58190a6ada9ffda58339874d44a6aa9aa926d6d8d722",
+      "source_hash": "sha256:a9ef52c482d20f30c125df83eebed6ad3023bdd728a7e8ca0e71c7dba7b7a46c",
       "source_anchor": "/// Details of a code item (function, struct, etc.)"
     },
     {
@@ -44,7 +44,7 @@
         47,
         60
       ],
-      "source_hash": "sha256:3df33f9d7d07763f351cdf2437a1495530f32bdcc91fc1100e3813656c57545a",
+      "source_hash": "sha256:fb6cd085a13d179f6f97964a90b3c3217326a6b1e0ff2c1c2af56cdc5d349935",
       "source_anchor": "/// Details of a module requirement/invariant"
     },
     {
@@ -77,7 +77,7 @@
         123,
         128
       ],
-      "source_hash": "sha256:8a5e7d12800e936fa7e4bba8e3601a9c5a83eab649f674381910ed9a1faa18d8",
+      "source_hash": "sha256:e4fa75eb25f814681c0aa33db2bc05a3db4b43bd7fd0216efb096351e54c661e",
       "source_anchor": "/// Serialize a `SidecarFile` to pretty-printed JSON with a JSONC header comment."
     },
     {
@@ -88,7 +88,7 @@
         130,
         200
       ],
-      "source_hash": "sha256:7553ea387079f07df12b091d563d01c34f6134b4cf4a71ff5619f489d335314d",
+      "source_hash": "sha256:18f52cbe5cf9c820bbf994fe3a206bed73c514fb63c4fefa588ce74033920cd5",
       "source_anchor": "/// Validate a parsed `SidecarFile`. Returns a list of error strings (empty = valid)."
     }
   ]

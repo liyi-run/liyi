@@ -9,9 +9,9 @@
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and recompute its hash/anchor. Otherwise recompute hash/anchor for every spec from the current source file. Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
         7,
-        72
+        70
       ],
-      "source_hash": "sha256:aa78c1db923fbfed373bbea233dd5e67977c48233ab40703ccfb3c6f0bb9f5c2",
+      "source_hash": "sha256:fd7c5e3c393505e004466a621b6dc6463287f9cdced0e322cf5ff70be66d6645",
       "source_anchor": "/// Re-hash source spans in a sidecar file."
     }
   ]
