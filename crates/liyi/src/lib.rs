@@ -2,6 +2,7 @@ pub mod check;
 pub mod diagnostics;
 pub mod discovery;
 pub mod hashing;
+pub mod init;
 pub mod markers;
 pub mod reanchor;
 pub mod schema;

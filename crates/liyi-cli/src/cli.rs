@@ -66,6 +66,17 @@ pub enum Commands {
         #[arg(long)]
         migrate: bool,
     },
+
+    /// Scaffold AGENTS.md or skeleton .liyi.jsonc sidecar
+    Init {
+        /// Source file to create a skeleton sidecar for.
+        /// If omitted, appends agent instruction to AGENTS.md.
+        source_file: Option<PathBuf>,
+
+        /// Overwrite existing files
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 /// Parse a "start,end" string into a [usize; 2] span.

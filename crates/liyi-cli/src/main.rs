@@ -100,5 +100,28 @@ fn main() {
                 process::exit(2);
             }
         }
+        Commands::Init { source_file, force } => {
+            match source_file {
+                Some(src) => {
+                    match liyi::init::init_sidecar(&src, force) {
+                        Ok(path) => println!("Created: {}", path.display()),
+                        Err(e) => {
+                            eprintln!("Error: {e}");
+                            process::exit(1);
+                        }
+                    }
+                }
+                None => {
+                    let root = env::current_dir().unwrap_or_default();
+                    match liyi::init::init_agents_md(&root, force) {
+                        Ok(path) => println!("Initialized: {}", path.display()),
+                        Err(e) => {
+                            eprintln!("Error: {e}");
+                            process::exit(1);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
