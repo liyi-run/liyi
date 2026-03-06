@@ -4,5 +4,5 @@ docs/
 AGENTS.md
 README.md
 README.zh.md
-# Exclude test fixtures
-tests/fixtures/
+# Exclude test fixtures (need full path — anchored patterns require it)
+**/tests/fixtures/
