@@ -8,60 +8,60 @@
       "reviewed": false,
       "intent": "Represent the outcome of span relocation: either the span was found at a new position (Shifted with delta and new_span), or it could not be relocated (Stale).",
       "source_span": [
-        3,
+        5,
         10
       ],
       "tree_path": "enum::ShiftResult",
-      "source_hash": "sha256:1ec5b998c90f6312ad5636d57daa0508160fef681d18e655243df8621da33551",
-      "source_anchor": "/// Result of attempting to relocate a shifted span."
+      "source_hash": "sha256:d0021d0fb84bf4f5909e28b1b0290a39b9fca60bbea3e937604b2a4c8358f781",
+      "source_anchor": "pub enum ShiftResult {"
     },
     {
       "item": "detect_shift",
       "reviewed": false,
       "intent": "Try to relocate a span whose hash no longer matches at its recorded position. First check the original position (delta 0), then scan offsets in small-delta-first order (1, -1, 2, -2, ...) up to ±100 lines. Return Shifted on the first hash match, or Stale if no match is found.",
       "source_span": [
-        15,
+        20,
         23
       ],
       "tree_path": "fn::detect_shift",
-      "source_hash": "sha256:6b947006b3cafcbda341dd285d91ab1a3302a8bfeee34a59c667f699b059dce0",
-      "source_anchor": "/// Try to relocate a span whose hash no longer matches."
+      "source_hash": "sha256:f93dd44cde94d5d2c3345336256fc3c1d95ddbd006225dd274af71d94f558985",
+      "source_anchor": "pub fn detect_shift(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {"
     },
     {
       "item": "detect_shift_with_hint",
       "reviewed": false,
       "intent": "Like detect_shift but try a caller-supplied hint_delta first (useful when multiple spans in the same file likely shifted by the same amount), then fall back to the full scan if the hint misses.",
       "source_span": [
-        25,
+        29,
         41
       ],
       "tree_path": "fn::detect_shift_with_hint",
-      "source_hash": "sha256:9df079e7ea416a09f14d4809b20ab358b109ad11ced8af673de8da90a3bab890",
-      "source_anchor": "/// Like [`detect_shift`], but tries `hint_delta` before the full scan."
+      "source_hash": "sha256:19819d73d195b909aae47b82f5e785a81df2d1b403271678e129512cb28bb78c",
+      "source_anchor": "pub fn detect_shift_with_hint("
     },
     {
       "item": "scan",
       "reviewed": false,
       "intent": "Perform the full bidirectional scan in small-delta-first order (1, -1, 2, -2, ..., WINDOW, -WINDOW), returning the first Shifted result or Stale if none matches.",
       "source_span": [
-        43,
+        44,
         54
       ],
       "tree_path": "fn::scan",
-      "source_hash": "sha256:5a4d6b9a3876d68e8025b7f2277b8c5a5965d84c4b39f9c46953c1290b16a367",
-      "source_anchor": "/// Full scan in small-delta-first order: 1, −1, 2, −2, …"
+      "source_hash": "sha256:ab3630521c0f7511ab7c9f3da7e403e75f428785fd9bbe6232ef022a56e5353a",
+      "source_anchor": "fn scan(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {"
     },
     {
       "item": "try_offset",
       "reviewed": false,
       "intent": "Check a single offset delta: compute the candidate span by adding delta to both start and end, reject if either drops below 1, hash the candidate span, and return Some(Shifted) if the hash matches expected_hash, None otherwise.",
       "source_span": [
-        56,
+        57,
         78
       ],
       "tree_path": "fn::try_offset",
-      "source_hash": "sha256:0eaa4ef66dbff595955a89352bebd82ea0bdee31d47f176a65dad7ec7b743b6e",
-      "source_anchor": "/// Check a single offset. Returns `Some(Shifted{…})` on hash match."
+      "source_hash": "sha256:0f1b847299439f8ba6163bb5bf37a775b2c54462505569e815b20a9a3994aa92",
+      "source_anchor": "fn try_offset("
     }
   ]
 }

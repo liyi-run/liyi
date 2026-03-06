@@ -17,72 +17,72 @@
       "reviewed": false,
       "intent": "Enumerate all recognized @liyi: marker types (Module, Requirement, Related, Intent, Trivial, Ignore, Nontrivial) with their associated data (name, prose, line number). Each variant carries a 1-indexed line number.",
       "source_span": [
-        3,
+        5,
         32
       ],
       "tree_path": "enum::SourceMarker",
-      "source_hash": "sha256:58e1ee420c395e98476392e740880ac5ab7d57cfcdaa00b2b5203045296e6fec",
-      "source_anchor": "/// A discovered marker in a source file."
+      "source_hash": "sha256:9914dee0aa2de6a23535773503f9d4af08d5704364faef687ab3ed9f73f4a078",
+      "source_anchor": "pub enum SourceMarker {"
     },
     {
       "item": "normalize_line",
       "reviewed": false,
       "intent": "Replace full-width Unicode punctuation (＠ → @, ： → :, （ → (, ） → )) with ASCII equivalents so that markers written with CJK input methods are recognized.",
       "source_span": [
-        34,
+        35,
         47
       ],
       "tree_path": "fn::normalize_line",
-      "source_hash": "sha256:70f70475d2a24a454a8399779581c2211d51072131bd0f5e6ac756bd2ac7f5f9",
-      "source_anchor": "/// Replace full-width punctuation with half-width equivalents."
+      "source_hash": "sha256:042886b54393166d59d9cd573722d841651cc1eba4321dc0f62d44de39379b09",
+      "source_anchor": "pub fn normalize_line(line: &str) -> String {"
     },
     {
       "item": "ALIAS_TABLE",
       "reviewed": false,
       "intent": "Map every accepted marker alias (English canonical forms plus Chinese, Japanese, Korean, Spanish, French, Portuguese variants) to its canonical @liyi:* form. This table is the single source of truth for multilingual marker recognition.",
       "source_span": [
-        71,
+        72,
         120
       ],
       "tree_path": "const::ALIAS_TABLE",
-      "source_hash": "sha256:e37f7830bd0043268f210c53ec87ed519290dfbde4e7ecd00e03bc33e82af9cc",
-      "source_anchor": "/// (alias, canonical) pairs.  Order does not matter."
+      "source_hash": "sha256:0eebe3f11964541df61a658e4aa067747b473032480a5f3f0778ec8e5c88d9f4",
+      "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &["
     },
     {
       "item": "find_marker",
       "reviewed": false,
       "intent": "Search a normalized line for any known marker alias from ALIAS_TABLE. Return the canonical marker keyword and the byte offset immediately after the matched alias, or None if no marker is found.",
       "source_span": [
-        122,
+        124,
         131
       ],
       "tree_path": "fn::find_marker",
-      "source_hash": "sha256:03a8b361bfd2c5dc9a1191ae162f22407112afda0f27b86f3b123762818f4738",
-      "source_anchor": "/// Try to find a known marker at any position in `normalized`."
+      "source_hash": "sha256:b5582e49e542c759c86939b556ddfefe338818898396c1d82476817f8b20b788",
+      "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize)> {"
     },
     {
       "item": "extract_name",
       "reviewed": false,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present.",
       "source_span": [
-        133,
+        136,
         153
       ],
       "tree_path": "fn::extract_name",
-      "source_hash": "sha256:67a4ad9cfb8906d7d8a28c2aab37ff71e5213f2bc242788860093ccde1ef33eb",
-      "source_anchor": "/// Extract a name from the remainder after a keyword."
+      "source_hash": "sha256:49fcb7884fcec40dcb0b329d971eddae3ee78ef7c167a0e63726c37a73ce2e50",
+      "source_anchor": "fn extract_name(rest: &str) -> Option<String> {"
     },
     {
       "item": "scan_markers",
       "reviewed": false,
       "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
-        155,
+        157,
         231
       ],
       "tree_path": "fn::scan_markers",
-      "source_hash": "sha256:3800b244f5a16ebca75fdd7efbd46b644cf24447b302d1d938eb969e4dcb3637",
-      "source_anchor": "/// Scan all lines of `content` and return discovered `@liyi:*` markers."
+      "source_hash": "sha256:cefc61612b7a340a65aac138f1947ac29319d50199e1eec28f0c2c96e36f3e0e",
+      "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {"
     }
   ]
 }

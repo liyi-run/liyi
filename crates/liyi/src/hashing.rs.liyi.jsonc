@@ -8,24 +8,24 @@
       "reviewed": false,
       "intent": "Represent the three ways a source span can be invalid: end exceeds file length (PastEof), start > end (Inverted), or a zero index (Empty). Provide Display and Error impls for use in error propagation.",
       "source_span": [
-        4,
+        6,
         13
       ],
       "tree_path": "enum::SpanError",
-      "source_hash": "sha256:ce6348dc52bd0adf98b166b806f6513d49e3f3062f2c6da83dfee6ca3188db8d",
-      "source_anchor": "/// Errors produced when a source span is invalid."
+      "source_hash": "sha256:522692e8b374d0099e5b3bc1b3cf0c296687db147466da9ccbe7599f6fd74034",
+      "source_anchor": "pub enum SpanError {"
     },
     {
       "item": "hash_span",
       "reviewed": false,
       "intent": "Compute a SHA-256 hash of the source lines in a 1-indexed inclusive [start, end] span. Join selected lines with LF (normalizing CRLF) before hashing. Return the hash as 'sha256:<hex>' and the first line as the anchor string. Reject empty, inverted, or past-EOF spans with SpanError.",
       "source_span": [
-        31,
+        36,
         59
       ],
       "tree_path": "fn::hash_span",
-      "source_hash": "sha256:5b1bb84d6bc509953f4b48ca0eb18cdaecf0f1e08fb928d9c0ce99eaf54506bf",
-      "source_anchor": "/// Hash the source lines in `span` and return `(\"sha256:{hex}\", anchor)`."
+      "source_hash": "sha256:330db49b980b8d6e93fc853a8b490581aa5e0c7307b9f3f733e5e99ddc66cd80",
+      "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {"
     }
   ]
 }

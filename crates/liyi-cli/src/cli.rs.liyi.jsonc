@@ -8,36 +8,36 @@
       "reviewed": false,
       "intent": "Define the top-level CLI parser with a single required subcommand field, providing the tool name, version, and about string for help output.",
       "source_span": [
-        4,
+        10,
         13
       ],
       "tree_path": "struct::Cli",
-      "source_hash": "sha256:070e66f7044a01f80a1750a24a5894bf709354ec183439d7a4ed043f44703ae4",
-      "source_anchor": "#[derive(Parser)]"
+      "source_hash": "sha256:c072f8bce549d84bfae355789b880a43605410751f01bfa0b10e66b48d817091",
+      "source_anchor": "pub struct Cli {"
     },
     {
       "item": "Commands",
       "reviewed": false,
       "intent": "Enumerate all CLI subcommands (Check, Reanchor) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate).",
       "source_span": [
-        15,
-        65
+        16,
+        69
       ],
       "tree_path": "enum::Commands",
-      "source_hash": "sha256:c0eb35a0a5f63e05b07567d0bfd776b76b4d296d7c59b04f4d4a675f819a7502",
-      "source_anchor": "#[derive(Subcommand)]"
+      "source_hash": "sha256:6661d0d605b77fd31699d0fef2febc914f3546291a66f8390daf9c85ec21bd1a",
+      "source_anchor": "pub enum Commands {"
     },
     {
       "item": "parse_span",
       "reviewed": false,
       "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
       "source_span": [
-        67,
-        82
+        72,
+        86
       ],
       "tree_path": "fn::parse_span",
-      "source_hash": "sha256:12d104d2a3f7fb454dfbce61101cfe715d6d418a7c819d885b2956730964edc9",
-      "source_anchor": "/// Parse a \"start,end\" string into a [usize; 2] span."
+      "source_hash": "sha256:d57d01b6fb8d7fbefc54c62e3240b46d80cc2370a7d148811caad6d809b23977",
+      "source_anchor": "fn parse_span(s: &str) -> Result<[usize; 2], String> {"
     }
   ]
 }

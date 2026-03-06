@@ -21,10 +21,10 @@
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         34,
-        144
+        146
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:0e7c734b62e4458f00d3a7bd07b0317655a1c99233efe2e1ebd4d7b32076ab40",
+      "source_hash": "sha256:8c63f0d5148e8503b5eb235a52e71965cb9e9a663ee78ef728a8cc52b02a2dc8",
       "source_anchor": "pub fn run_check("
     },
     {
@@ -32,11 +32,11 @@
       "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        150,
-        535
+        152,
+        658
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:7a32f895617f40735aec86895decaf28bc8a42bc7556495c7ddf96ba745a84c3",
+      "source_hash": "sha256:d92fd06b6914d16e2817b67e27ca1bfc039e974a03188841f7ea5376f2583682",
       "source_anchor": "fn check_sidecar("
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        542,
-        553
+        665,
+        676
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",

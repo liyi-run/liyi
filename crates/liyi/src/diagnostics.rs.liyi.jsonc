@@ -8,36 +8,36 @@
       "reviewed": false,
       "intent": "Classify diagnostic severity into Info, Warning, and Error levels.",
       "source_span": [
-        4,
+        5,
         9
       ],
       "tree_path": "enum::Severity",
-      "source_hash": "sha256:e3aa56c7405cafa0a78eb8e18f77d896c7667041d2b72b42fb809d21ac33540b",
-      "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
+      "source_hash": "sha256:7dea0b8cd2dbee0389ef5eb48eb9ed10b850ae6eeab8e0703a2862c6fdce8340",
+      "source_anchor": "pub enum Severity {"
     },
     {
       "item": "DiagnosticKind",
       "reviewed": false,
       "intent": "Enumerate all distinct diagnostic conditions the linter can report: hash-current, unreviewed, stale, shifted span, requirement changed/unknown, untracked, trivial/ignored markers, span errors, malformed hashes, duplicates, orphaned sources, parse errors, unknown versions, requirement cycles, and ambiguous sidecars.",
       "source_span": [
-        11,
+        12,
         32
       ],
       "tree_path": "enum::DiagnosticKind",
-      "source_hash": "sha256:4baad443b58740d5ad757b1277136ada6c4c1049a64a9726eccf7972a46f403f",
-      "source_anchor": "#[derive(Debug, Clone, PartialEq, Eq)]"
+      "source_hash": "sha256:fd4adbda127fbc5e46fbe1cb1337ef7fb780a66f22c2c31fced4068c45700e6b",
+      "source_anchor": "pub enum DiagnosticKind {"
     },
     {
       "item": "Diagnostic",
       "reviewed": false,
       "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, and a human-readable message.",
       "source_span": [
-        34,
+        35,
         41
       ],
       "tree_path": "struct::Diagnostic",
-      "source_hash": "sha256:ef5a8f83531ff72b1c74c80b7408b5c917d1d6ba5912ec38240474dba889e3b2",
-      "source_anchor": "#[derive(Debug, Clone)]"
+      "source_hash": "sha256:ac8791f99477bdf747c7c4b20d4f635c0f0879e0b22f5b517731f915a7cd0e35",
+      "source_anchor": "pub struct Diagnostic {"
     },
     {
       "item": "impl Display for Diagnostic",
@@ -56,24 +56,24 @@
       "reviewed": false,
       "intent": "Hold the three boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
-        63,
+        64,
         68
       ],
       "tree_path": "struct::CheckFlags",
-      "source_hash": "sha256:aac7f53b52c00b332097037be22f351f7cab3a9fdd7acb23c76635ef8a26fd6a",
-      "source_anchor": "#[derive(Debug, Clone)]"
+      "source_hash": "sha256:40eb242caad90c8b6df9cf43ca15c88f4cb13833c34371fbe2fa2fb2f9a8c819",
+      "source_anchor": "pub struct CheckFlags {"
     },
     {
       "item": "LiyiExitCode",
       "reviewed": false,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        70,
+        71,
         75
       ],
       "tree_path": "enum::LiyiExitCode",
-      "source_hash": "sha256:6ebda039738b05d6cb149ea3c872accf764f674c93f0d111b6037c3c10c0ee0a",
-      "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
+      "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
+      "source_anchor": "pub enum LiyiExitCode {"
     },
     {
       "item": "compute_exit_code",

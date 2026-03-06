@@ -8,24 +8,24 @@
       "reviewed": false,
       "intent": "Model the top-level .liyi.jsonc file with version, source path, and a list of specs. Enforce deny_unknown_fields to reject extraneous keys during deserialization.",
       "source_span": [
-        4,
+        7,
         11
       ],
       "tree_path": "struct::SidecarFile",
-      "source_hash": "sha256:e832dbb2f978f79be6b0135630e2f5bbd314753f4ba09eee25a476ad4c1a622b",
-      "source_anchor": "/// Top-level `.liyi.jsonc` file representation"
+      "source_hash": "sha256:542a90b8d25a3cbb81a8099a82a0c4ec7384f03f9e33973548d6c3fdde7fba63",
+      "source_anchor": "pub struct SidecarFile {"
     },
     {
       "item": "Spec",
       "reviewed": false,
       "intent": "Discriminated union of ItemSpec and RequirementSpec, using untagged serde deserialization so the variant is inferred from the presence of 'item' vs 'requirement' keys.",
       "source_span": [
-        13,
+        16,
         19
       ],
       "tree_path": "enum::Spec",
-      "source_hash": "sha256:a3a7434250cc317950588f0ea7c5873d0c92103f84c8f2e435c3103d42d7326a",
-      "source_anchor": "/// Represents either an item or a requirement spec"
+      "source_hash": "sha256:a8f006e513b1bf6d24607234b0040cd90e816ba7a35fe134ef14196a9934309d",
+      "source_anchor": "pub enum Spec {"
     },
     {
       "item": "ItemSpec",
@@ -54,48 +54,48 @@
       "reviewed": false,
       "intent": "Remove // line comments and /* block comments from JSONC input while respecting JSON string boundaries and backslash escapes. Preserve newlines from line comments so downstream line numbers remain meaningful.",
       "source_span": [
-        68,
+        70,
         120
       ],
       "tree_path": "fn::strip_jsonc_comments",
-      "source_hash": "sha256:9dc96d8d82dab62dc9874ea22649619671cb75068f9866011ddb7b09e24de922",
-      "source_anchor": "/// Strip `//` line comments and `/* */` block comments from JSONC input,"
+      "source_hash": "sha256:9560729c11c40981dee6e08610759cd496106046c00b6afee63d5ffce009dcf3",
+      "source_anchor": "pub fn strip_jsonc_comments(input: &str) -> String {"
     },
     {
       "item": "parse_sidecar",
       "reviewed": false,
       "intent": "Parse a .liyi.jsonc string by stripping JSONC comments then deserializing into a SidecarFile. Return a human-readable error on parse failure.",
       "source_span": [
-        122,
+        123,
         127
       ],
       "tree_path": "fn::parse_sidecar",
-      "source_hash": "sha256:411392dde2425ae37d6f1437783764b15a77a00f83f2791eb285d37a3a314e91",
-      "source_anchor": "/// Parse a `.liyi.jsonc` file: strip JSONC comments then deserialize."
+      "source_hash": "sha256:3da515f78d43c9b0a0416919d6ff1ba2ba139928631bfd071336a9de21efa15d",
+      "source_anchor": "pub fn parse_sidecar(content: &str) -> Result<SidecarFile, String> {"
     },
     {
       "item": "write_sidecar",
       "reviewed": false,
       "intent": "Serialize a SidecarFile to pretty-printed JSON prefixed with a '// liyi v0.1 spec file' header comment and a trailing newline.",
       "source_span": [
-        129,
+        130,
         134
       ],
       "tree_path": "fn::write_sidecar",
-      "source_hash": "sha256:e4fa75eb25f814681c0aa33db2bc05a3db4b43bd7fd0216efb096351e54c661e",
-      "source_anchor": "/// Serialize a `SidecarFile` to pretty-printed JSON with a JSONC header comment."
+      "source_hash": "sha256:673d24b668a4ead06a07ef74f02c689fd5184ecf88a54509330a34ddf8d1817f",
+      "source_anchor": "pub fn write_sidecar(sidecar: &SidecarFile) -> String {"
     },
     {
       "item": "validate_sidecar",
       "reviewed": false,
       "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
-        136,
+        137,
         206
       ],
       "tree_path": "fn::validate_sidecar",
-      "source_hash": "sha256:18f52cbe5cf9c820bbf994fe3a206bed73c514fb63c4fefa588ce74033920cd5",
-      "source_anchor": "/// Validate a parsed `SidecarFile`. Returns a list of error strings (empty = valid)."
+      "source_hash": "sha256:dd875abdf4ecfc0059e9d2c710980144d9a3e339fe200e142b5eb9b045113ffa",
+      "source_anchor": "pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {"
     }
   ]
 }
