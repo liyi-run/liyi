@@ -18,19 +18,21 @@
 cargo install --path crates/liyi-cli
 
 # Have an agent generate intent specs (writes .liyi.jsonc files)
+# You can just tell it to — no special command, the agent is the command
+
 # Then fill in hashes:
 liyi check --fix --root .
 
-# Run the linter in CI:
+# Run manually, or wire into CI:
 liyi check --root .
 ```
 
 ## How It Works
 
-1. **Agent infers intent** — reads `AGENTS.md`, writes `.liyi.jsonc` sidecar files with `source_span` and natural-language `intent` for each code item.
+1. **Agent infers intent** — today's agents automatically read `AGENTS.md`, which teaches them the 立意 pattern. During normal development they maintain `.liyi.jsonc` sidecar files for each code item, with `source_span` and natural-language `intent`. If they don't do it automatically, you can always tell them to.
 2. **`liyi check`** — hashes source spans, detects staleness and shifts, checks review status, tracks requirement edges. Zero network, zero LLM, fully deterministic.
 3. **`liyi reanchor`** — re-hashes spans after intentional code changes. Never modifies intent or review state.
-4. **Human reviews** — sets `"reviewed": true` or adds `@liyi:intent` in source to approve.
+4. **Human reviews** — sets `"reviewed": true` in the sidecar to approve, or adds `@liyi:intent` in source to provide the authoritative human version.
 
 ## Progressive Adoption
 
