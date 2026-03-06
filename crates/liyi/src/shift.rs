@@ -32,10 +32,10 @@ pub fn detect_shift_with_hint(
     expected_hash: &str,
     hint_delta: i64,
 ) -> ShiftResult {
-    if hint_delta != 0 {
-        if let Some(r) = try_offset(source_content, span, expected_hash, hint_delta) {
-            return r;
-        }
+    if hint_delta != 0
+        && let Some(r) = try_offset(source_content, span, expected_hash, hint_delta)
+    {
+        return r;
     }
     scan(source_content, span, expected_hash)
 }

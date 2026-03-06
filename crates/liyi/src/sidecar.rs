@@ -153,22 +153,22 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                         item.source_span[0], item.source_span[1]
                     ));
                 }
-                if let Some(ref h) = item.source_hash {
-                    if !hash_re.is_match(h) {
-                        errors.push(format!(
-                            "{label}: source_hash \"{}\" does not match sha256:<hex>",
-                            h
-                        ));
-                    }
+                if let Some(ref h) = item.source_hash
+                    && !hash_re.is_match(h)
+                {
+                    errors.push(format!(
+                        "{label}: source_hash \"{}\" does not match sha256:<hex>",
+                        h
+                    ));
                 }
                 if let Some(ref related) = item.related {
                     for (name, hash_opt) in related {
-                        if let Some(h) = hash_opt {
-                            if !hash_re.is_match(h) {
-                                errors.push(format!(
-                                    "{label}: related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
-                                ));
-                            }
+                        if let Some(h) = hash_opt
+                            && !hash_re.is_match(h)
+                        {
+                            errors.push(format!(
+                                "{label}: related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
+                            ));
                         }
                     }
                 }
@@ -184,13 +184,13 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                         req.source_span[0], req.source_span[1]
                     ));
                 }
-                if let Some(ref h) = req.source_hash {
-                    if !hash_re.is_match(h) {
-                        errors.push(format!(
-                            "{label}: source_hash \"{}\" does not match sha256:<hex>",
-                            h
-                        ));
-                    }
+                if let Some(ref h) = req.source_hash
+                    && !hash_re.is_match(h)
+                {
+                    errors.push(format!(
+                        "{label}: source_hash \"{}\" does not match sha256:<hex>",
+                        h
+                    ));
                 }
             }
         }

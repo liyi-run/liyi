@@ -109,12 +109,11 @@ pub fn run_check(
             Err(_) => continue,
         };
         for spec in &sidecar.specs {
-            if let Spec::Requirement(req) = spec {
-                if let Some(rec) = requirements.get_mut(&req.requirement) {
-                    if rec.hash.is_none() {
-                        rec.hash = req.source_hash.clone();
-                    }
-                }
+            if let Spec::Requirement(req) = spec
+                && let Some(rec) = requirements.get_mut(&req.requirement)
+                && rec.hash.is_none()
+            {
+                rec.hash = req.source_hash.clone();
             }
         }
     }
@@ -231,10 +230,8 @@ fn check_sidecar(
                 // a. Hash the span
                 match hash_span(&source_content, item.source_span) {
                     Ok((computed_hash, computed_anchor)) => {
-                        let is_current = item
-                            .source_hash
-                            .as_ref()
-                            .map_or(false, |h| h == &computed_hash);
+                        let is_current =
+                            item.source_hash.as_ref() == Some(&computed_hash);
 
                         if is_current {
                             // CURRENT
@@ -400,20 +397,19 @@ fn check_sidecar(
                                 // have hashes, compare them.
                                 if let (Some(sh), Some(rh)) =
                                     (stored_hash.as_ref(), rec.hash.as_ref())
+                                    && sh != rh
                                 {
-                                    if sh != rh {
-                                        diagnostics.push(Diagnostic {
-                                            file: entry.source_path.clone(),
-                                            item_or_req: label.clone(),
-                                            kind: DiagnosticKind::ReqChanged {
-                                                requirement: req_name.clone(),
-                                            },
-                                            severity: Severity::Warning,
-                                            message: format!(
-                                                "requirement \"{req_name}\" has changed"
-                                            ),
-                                        });
-                                    }
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::ReqChanged {
+                                            requirement: req_name.clone(),
+                                        },
+                                        severity: Severity::Warning,
+                                        message: format!(
+                                            "requirement \"{req_name}\" has changed"
+                                        ),
+                                    });
                                 }
                             }
                         }
@@ -424,10 +420,8 @@ fn check_sidecar(
                 let label = req.requirement.clone();
                 match hash_span(&source_content, req.source_span) {
                     Ok((computed_hash, computed_anchor)) => {
-                        let is_current = req
-                            .source_hash
-                            .as_ref()
-                            .map_or(false, |h| h == &computed_hash);
+                        let is_current =
+                            req.source_hash.as_ref() == Some(&computed_hash);
 
                         if is_current {
                             diagnostics.push(Diagnostic {

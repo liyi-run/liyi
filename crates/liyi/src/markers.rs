@@ -1,5 +1,5 @@
 /// Source-file marker scanner with full-width normalization and multilingual aliases.
-
+///
 /// A discovered marker in a source file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SourceMarker {
@@ -138,8 +138,7 @@ fn extract_name(rest: &str) -> Option<String> {
     if trimmed.is_empty() {
         return None;
     }
-    if trimmed.starts_with('(') {
-        let inner = &trimmed[1..];
+    if let Some(inner) = trimmed.strip_prefix('(') {
         let end = inner.find(')')?;
         let name = inner[..end].trim();
         if name.is_empty() {

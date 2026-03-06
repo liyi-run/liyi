@@ -71,14 +71,14 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
         if !path.is_file() {
             continue;
         }
-        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            if name.ends_with(SIDECAR_SUFFIX) {
-                sidecar_paths.push(path);
-                // Sidecar files are metadata — do not include them in
-                // all_files so the marker scanner does not match literal
-                // marker text in JSON string values (source_anchor, intent).
-                continue;
-            }
+        if let Some(name) = path.file_name().and_then(|n| n.to_str())
+            && name.ends_with(SIDECAR_SUFFIX)
+        {
+            sidecar_paths.push(path);
+            // Sidecar files are metadata — do not include them in
+            // all_files so the marker scanner does not match literal
+            // marker text in JSON string values (source_anchor, intent).
+            continue;
         }
         all_files.push(path);
     }
