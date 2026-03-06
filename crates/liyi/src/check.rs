@@ -265,23 +265,23 @@ fn check_sidecar(
 
                             // Try tree_path-based recovery, tracking why it
                             // may not be available for diagnostic clarity.
-                            let (tree_path_recovered, tree_path_note) =
-                                if item.tree_path.is_empty() {
-                                    (None, "no tree_path set")
-                                } else if lang.is_none() {
-                                    (None, "no grammar for source language")
+                            let (tree_path_recovered, tree_path_note) = if item.tree_path.is_empty()
+                            {
+                                (None, "no tree_path set")
+                            } else if lang.is_none() {
+                                (None, "no grammar for source language")
+                            } else {
+                                let resolved = resolve_tree_path(
+                                    &source_content,
+                                    &item.tree_path,
+                                    lang.unwrap(),
+                                );
+                                if resolved.is_some() {
+                                    (resolved, "")
                                 } else {
-                                    let resolved = resolve_tree_path(
-                                        &source_content,
-                                        &item.tree_path,
-                                        lang.unwrap(),
-                                    );
-                                    if resolved.is_some() {
-                                        (resolved, "")
-                                    } else {
-                                        (None, "tree_path resolution failed")
-                                    }
-                                };
+                                    (None, "tree_path resolution failed")
+                                }
+                            };
 
                             if let Some(new_span) = tree_path_recovered {
                                 // tree_path resolved to a (possibly different) span
@@ -377,11 +377,8 @@ fn check_sidecar(
                         } else if lang.is_none() {
                             (None, "no grammar for source language")
                         } else {
-                            let r = resolve_tree_path(
-                                &source_content,
-                                &item.tree_path,
-                                lang.unwrap(),
-                            );
+                            let r =
+                                resolve_tree_path(&source_content, &item.tree_path, lang.unwrap());
                             if r.is_some() {
                                 (r, "")
                             } else {
@@ -417,9 +414,7 @@ fn check_sidecar(
                             let detail = if tp_note.is_empty() {
                                 format!("span end {end} exceeds file length {total}")
                             } else {
-                                format!(
-                                    "span end {end} exceeds file length {total} ({tp_note})"
-                                )
+                                format!("span end {end} exceeds file length {total} ({tp_note})")
                             };
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
@@ -575,11 +570,8 @@ fn check_sidecar(
                         } else if lang.is_none() {
                             (None, "no grammar for source language")
                         } else {
-                            let r = resolve_tree_path(
-                                &source_content,
-                                &req.tree_path,
-                                lang.unwrap(),
-                            );
+                            let r =
+                                resolve_tree_path(&source_content, &req.tree_path, lang.unwrap());
                             if r.is_some() {
                                 (r, "")
                             } else {
@@ -615,9 +607,7 @@ fn check_sidecar(
                             let detail = if tp_note.is_empty() {
                                 format!("span end {end} exceeds file length {total}")
                             } else {
-                                format!(
-                                    "span end {end} exceeds file length {total} ({tp_note})"
-                                )
+                                format!("span end {end} exceeds file length {total} ({tp_note})")
                             };
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
