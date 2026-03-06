@@ -21,10 +21,10 @@
       "intent": "Enumerate all CLI subcommands (Check, Reanchor) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate).",
       "source_span": [
         16,
-        69
+        98
       ],
       "tree_path": "enum::Commands",
-      "source_hash": "sha256:6661d0d605b77fd31699d0fef2febc914f3546291a66f8390daf9c85ec21bd1a",
+      "source_hash": "sha256:f20485289c5a04338a1e3e5ab951e8c386718eb72646ca831c33ec6b70ece88e",
       "source_anchor": "pub enum Commands {"
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": false,
       "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
       "source_span": [
-        72,
-        86
+        101,
+        115
       ],
       "tree_path": "fn::parse_span",
       "source_hash": "sha256:d57d01b6fb8d7fbefc54c62e3240b46d80cc2370a7d148811caad6d809b23977",

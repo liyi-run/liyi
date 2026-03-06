@@ -81,10 +81,10 @@
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
         77,
-        99
+        109
       ],
       "tree_path": "fn::compute_exit_code",
-      "source_hash": "sha256:40d1d1a16fdb85f853f14a08744bcebc27fbaa0965f64587b7d05dc89eacec66",
+      "source_hash": "sha256:8a8a6522c140c7c3565451d4da468262a9b75023d4fd07eeb669cbd765b0d522",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {"
     }
   ]

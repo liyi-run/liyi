@@ -1,0 +1,79 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/approve.rs",
+  "specs": [
+    {
+      "item": "ApproveResult",
+      "reviewed": false,
+      "intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
+      "source_span": [
+        11,
+        16
+      ],
+      "tree_path": "struct::ApproveResult",
+      "source_hash": "sha256:c508a96f425f3db28dbead37eafe6c7dc6c16d95fce87747cbd36bc60b62812c",
+      "source_anchor": "pub struct ApproveResult {"
+    },
+    {
+      "item": "ApproveError",
+      "reviewed": false,
+      "intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
+      "source_span": [
+        20,
+        24
+      ],
+      "tree_path": "enum::ApproveError",
+      "source_hash": "sha256:173a61b1f98538798224266b4af28015e5332da0463f5c4b360c60d0f784f801",
+      "source_anchor": "pub enum ApproveError {"
+    },
+    {
+      "item": "approve_batch",
+      "reviewed": false,
+      "intent": "Resolve sidecar targets from paths, then approve all (or filtered by item name) unreviewed items without prompting. Supports dry-run mode. Returns error if no targets found.",
+      "source_span": [
+        46,
+        62
+      ],
+      "tree_path": "fn::approve_batch",
+      "source_hash": "sha256:f12abddb8eba84afa2e5fb75e688fd74b16c156da4e50a742d0ad07fd39d3efd",
+      "source_anchor": "pub fn approve_batch("
+    },
+    {
+      "item": "approve_interactive",
+      "reviewed": false,
+      "intent": "Resolve sidecar targets from paths, then for each unreviewed item display source context and prompt y/n/s. Supports dry-run and item filtering. Returns error if no targets found.",
+      "source_span": [
+        67,
+        83
+      ],
+      "tree_path": "fn::approve_interactive",
+      "source_hash": "sha256:198840f2b065bb9f9f882912916e2a66651d1480689f8a0b33394d29776986e5",
+      "source_anchor": "pub fn approve_interactive("
+    },
+    {
+      "item": "approve_sidecar",
+      "reviewed": false,
+      "intent": "Core per-sidecar logic: read and parse sidecar, iterate specs, apply item filter, skip already-reviewed, collect approve/reject/skip decisions (auto or interactive), reanchor hashes on approve, write back only if modified and not dry-run.",
+      "source_span": [
+        86,
+        188
+      ],
+      "tree_path": "fn::approve_sidecar",
+      "source_hash": "sha256:dab44e142c4f4ac3b6f8e2d6de67c7c9a10fb40059258011c5a150bd1f460c3b",
+      "source_anchor": "fn approve_sidecar("
+    },
+    {
+      "item": "prompt_user",
+      "reviewed": false,
+      "intent": "Read a line from stdin and return Decision::Yes, Decision::No, or Decision::Skip. Must flush stdout before reading. Loop until a valid input is given.",
+      "source_span": [
+        198,
+        220
+      ],
+      "tree_path": "fn::prompt_user",
+      "source_hash": "sha256:1da2906b05a1b4c868cabe60d3f8cc39b47788763805c0ef92412b06ee2bb4a9",
+      "source_anchor": "fn prompt_user() -> Decision {"
+    }
+  ]
+}

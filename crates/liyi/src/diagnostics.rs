@@ -119,6 +119,7 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
     let mut errors = 0usize;
     let mut trivial = 0usize;
     let mut ignored = 0usize;
+    let mut untracked = 0usize;
 
     for d in diagnostics {
         match &d.kind {
@@ -128,9 +129,10 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
             DiagnosticKind::Unreviewed => unreviewed += 1,
             DiagnosticKind::Trivial => trivial += 1,
             DiagnosticKind::Ignored => ignored += 1,
+            DiagnosticKind::Untracked => untracked += 1,
             DiagnosticKind::ReqNoRelated => {} // informational, not counted
+            DiagnosticKind::ReqChanged { .. } => stale += 1,
             _ if d.severity == Severity::Error => errors += 1,
-            _ if d.severity == Severity::Warning => stale += 1, // ReqChanged, Untracked, etc.
             _ => {}
         }
     }
@@ -150,6 +152,9 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
     }
     if errors > 0 {
         parts.push(format!("{errors} error{}", if errors == 1 { "" } else { "s" }));
+    }
+    if untracked > 0 {
+        parts.push(format!("{untracked} untracked"));
     }
     if trivial > 0 {
         parts.push(format!("{trivial} trivial"));

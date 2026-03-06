@@ -1,0 +1,67 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/init.rs",
+  "specs": [
+    {
+      "item": "AGENTS_MD_BLOCK",
+      "reviewed": false,
+      "intent": "Constant containing the agent instruction block that liyi init appends to AGENTS.md. Must enumerate the six canonical agent rules for sidecar spec management.",
+      "source_span": [
+        5,
+        16
+      ],
+      "tree_path": "const::AGENTS_MD_BLOCK",
+      "source_hash": "sha256:9d323da32a865035f1944a22f7e74301acafe641ab31020aec57df6d32a0cbba",
+      "source_anchor": "const AGENTS_MD_BLOCK: &str = r#\""
+    },
+    {
+      "item": "skeleton_sidecar",
+      "reviewed": false,
+      "intent": "Generate a valid v0.1 skeleton .liyi.jsonc sidecar string with an empty specs array, using the given repo-relative source path.",
+      "source_span": [
+        19,
+        29
+      ],
+      "tree_path": "fn::skeleton_sidecar",
+      "source_hash": "sha256:87868ce0d94d5c7a2882aa88cb35188b6433f7b4018dc0038803f90c38968749",
+      "source_anchor": "fn skeleton_sidecar(source_relative: &str) -> String {"
+    },
+    {
+      "item": "InitError",
+      "reviewed": false,
+      "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
+      "source_span": [
+        33,
+        38
+      ],
+      "tree_path": "enum::InitError",
+      "source_hash": "sha256:96d1108fe3d9dc1dcd640eb6ce16270d2656b106073ea4f06e2aee06f858e51b",
+      "source_anchor": "pub enum InitError {"
+    },
+    {
+      "item": "init_agents_md",
+      "reviewed": false,
+      "intent": "If AGENTS.md does not exist, create it with a heading and the agent block. If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
+      "source_span": [
+        60,
+        79
+      ],
+      "tree_path": "fn::init_agents_md",
+      "source_hash": "sha256:6ce5efe1370ea6c3e1d5ad786c83c2bdc85eddc041577949af01a58bdec86f68",
+      "source_anchor": "pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {"
+    },
+    {
+      "item": "init_sidecar",
+      "reviewed": false,
+      "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
+      "source_span": [
+        85,
+        106
+      ],
+      "tree_path": "fn::init_sidecar",
+      "source_hash": "sha256:c9f8f9709e71b3e8fee7bbfb815edb261402dab3c1c2b8e7928fe798f475308b",
+      "source_anchor": "pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {"
+    }
+  ]
+}
