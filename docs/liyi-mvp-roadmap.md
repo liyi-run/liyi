@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — MVP Implementation Roadmap
 
-2026-03-05 (updated 2026-03-08)
+2026-03-05 (updated 2026-03-06)
 
 ---
 
@@ -19,7 +19,7 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 ---
 
-## Current Status (2026-03-08)
+## Current Status (2026-03-06)
 
 ### Components — all implemented
 
@@ -31,8 +31,8 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 | `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
 | `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
 | `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
-| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, tree-sitter span recovery via `tree_path` |
-| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold, tree-sitter span recovery |
+| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, `--dry-run`, tree-sitter span recovery via `tree_path`, semantic drift protection |
+| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, multi-file/directory support, `--migrate` scaffold, tree-sitter span recovery |
 | `tree_path.rs` | ✅ Done | Tree-sitter structural identity & span recovery (R6). Resolve, compute, auto-populate. Rust grammar. |
 | `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes |
 | `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
@@ -66,6 +66,8 @@ Four `DiagnosticKind` variants are defined but never emitted:
 | `span_past_eof/` | ✅ | |
 | `fullwidth_markers/` | ✅ | |
 | `multilingual_aliases/` | ✅ | |
+| `tree_path_recovery/` | ✅ | Includes `tree_path_recovery_fix` variant |
+| `semantic_drift/` | ✅ | Verifies `--fix` does NOT silently rehash semantic changes |
 | `req_changed/` | ❌ Missing | Need fixture to test `ReqChanged` diagnostic |
 | `req_cycle/` | ❌ Missing | Need fixture + cycle detection logic first |
 | `liyiignore/` | 🟡 | Covered by `discover_respects_liyiignore` unit test, no golden fixture |
@@ -845,11 +847,12 @@ Without this, bootstrapping requires hand-writing JSONC. Critical for first-run 
 
 Implemented. See `tree_path.rs`. The `tree_path` field provides structural identity for specs in supported languages (Rust in 0.1). `liyi reanchor` and `liyi check --fix` use tree-sitter to locate items by AST path, auto-populate `tree_path` from `source_span`, and recover spans across formatting and line-shifting changes.
 
-Remaining improvements (design v8.5):
-- `liyi reanchor` should accept multiple files and directories.
-- `liyi check --fix` should attempt tree-path re-resolution before span validation (handles span-past-EOF).
-- Diagnostics should distinguish "no tree_path" from "tree_path resolution failed."
-- `--fix --dry-run` for previewing corrections.
+Improvements from design v8.5 — all implemented:
+- ✅ `liyi reanchor` accepts multiple files and directories.
+- ✅ `liyi check --fix` attempts tree-path re-resolution before span validation (handles span-past-EOF).
+- ✅ Diagnostics distinguish "no tree_path set" / "tree_path resolution failed" / "no grammar for source language."
+- ✅ `--fix --dry-run` for previewing corrections.
+- ✅ Semantic drift protection: `--fix` does not rehash when tree_path resolves to changed content.
 
 ### Nice-to-have before 0.1
 
@@ -931,7 +934,8 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 | `liyi check --json` | Post-MVP convenience. Machine-readable output with full stale-item context for feeding triage. The triage `--prompt` flag assembles this into a self-contained LLM prompt |
 | Challenge (agent-driven semantic verification) | Post-MVP. Agent verifies code against intent on demand; `liyi` provides context, not reasoning |
 | Adversarial test generation | Level 6; requires reviewed intents + model integration |
-| Tree-sitter-based span anchoring | ~~Post-MVP~~ **Promoted to 0.1** via `tree_path` field. See design doc v8.4, *Structural identity via `tree_path`*. Rust grammar in 0.1; additional languages post-MVP |
+| Tree-sitter-based span anchoring | ~~Post-MVP~~ **Promoted to 0.1** via `tree_path` field. See design doc v8.6, *Structural identity via `tree_path`*. Rust grammar in 0.1; additional languages in 0.1.x (see `docs/liyi-01x-roadmap.md`) |
+| Multi-language tree_path | 0.1.x. `LanguageConfig` abstraction for Python, Go, JS, TS. See design doc v8.6 and `docs/liyi-01x-roadmap.md` |
 | `liyi review` CLI subcommand | Post-MVP convenience; `"reviewed": true` can be set manually |
 | Code-level dependency graph (`depends_on`) | Future direction for tighter staleness |
 | Coverage detection (items without specs) | Requires item definition detection in source |
@@ -944,8 +948,8 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 ## Success Criteria for MVP
 
-1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (29 unit + 12 integration tests pass)
-2. **All golden-file tests pass** — covering every diagnostic in the catalog. 🟡 (10/12 planned fixtures exist; `req_changed/` and `req_cycle/` missing)
+1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (43 unit + 15 golden tests pass)
+2. **All golden-file tests pass** — covering every diagnostic in the catalog. 🟡 (13/15 planned fixtures exist; `req_changed/` and `req_cycle/` missing)
 3. **`liyi reanchor` re-hashes spans** correctly, including `--item`/`--span` targeting. ✅
 4. **The agent instruction works** — an LLM reading `AGENTS.md` produces valid `.liyi.jsonc` files that `liyi check` can lint. ✅
 5. **CI is green** — GitHub Actions runs `liyi check` on every push. ❌ (not set up)
@@ -954,4 +958,4 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 ---
 
-*立意 · MVP Implementation Roadmap · 2026-03-05 (updated 2026-03-07)*
+*立意 · MVP Implementation Roadmap · 2026-03-05 (updated 2026-03-06)*
