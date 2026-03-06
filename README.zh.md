@@ -3,6 +3,8 @@
 
 > ⚠️ **开发中** — 规格格式与 CLI 工具正在积极开发，预期会有破坏性变更。
 
+> 🐕 **自举验证** — `liyi check` 运行在自身代码库上。当 Agent 修改了 Linter 的源码，`liyi check` 立刻报告过时，Agent 自行修复——无需人类额外指令。代码与意图之间的差距自动保持闭合。
+
 > English version: [README.md](README.md)
 
 # 《立意》Lìyì — *意在笔先*

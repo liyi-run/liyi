@@ -14,7 +14,7 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 2. `liyi reanchor` — the span re-hashing tool (subcommand of the same binary) ✅
 3. `liyi.schema.json` — the JSON Schema for `.liyi.jsonc` v0.1 ✅
 4. Agent instruction — the ~12-line AGENTS.md paragraph ✅
-5. Demo repo — the linter's own codebase, dogfooded with `.liyi.jsonc` specs and `@liyi:module` markers 🟡
+5. Demo repo — the linter's own codebase, dogfooded with `.liyi.jsonc` specs and `@liyi:module` markers ✅
 6. README / landing page — the one-paragraph pitch + progressive adoption table ✅
 
 ---
@@ -75,7 +75,7 @@ Four `DiagnosticKind` variants are defined but never emitted:
 |------|--------|-------|
 | `shift_proptest.rs` | ❌ Missing | Property-based tests for shift detection |
 | CI (GitHub Actions) | ❌ Not set up | Workflow to run `cargo test` + `liyi check` |
-| Dogfooding in CI | ❌ Not set up | Run `liyi check` on the project's own sidecars |
+| Dogfooding locally | ✅ Done | Full loop confirmed: agent changes code → `liyi check` detects staleness → agent reanchors specs. No human instruction needed beyond the initial prompt. CI not yet wired. |
 | Summary line output | ❌ Not implemented | "3 stale, 1 unreviewed, 12 current" after diagnostics |
 
 ---

@@ -2,6 +2,8 @@
 
 > ⚠️ **Work in progress** — the spec format and CLI are under active development. Expect breaking changes.
 
+> 🐕 **Self-hosted** — `liyi check` runs on its own codebase. When an agent changes the linter's source, `liyi check` surfaces the staleness, and the agent resolves it — no human instruction needed. The gap between code and intent stays closed automatically.
+
 > 中文版：[README.zh.md](README.zh.md)
 
 # 《立意》Lìyì — *Establish intent before execution*
