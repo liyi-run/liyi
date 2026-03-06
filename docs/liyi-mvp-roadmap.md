@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — MVP Implementation Roadmap
 
-2026-03-05 (updated 2026-03-06)
+2026-03-05 (updated 2026-03-07)
 
 ---
 
@@ -19,24 +19,25 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 ---
 
-## Current Status (2026-03-06)
+## Current Status (2026-03-07)
 
-### Components — all implemented
+### Components — all implemented (tree_path pending)
 
 | Module | Status | Notes |
 |--------|--------|-------|
 | `cli.rs` | ✅ Done | `check` + `reanchor` subcommands, all planned flags |
 | `discovery.rs` | ✅ Done | `.liyiignore` support, ambiguous sidecar detection, scope filtering |
-| `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields` |
+| `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields`. `tree_path` field not yet added to structs |
 | `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
 | `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
 | `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
-| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back |
-| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold |
+| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back. Tree-sitter span recovery not yet wired |
+| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold. Tree-sitter span recovery not yet wired |
+| `tree_path.rs` | ❌ Not implemented | Tree-sitter structural identity & span recovery (R6) |
 | `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes |
 | `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
-| JSON Schema | ✅ Done | `schema/liyi.schema.json` |
-| AGENTS.md | ✅ Done | Dogfooded on the project itself |
+| JSON Schema | ✅ Done | `schema/liyi.schema.json` — `tree_path` field added |
+| AGENTS.md | ✅ Done | Dogfooded on the project itself — `tree_path` schema added |
 | README (en + zh) | ✅ Done | WIP badge, adoption table, CLI reference |
 | Cargo workspace | ✅ Done | `crates/liyi` (library) + `crates/liyi-cli` (binary) |
 
@@ -177,6 +178,7 @@ liyi/
 │   │   │   ├── hashing.rs       ← source_span → SHA-256, anchor extraction
 │   │   │   ├── shift.rs         ← Span-shift detection
 │   │   │   ├── reanchor.rs      ← reanchor subcommand logic
+│   │   │   ├── tree_path.rs     ← Tree-sitter structural identity & span recovery
 │   │   │   ├── diagnostics.rs   ← Diagnostic types, formatting, exit codes
 │   │   │   └── schema.rs        ← Version validation, migration scaffold
 │   │   └── tests/
@@ -349,6 +351,8 @@ struct ItemSpec {
     intent: String,
     source_span: [usize; 2],
     #[serde(skip_serializing_if = "Option::is_none")]
+    tree_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     source_hash: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     source_anchor: Option<String>,
@@ -364,6 +368,8 @@ struct ItemSpec {
 struct RequirementSpec {
     requirement: String,
     source_span: [usize; 2],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tree_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     source_hash: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -598,13 +604,15 @@ enum ExitCode {
 
 ### 8. `reanchor.rs` — Reanchor Subcommand
 
-**Purpose:** Re-hash source spans in a sidecar file. Manual tool for fixing spans after line shifts.
+**Purpose:** Re-hash source spans in a sidecar file. Manual tool for fixing spans after line shifts. When `tree_path` is populated, uses tree-sitter to locate items by structural identity before re-hashing.
 
 **Behavior:**
 
 1. Parse the target sidecar.
 2. If `--item` and `--span` are specified: find the named item, update its span, recompute hash/anchor.
-3. If neither: for every spec in the sidecar, recompute hash/anchor from the source file at the recorded span. This handles "code changed at the same span" (human confirms intent still holds → re-hash).
+3. If neither: for every spec in the sidecar:
+   a. If `tree_path` is non-empty and a tree-sitter grammar is available for the source language: parse the source file, locate the item by structural identity, update `source_span` to the item's current line range, recompute hash/anchor. This handles formatting changes, import additions, and any line-shifting edits.
+   b. Otherwise: recompute hash/anchor from the source file at the recorded span (existing behavior). This handles "code changed at the same span" (human confirms intent still holds → re-hash).
 4. If `--migrate`: update `"version"` to current (no-op in 0.1, but the scaffold ensures the flag exists and the code path handles future versions).
 5. Write modified sidecar back.
 
@@ -755,8 +763,8 @@ The convention defines 7 marker types that the linter recognizes in source files
 
 ## Key Constraints
 
-### 1. No language-specific parsing
-The linter reads line ranges and hashes bytes. It does not parse any programming language. Source markers are found by string matching on individual lines (after normalization). This is the core design constraint that makes the tool work with any language.
+### 1. No language-specific parsing (core path)
+The linter's core check path reads line ranges and hashes bytes. It does not parse any programming language. Source markers are found by string matching on individual lines (after normalization). This is the core design constraint that makes the tool work with any language. Tree-sitter is used **only** for `tree_path` span recovery in `liyi reanchor` and `liyi check --fix` — it is an optional enhancement, not a requirement. When tree-sitter has no grammar for a language (or `tree_path` is empty), the tool falls back to the language-agnostic line-number behavior.
 
 ### 2. No LLM calls, no network access
 The linter is fully offline and deterministic. SHA-256 hashing, file I/O, string matching. No API keys, no configuration for models, no telemetry.
@@ -772,7 +780,7 @@ Configuration is expressed through:
 | Field | Written by | Never written by |
 |---|---|---|
 | `item`, `intent`, `source_span`, `confidence`, `related` (names) | Agent | — |
-| `source_hash`, `source_anchor`, `related` (hashes) | `liyi reanchor` / `liyi check --fix` | Agent, human |
+| `source_hash`, `source_anchor`, `tree_path`, `related` (hashes) | `liyi reanchor` / `liyi check --fix` | Agent (may write initial `tree_path`), human |
 | `reviewed` | Human (CLI / IDE) | Agent (security model) |
 
 ### 5. Exit code contract
@@ -830,17 +838,28 @@ Without this, bootstrapping requires hand-writing JSONC. Critical for first-run 
 2. Build `liyi` binary and run `liyi check --root .` as a CI step (dogfooding).
 3. Cache `target/` for fast builds.
 
+#### R6. `tree_path` — tree-sitter structural span recovery (~3 hours)
+
+Implement the `tree_path` field for structural identity (design doc v8.4). This is the primary mitigation for `source_span` brittleness.
+
+1. **`tree_path.rs` module** (~150 lines): Parse source files with `tree-sitter` + `tree-sitter-rust`. Given a `tree_path` string (e.g., `"fn::add_money"`, `"impl::Money::fn::new"`), walk the CST to find the matching node and return its line range. Given a `source_span`, walk the CST to construct the canonical `tree_path` for the node at that span.
+2. **`sidecar.rs`**: Add `tree_path: Option<String>` to `ItemSpec` and `RequirementSpec`. Serialize with `skip_serializing_if = "Option::is_none"`.
+3. **`reanchor.rs`**: When `tree_path` is non-empty and grammar is available, use tree-sitter to locate the item and update `source_span`. Populate/overwrite `tree_path` with canonical form. Fall back to current behavior when empty.
+4. **`check.rs`**: In pass 2, when hash mismatches and `tree_path` is available, use tree-sitter to verify/recover span before falling back to shift heuristic.
+5. **Golden-file test**: `tree_path_recovery/` fixture — source file reformatted (lines shifted), sidecar with `tree_path` populated, verify correct span recovery.
+6. **Language detection**: Infer language from file extension (`.rs` → Rust). Return `None` for unsupported languages (graceful fallback).
+
 ### Nice-to-have before 0.1
 
-#### R6. Summary line output
+#### R7. Summary line output
 
 Print a one-line summary after diagnostics: e.g., `12 current, 3 stale, 1 unreviewed`.
 
-#### R7. Property-based tests for shift detection
+#### R8. Property-based tests for shift detection
 
 `shift_proptest.rs`: generate random file content, insert/delete lines, verify shift detection correctness and delta propagation.
 
-#### R8. `liyiignore/` golden fixture
+#### R9. `liyiignore/` golden fixture
 
 A dedicated golden fixture for `.liyiignore` behavior (currently only tested by unit test).
 
@@ -854,12 +873,14 @@ A dedicated golden fixture for `.liyiignore` behavior (currently only tested by 
 | `serde` + `serde_json` | 1.x | JSON (de)serialization | Well-known |
 | `sha2` | 0.10.x | SHA-256 hashing | Minimal |
 | `ignore` | 0.4.x | `.gitignore`/`.liyiignore`-aware directory walking | ripgrep's own crate |
+| `tree-sitter` | 0.24.x | Incremental parser for structural span recovery | Well-known |
+| `tree-sitter-rust` | 0.23.x | Rust grammar for tree-sitter | Grammar only |
 | `proptest` | 1.x (dev) | Property-based testing for shift detection | Dev-only |
 
 Optional:
 | `json_comments` | 0.2.x | Strip JSONC comments before serde parsing | Tiny; can be hand-rolled (~20 lines) |
 
-Total direct dependencies: 4 (runtime) + 1-2 (dev). Deliberately minimal.
+Total direct dependencies: 6 (runtime) + 1-2 (dev). Deliberately minimal. Tree-sitter grammars for additional languages are additive — each is a separate crate with no impact on the core.
 
 ---
 
@@ -908,7 +929,7 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 | `liyi check --json` | Post-MVP convenience. Machine-readable output with full stale-item context for feeding triage. The triage `--prompt` flag assembles this into a self-contained LLM prompt |
 | Challenge (agent-driven semantic verification) | Post-MVP. Agent verifies code against intent on demand; `liyi` provides context, not reasoning |
 | Adversarial test generation | Level 6; requires reviewed intents + model integration |
-| Tree-sitter-based span anchoring | Post-MVP upgrade for `source_span` resilience |
+| Tree-sitter-based span anchoring | ~~Post-MVP~~ **Promoted to 0.1** via `tree_path` field. See design doc v8.4, *Structural identity via `tree_path`*. Rust grammar in 0.1; additional languages post-MVP |
 | `liyi review` CLI subcommand | Post-MVP convenience; `"reviewed": true` can be set manually |
 | Code-level dependency graph (`depends_on`) | Future direction for tighter staleness |
 | Coverage detection (items without specs) | Requires item definition detection in source |
@@ -931,4 +952,4 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 ---
 
-*立意 · MVP Implementation Roadmap · 2026-03-05 (updated 2026-03-06)*
+*立意 · MVP Implementation Roadmap · 2026-03-05 (updated 2026-03-07)*
