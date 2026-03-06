@@ -101,6 +101,13 @@ pub fn run_check(
     }
 
     // Enrich requirement records with hashes from any existing sidecars.
+    // Also track which requirements have a Spec::Requirement sidecar entry
+    // and which requirement names are referenced by any Spec::Item via `related`.
+    let mut requirements_with_sidecar: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    let mut requirements_referenced: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+
     for entry in &disc.sidecars {
         let sc_content = match fs::read_to_string(&entry.sidecar_path) {
             Ok(c) => c,
@@ -111,11 +118,22 @@ pub fn run_check(
             Err(_) => continue,
         };
         for spec in &sidecar.specs {
-            if let Spec::Requirement(req) = spec
-                && let Some(rec) = requirements.get_mut(&req.requirement)
-                && rec.hash.is_none()
-            {
-                rec.hash = req.source_hash.clone();
+            match spec {
+                Spec::Requirement(req) => {
+                    requirements_with_sidecar.insert(req.requirement.clone());
+                    if let Some(rec) = requirements.get_mut(&req.requirement)
+                        && rec.hash.is_none()
+                    {
+                        rec.hash = req.source_hash.clone();
+                    }
+                }
+                Spec::Item(item) => {
+                    if let Some(ref related) = item.related {
+                        for name in related.keys() {
+                            requirements_referenced.insert(name.clone());
+                        }
+                    }
+                }
             }
         }
     }
@@ -132,6 +150,43 @@ pub fn run_check(
             fix,
             dry_run,
         );
+    }
+
+    // ------------------------------------------------------------------
+    // Post-pass diagnostics
+    // ------------------------------------------------------------------
+
+    // Untracked: requirements found in source markers but absent from any sidecar.
+    for (name, rec) in &requirements {
+        if !requirements_with_sidecar.contains(name) {
+            diagnostics.push(Diagnostic {
+                file: rec.file.clone(),
+                item_or_req: name.clone(),
+                kind: DiagnosticKind::Untracked,
+                severity: Severity::Warning,
+                message: format!(
+                    "\x40liyi:requirement \"{name}\" at line {} has no sidecar entry",
+                    rec.line,
+                ),
+            });
+        }
+    }
+
+    // ReqNoRelated: requirements with sidecar entries that no item references.
+    for name in &requirements_with_sidecar {
+        if !requirements_referenced.contains(name) {
+            if let Some(rec) = requirements.get(name) {
+                diagnostics.push(Diagnostic {
+                    file: rec.file.clone(),
+                    item_or_req: name.clone(),
+                    kind: DiagnosticKind::ReqNoRelated,
+                    severity: Severity::Info,
+                    message: format!(
+                        "requirement \"{name}\" is not referenced by any item"
+                    ),
+                });
+            }
+        }
     }
 
     // Sort by file path, then by item/requirement name.
