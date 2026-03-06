@@ -1,4 +1,4 @@
-# 立意 (Lìyì) — Design v8.4
+# 立意 (Lìyì) — Design v8.5
 
 Establish intent before execution · 2026-03-06
 
@@ -338,13 +338,15 @@ The path identifies the item by node kind and name, not by position. The tool co
 2. `liyi check --fix`: Same tree-sitter lookup. If the hash mismatches but the `tree_path` resolves to a valid node, update the span (the item moved but is still present). If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
 3. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
 
+**Diagnostic clarity.** When a spec has no `tree_path` and the shift heuristic also fails, the diagnostic indicates why tree-path recovery was skipped — e.g., "no tree_path set, falling back to shift heuristic" — so that users can add the missing field or run `liyi reanchor` to auto-populate it. Diagnostics distinguish "no tree_path available" from "tree_path resolution failed (item may have been renamed or deleted)."
+
 **Empty string fallback.** When `tree_path` is `""` (empty string) or absent, the tool falls back to the current line-number-based behavior — span-shift heuristic, `source_anchor` matching, delta propagation. This accommodates:
 
 - **Macro invocations** where the interesting item is the macro call, not a named AST node.
 - **Generated code** where tree-sitter may not produce useful node kinds.
 - **Complex or contrived cases** where the agent or human determines that a tree path is non-obvious or ambiguous.
 
-The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. The tool populates `tree_path` automatically when it can resolve a clear structural path; it sets `""` (or leaves absent) when it cannot.
+The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi reanchor` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
 
 **Language support.** Tree-sitter support is grammar-dependent. In 0.1, Rust is the primary supported language (via `tree-sitter-rust`). For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
 
@@ -529,12 +531,14 @@ This closes the **spec rot gap**: when requirements change, the requirement hash
 
 `liyi reanchor` is also the tool that populates hashes for new entries. When an agent writes a sidecar with `source_span` but no `source_hash`, running `liyi reanchor` (or `liyi check --fix`) reads the source lines, computes the SHA-256, and fills in both `source_hash` and `source_anchor`. This means a fresh agent-written sidecar is incomplete until the tool runs — by design.
 
-For resolving CI failures without an agent pass, the `liyi reanchor` subcommand re-hashes existing spans:
+For resolving CI failures without an agent pass, the `liyi reanchor` subcommand re-hashes existing spans. It accepts one or more sidecar files or directories (recursive):
 
 ```bash
 $ liyi reanchor src/billing/money.rs.liyi.jsonc
   add_money [42, 58]: hash updated (source changed at same span)
   convert_currency [60, 85]: hash unchanged
+$ liyi reanchor crates/          # reanchor all sidecars under crates/
+$ liyi reanchor a.rs.liyi.jsonc b.rs.liyi.jsonc
 ```
 
 This handles the case where code at those lines changed but lines didn't shift — the human has reviewed the change and is confirming "the intent still holds." The tool computes the new hash; the human never touches it.
@@ -1028,6 +1032,9 @@ This replaces the previously described `--smart` flag. The split is cleaner: `li
 
 - Fills in missing `source_hash` and `source_anchor` for specs that have `source_span` but no hash (fresh agent-written sidecars).
 - Auto-corrects SHIFTED spans (updates `source_span`, recomputes hash and anchor).
+- Attempts tree-path re-resolution **before** validating span boundaries — if `tree_path` is set and the current `source_span` is past EOF or otherwise invalid, the tool resolves via tree-sitter first and replaces the span. This handles file truncation (e.g., `cargo fmt` removing lines) gracefully.
+
+`--fix --dry-run` shows what `--fix` would change without writing any files. Each correction is printed as a diff-like line (`item: [old_span] → [new_span], hash updated`). This lets users preview mechanical corrections before committing them.
 
 `--fix` never modifies `"intent"`, `"reviewed"`, `"related"`, or any human-authored field. It only writes tool-managed fields. This is the same contract as `eslint --fix` or `cargo clippy --fix` — mechanical corrections, no semantic changes.
 
