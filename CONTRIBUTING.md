@@ -6,7 +6,8 @@ Thank you for your interest in 立意 (Lìyì)!
 
 > **⚠️ Work in progress** — This project is in early, active development and
 > maintained **part-time by a solo developer**. Expect very limited bandwidth
-> for reviewing contributions, except for urgent bug fixes and security issues.
+> for reviewing contributions, except for good-quality content, urgent bug
+> fixes and security issues.
 
 ## Before You Start
 
