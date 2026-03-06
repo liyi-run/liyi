@@ -45,36 +45,53 @@ fn main() {
             process::exit(exit_code as i32);
         }
         Commands::Reanchor {
-            file,
+            files,
             item,
             span,
             migrate,
         } => {
-            if migrate && file.is_none() {
-                eprintln!("--migrate requires a sidecar file path");
+            if migrate && files.is_empty() {
+                eprintln!("--migrate requires at least one sidecar file path");
                 process::exit(2);
             }
 
-            let sidecar_path = match &file {
-                Some(p) => p.as_path(),
-                None => {
-                    eprintln!("sidecar file path required");
-                    process::exit(2);
-                }
-            };
+            if files.is_empty() {
+                eprintln!("at least one sidecar file or directory required");
+                process::exit(2);
+            }
 
-            match liyi::reanchor::run_reanchor(sidecar_path, item.as_deref(), span, migrate) {
-                Ok(()) => {
-                    if migrate {
-                        println!("Migration complete.");
-                    } else {
-                        println!("Reanchor complete.");
-                    }
-                }
+            let targets = match liyi::reanchor::resolve_reanchor_targets(&files) {
+                Ok(t) => t,
                 Err(e) => {
                     eprintln!("Error: {e}");
                     process::exit(2);
                 }
+            };
+
+            if targets.is_empty() {
+                eprintln!("no .liyi.jsonc files found in the given paths");
+                process::exit(2);
+            }
+
+            let mut errors = 0;
+            for sidecar_path in &targets {
+                match liyi::reanchor::run_reanchor(sidecar_path, item.as_deref(), span, migrate) {
+                    Ok(()) => {
+                        if migrate {
+                            println!("Migrated: {}", sidecar_path.display());
+                        } else {
+                            println!("Reanchored: {}", sidecar_path.display());
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Error ({}): {e}", sidecar_path.display());
+                        errors += 1;
+                    }
+                }
+            }
+
+            if errors > 0 {
+                process::exit(2);
             }
         }
     }

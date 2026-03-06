@@ -1,9 +1,43 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::hashing::hash_span;
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
+
+const SIDECAR_SUFFIX: &str = ".liyi.jsonc";
+
+/// Expand a list of file/directory paths into concrete `.liyi.jsonc` file
+/// paths. If a path is a directory, walk it recursively (respecting
+/// `.gitignore` and `.liyiignore`) and collect all sidecar files found.
+/// If a path is a file, include it directly.
+pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
+    let mut result: Vec<PathBuf> = Vec::new();
+    for p in paths {
+        if p.is_dir() {
+            let walker = ignore::WalkBuilder::new(p)
+                .add_custom_ignore_filename(".liyiignore")
+                .build();
+            for entry in walker {
+                let entry = entry.map_err(|e| format!("walk error: {e}"))?;
+                if entry.file_type().is_some_and(|ft| ft.is_file()) {
+                    if let Some(name) = entry.path().file_name().and_then(|n| n.to_str()) {
+                        if name.ends_with(SIDECAR_SUFFIX) {
+                            result.push(entry.into_path());
+                        }
+                    }
+                }
+            }
+        } else if p.is_file() {
+            result.push(p.clone());
+        } else {
+            return Err(format!("path does not exist: {}", p.display()));
+        }
+    }
+    result.sort();
+    result.dedup();
+    Ok(result)
+}
 
 /// Re-hash source spans in a sidecar file.
 ///

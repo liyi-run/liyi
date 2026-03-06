@@ -46,9 +46,9 @@ pub enum Commands {
 
     /// Re-hash source spans in sidecar files
     Reanchor {
-        /// Sidecar file to reanchor
+        /// Sidecar files or directories to reanchor (recursive)
         #[arg(required_unless_present = "migrate")]
-        file: Option<PathBuf>,
+        files: Vec<PathBuf>,
 
         /// Target a specific item by name
         #[arg(long, requires = "span")]
