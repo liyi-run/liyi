@@ -260,16 +260,25 @@ fn check_sidecar(
                             // Hash mismatch — try tree_path first, then shift
                             let lang = detect_language(&entry.source_path);
 
-                            // Try tree_path-based recovery
-                            let tree_path_recovered = if !item.tree_path.is_empty() {
-                                if let Some(l) = lang {
-                                    resolve_tree_path(&source_content, &item.tree_path, l)
+                            // Try tree_path-based recovery, tracking why it
+                            // may not be available for diagnostic clarity.
+                            let (tree_path_recovered, tree_path_note) =
+                                if item.tree_path.is_empty() {
+                                    (None, "no tree_path set")
+                                } else if lang.is_none() {
+                                    (None, "no grammar for source language")
                                 } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            };
+                                    let resolved = resolve_tree_path(
+                                        &source_content,
+                                        &item.tree_path,
+                                        lang.unwrap(),
+                                    );
+                                    if resolved.is_some() {
+                                        (resolved, "")
+                                    } else {
+                                        (None, "tree_path resolution failed")
+                                    }
+                                };
 
                             if let Some(new_span) = tree_path_recovered {
                                 // tree_path resolved to a (possibly different) span
@@ -338,12 +347,19 @@ fn check_sidecar(
                                         });
                                     }
                                     ShiftResult::Stale => {
+                                        let detail = if tree_path_note.is_empty() {
+                                            "hash mismatch, could not relocate".to_string()
+                                        } else {
+                                            format!(
+                                                "hash mismatch, could not relocate ({tree_path_note})"
+                                            )
+                                        };
                                         diagnostics.push(Diagnostic {
                                             file: entry.source_path.clone(),
                                             item_or_req: label.clone(),
                                             kind: DiagnosticKind::Stale,
                                             severity: Severity::Warning,
-                                            message: "hash mismatch, could not relocate".into(),
+                                            message: detail,
                                         });
                                     }
                                 }
@@ -353,10 +369,21 @@ fn check_sidecar(
                     Err(SpanError::PastEof { end, total }) => {
                         // Try tree-path recovery before giving up
                         let lang = detect_language(&entry.source_path);
-                        let recovered = if !item.tree_path.is_empty() {
-                            lang.and_then(|l| resolve_tree_path(&source_content, &item.tree_path, l))
+                        let (recovered, tp_note) = if item.tree_path.is_empty() {
+                            (None, "no tree_path set")
+                        } else if lang.is_none() {
+                            (None, "no grammar for source language")
                         } else {
-                            None
+                            let r = resolve_tree_path(
+                                &source_content,
+                                &item.tree_path,
+                                lang.unwrap(),
+                            );
+                            if r.is_some() {
+                                (r, "")
+                            } else {
+                                (None, "tree_path resolution failed")
+                            }
                         };
 
                         if let Some(new_span) = recovered {
@@ -384,6 +411,13 @@ fn check_sidecar(
                                 ),
                             });
                         } else {
+                            let detail = if tp_note.is_empty() {
+                                format!("span end {end} exceeds file length {total}")
+                            } else {
+                                format!(
+                                    "span end {end} exceeds file length {total} ({tp_note})"
+                                )
+                            };
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
                                 item_or_req: label.clone(),
@@ -392,7 +426,7 @@ fn check_sidecar(
                                     file_lines: total,
                                 },
                                 severity: Severity::Error,
-                                message: format!("span end {end} exceeds file length {total}"),
+                                message: detail,
                             });
                         }
                     }
@@ -533,10 +567,21 @@ fn check_sidecar(
                     Err(SpanError::PastEof { end, total }) => {
                         // Try tree-path recovery before giving up
                         let lang = detect_language(&entry.source_path);
-                        let recovered = if !req.tree_path.is_empty() {
-                            lang.and_then(|l| resolve_tree_path(&source_content, &req.tree_path, l))
+                        let (recovered, tp_note) = if req.tree_path.is_empty() {
+                            (None, "no tree_path set")
+                        } else if lang.is_none() {
+                            (None, "no grammar for source language")
                         } else {
-                            None
+                            let r = resolve_tree_path(
+                                &source_content,
+                                &req.tree_path,
+                                lang.unwrap(),
+                            );
+                            if r.is_some() {
+                                (r, "")
+                            } else {
+                                (None, "tree_path resolution failed")
+                            }
                         };
 
                         if let Some(new_span) = recovered {
@@ -564,6 +609,13 @@ fn check_sidecar(
                                 ),
                             });
                         } else {
+                            let detail = if tp_note.is_empty() {
+                                format!("span end {end} exceeds file length {total}")
+                            } else {
+                                format!(
+                                    "span end {end} exceeds file length {total} ({tp_note})"
+                                )
+                            };
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
                                 item_or_req: label,
@@ -572,7 +624,7 @@ fn check_sidecar(
                                     file_lines: total,
                                 },
                                 severity: Severity::Error,
-                                message: format!("span end {end} exceeds file length {total}"),
+                                message: detail,
                             });
                         }
                     }
