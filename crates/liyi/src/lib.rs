@@ -1,5 +1,4 @@
 pub mod check;
-pub mod cli;
 pub mod diagnostics;
 pub mod discovery;
 pub mod hashing;

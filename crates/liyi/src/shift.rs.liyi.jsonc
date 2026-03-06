@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/shift.rs",
+  "source": "crates/liyi/src/shift.rs",
   "specs": [
     {
       "item": "ShiftResult",

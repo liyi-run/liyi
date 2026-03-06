@@ -390,7 +390,6 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 name = "liyi"
 version = "0.1.0"
 dependencies = [
- "clap",
  "ignore",
  "proptest",
  "regex",
@@ -398,6 +397,14 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+]
+
+[[package]]
+name = "liyi-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "liyi",
 ]
 
 [[package]]

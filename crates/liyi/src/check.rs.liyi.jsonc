@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/check.rs",
+  "source": "crates/liyi/src/check.rs",
   "specs": [
     {
       "item": "RequirementRecord",

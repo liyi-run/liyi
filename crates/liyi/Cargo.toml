@@ -1,0 +1,17 @@
+[package]
+name = "liyi"
+version = "0.1.0"
+edition = "2024"
+description = "立意 — make intent explicit, persistent, and reviewable in AI-assisted development"
+license = "Apache-2.0 OR MIT"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = "0.10"
+ignore = "0.4"
+regex = "1"
+
+[dev-dependencies]
+proptest = "1"
+tempfile = "3"

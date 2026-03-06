@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/discovery.rs",
+  "source": "crates/liyi/src/discovery.rs",
   "specs": [
     {
       "item": "SidecarEntry",

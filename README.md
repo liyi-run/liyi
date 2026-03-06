@@ -12,7 +12,7 @@
 
 ```bash
 # Install (from source)
-cargo install --path .
+cargo install --path crates/liyi-cli
 
 # Have an agent generate intent specs (writes .liyi.jsonc files)
 # Then fill in hashes:

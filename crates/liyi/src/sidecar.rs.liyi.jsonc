@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/sidecar.rs",
+  "source": "crates/liyi/src/sidecar.rs",
   "specs": [
     {
       "item": "SidecarFile",

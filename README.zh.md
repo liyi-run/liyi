@@ -13,7 +13,7 @@
 
 ```bash
 # 安装（从源码）
-cargo install --path .
+cargo install --path crates/liyi-cli
 
 # 由智能体生成意图规格（写入 .liyi.jsonc 文件）
 # 然后填充哈希：

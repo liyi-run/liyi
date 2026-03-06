@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/markers.rs",
+  "source": "crates/liyi/src/markers.rs",
   "specs": [
     {
       "requirement": "quine-escape",

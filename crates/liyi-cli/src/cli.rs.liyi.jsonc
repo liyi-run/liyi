@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/cli.rs",
+  "source": "crates/liyi-cli/src/cli.rs",
   "specs": [
     {
       "item": "Cli",

@@ -2,7 +2,10 @@ use std::env;
 use std::process;
 
 use clap::Parser;
-use liyi::cli::{Cli, Commands};
+
+mod cli;
+
+use cli::{Cli, Commands};
 use liyi::diagnostics::CheckFlags;
 
 fn main() {

@@ -1,7 +1,7 @@
 // liyi v0.1 spec file
 {
   "version": "0.1",
-  "source": "src/hashing.rs",
+  "source": "crates/liyi/src/hashing.rs",
   "specs": [
     {
       "item": "SpanError",
