@@ -1,5 +1,7 @@
 <!-- @liyi:module -->
 
+> 中文版：[README.zh.md](README.zh.md)
+
 # 《立意》Lìyì — *Establish intent before execution*
 
 **立意** is a convention and CLI tool that makes intent explicit, persistent, and reviewable in AI-assisted software development. It pairs every code item with a human-readable statement of what the item *should* do, stored in language-agnostic sidecar files (`.liyi.jsonc`). A CI linter (`liyi check`) detects when source changes outpace intent — catching staleness, orphaned specs, and broken requirement edges — so that the gap between "what the AI wrote" and "what the human intended" never grows silently.
