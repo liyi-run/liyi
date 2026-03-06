@@ -57,6 +57,11 @@
           "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "tree_path": {
+          "type": "string",
+          "default": "",
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn::add_money', 'impl::Money::fn::new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
+        },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
           "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
@@ -93,6 +98,11 @@
           "description": "Name of the requirement. Unique per repository."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "tree_path": {
+          "type": "string",
+          "default": "",
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery. When non-empty, the tool uses tree-sitter to locate the requirement by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed."
+        },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
           "description": "Tool-managed. Computed by liyi reanchor or the linter."

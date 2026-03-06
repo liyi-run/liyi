@@ -1,4 +1,4 @@
-# 立意 (Lìyì) — Design v8.3
+# 立意 (Lìyì) — Design v8.4
 
 Establish intent before execution · 2026-03-06
 
@@ -240,19 +240,21 @@ The `source` path is relative to the repository root — the same path you'd pas
       "item": "add_money",
       "intent": "Add two monetary amounts of the same currency. Must be commutative. Must reject mismatched currencies with an error, not a panic. Must not overflow silently.",
       "source_span": [42, 58],
+      "tree_path": "fn::add_money",
       "confidence": 0.94
     },
     {
       "item": "convert_currency",
       "intent": "=doc",
       "source_span": [60, 85],
+      "tree_path": "fn::convert_currency",
       "confidence": 0.87
     }
   ]
 }
 ```
 
-`source_hash` and `source_anchor` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* below). `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
+`source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi reanchor`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
 
 `"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, structured fields in post-0.1). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi reanchor --migrate` will upgrade sidecar files in place.
 
@@ -270,6 +272,7 @@ After human review — either the human adds `@liyi:intent` in the source file (
       "reviewed": true,
       "intent": "Add two monetary amounts of the same currency. Must be commutative. Must reject mismatched currencies with an error, not a panic. Must not overflow silently.",
       "source_span": [42, 58],
+      "tree_path": "fn::add_money",
       "source_hash": "sha256:a1b2c3...",
       "source_anchor": "pub fn add_money(a: Money, b: Money) -> Result<Money, CurrencyError> {"
     }
@@ -307,11 +310,43 @@ The agent records each item's line range (`source_span`) when writing the spec. 
 
 **Blast radius of line-number shifts.** Any edit that changes line numbers — inserting, deleting, or splitting lines — invalidates every spec whose `source_span` falls at or below the edit point. The span now points to different lines, the hash mismatches, and the linter flags them all stale. Add an import at line 3 in a file with 20 specs, and all 20 go stale. This is the real cost of line-number-based spans.
 
-The correct mitigation is language-aware span anchoring — resolving spec positions by AST node identity (e.g., "the function named `add_money` in this file") rather than line numbers. But any anchoring that works across languages amounts to tree-sitter or an equivalent parser, which contradicts the 0.1 constraint of zero language-specific dependencies. Tree-sitter-based span resolution is the natural post-MVP upgrade path.
+The correct mitigation is language-aware span anchoring — resolving spec positions by AST node identity (e.g., "the function named `add_money` in this file") rather than line numbers. This is what `tree_path` provides (see *Structural identity via `tree_path`* below).
 
-The 0.1 tradeoff: batch false positives on any line-shifting edit, corrected on the next agent inference pass. The damage is transient and mechanical — the agent re-reads the file, re-records spans, re-hashes — but noisy in CI until it does. Still fewer false positives than file-level hashing (where a docstring typo marks every spec in the file stale with no way to distinguish which items actually changed).
+Without a `tree_path`, the fallback is: batch false positives on any line-shifting edit, corrected on the next agent inference pass. The damage is transient and mechanical — the agent re-reads the file, re-records spans, re-hashes — but noisy in CI until it does. Still fewer false positives than file-level hashing (where a docstring typo marks every spec in the file stale with no way to distinguish which items actually changed).
 
-**Span-shift detection (included in 0.1).** When the linter detects a hash mismatch, it scans ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi reanchor`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. Tree-sitter-based anchoring remains the post-MVP upgrade for structural resilience.
+**Span-shift detection (included in 0.1).** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi reanchor`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
+
+### Structural identity via `tree_path`
+
+`tree_path` is an optional field on both `itemSpec` and `requirementSpec` that provides **structural identity** — matching a spec to its source item by AST node path rather than line number. When present and non-empty, `liyi reanchor` and `liyi check --fix` use tree-sitter to locate the item by its structural position in the parse tree, then update `source_span` to the item's current line range. This makes span recovery deterministic across formatting changes, import additions, line reflows, and any other edit that moves lines without changing the item's identity.
+
+**Format.** A `tree_path` is a `::` delimited path of tree-sitter node kinds and name tokens that uniquely identifies an item within a file. Examples:
+
+| Source item | `tree_path` |
+|---|---|
+| `pub fn add_money(…)` | `fn::add_money` |
+| `impl Money { fn new(…) }` | `impl::Money::fn::new` |
+| `struct Money { … }` | `struct::Money` |
+| `mod billing { fn charge(…) }` | `mod::billing::fn::charge` |
+| `#[test] fn test_add()` | `fn::test_add` |
+
+The path identifies the item by node kind and name, not by position. The tool constructs the path by walking the tree-sitter CST from root to the node that covers `source_span`, recording each named ancestor. This is deterministic — the same source item always produces the same path regardless of where it appears in the file.
+
+**Behavior during reanchor and check.**
+
+1. `liyi reanchor`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found, update `source_span` to the node's line range, recompute `source_hash` and `source_anchor`. If not found (item was renamed or deleted), report an error — do not silently fall back.
+2. `liyi check --fix`: Same tree-sitter lookup. If the hash mismatches but the `tree_path` resolves to a valid node, update the span (the item moved but is still present). If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
+3. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
+
+**Empty string fallback.** When `tree_path` is `""` (empty string) or absent, the tool falls back to the current line-number-based behavior — span-shift heuristic, `source_anchor` matching, delta propagation. This accommodates:
+
+- **Macro invocations** where the interesting item is the macro call, not a named AST node.
+- **Generated code** where tree-sitter may not produce useful node kinds.
+- **Complex or contrived cases** where the agent or human determines that a tree path is non-obvious or ambiguous.
+
+The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. The tool populates `tree_path` automatically when it can resolve a clear structural path; it sets `""` (or leaves absent) when it cannot.
+
+**Language support.** Tree-sitter support is grammar-dependent. In 0.1, Rust is the primary supported language (via `tree-sitter-rust`). For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
 
 ### Edge cases
 
@@ -1477,13 +1512,15 @@ But validation is necessary for the project to be more than a staleness checker.
 
 **Action:** After shipping the linter, run the adversarial testing experiment on a real codebase (the project's own, or a volunteer's) and publish the results — including null results if the hypothesis doesn't hold. Honest reporting of a null result would still be a contribution to the field.
 
-### 4. `source_span` brittleness in 0.1
+### 4. `source_span` brittleness in 0.1 (mitigated by `tree_path`)
 
-Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi reanchor` handles non-uniform shifts manually. Tree-sitter-based anchoring is the post-MVP fix.
+Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi reanchor` handles non-uniform shifts manually.
 
-The remaining friction: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi reanchor`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless, and early adopters hitting it repeatedly may abandon before reaching level 3's benefits.
+**v8.4 update:** This risk prompted the introduction of `tree_path` in 0.1 (see *Structural identity via `tree_path`*). When `tree_path` is populated, span recovery is deterministic — the tool locates the item by AST identity regardless of how lines shifted. The span-shift heuristic remains as a fallback for items without a `tree_path` (macros, generated code, unsupported languages).
 
-**Mitigation already in design:** span-shift auto-correction, `liyi reanchor`, agent re-inference on next pass. **Mitigation to prioritize post-MVP:** tree-sitter-based span anchoring, which resolves positions by AST node identity rather than line numbers and eliminates this class of false positives entirely.
+The remaining friction for items without `tree_path`: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi reanchor`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless. For supported languages (Rust in 0.1), `tree_path` eliminates this friction entirely.
+
+**Mitigation in 0.1:** `tree_path` structural anchoring (primary), span-shift auto-correction (fallback), `liyi reanchor`, agent re-inference on next pass.
 
 ### 5. Convention absorption and licensing (added 2026-03-06)
 
@@ -1698,6 +1735,11 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
           "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "tree_path": {
+          "type": "string",
+          "default": "",
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn::add_money', 'impl::Money::fn::new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
+        },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
           "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
@@ -1734,6 +1776,11 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
           "description": "Name of the requirement. Unique per repository."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "tree_path": {
+          "type": "string",
+          "default": "",
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery. When non-empty, the tool uses tree-sitter to locate the requirement by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed."
+        },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
           "description": "Tool-managed. Computed by liyi reanchor or the linter."
