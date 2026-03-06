@@ -1,4 +1,4 @@
-# 立意 (Lìyì) — Design v8.5
+# 立意 (Lìyì) — Design v8.6
 
 Establish intent before execution · 2026-03-06
 
@@ -349,6 +349,37 @@ The path identifies the item by node kind and name, not by position. The tool co
 The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi reanchor` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
 
 **Language support.** Tree-sitter support is grammar-dependent. In 0.1, Rust is the primary supported language (via `tree-sitter-rust`). For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
+
+**Multi-language architecture (`LanguageConfig`).** The `tree_path` implementation is designed to be language-extensible via a data-driven configuration per language. Each supported language provides:
+
+| Config field | Purpose | Example (Rust) | Example (Python) |
+|---|---|---|---|
+| `ts_language` | Tree-sitter grammar reference | `tree_sitter_rust::LANGUAGE` | `tree_sitter_python::LANGUAGE` |
+| `extensions` | File extensions that select this language | `["rs"]` | `["py", "pyi"]` |
+| `kind_map` | Shorthand → tree-sitter node kind | `fn → function_item` | `fn → function_definition` |
+| `name_field` | Field name for extracting the item name | `"name"` | `"name"` |
+| `name_overrides` | Per-kind overrides for name extraction | `impl_item → "type"` | — |
+| `body_fields` | Field names for nested item containers | `["body", "declaration_list"]` | `["body"]` |
+
+The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum`, `const`, `static`, `type`, `macro`, `interface`, `method`) is shared across languages — `fn` always means "function-like item" regardless of whether the underlying node kind is `function_item` (Rust), `function_definition` (Python/Go), or `function_declaration` (JS/TS). The `tree_path` format remains the same: `fn::add_money`, `class::Order::fn::process`.
+
+Each language is gated behind a Cargo feature (`lang-python`, `lang-go`, `lang-javascript`, `lang-typescript`) so users only pay binary-size cost for languages they need. A `lang-all` convenience feature includes everything.
+
+**Planned languages (0.1.x):**
+
+| Language | Grammar crate | Notes |
+|---|---|---|
+| Python | `tree-sitter-python` | Flat AST; methods are `function_definition` inside `class_definition` body. No `impl`-block equivalent. |
+| Go | `tree-sitter-go` | `type_declaration` → `type_spec` indirection for structs/interfaces. Methods have receivers and live at top level — tree_path encodes as `method::(*MyType).DoThing` or `fn::DoThing`. |
+| JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
+| TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
+
+**Deferred languages:**
+
+| Language | Reason |
+|---|---|
+| Vue | SFCs are a meta-language with embedded JS/TS inside `<script>` blocks. Requires language-in-language extraction not supported by the current single-grammar-per-file architecture. `tree-sitter-vue` (v0.0.3) is low-maturity. Vue users can still use liyi — `tree_path` is empty, shift heuristic applies. |
+| Markdown | Heading-based tree_path (`heading::Installation::heading::Prerequisites`) is technically feasible and useful for tracking intent on documentation sections. But it's a conceptual extension — the item vocabulary (`fn`, `struct`) doesn't apply, requiring a Markdown-specific vocabulary (`heading`, `code_block`). Deferred as a distinct design note. |
 
 ### Edge cases
 
@@ -1037,6 +1068,10 @@ This replaces the previously described `--smart` flag. The split is cleaner: `li
 `--fix --dry-run` shows what `--fix` would change without writing any files. Each correction is printed as a diff-like line (`item: [old_span] → [new_span], hash updated`). This lets users preview mechanical corrections before committing them.
 
 `--fix` never modifies `"intent"`, `"reviewed"`, `"related"`, or any human-authored field. It only writes tool-managed fields. This is the same contract as `eslint --fix` or `cargo clippy --fix` — mechanical corrections, no semantic changes.
+
+**Semantic drift protection.** When `tree_path` resolves an item to a new span, `--fix` compares the hash at the new location against the recorded `source_hash`. If the content is unchanged (pure positional shift), the span, hash, and anchor are all updated — this is a safe mechanical correction. If the content at the new span also changed (semantic drift), `--fix` updates `source_span` to track the item's current location but does **not** rewrite `source_hash` — the spec remains stale so the next `liyi check` flags it for human review. This prevents `--fix` from silently blessing semantic changes that may invalidate the declared intent.
+
+The shift heuristic (non-`tree_path` fallback) is inherently safe — it only matches when the *exact same content* is found at an offset — so no additional protection is needed there.
 
 `liyi reanchor` remains as the explicit manual tool for targeted re-hashing (e.g., `liyi reanchor --item add_money --span 45,61`). `--fix` is the batch equivalent for CI and post-merge workflows.
 
