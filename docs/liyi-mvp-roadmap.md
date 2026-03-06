@@ -19,38 +19,40 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 ---
 
-## Current Status (2026-03-06)
+## Current Status (2026-03-07)
 
 ### Components — all implemented
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| `cli.rs` | ✅ Done | `check` + `reanchor` subcommands, all planned flags |
+| `cli.rs` | ✅ Done | `check`, `reanchor`, `init`, `approve` subcommands, all planned flags |
 | `discovery.rs` | ✅ Done | `.liyiignore` support, ambiguous sidecar detection, scope filtering |
 | `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields`, `tree_path` field |
 | `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
 | `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
 | `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
-| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, `--dry-run`, tree-sitter span recovery via `tree_path`, semantic drift protection |
+| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, `--dry-run`, tree-sitter span recovery via `tree_path`, semantic drift protection, all 4 post-pass diagnostics wired |
 | `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, multi-file/directory support, `--migrate` scaffold, tree-sitter span recovery |
 | `tree_path.rs` | ✅ Done | Tree-sitter structural identity & span recovery (R6). Resolve, compute, auto-populate. Rust grammar. |
-| `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes |
+| `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes, summary line output |
 | `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
+| `init.rs` | ✅ Done | `liyi init` — scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
+| `approve.rs` | ✅ Done | `liyi approve` — batch and interactive review, `--dry-run`, `--item` filter |
 | JSON Schema | ✅ Done | `schema/liyi.schema.json` — `tree_path` field added |
 | AGENTS.md | ✅ Done | Dogfooded on the project itself — `tree_path` schema added |
 | README (en + zh) | ✅ Done | WIP badge, adoption table, CLI reference |
 | Cargo workspace | ✅ Done | `crates/liyi` (library) + `crates/liyi-cli` (binary) |
 
-### Diagnostics — wiring gaps
+### Diagnostics — all wired
 
-Four `DiagnosticKind` variants are defined but never emitted:
+All `DiagnosticKind` variants are defined and emitted:
 
-| Variant | Status | What's needed |
-|---------|--------|---------------|
-| `RequirementCycle` | ❌ Never emitted | Add cycle detection in pass 2 when resolving `related` edges transitively |
-| `Untracked` | ❌ Never emitted | After pass 1, flag requirements found in source markers but absent from any sidecar |
-| `ReqNoRelated` | ❌ Never emitted | After pass 2, flag requirements that no item references (informational) |
-| `MalformedHash` | ❌ Never emitted | Validate `source_hash` format (`^sha256:[0-9a-f]+$`) during sidecar parsing or check |
+| Variant | Status | Notes |
+|---------|--------|-------|
+| `RequirementCycle` | ✅ Done | DFS cycle detection on the requirement dependency graph in post-pass |
+| `Untracked` | ✅ Done | Post-pass: flags requirements found in source markers but absent from any sidecar |
+| `ReqNoRelated` | ✅ Done | Post-pass: flags requirements that no item references (informational) |
+| `MalformedHash` | ✅ Done | Validates `source_hash` format (`^sha256:[0-9a-f]+$`) during check |
 
 ### Golden-file test coverage
 
@@ -68,18 +70,20 @@ Four `DiagnosticKind` variants are defined but never emitted:
 | `multilingual_aliases/` | ✅ | |
 | `tree_path_recovery/` | ✅ | Includes `tree_path_recovery_fix` variant |
 | `semantic_drift/` | ✅ | Verifies `--fix` does NOT silently rehash semantic changes |
-| `req_changed/` | ❌ Missing | Need fixture to test `ReqChanged` diagnostic |
-| `req_cycle/` | ❌ Missing | Need fixture + cycle detection logic first |
-| `liyiignore/` | 🟡 | Covered by `discover_respects_liyiignore` unit test, no golden fixture |
+| `req_changed/` | ✅ | Tests `ReqChanged` diagnostic with stale related hash |
+| `req_cycle/` | ✅ | Tests `RequirementCycle` diagnostic with mutual dependency |
+| `liyiignore/` | ✅ | Tests `.liyiignore` exclusion at golden fixture level |
 
-### Other gaps
+### Other gaps — all resolved
 
 | Item | Status | Notes |
 |------|--------|-------|
-| `shift_proptest.rs` | ❌ Missing | Property-based tests for shift detection |
-| CI (GitHub Actions) | ❌ Not set up | Workflow to run `cargo test` + `liyi check` |
-| Dogfooding locally | ✅ Done | Full loop confirmed: agent changes code → `liyi check` detects staleness → agent reanchors specs. No human instruction needed beyond the initial prompt. CI not yet wired. |
-| Summary line output | ❌ Not implemented | "3 stale, 1 unreviewed, 12 current" after diagnostics |
+| `shift_proptest.rs` | ✅ Done | 4 property-based tests: insert/delete shifts, content modification, hint agreement |
+| CI (GitHub Actions) | ✅ Done | Workflow: `cargo test`, `cargo clippy`, `cargo fmt --check`, `liyi check --root .` (dogfood) |
+| Dogfooding locally | ✅ Done | Full loop confirmed: agent changes code → `liyi check` detects staleness → agent reanchors specs. CI wired. |
+| Summary line output | ✅ Done | Prints "N current, M stale, K unreviewed, ..." after diagnostics |
+| `liyi init` subcommand | ✅ Done | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
+| `liyi approve` subcommand | ✅ Done | Batch (`--yes`) and interactive modes, `--dry-run`, `--item` filter |
 
 ---
 
@@ -182,9 +186,12 @@ liyi/
 │   │   │   ├── reanchor.rs      ← reanchor subcommand logic
 │   │   │   ├── tree_path.rs     ← Tree-sitter structural identity & span recovery
 │   │   │   ├── diagnostics.rs   ← Diagnostic types, formatting, exit codes
-│   │   │   └── schema.rs        ← Version validation, migration scaffold
+│   │   │   ├── schema.rs        ← Version validation, migration scaffold
+│   │   │   ├── init.rs          ← liyi init subcommand logic
+│   │   │   └── approve.rs       ← liyi approve subcommand logic
 │   │   └── tests/
 │   │       ├── golden.rs        ← Golden-file test runner
+│   │       ├── shift_proptest.rs ← Property-based shift tests
 │   │       └── fixtures/        ← Golden-file test repos
 │   └── liyi-cli/            ← binary crate
 │       ├── Cargo.toml
@@ -198,10 +205,6 @@ liyi/
 ├── AGENTS.md                ← Agent instruction (dogfooded)
 ├── README.md                ← Project README with @liyi:module
 └── crates/liyi/src/*.rs.liyi.jsonc  ← Dogfood: linter's own specs
-```
-│   ├── fixtures/            ← Golden-file test repos (see Current Status for coverage)
-│   ├── golden.rs            ← Golden-file test runner
-│   └── shift_proptest.rs    ← Property-based tests for span-shift (planned)
 ```
 
 ---
@@ -805,68 +808,52 @@ All `source_span` values are 1-indexed closed intervals matching editor line num
 
 ## Remaining Work for 0.1 Release
 
-### Must-have
+All must-have and nice-to-have items are now complete.
 
-#### R1. `liyi approve` — interactive review command (~2 hours)
+### Must-have — all done
 
-The primary mechanism for transitioning intent from "agent-inferred" to "human-approved." Without this, "reviewable" is aspirational — users must hand-edit JSON to set `"reviewed": true`.
+#### R1. `liyi approve` — interactive review command ✅
 
-- Interactive by default when stdin is a TTY: show intent + source span, prompt `[y]es / [n]o / [e]dit / [s]kip`.
-- Batch mode via `--yes` or when non-TTY.
-- `--dry-run`, `--item <name>` flags.
-- Reanchors on approval (fills `source_hash`, `source_anchor`).
-- See design doc (`docs/liyi-design.md`) for full specification.
+Implemented in `crates/liyi/src/approve.rs`. Interactive by default when stdin is a TTY (show intent + source span, prompt y/n/s). Batch mode via `--yes` or when non-TTY. `--dry-run`, `--item <name>` flags. Reanchors on approval (fills `source_hash`, `source_anchor`).
 
-#### R2. `liyi init` — scaffold command (~1 hour)
+#### R2. `liyi init` — scaffold command ✅
 
-Without this, bootstrapping requires hand-writing JSONC. Critical for first-run experience.
+Implemented in `crates/liyi/src/init.rs`. `liyi init` appends agent instruction to `AGENTS.md`. `liyi init <source-file>` creates skeleton `.liyi.jsonc` sidecar. `--force` flag for overwriting.
 
-- `liyi init` — append agent instruction to `AGENTS.md`.
-- `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
-- `--force` flag for overwriting existing files.
+#### R3. Wire up remaining diagnostics ✅
 
-#### R3. Wire up remaining diagnostics (~1 hour)
+All four diagnostic kinds now emitted:
+1. **`RequirementCycle`**: DFS cycle detection on the requirement dependency graph in post-pass.
+2. **`Untracked`**: Post-pass flags requirements found in source markers but absent from any sidecar.
+3. **`ReqNoRelated`**: Post-pass flags requirements that no item references via `related` (informational).
+4. **`MalformedHash`**: Validates `source_hash` format (`^sha256:[0-9a-f]+$`) during check.
 
-1. **`RequirementCycle`**: In pass 2, when resolving `related` edges, track visited requirement names. If a cycle is detected, emit `RequirementCycle` diagnostic with the cycle path and stop traversing.
-2. **`Untracked`**: After pass 1, for each requirement found in source markers that has no corresponding `Spec::Requirement` in any sidecar, emit `Untracked` diagnostic.
-3. **`ReqNoRelated`**: After pass 2, for each requirement in the pass-1 map that no `Spec::Item` references via `related`, emit `ReqNoRelated` diagnostic (informational).
-4. **`MalformedHash`**: During sidecar parsing or check, validate that `source_hash` values match `^sha256:[0-9a-f]+$`. Emit `MalformedHash` on mismatch.
+#### R4. Missing golden-file fixtures ✅
 
-#### R4. Missing golden-file fixtures (~30 min)
+1. **`req_changed/`**: Tests `ReqChanged` diagnostic with stale related hash.
+2. **`req_cycle/`**: Tests `RequirementCycle` diagnostic with mutual dependency.
 
-1. **`req_changed/`**: Source file with a `@liyi:requirement`, sidecar with a `Spec::Item` referencing it via `related` with a stale hash. Expect `ReqChanged` diagnostic, exit 1.
-2. **`req_cycle/`**: Two requirements referencing each other transitively. Expect `RequirementCycle` diagnostic. (Depends on R3.)
+#### R5. CI setup ✅
 
-#### R5. CI setup (~30 min)
-
-1. GitHub Actions workflow: `cargo test` on push/PR.
-2. Build `liyi` binary and run `liyi check --root .` as a CI step (dogfooding).
-3. Cache `target/` for fast builds.
+GitHub Actions workflow in `.github/workflows/ci.yml`: `cargo test`, `cargo clippy`, `cargo fmt --check`, and `liyi check --root .` (dogfooding). Uses `Swatinem/rust-cache` for fast builds.
 
 #### R6. `tree_path` — tree-sitter structural span recovery ✅
 
-Implemented. See `tree_path.rs`. The `tree_path` field provides structural identity for specs in supported languages (Rust in 0.1). `liyi reanchor` and `liyi check --fix` use tree-sitter to locate items by AST path, auto-populate `tree_path` from `source_span`, and recover spans across formatting and line-shifting changes.
+Implemented. See `tree_path.rs`. The `tree_path` field provides structural identity for specs in supported languages (Rust in 0.1).
 
-Improvements from design v8.5 — all implemented:
-- ✅ `liyi reanchor` accepts multiple files and directories.
-- ✅ `liyi check --fix` attempts tree-path re-resolution before span validation (handles span-past-EOF).
-- ✅ Diagnostics distinguish "no tree_path set" / "tree_path resolution failed" / "no grammar for source language."
-- ✅ `--fix --dry-run` for previewing corrections.
-- ✅ Semantic drift protection: `--fix` does not rehash when tree_path resolves to changed content.
+### Nice-to-have — all done
 
-### Nice-to-have before 0.1
+#### R7. Summary line output ✅
 
-#### R7. Summary line output
+Prints a one-line summary after diagnostics: e.g., `66 current, 64 unreviewed, 1 trivial`.
 
-Print a one-line summary after diagnostics: e.g., `12 current, 3 stale, 1 unreviewed`.
+#### R8. Property-based tests for shift detection ✅
 
-#### R8. Property-based tests for shift detection
+`shift_proptest.rs`: 4 property-based tests — insert/delete line shifts, content modification, hint agreement with full scan.
 
-`shift_proptest.rs`: generate random file content, insert/delete lines, verify shift detection correctness and delta propagation.
+#### R9. `liyiignore/` golden fixture ✅
 
-#### R9. `liyiignore/` golden fixture
-
-A dedicated golden fixture for `.liyiignore` behavior (currently only tested by unit test).
+Dedicated golden fixture for `.liyiignore` behavior with excluded directory.
 
 ---
 
@@ -948,11 +935,11 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 ## Success Criteria for MVP
 
-1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (43 unit + 15 golden tests pass)
-2. **All golden-file tests pass** — covering every diagnostic in the catalog. 🟡 (13/15 planned fixtures exist; `req_changed/` and `req_cycle/` missing)
+1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (43 unit + 22 golden/integration tests pass)
+2. **All golden-file tests pass** — covering every diagnostic in the catalog. ✅ (all 15+ planned fixtures exist)
 3. **`liyi reanchor` re-hashes spans** correctly, including `--item`/`--span` targeting. ✅
 4. **The agent instruction works** — an LLM reading `AGENTS.md` produces valid `.liyi.jsonc` files that `liyi check` can lint. ✅
-5. **CI is green** — GitHub Actions runs `liyi check` on every push. ❌ (not set up)
+5. **CI is green** — GitHub Actions runs `liyi check` on every push. ✅
 6. **The binary is small** — single static binary, <5 MB, zero runtime dependencies. ✅
 7. **The README conveys the pitch** — a developer reading it for 60 seconds understands what 立意 does and how to try it. ✅
 
