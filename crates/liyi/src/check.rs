@@ -208,10 +208,7 @@ fn check_sidecar(
             item_or_req: entry.repo_relative_source.clone(),
             kind: DiagnosticKind::OrphanedSource,
             severity: Severity::Error,
-            message: format!(
-                "source file {} not found",
-                entry.source_path.display()
-            ),
+            message: format!("source file {} not found", entry.source_path.display()),
         });
         return;
     }
@@ -265,19 +262,13 @@ fn check_sidecar(
                         } else {
                             // Hash mismatch — try shift detection
                             let expected = item.source_hash.as_ref().unwrap();
-                            match detect_shift(
-                                &source_content,
-                                item.source_span,
-                                expected,
-                            ) {
+                            match detect_shift(&source_content, item.source_span, expected) {
                                 ShiftResult::Shifted { delta, new_span } => {
                                     let old_span = item.source_span;
                                     if fix {
                                         item.source_span = new_span;
                                         // Recompute hash/anchor at new span
-                                        if let Ok((h, a)) =
-                                            hash_span(&source_content, new_span)
-                                        {
+                                        if let Ok((h, a)) = hash_span(&source_content, new_span) {
                                             item.source_hash = Some(h);
                                             item.source_anchor = Some(a);
                                         }
@@ -303,8 +294,7 @@ fn check_sidecar(
                                         item_or_req: label.clone(),
                                         kind: DiagnosticKind::Stale,
                                         severity: Severity::Warning,
-                                        message: "hash mismatch, could not relocate"
-                                            .into(),
+                                        message: "hash mismatch, could not relocate".into(),
                                     });
                                 }
                             }
@@ -319,9 +309,7 @@ fn check_sidecar(
                                 file_lines: total,
                             },
                             severity: Severity::Error,
-                            message: format!(
-                                "span end {end} exceeds file length {total}"
-                            ),
+                            message: format!("span end {end} exceeds file length {total}"),
                         });
                     }
                     Err(SpanError::Inverted { .. } | SpanError::Empty) => {
@@ -365,8 +353,7 @@ fn check_sidecar(
                 for m in &source_markers {
                     match m {
                         SourceMarker::Trivial { line }
-                            if *line >= span_start.saturating_sub(1)
-                                && *line <= span_end =>
+                            if *line >= span_start.saturating_sub(1) && *line <= span_end =>
                         {
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
@@ -377,8 +364,7 @@ fn check_sidecar(
                             });
                         }
                         SourceMarker::Ignore { line, .. }
-                            if *line >= span_start.saturating_sub(1)
-                                && *line <= span_end =>
+                            if *line >= span_start.saturating_sub(1) && *line <= span_end =>
                         {
                             diagnostics.push(Diagnostic {
                                 file: entry.source_path.clone(),
@@ -475,9 +461,7 @@ fn check_sidecar(
                                 file_lines: total,
                             },
                             severity: Severity::Error,
-                            message: format!(
-                                "span end {end} exceeds file length {total}"
-                            ),
+                            message: format!("span end {end} exceeds file length {total}"),
                         });
                     }
                     Err(SpanError::Inverted { .. } | SpanError::Empty) => {

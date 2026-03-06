@@ -87,10 +87,7 @@ fn basic_pass() {
         })
         .collect();
 
-    assert!(
-        failures.is_empty(),
-        "unexpected diagnostics: {failures:#?}"
-    );
+    assert!(failures.is_empty(), "unexpected diagnostics: {failures:#?}");
     assert_eq!(exit_code, LiyiExitCode::Clean);
 }
 
@@ -103,7 +100,10 @@ fn stale_hash() {
     let has_stale = diagnostics
         .iter()
         .any(|d| matches!(d.kind, DiagnosticKind::Stale));
-    assert!(has_stale, "expected Stale diagnostic, got: {diagnostics:#?}");
+    assert!(
+        has_stale,
+        "expected Stale diagnostic, got: {diagnostics:#?}"
+    );
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
 

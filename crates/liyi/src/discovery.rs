@@ -90,7 +90,10 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
     let mut dir_groups: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
     for sc in &sidecar_paths {
         if let Some(parent) = sc.parent() {
-            dir_groups.entry(parent.to_path_buf()).or_default().push(sc.clone());
+            dir_groups
+                .entry(parent.to_path_buf())
+                .or_default()
+                .push(sc.clone());
         }
     }
 
@@ -129,8 +132,7 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
 
             // Scope filtering: if scope_paths is non-empty, only keep
             // sidecars whose source_path falls under one of the scopes.
-            if !scope_paths.is_empty()
-                && !scope_paths.iter().any(|sp| source_path.starts_with(sp))
+            if !scope_paths.is_empty() && !scope_paths.iter().any(|sp| source_path.starts_with(sp))
             {
                 return None;
             }
@@ -153,10 +155,7 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
 /// Strip the `.liyi.jsonc` suffix from a sidecar filename to recover the
 /// source filename component.
 fn source_name_from_sidecar(sidecar: &Path) -> String {
-    let name = sidecar
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let name = sidecar.file_name().and_then(|n| n.to_str()).unwrap_or("");
     name.strip_suffix(SIDECAR_SUFFIX)
         .unwrap_or(name)
         .to_string()
@@ -208,7 +207,12 @@ mod tests {
         // all_files includes every non-ignored file except sidecars
         assert!(result.all_files.len() >= 2);
         // Sidecar files must not appear in all_files
-        assert!(!result.all_files.iter().any(|p| p.to_string_lossy().ends_with(".liyi.jsonc")));
+        assert!(
+            !result
+                .all_files
+                .iter()
+                .any(|p| p.to_string_lossy().ends_with(".liyi.jsonc"))
+        );
         assert!(result.warnings.is_empty());
     }
 

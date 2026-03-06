@@ -3,13 +3,32 @@
 /// A discovered marker in a source file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SourceMarker {
-    Module { line: usize },
-    Requirement { name: String, line: usize },
-    Related { name: String, line: usize },
-    Intent { prose: Option<String>, is_doc: bool, line: usize },
-    Trivial { line: usize },
-    Ignore { reason: Option<String>, line: usize },
-    Nontrivial { line: usize },
+    Module {
+        line: usize,
+    },
+    Requirement {
+        name: String,
+        line: usize,
+    },
+    Related {
+        name: String,
+        line: usize,
+    },
+    Intent {
+        prose: Option<String>,
+        is_doc: bool,
+        line: usize,
+    },
+    Trivial {
+        line: usize,
+    },
+    Ignore {
+        reason: Option<String>,
+        line: usize,
+    },
+    Nontrivial {
+        line: usize,
+    },
 }
 
 /// Replace full-width punctuation with half-width equivalents.
@@ -123,7 +142,11 @@ fn extract_name(rest: &str) -> Option<String> {
         let inner = &trimmed[1..];
         let end = inner.find(')')?;
         let name = inner[..end].trim();
-        if name.is_empty() { None } else { Some(name.to_string()) }
+        if name.is_empty() {
+            None
+        } else {
+            Some(name.to_string())
+        }
     } else {
         let token = trimmed.split_whitespace().next()?;
         Some(token.to_string())
@@ -153,18 +176,31 @@ pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
             CANON_IGNORE => {
                 let reason = {
                     let t = rest.trim();
-                    if t.is_empty() { None } else { Some(t.to_string()) }
+                    if t.is_empty() {
+                        None
+                    } else {
+                        Some(t.to_string())
+                    }
                 };
-                markers.push(SourceMarker::Ignore { reason, line: line_num });
+                markers.push(SourceMarker::Ignore {
+                    reason,
+                    line: line_num,
+                });
             }
             CANON_REQUIREMENT => {
                 if let Some(name) = extract_name(rest) {
-                    markers.push(SourceMarker::Requirement { name, line: line_num });
+                    markers.push(SourceMarker::Requirement {
+                        name,
+                        line: line_num,
+                    });
                 }
             }
             CANON_RELATED => {
                 if let Some(name) = extract_name(rest) {
-                    markers.push(SourceMarker::Related { name, line: line_num });
+                    markers.push(SourceMarker::Related {
+                        name,
+                        line: line_num,
+                    });
                 }
             }
             CANON_INTENT => {
@@ -176,7 +212,11 @@ pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
                         line: line_num,
                     });
                 } else {
-                    let prose = if trimmed.is_empty() { None } else { Some(trimmed.to_string()) };
+                    let prose = if trimmed.is_empty() {
+                        None
+                    } else {
+                        Some(trimmed.to_string())
+                    };
                     markers.push(SourceMarker::Intent {
                         prose,
                         is_doc: false,
@@ -198,7 +238,10 @@ mod tests {
     #[test]
     fn normalize_fullwidth() {
         assert_eq!(normalize_line("\u{FF20}立意\u{FF1A}忽略"), "\x40立意:忽略");
-        assert_eq!(normalize_line("\u{FF20}liyi\u{FF1A}intent\u{FF08}x\u{FF09}"), "\x40liyi:intent(x)");
+        assert_eq!(
+            normalize_line("\u{FF20}liyi\u{FF1A}intent\u{FF08}x\u{FF09}"),
+            "\x40liyi:intent(x)"
+        );
     }
 
     #[test]
@@ -219,19 +262,25 @@ mod tests {
     #[test]
     fn scan_ignore_with_reason() {
         let m = scan_markers("// \x40liyi:ignore generated code\n");
-        assert!(matches!(&m[0], SourceMarker::Ignore { reason: Some(r), line: 1 } if r == "generated code"));
+        assert!(
+            matches!(&m[0], SourceMarker::Ignore { reason: Some(r), line: 1 } if r == "generated code")
+        );
     }
 
     #[test]
     fn scan_requirement_paren() {
         let m = scan_markers("// \x40liyi:requirement(currency-match) ...\n");
-        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match"));
+        assert!(
+            matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match")
+        );
     }
 
     #[test]
     fn scan_requirement_space() {
         let m = scan_markers("// \x40liyi:requirement currency-match\n");
-        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match"));
+        assert!(
+            matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match")
+        );
     }
 
     #[test]
@@ -243,19 +292,35 @@ mod tests {
     #[test]
     fn scan_intent_doc() {
         let m = scan_markers("// \x40liyi:intent =doc\n");
-        assert!(matches!(&m[0], SourceMarker::Intent { prose: None, is_doc: true, line: 1 }));
+        assert!(matches!(
+            &m[0],
+            SourceMarker::Intent {
+                prose: None,
+                is_doc: true,
+                line: 1
+            }
+        ));
     }
 
     #[test]
     fn scan_intent_doc_chinese() {
         let m = scan_markers("// \x40liyi:intent =文档\n");
-        assert!(matches!(&m[0], SourceMarker::Intent { prose: None, is_doc: true, line: 1 }));
+        assert!(matches!(
+            &m[0],
+            SourceMarker::Intent {
+                prose: None,
+                is_doc: true,
+                line: 1
+            }
+        ));
     }
 
     #[test]
     fn scan_intent_prose() {
         let m = scan_markers("// \x40liyi:intent Must reject negative amounts\n");
-        assert!(matches!(&m[0], SourceMarker::Intent { prose: Some(p), is_doc: false, line: 1 } if p == "Must reject negative amounts"));
+        assert!(
+            matches!(&m[0], SourceMarker::Intent { prose: Some(p), is_doc: false, line: 1 } if p == "Must reject negative amounts")
+        );
     }
 
     #[test]
@@ -270,6 +335,12 @@ mod tests {
     fn scan_fullwidth_normalization() {
         let m = scan_markers("// \u{FF20}立意\u{FF1A}忽略\n");
         assert_eq!(m.len(), 1);
-        assert!(matches!(&m[0], SourceMarker::Ignore { reason: None, line: 1 }));
+        assert!(matches!(
+            &m[0],
+            SourceMarker::Ignore {
+                reason: None,
+                line: 1
+            }
+        ));
     }
 }

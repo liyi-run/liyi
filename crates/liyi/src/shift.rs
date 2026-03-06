@@ -17,11 +17,7 @@ const WINDOW: i64 = 100;
 /// Searches offsets −100..+100 (skipping 0) in small-delta-first order
 /// (1, −1, 2, −2, …) and returns the first candidate whose hash equals
 /// `expected_hash`.
-pub fn detect_shift(
-    source_content: &str,
-    span: [usize; 2],
-    expected_hash: &str,
-) -> ShiftResult {
+pub fn detect_shift(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {
     try_offset(source_content, span, expected_hash, 0)
         .unwrap_or_else(|| scan(source_content, span, expected_hash))
 }

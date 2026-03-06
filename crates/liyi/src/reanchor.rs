@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::hashing::hash_span;
 use crate::schema::migrate;
-use crate::sidecar::{parse_sidecar, write_sidecar, Spec};
+use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
 /// Re-hash source spans in a sidecar file.
 ///
@@ -15,15 +15,14 @@ pub fn run_reanchor(
     target_span: Option<[usize; 2]>,
     do_migrate: bool,
 ) -> Result<(), String> {
-    let raw = std::fs::read_to_string(sidecar_path)
-        .map_err(|e| format!("cannot read sidecar: {e}"))?;
+    let raw =
+        std::fs::read_to_string(sidecar_path).map_err(|e| format!("cannot read sidecar: {e}"))?;
 
     if do_migrate {
         let mut sidecar = parse_sidecar(&raw)?;
         migrate(&mut sidecar)?;
         let out = write_sidecar(&sidecar);
-        std::fs::write(sidecar_path, out)
-            .map_err(|e| format!("cannot write sidecar: {e}"))?;
+        std::fs::write(sidecar_path, out).map_err(|e| format!("cannot write sidecar: {e}"))?;
         return Ok(());
     }
 
@@ -66,7 +65,6 @@ pub fn run_reanchor(
     }
 
     let out = write_sidecar(&sidecar);
-    std::fs::write(sidecar_path, out)
-        .map_err(|e| format!("cannot write sidecar: {e}"))?;
+    std::fs::write(sidecar_path, out).map_err(|e| format!("cannot write sidecar: {e}"))?;
     Ok(())
 }

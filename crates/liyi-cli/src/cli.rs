@@ -2,7 +2,11 @@ use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "liyi", version = "0.1.0", about = "立意 — establish intent before execution")]
+#[command(
+    name = "liyi",
+    version = "0.1.0",
+    about = "立意 — establish intent before execution"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

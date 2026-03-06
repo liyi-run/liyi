@@ -22,7 +22,9 @@ fn main() {
             verbose,
         } => {
             let repo_root = root
-                .or_else(|| liyi::discovery::find_repo_root(&env::current_dir().unwrap_or_default()))
+                .or_else(|| {
+                    liyi::discovery::find_repo_root(&env::current_dir().unwrap_or_default())
+                })
                 .unwrap_or_else(|| env::current_dir().unwrap_or_default());
 
             let flags = CheckFlags {
@@ -31,8 +33,7 @@ fn main() {
                 fail_on_req_changed,
             };
 
-            let (diagnostics, exit_code) =
-                liyi::check::run_check(&repo_root, &paths, fix, &flags);
+            let (diagnostics, exit_code) = liyi::check::run_check(&repo_root, &paths, fix, &flags);
 
             for d in &diagnostics {
                 if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {
@@ -62,12 +63,7 @@ fn main() {
                 }
             };
 
-            match liyi::reanchor::run_reanchor(
-                sidecar_path,
-                item.as_deref(),
-                span,
-                migrate,
-            ) {
+            match liyi::reanchor::run_reanchor(sidecar_path, item.as_deref(), span, migrate) {
                 Ok(()) => {
                     if migrate {
                         println!("Migration complete.");

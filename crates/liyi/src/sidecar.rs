@@ -23,23 +23,23 @@ pub enum Spec {
 #[serde(deny_unknown_fields)]
 pub struct ItemSpec {
     pub item: String,
-    
+
     #[serde(default)]
     pub reviewed: bool,
-    
+
     pub intent: String,
-    
+
     pub source_span: [usize; 2],
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_anchor: Option<String>,
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub confidence: Option<f64>,
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub related: Option<HashMap<String, Option<String>>>,
 }
@@ -49,12 +49,12 @@ pub struct ItemSpec {
 #[serde(deny_unknown_fields)]
 pub struct RequirementSpec {
     pub requirement: String,
-    
+
     pub source_span: [usize; 2],
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_anchor: Option<String>,
 }
@@ -122,8 +122,8 @@ pub fn parse_sidecar(content: &str) -> Result<SidecarFile, String> {
 
 /// Serialize a `SidecarFile` to pretty-printed JSON with a JSONC header comment.
 pub fn write_sidecar(sidecar: &SidecarFile) -> String {
-    let json = serde_json::to_string_pretty(sidecar)
-        .expect("SidecarFile serialization should not fail");
+    let json =
+        serde_json::to_string_pretty(sidecar).expect("SidecarFile serialization should not fail");
     format!("// liyi v0.1 spec file\n{json}\n")
 }
 
