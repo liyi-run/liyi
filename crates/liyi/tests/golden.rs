@@ -400,3 +400,23 @@ fn semantic_drift_fix_preserves_stale() {
     );
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
+
+#[test]
+fn req_changed() {
+    let root = fixture_path("req_changed");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+    };
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let has_req_changed = diagnostics
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::ReqChanged { .. }));
+    assert!(
+        has_req_changed,
+        "expected ReqChanged diagnostic, got: {diagnostics:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
+}

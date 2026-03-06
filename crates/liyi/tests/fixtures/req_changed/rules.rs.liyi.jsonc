@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "rules.rs",
+  "specs": [
+    {
+      "requirement": "no-overflow",
+      "source_span": [1, 2],
+      "source_hash": "sha256:b3c4ac0b482faa43b6bd6bffb734cf3d2bb3c43924611e9ac1ff0abd5373d243"
+    }
+  ]
+}
