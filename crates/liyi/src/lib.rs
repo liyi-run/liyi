@@ -1,3 +1,4 @@
+pub mod approve;
 pub mod check;
 pub mod diagnostics;
 pub mod discovery;

@@ -1,4 +1,5 @@
 use std::env;
+use std::io::{self, IsTerminal};
 use std::process;
 
 use clap::Parser;
@@ -123,5 +124,46 @@ fn main() {
                 }
             }
         }
+        Commands::Approve {
+            paths,
+            yes,
+            dry_run,
+            item,
+        } => {
+            let targets = if paths.is_empty() {
+                vec![env::current_dir().unwrap_or_default()]
+            } else {
+                paths
+            };
+
+            // Use batch mode if --yes or stdin is not a TTY.
+            let use_batch = yes || !atty_is_tty();
+
+            let result = if use_batch {
+                liyi::approve::approve_batch(&targets, item.as_deref(), dry_run)
+            } else {
+                liyi::approve::approve_interactive(&targets, item.as_deref(), dry_run)
+            };
+
+            match result {
+                Ok(results) => {
+                    let total_approved: usize = results.iter().map(|r| r.approved).sum();
+                    let total_skipped: usize = results.iter().map(|r| r.skipped).sum();
+                    let total_rejected: usize = results.iter().map(|r| r.rejected).sum();
+                    println!(
+                        "{total_approved} approved, {total_skipped} skipped, {total_rejected} rejected"
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    process::exit(2);
+                }
+            }
+        }
     }
+}
+
+/// Check if stdin is a TTY (for interactive mode detection).
+fn atty_is_tty() -> bool {
+    io::stdin().is_terminal()
 }

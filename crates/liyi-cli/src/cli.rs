@@ -77,6 +77,24 @@ pub enum Commands {
         #[arg(long)]
         force: bool,
     },
+
+    /// Mark specs as reviewed by a human
+    Approve {
+        /// Sidecar files, source files, or directories to approve
+        paths: Vec<PathBuf>,
+
+        /// Approve all without prompting
+        #[arg(long)]
+        yes: bool,
+
+        /// Preview what would be approved without writing files
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Filter to a specific item by name
+        #[arg(long)]
+        item: Option<String>,
+    },
 }
 
 /// Parse a "start,end" string into a [usize; 2] span.
