@@ -122,11 +122,7 @@ fn parse_tree_path(tree_path: &str) -> Option<Vec<PathSegment>> {
 ///
 /// Returns `None` if the tree_path cannot be resolved (item renamed, deleted,
 /// or grammar unavailable).
-pub fn resolve_tree_path(
-    source: &str,
-    tree_path: &str,
-    lang: Language,
-) -> Option<[usize; 2]> {
+pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {
     if tree_path.is_empty() {
         return None;
     }
@@ -183,14 +179,12 @@ fn resolve_in_body<'a>(
 ) -> Option<Node<'a>> {
     // For impl/mod/trait blocks, the children are inside the declaration_list
     // or body field. Walk all descendants at the next level.
-    let body = node
-        .child_by_field_name("body")
-        .or_else(|| {
-            // Try finding declaration_list child directly
-            let mut cursor = node.walk();
-            node.children(&mut cursor)
-                .find(|c| c.kind() == "declaration_list")
-        })?;
+    let body = node.child_by_field_name("body").or_else(|| {
+        // Try finding declaration_list child directly
+        let mut cursor = node.walk();
+        node.children(&mut cursor)
+            .find(|c| c.kind() == "declaration_list")
+    })?;
 
     resolve_segments(&body, segments, source)
 }
@@ -200,11 +194,7 @@ fn resolve_in_body<'a>(
 /// Returns an empty string if no suitable structural path can be determined
 /// (e.g., the span doesn't align with a named item, or the language is
 /// unsupported).
-pub fn compute_tree_path(
-    source: &str,
-    span: [usize; 2],
-    lang: Language,
-) -> String {
+pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {
     let mut parser = make_parser(lang);
     let tree = match parser.parse(source, None) {
         Some(t) => t,
@@ -294,16 +284,10 @@ fn build_path_to_node(root: &Node, target: &Node, source: &str) -> String {
 }
 
 /// Recursively find `target` in the tree and collect path segments.
-fn collect_path(
-    node: &Node,
-    target: &Node,
-    source: &str,
-    segments: &mut Vec<String>,
-) -> bool {
+fn collect_path(node: &Node, target: &Node, source: &str, segments: &mut Vec<String>) -> bool {
     if node.id() == target.id() {
         // We found the target — add this node's segment if it's an item
-        if let (Some(short), Some(name)) =
-            (kind_to_shorthand(node.kind()), node_name(node, source))
+        if let (Some(short), Some(name)) = (kind_to_shorthand(node.kind()), node_name(node, source))
         {
             segments.push(format!("{short}::{name}"));
             return true;
@@ -438,8 +422,7 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_mod_fn() {
-        let span =
-            resolve_tree_path(SAMPLE_RUST, "mod::billing::fn::charge", Language::Rust);
+        let span = resolve_tree_path(SAMPLE_RUST, "mod::billing::fn::charge", Language::Rust);
         assert!(span.is_some(), "should resolve mod::billing::fn::charge");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
@@ -500,11 +483,7 @@ fn standalone() -> i32 {
     #[test]
     fn compute_impl_method_path() {
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
-        let start = lines
-            .iter()
-            .position(|l| l.contains("pub fn new"))
-            .unwrap()
-            + 1;
+        let start = lines.iter().position(|l| l.contains("pub fn new")).unwrap() + 1;
         // fn new spans from its line to the closing }
         let mut brace_depth = 0i32;
         let mut end = start;
@@ -555,12 +534,10 @@ fn standalone() -> i32 {
         let resolved_span =
             resolve_tree_path(SAMPLE_RUST, "fn::standalone", Language::Rust).unwrap();
 
-        let computed_path =
-            compute_tree_path(SAMPLE_RUST, resolved_span, Language::Rust);
+        let computed_path = compute_tree_path(SAMPLE_RUST, resolved_span, Language::Rust);
         assert_eq!(computed_path, "fn::standalone");
 
-        let re_resolved =
-            resolve_tree_path(SAMPLE_RUST, &computed_path, Language::Rust).unwrap();
+        let re_resolved = resolve_tree_path(SAMPLE_RUST, &computed_path, Language::Rust).unwrap();
         assert_eq!(re_resolved, resolved_span);
     }
 
@@ -570,10 +547,7 @@ fn standalone() -> i32 {
             detect_language(Path::new("src/main.rs")),
             Some(Language::Rust)
         );
-        assert_eq!(
-            detect_language(Path::new("foo.py")),
-            None
-        );
+        assert_eq!(detect_language(Path::new("foo.py")), None);
     }
 
     #[test]

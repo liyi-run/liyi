@@ -59,16 +59,14 @@ pub fn run_reanchor(
                 // If resolution fails (item renamed/deleted), keep the
                 // existing span — hash_span below will detect the mismatch.
                 if let (false, Some(l)) = (item.tree_path.is_empty(), lang)
-                    && let Some(new_span) =
-                        resolve_tree_path(&source_content, &item.tree_path, l)
+                    && let Some(new_span) = resolve_tree_path(&source_content, &item.tree_path, l)
                 {
                     item.source_span = new_span;
                 }
 
                 // Compute or update tree_path from the (possibly updated) span.
                 if let Some(l) = lang {
-                    let canonical =
-                        compute_tree_path(&source_content, item.source_span, l);
+                    let canonical = compute_tree_path(&source_content, item.source_span, l);
                     item.tree_path = canonical;
                 }
 
@@ -84,15 +82,13 @@ pub fn run_reanchor(
 
                 // Tree-sitter span recovery for requirements
                 if let (false, Some(l)) = (req.tree_path.is_empty(), lang)
-                    && let Some(new_span) =
-                        resolve_tree_path(&source_content, &req.tree_path, l)
+                    && let Some(new_span) = resolve_tree_path(&source_content, &req.tree_path, l)
                 {
                     req.source_span = new_span;
                 }
 
                 if let Some(l) = lang {
-                    let canonical =
-                        compute_tree_path(&source_content, req.source_span, l);
+                    let canonical = compute_tree_path(&source_content, req.source_span, l);
                     req.tree_path = canonical;
                 }
 

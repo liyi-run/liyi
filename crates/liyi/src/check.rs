@@ -231,8 +231,7 @@ fn check_sidecar(
                 // a. Hash the span
                 match hash_span(&source_content, item.source_span) {
                     Ok((computed_hash, computed_anchor)) => {
-                        let is_current =
-                            item.source_hash.as_ref() == Some(&computed_hash);
+                        let is_current = item.source_hash.as_ref() == Some(&computed_hash);
 
                         if is_current {
                             // CURRENT
@@ -279,9 +278,7 @@ fn check_sidecar(
                                     let delta = new_span[0] as i64 - old_span[0] as i64;
                                     if fix {
                                         item.source_span = new_span;
-                                        if let Ok((h, a)) =
-                                            hash_span(&source_content, new_span)
-                                        {
+                                        if let Ok((h, a)) = hash_span(&source_content, new_span) {
                                             item.source_hash = Some(h);
                                             item.source_anchor = Some(a);
                                         }
@@ -313,42 +310,43 @@ fn check_sidecar(
                             } else {
                                 // Fallback to shift heuristic
                                 let expected = item.source_hash.as_ref().unwrap();
-                            match detect_shift(&source_content, item.source_span, expected) {
-                                ShiftResult::Shifted { delta, new_span } => {
-                                    let old_span = item.source_span;
-                                    if fix {
-                                        item.source_span = new_span;
-                                        // Recompute hash/anchor at new span
-                                        if let Ok((h, a)) = hash_span(&source_content, new_span) {
-                                            item.source_hash = Some(h);
-                                            item.source_anchor = Some(a);
+                                match detect_shift(&source_content, item.source_span, expected) {
+                                    ShiftResult::Shifted { delta, new_span } => {
+                                        let old_span = item.source_span;
+                                        if fix {
+                                            item.source_span = new_span;
+                                            // Recompute hash/anchor at new span
+                                            if let Ok((h, a)) = hash_span(&source_content, new_span)
+                                            {
+                                                item.source_hash = Some(h);
+                                                item.source_anchor = Some(a);
+                                            }
+                                            modified = true;
                                         }
-                                        modified = true;
+                                        diagnostics.push(Diagnostic {
+                                            file: entry.source_path.clone(),
+                                            item_or_req: label.clone(),
+                                            kind: DiagnosticKind::Shifted {
+                                                from: old_span,
+                                                to: new_span,
+                                            },
+                                            severity: Severity::Warning,
+                                            message: format!(
+                                                "span shifted by {delta:+} → [{}, {}]",
+                                                new_span[0], new_span[1]
+                                            ),
+                                        });
                                     }
-                                    diagnostics.push(Diagnostic {
-                                        file: entry.source_path.clone(),
-                                        item_or_req: label.clone(),
-                                        kind: DiagnosticKind::Shifted {
-                                            from: old_span,
-                                            to: new_span,
-                                        },
-                                        severity: Severity::Warning,
-                                        message: format!(
-                                            "span shifted by {delta:+} → [{}, {}]",
-                                            new_span[0], new_span[1]
-                                        ),
-                                    });
+                                    ShiftResult::Stale => {
+                                        diagnostics.push(Diagnostic {
+                                            file: entry.source_path.clone(),
+                                            item_or_req: label.clone(),
+                                            kind: DiagnosticKind::Stale,
+                                            severity: Severity::Warning,
+                                            message: "hash mismatch, could not relocate".into(),
+                                        });
+                                    }
                                 }
-                                ShiftResult::Stale => {
-                                    diagnostics.push(Diagnostic {
-                                        file: entry.source_path.clone(),
-                                        item_or_req: label.clone(),
-                                        kind: DiagnosticKind::Stale,
-                                        severity: Severity::Warning,
-                                        message: "hash mismatch, could not relocate".into(),
-                                    });
-                                }
-                            }
                             }
                         }
                     }
@@ -461,9 +459,7 @@ fn check_sidecar(
                                             requirement: req_name.clone(),
                                         },
                                         severity: Severity::Warning,
-                                        message: format!(
-                                            "requirement \"{req_name}\" has changed"
-                                        ),
+                                        message: format!("requirement \"{req_name}\" has changed"),
                                     });
                                 }
                             }
@@ -475,8 +471,7 @@ fn check_sidecar(
                 let label = req.requirement.clone();
                 match hash_span(&source_content, req.source_span) {
                     Ok((computed_hash, computed_anchor)) => {
-                        let is_current =
-                            req.source_hash.as_ref() == Some(&computed_hash);
+                        let is_current = req.source_hash.as_ref() == Some(&computed_hash);
 
                         if is_current {
                             diagnostics.push(Diagnostic {
