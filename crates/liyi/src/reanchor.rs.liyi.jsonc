@@ -9,10 +9,10 @@
       "intent": "Expand a list of file and directory paths into concrete .liyi.jsonc file paths. Directories are walked recursively respecting .gitignore and .liyiignore. Files are included directly. Non-existent paths produce an error. Results are sorted and deduplicated.",
       "source_span": [
         14,
-        40
+        39
       ],
       "tree_path": "fn::resolve_reanchor_targets",
-      "source_hash": "sha256:575c7aa6702b7b9b8f309639476ebd0b469a4f5a652f4065d3354813a2eadd0f",
+      "source_hash": "sha256:7e38409f96830a3b46075be4b7055db02c4a7a7ed388923588570bba01bbcf25",
       "source_anchor": "pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
     },
     {
@@ -20,8 +20,8 @@
       "reviewed": false,
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and rehash. Otherwise, for every spec: if tree_path is non-empty and a tree-sitter grammar is available, locate the item by structural identity and update the span; then recompute hash/anchor. Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
-        50,
-        140
+        49,
+        139
       ],
       "tree_path": "fn::run_reanchor",
       "source_hash": "sha256:28a7f0bffb54f043c3497210bc11cb4d040ca85aefef4c8f8453ce2c4afd94b8",

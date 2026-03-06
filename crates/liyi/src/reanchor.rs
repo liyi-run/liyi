@@ -20,12 +20,11 @@ pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, Strin
                 .build();
             for entry in walker {
                 let entry = entry.map_err(|e| format!("walk error: {e}"))?;
-                if entry.file_type().is_some_and(|ft| ft.is_file()) {
-                    if let Some(name) = entry.path().file_name().and_then(|n| n.to_str()) {
-                        if name.ends_with(SIDECAR_SUFFIX) {
-                            result.push(entry.into_path());
-                        }
-                    }
+                if entry.file_type().is_some_and(|ft| ft.is_file())
+                    && let Some(name) = entry.path().file_name().and_then(|n| n.to_str())
+                    && name.ends_with(SIDECAR_SUFFIX)
+                {
+                    result.push(entry.into_path());
                 }
             }
         } else if p.is_file() {

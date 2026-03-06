@@ -201,18 +201,16 @@ pub fn run_check(
 
     // ReqNoRelated: requirements with sidecar entries that no item references.
     for name in &requirements_with_sidecar {
-        if !requirements_referenced.contains(name) {
-            if let Some(rec) = requirements.get(name) {
-                diagnostics.push(Diagnostic {
-                    file: rec.file.clone(),
-                    item_or_req: name.clone(),
-                    kind: DiagnosticKind::ReqNoRelated,
-                    severity: Severity::Info,
-                    message: format!(
-                        "requirement \"{name}\" is not referenced by any item"
-                    ),
-                });
-            }
+        if !requirements_referenced.contains(name)
+            && let Some(rec) = requirements.get(name)
+        {
+            diagnostics.push(Diagnostic {
+                file: rec.file.clone(),
+                item_or_req: name.clone(),
+                kind: DiagnosticKind::ReqNoRelated,
+                severity: Severity::Info,
+                message: format!("requirement \"{name}\" is not referenced by any item"),
+            });
         }
     }
 

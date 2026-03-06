@@ -36,7 +36,7 @@
         62
       ],
       "tree_path": "fn::approve_batch",
-      "source_hash": "sha256:f12abddb8eba84afa2e5fb75e688fd74b16c156da4e50a742d0ad07fd39d3efd",
+      "source_hash": "sha256:9a4bcff26a13992016c8414456252834e3a45993df4c86e22caba3417418f926",
       "source_anchor": "pub fn approve_batch("
     },
     {
@@ -48,7 +48,7 @@
         83
       ],
       "tree_path": "fn::approve_interactive",
-      "source_hash": "sha256:198840f2b065bb9f9f882912916e2a66651d1480689f8a0b33394d29776986e5",
+      "source_hash": "sha256:60a399bd7f96a352aa9c6cb3d89fb7039a1bfad59b853b0e2468b172a2de1fa5",
       "source_anchor": "pub fn approve_interactive("
     },
     {
@@ -60,7 +60,7 @@
         188
       ],
       "tree_path": "fn::approve_sidecar",
-      "source_hash": "sha256:dab44e142c4f4ac3b6f8e2d6de67c7c9a10fb40059258011c5a150bd1f460c3b",
+      "source_hash": "sha256:5c43f0ebfbf707715415cfd628de83b5c72b07c3f9fee204e511cdf34f371f27",
       "source_anchor": "fn approve_sidecar("
     },
     {

@@ -21,10 +21,10 @@
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         34,
-        248
+        246
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:47bdbccc86383fec6f7753b49d07b52526ad2f365250ab0e7296637d6c3daa37",
+      "source_hash": "sha256:74bb6da99559a9012dad11fccd00cf85bbd6543477c1534ab207fa2bbe1d4d73",
       "source_anchor": "pub fn run_check("
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        254,
-        893
+        252,
+        891
       ],
       "tree_path": "fn::check_sidecar",
       "source_hash": "sha256:f65514c8416526758da552732ff0d9dbf13204e63cf9da3d04637deda0d042a4",
@@ -44,8 +44,8 @@
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        951,
-        962
+        949,
+        960
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",

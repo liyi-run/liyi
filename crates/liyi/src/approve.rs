@@ -48,7 +48,7 @@ pub fn approve_batch(
     item_filter: Option<&str>,
     dry_run: bool,
 ) -> Result<Vec<ApproveResult>, ApproveError> {
-    let targets = resolve_reanchor_targets(paths).map_err(|e| ApproveError::Parse(e))?;
+    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
     if targets.is_empty() {
         return Err(ApproveError::NoTargets);
     }
@@ -69,7 +69,7 @@ pub fn approve_interactive(
     item_filter: Option<&str>,
     dry_run: bool,
 ) -> Result<Vec<ApproveResult>, ApproveError> {
-    let targets = resolve_reanchor_targets(paths).map_err(|e| ApproveError::Parse(e))?;
+    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
     if targets.is_empty() {
         return Err(ApproveError::NoTargets);
     }
@@ -104,10 +104,10 @@ fn approve_sidecar(
     for spec in &mut sidecar.specs {
         if let Spec::Item(item) = spec {
             // Apply item name filter if specified.
-            if let Some(filter) = item_filter {
-                if item.item != filter {
-                    continue;
-                }
+            if let Some(filter) = item_filter
+                && item.item != filter
+            {
+                continue;
             }
 
             // Skip already reviewed items.
