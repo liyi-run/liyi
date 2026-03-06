@@ -1,0 +1,13 @@
+{
+  "version": "0.1",
+  "source": "hidden.rs",
+  "specs": [
+    {
+      "item": "hidden",
+      "reviewed": true,
+      "intent": "Should never be checked",
+      "source_span": [1, 3],
+      "source_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

@@ -436,3 +436,29 @@ fn req_cycle() {
     );
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
+
+/// `.liyiignore` excludes the `ignored/` directory.
+/// The stale sidecar in `ignored/` should NOT produce diagnostics.
+/// Only `visible.rs` should be checked.
+#[test]
+fn liyiignore() {
+    let (_tmp, root) = fixture_in_tmp("liyiignore");
+    let flags = default_flags();
+
+    // Fix hashes for visible.rs first.
+    let _ = run_check(&root, &[], true, false, &flags);
+
+    // Re-check: only visible.rs should appear; the ignored stale sidecar
+    // should produce no diagnostics at all.
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    // No diagnostic should reference anything in "ignored/".
+    let has_hidden = diagnostics
+        .iter()
+        .any(|d| d.item_or_req == "hidden" || d.file.to_string_lossy().contains("ignored"));
+    assert!(
+        !has_hidden,
+        "expected ignored directory to be excluded, got: {diagnostics:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::Clean);
+}

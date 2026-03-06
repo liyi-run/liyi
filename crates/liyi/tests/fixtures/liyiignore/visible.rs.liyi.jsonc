@@ -1,0 +1,12 @@
+{
+  "version": "0.1",
+  "source": "visible.rs",
+  "specs": [
+    {
+      "item": "visible",
+      "reviewed": true,
+      "intent": "Returns 42",
+      "source_span": [1, 3]
+    }
+  ]
+}
