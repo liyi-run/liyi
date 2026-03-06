@@ -103,10 +103,14 @@ pub fn run_check(
     // Enrich requirement records with hashes from any existing sidecars.
     // Also track which requirements have a Spec::Requirement sidecar entry
     // and which requirement names are referenced by any Spec::Item via `related`.
+    // Build a requirement dependency graph for cycle detection:
+    //   edge A → B means: a sidecar defines requirement A AND contains an
+    //   item that references requirement B.
     let mut requirements_with_sidecar: std::collections::HashSet<String> =
         std::collections::HashSet::new();
     let mut requirements_referenced: std::collections::HashSet<String> =
         std::collections::HashSet::new();
+    let mut req_dep_graph: HashMap<String, Vec<String>> = HashMap::new();
 
     for entry in &disc.sidecars {
         let sc_content = match fs::read_to_string(&entry.sidecar_path) {
@@ -117,10 +121,17 @@ pub fn run_check(
             Ok(s) => s,
             Err(_) => continue,
         };
+
+        // Collect requirements defined in this sidecar and requirements
+        // referenced by items in this sidecar.
+        let mut defined_in_sidecar: Vec<String> = Vec::new();
+        let mut referenced_in_sidecar: Vec<String> = Vec::new();
+
         for spec in &sidecar.specs {
             match spec {
                 Spec::Requirement(req) => {
                     requirements_with_sidecar.insert(req.requirement.clone());
+                    defined_in_sidecar.push(req.requirement.clone());
                     if let Some(rec) = requirements.get_mut(&req.requirement)
                         && rec.hash.is_none()
                     {
@@ -131,12 +142,28 @@ pub fn run_check(
                     if let Some(ref related) = item.related {
                         for name in related.keys() {
                             requirements_referenced.insert(name.clone());
+                            referenced_in_sidecar.push(name.clone());
                         }
                     }
                 }
             }
         }
+
+        // Build graph edges: defined req → referenced reqs in same sidecar.
+        for def in &defined_in_sidecar {
+            for reff in &referenced_in_sidecar {
+                if def != reff {
+                    req_dep_graph
+                        .entry(def.clone())
+                        .or_default()
+                        .push(reff.clone());
+                }
+            }
+        }
     }
+
+    // Detect cycles in the requirement dependency graph using DFS.
+    let cycles = detect_requirement_cycles(&req_dep_graph);
 
     // ------------------------------------------------------------------
     // Pass 2 — Item / requirement checking (scoped to discovered sidecars)
@@ -187,6 +214,26 @@ pub fn run_check(
                 });
             }
         }
+    }
+
+    // RequirementCycle: circular dependencies among requirements.
+    for cycle in &cycles {
+        let cycle_display = cycle.join(" → ");
+        // Report from the first requirement in the cycle.
+        let first = &cycle[0];
+        let file = requirements
+            .get(first)
+            .map(|r| r.file.clone())
+            .unwrap_or_default();
+        diagnostics.push(Diagnostic {
+            file,
+            item_or_req: first.clone(),
+            kind: DiagnosticKind::RequirementCycle {
+                path: cycle.clone(),
+            },
+            severity: Severity::Error,
+            message: format!("requirement cycle detected: {cycle_display}"),
+        });
     }
 
     // Sort by file path, then by item/requirement name.
@@ -848,6 +895,57 @@ fn check_sidecar(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/// Detect cycles in a directed graph of requirement dependencies.
+///
+/// Returns a list of cycles, where each cycle is a Vec of requirement names
+/// forming the cycle (e.g., `["A", "B", "A"]`).
+fn detect_requirement_cycles(graph: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {
+    use std::collections::HashSet;
+
+    let mut cycles: Vec<Vec<String>> = Vec::new();
+    let mut visited: HashSet<String> = HashSet::new();
+    let mut on_stack: HashSet<String> = HashSet::new();
+    let mut path: Vec<String> = Vec::new();
+
+    fn dfs(
+        node: &str,
+        graph: &HashMap<String, Vec<String>>,
+        visited: &mut HashSet<String>,
+        on_stack: &mut HashSet<String>,
+        path: &mut Vec<String>,
+        cycles: &mut Vec<Vec<String>>,
+    ) {
+        visited.insert(node.to_string());
+        on_stack.insert(node.to_string());
+        path.push(node.to_string());
+
+        if let Some(neighbors) = graph.get(node) {
+            for next in neighbors {
+                if !visited.contains(next.as_str()) {
+                    dfs(next, graph, visited, on_stack, path, cycles);
+                } else if on_stack.contains(next.as_str()) {
+                    // Found a cycle — extract just the cycle portion.
+                    let start_idx = path.iter().position(|n| n == next).unwrap();
+                    let mut cycle: Vec<String> = path[start_idx..].to_vec();
+                    cycle.push(next.clone()); // Close the cycle
+                    cycles.push(cycle);
+                }
+            }
+        }
+
+        on_stack.remove(node);
+        path.pop();
+    }
+
+    for node in graph.keys() {
+        if !visited.contains(node.as_str()) {
+            dfs(node, graph, &mut visited, &mut on_stack, &mut path, &mut cycles);
+        }
+    }
+
+    cycles
+}
 
 /// Read a file into the cache and return a clone of its contents.
 fn read_cached(cache: &mut HashMap<PathBuf, String>, path: &Path) -> Option<String> {
