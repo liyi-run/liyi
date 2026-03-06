@@ -31,6 +31,9 @@ pub struct ItemSpec {
 
     pub source_span: [usize; 2],
 
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub tree_path: String,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,
 
@@ -51,6 +54,9 @@ pub struct RequirementSpec {
     pub requirement: String,
 
     pub source_span: [usize; 2],
+
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub tree_path: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,

@@ -11,6 +11,7 @@
         3,
         10
       ],
+      "tree_path": "enum::ShiftResult",
       "source_hash": "sha256:1ec5b998c90f6312ad5636d57daa0508160fef681d18e655243df8621da33551",
       "source_anchor": "/// Result of attempting to relocate a shifted span."
     },
@@ -22,6 +23,7 @@
         15,
         23
       ],
+      "tree_path": "fn::detect_shift",
       "source_hash": "sha256:6b947006b3cafcbda341dd285d91ab1a3302a8bfeee34a59c667f699b059dce0",
       "source_anchor": "/// Try to relocate a span whose hash no longer matches."
     },
@@ -33,6 +35,7 @@
         25,
         41
       ],
+      "tree_path": "fn::detect_shift_with_hint",
       "source_hash": "sha256:9df079e7ea416a09f14d4809b20ab358b109ad11ced8af673de8da90a3bab890",
       "source_anchor": "/// Like [`detect_shift`], but tries `hint_delta` before the full scan."
     },
@@ -44,6 +47,7 @@
         43,
         54
       ],
+      "tree_path": "fn::scan",
       "source_hash": "sha256:5a4d6b9a3876d68e8025b7f2277b8c5a5965d84c4b39f9c46953c1290b16a367",
       "source_anchor": "/// Full scan in small-delta-first order: 1, −1, 2, −2, …"
     },
@@ -55,6 +59,7 @@
         56,
         78
       ],
+      "tree_path": "fn::try_offset",
       "source_hash": "sha256:0eaa4ef66dbff595955a89352bebd82ea0bdee31d47f176a65dad7ec7b743b6e",
       "source_anchor": "/// Check a single offset. Returns `Some(Shifted{…})` on hash match."
     }

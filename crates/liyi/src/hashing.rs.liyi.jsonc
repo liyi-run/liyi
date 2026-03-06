@@ -11,6 +11,7 @@
         4,
         13
       ],
+      "tree_path": "enum::SpanError",
       "source_hash": "sha256:ce6348dc52bd0adf98b166b806f6513d49e3f3062f2c6da83dfee6ca3188db8d",
       "source_anchor": "/// Errors produced when a source span is invalid."
     },
@@ -22,6 +23,7 @@
         31,
         59
       ],
+      "tree_path": "fn::hash_span",
       "source_hash": "sha256:5b1bb84d6bc509953f4b48ca0eb18cdaecf0f1e08fb928d9c0ce99eaf54506bf",
       "source_anchor": "/// Hash the source lines in `span` and return `(\"sha256:{hex}\", anchor)`."
     }

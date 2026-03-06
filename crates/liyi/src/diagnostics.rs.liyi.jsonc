@@ -11,6 +11,7 @@
         4,
         9
       ],
+      "tree_path": "enum::Severity",
       "source_hash": "sha256:e3aa56c7405cafa0a78eb8e18f77d896c7667041d2b72b42fb809d21ac33540b",
       "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
     },
@@ -22,6 +23,7 @@
         11,
         32
       ],
+      "tree_path": "enum::DiagnosticKind",
       "source_hash": "sha256:4baad443b58740d5ad757b1277136ada6c4c1049a64a9726eccf7972a46f403f",
       "source_anchor": "#[derive(Debug, Clone, PartialEq, Eq)]"
     },
@@ -33,6 +35,7 @@
         34,
         41
       ],
+      "tree_path": "struct::Diagnostic",
       "source_hash": "sha256:ef5a8f83531ff72b1c74c80b7408b5c917d1d6ba5912ec38240474dba889e3b2",
       "source_anchor": "#[derive(Debug, Clone)]"
     },
@@ -44,6 +47,7 @@
         43,
         61
       ],
+      "tree_path": "impl::Diagnostic",
       "source_hash": "sha256:5f7daf3b0b6e956c70e91a5c3b7a16c501d62d5f5c5e84a48824e6334b51a9b2",
       "source_anchor": "impl fmt::Display for Diagnostic {"
     },
@@ -55,6 +59,7 @@
         63,
         68
       ],
+      "tree_path": "struct::CheckFlags",
       "source_hash": "sha256:aac7f53b52c00b332097037be22f351f7cab3a9fdd7acb23c76635ef8a26fd6a",
       "source_anchor": "#[derive(Debug, Clone)]"
     },
@@ -66,6 +71,7 @@
         70,
         75
       ],
+      "tree_path": "enum::LiyiExitCode",
       "source_hash": "sha256:6ebda039738b05d6cb149ea3c872accf764f674c93f0d111b6037c3c10c0ee0a",
       "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
     },
@@ -77,6 +83,7 @@
         77,
         99
       ],
+      "tree_path": "fn::compute_exit_code",
       "source_hash": "sha256:40d1d1a16fdb85f853f14a08744bcebc27fbaa0965f64587b7d05dc89eacec66",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {"
     }

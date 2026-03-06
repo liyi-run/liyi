@@ -312,3 +312,52 @@ fn shifted_span_fix() {
     );
     assert_eq!(exit_code, LiyiExitCode::Clean);
 }
+
+#[test]
+fn tree_path_recovery() {
+    let (_tmp, root) = fixture_in_tmp("tree_path_recovery");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+    };
+    let (diagnostics, _) = run_check(&root, &[], false, &flags);
+
+    // tree_path should recover the span from [1,3] to [5,7]
+    let has_shifted = diagnostics.iter().any(|d| {
+        matches!(
+            d.kind,
+            DiagnosticKind::Shifted {
+                from: [1, 3],
+                to: [5, 7],
+            }
+        )
+    });
+    assert!(
+        has_shifted,
+        "expected tree_path Shifted diagnostic from [1,3] to [5,7], got: {diagnostics:#?}"
+    );
+}
+
+#[test]
+fn tree_path_recovery_fix() {
+    let (_tmp, root) = fixture_in_tmp("tree_path_recovery");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+    };
+    // Fix should auto-correct the span via tree_path
+    let _ = run_check(&root, &[], true, &flags);
+    // Re-check should be clean
+    let (diagnostics, exit_code) = run_check(&root, &[], false, &flags);
+
+    let has_current = diagnostics
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Current));
+    assert!(
+        has_current,
+        "expected Current after tree_path fix, got: {diagnostics:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::Clean);
+}

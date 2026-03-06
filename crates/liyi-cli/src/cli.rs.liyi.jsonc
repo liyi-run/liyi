@@ -11,6 +11,7 @@
         4,
         13
       ],
+      "tree_path": "struct::Cli",
       "source_hash": "sha256:070e66f7044a01f80a1750a24a5894bf709354ec183439d7a4ed043f44703ae4",
       "source_anchor": "#[derive(Parser)]"
     },
@@ -22,6 +23,7 @@
         15,
         65
       ],
+      "tree_path": "enum::Commands",
       "source_hash": "sha256:c0eb35a0a5f63e05b07567d0bfd776b76b4d296d7c59b04f4d4a675f819a7502",
       "source_anchor": "#[derive(Subcommand)]"
     },
@@ -33,6 +35,7 @@
         67,
         82
       ],
+      "tree_path": "fn::parse_span",
       "source_hash": "sha256:12d104d2a3f7fb454dfbce61101cfe715d6d418a7c819d885b2956730964edc9",
       "source_anchor": "/// Parse a \"start,end\" string into a [usize; 2] span."
     }

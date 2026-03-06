@@ -11,6 +11,7 @@ use crate::markers::{SourceMarker, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
+use crate::tree_path::{detect_language, resolve_tree_path};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -257,8 +258,61 @@ fn check_sidecar(
                                 message: "missing source_hash".into(),
                             });
                         } else {
-                            // Hash mismatch — try shift detection
-                            let expected = item.source_hash.as_ref().unwrap();
+                            // Hash mismatch — try tree_path first, then shift
+                            let lang = detect_language(&entry.source_path);
+
+                            // Try tree_path-based recovery
+                            let tree_path_recovered = if !item.tree_path.is_empty() {
+                                if let Some(l) = lang {
+                                    resolve_tree_path(&source_content, &item.tree_path, l)
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            };
+
+                            if let Some(new_span) = tree_path_recovered {
+                                // tree_path resolved to a (possibly different) span
+                                let old_span = item.source_span;
+                                if new_span != old_span {
+                                    let delta = new_span[0] as i64 - old_span[0] as i64;
+                                    if fix {
+                                        item.source_span = new_span;
+                                        if let Ok((h, a)) =
+                                            hash_span(&source_content, new_span)
+                                        {
+                                            item.source_hash = Some(h);
+                                            item.source_anchor = Some(a);
+                                        }
+                                        modified = true;
+                                    }
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::Shifted {
+                                            from: old_span,
+                                            to: new_span,
+                                        },
+                                        severity: Severity::Warning,
+                                        message: format!(
+                                            "tree_path resolved, span shifted by {delta:+} → [{}, {}]",
+                                            new_span[0], new_span[1]
+                                        ),
+                                    });
+                                } else {
+                                    // Same span, but hash changed — genuine stale
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::Stale,
+                                        severity: Severity::Warning,
+                                        message: "source changed at tree_path location".into(),
+                                    });
+                                }
+                            } else {
+                                // Fallback to shift heuristic
+                                let expected = item.source_hash.as_ref().unwrap();
                             match detect_shift(&source_content, item.source_span, expected) {
                                 ShiftResult::Shifted { delta, new_span } => {
                                     let old_span = item.source_span;
@@ -294,6 +348,7 @@ fn check_sidecar(
                                         message: "hash mismatch, could not relocate".into(),
                                     });
                                 }
+                            }
                             }
                         }
                     }

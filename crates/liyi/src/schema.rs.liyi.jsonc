@@ -11,6 +11,7 @@
         5,
         14
       ],
+      "tree_path": "fn::validate_version",
       "source_hash": "sha256:1582772f4c3328250e4e075550a4da36a8e5c0abbbb64c9cdaad19634b158ed7",
       "source_anchor": "/// Accept version \"0.1\" only; return an error for anything else."
     },
@@ -22,6 +23,7 @@
         16,
         22
       ],
+      "tree_path": "fn::migrate",
       "source_hash": "sha256:fa3c3ad6f30483f1a84b75218cc4af5ae83f52b405a95710142e570809ffb3df",
       "source_anchor": "/// Migrate a sidecar file to the current schema version."
     }

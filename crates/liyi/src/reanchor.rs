@@ -3,12 +3,16 @@ use std::path::Path;
 use crate::hashing::hash_span;
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
+use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 /// Re-hash source spans in a sidecar file.
 ///
 /// If `do_migrate` is set, run schema migration and return.
 /// If `target_item` + `target_span` are given, update only that item's span and rehash.
-/// Otherwise, recompute hash/anchor for every spec from the current source.
+/// Otherwise, for every spec: if `tree_path` is non-empty and a tree-sitter
+/// grammar is available, locate the item by structural identity and update the
+/// span. Then recompute hash/anchor. When tree_path is empty or the language is
+/// unsupported, fall back to re-hashing at the recorded span.
 pub fn run_reanchor(
     sidecar_path: &Path,
     target_item: Option<&str>,
@@ -36,6 +40,8 @@ pub fn run_reanchor(
     let source_content = std::fs::read_to_string(source_path)
         .map_err(|e| format!("cannot read source file {source_path}: {e}"))?;
 
+    let lang = detect_language(Path::new(source_path));
+
     for spec in &mut sidecar.specs {
         match spec {
             Spec::Item(item) => {
@@ -47,6 +53,25 @@ pub fn run_reanchor(
                 } else if target_item.is_some() || target_span.is_some() {
                     return Err("both --item and --span must be provided together".into());
                 }
+
+                // Tree-sitter span recovery: if tree_path is non-empty and
+                // language is supported, locate item by structural identity.
+                // If resolution fails (item renamed/deleted), keep the
+                // existing span — hash_span below will detect the mismatch.
+                if let (false, Some(l)) = (item.tree_path.is_empty(), lang)
+                    && let Some(new_span) =
+                        resolve_tree_path(&source_content, &item.tree_path, l)
+                {
+                    item.source_span = new_span;
+                }
+
+                // Compute or update tree_path from the (possibly updated) span.
+                if let Some(l) = lang {
+                    let canonical =
+                        compute_tree_path(&source_content, item.source_span, l);
+                    item.tree_path = canonical;
+                }
+
                 let (hash, anchor) = hash_span(&source_content, item.source_span)
                     .map_err(|e| format!("item \"{}\": {e}", item.item))?;
                 item.source_hash = Some(hash);
@@ -56,6 +81,21 @@ pub fn run_reanchor(
                 if target_item.is_some() {
                     continue; // targeted mode only touches items
                 }
+
+                // Tree-sitter span recovery for requirements
+                if let (false, Some(l)) = (req.tree_path.is_empty(), lang)
+                    && let Some(new_span) =
+                        resolve_tree_path(&source_content, &req.tree_path, l)
+                {
+                    req.source_span = new_span;
+                }
+
+                if let Some(l) = lang {
+                    let canonical =
+                        compute_tree_path(&source_content, req.source_span, l);
+                    req.tree_path = canonical;
+                }
+
                 let (hash, anchor) = hash_span(&source_content, req.source_span)
                     .map_err(|e| format!("requirement \"{}\": {e}", req.requirement))?;
                 req.source_hash = Some(hash);

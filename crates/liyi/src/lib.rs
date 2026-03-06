@@ -7,3 +7,4 @@ pub mod reanchor;
 pub mod schema;
 pub mod shift;
 pub mod sidecar;
+pub mod tree_path;
