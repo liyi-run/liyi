@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — MVP Implementation Roadmap
 
-2026-03-05
+2026-03-05 (updated 2026-03-06)
 
 ---
 
@@ -10,12 +10,73 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 **Deliverables:**
 
-1. `liyi check` — the CI linter binary (Rust)
-2. `liyi reanchor` — the span re-hashing tool (subcommand of the same binary)
-3. `liyi.schema.json` — the JSON Schema for `.liyi.jsonc` v0.1
-4. Agent instruction — the ~12-line AGENTS.md paragraph
-5. Demo repo — the linter's own codebase, dogfooded with `.liyi.jsonc` specs and `@liyi:module` markers
-6. README / landing page — the one-paragraph pitch + progressive adoption table
+1. `liyi check` — the CI linter binary (Rust) ✅
+2. `liyi reanchor` — the span re-hashing tool (subcommand of the same binary) ✅
+3. `liyi.schema.json` — the JSON Schema for `.liyi.jsonc` v0.1 ✅
+4. Agent instruction — the ~12-line AGENTS.md paragraph ✅
+5. Demo repo — the linter's own codebase, dogfooded with `.liyi.jsonc` specs and `@liyi:module` markers 🟡
+6. README / landing page — the one-paragraph pitch + progressive adoption table ✅
+
+---
+
+## Current Status (2026-03-06)
+
+### Components — all implemented
+
+| Module | Status | Notes |
+|--------|--------|-------|
+| `cli.rs` | ✅ Done | `check` + `reanchor` subcommands, all planned flags |
+| `discovery.rs` | ✅ Done | `.liyiignore` support, ambiguous sidecar detection, scope filtering |
+| `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields` |
+| `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
+| `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
+| `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
+| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back |
+| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold |
+| `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes |
+| `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
+| JSON Schema | ✅ Done | `schema/liyi.schema.json` |
+| AGENTS.md | ✅ Done | Dogfooded on the project itself |
+| README (en + zh) | ✅ Done | WIP badge, adoption table, CLI reference |
+| Cargo workspace | ✅ Done | `crates/liyi` (library) + `crates/liyi-cli` (binary) |
+
+### Diagnostics — wiring gaps
+
+Four `DiagnosticKind` variants are defined but never emitted:
+
+| Variant | Status | What's needed |
+|---------|--------|---------------|
+| `RequirementCycle` | ❌ Never emitted | Add cycle detection in pass 2 when resolving `related` edges transitively |
+| `Untracked` | ❌ Never emitted | After pass 1, flag requirements found in source markers but absent from any sidecar |
+| `ReqNoRelated` | ❌ Never emitted | After pass 2, flag requirements that no item references (informational) |
+| `MalformedHash` | ❌ Never emitted | Validate `source_hash` format (`^sha256:[0-9a-f]+$`) during sidecar parsing or check |
+
+### Golden-file test coverage
+
+| Fixture | Status | Notes |
+|---------|--------|-------|
+| `basic_pass/` | ✅ | |
+| `stale_hash/` | ✅ | |
+| `shifted_span/` | ✅ | Includes `shifted_span_fix` variant |
+| `unreviewed/` | ✅ | Tests lenient + strict modes |
+| `orphaned_source/` | ✅ | |
+| `malformed_jsonc/` | ✅ | |
+| `trivial_ignore/` | ✅ | |
+| `span_past_eof/` | ✅ | |
+| `fullwidth_markers/` | ✅ | |
+| `multilingual_aliases/` | ✅ | |
+| `req_changed/` | ❌ Missing | Need fixture to test `ReqChanged` diagnostic |
+| `req_cycle/` | ❌ Missing | Need fixture + cycle detection logic first |
+| `liyiignore/` | 🟡 | Covered by `discover_respects_liyiignore` unit test, no golden fixture |
+
+### Other gaps
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `shift_proptest.rs` | ❌ Missing | Property-based tests for shift detection |
+| CI (GitHub Actions) | ❌ Not set up | Workflow to run `cargo test` + `liyi check` |
+| Dogfooding in CI | ❌ Not set up | Run `liyi check` on the project's own sidecars |
+| Summary line output | ❌ Not implemented | "3 stale, 1 unreviewed, 12 current" after diagnostics |
 
 ---
 
@@ -80,44 +141,40 @@ A single Rust binary with subcommands:
 
 ```
 liyi/
-├── Cargo.toml
-├── src/
-│   ├── main.rs              ← CLI entry point (clap)
-│   ├── cli.rs               ← Argument parsing & subcommand dispatch
-│   ├── check.rs             ← Core check logic (two-pass)
-│   ├── discovery.rs         ← File walking, .gitignore/.liyiignore filtering
-│   ├── sidecar.rs           ← .liyi.jsonc parsing & serialization (serde)
-│   ├── markers.rs           ← Source marker scanning (@liyi:*, normalization)
-│   ├── hashing.rs           ← source_span → SHA-256, anchor extraction
-│   ├── shift.rs             ← Span-shift detection (±100-line scan, delta propagation)
-│   ├── reanchor.rs          ← reanchor subcommand logic
-│   ├── diagnostics.rs       ← Diagnostic types, formatting, exit codes
-│   └── schema.rs            ← Version validation, future migration scaffold
+├── Cargo.toml               ← workspace root
+├── crates/
+│   ├── liyi/                ← library crate
+│   │   ├── Cargo.toml
+│   │   ├── src/
+│   │   │   ├── lib.rs
+│   │   │   ├── check.rs         ← Core check logic (two-pass)
+│   │   │   ├── discovery.rs     ← File walking, .gitignore/.liyiignore filtering
+│   │   │   ├── sidecar.rs       ← .liyi.jsonc parsing & serialization (serde)
+│   │   │   ├── markers.rs       ← Source marker scanning (@liyi:*, normalization)
+│   │   │   ├── hashing.rs       ← source_span → SHA-256, anchor extraction
+│   │   │   ├── shift.rs         ← Span-shift detection
+│   │   │   ├── reanchor.rs      ← reanchor subcommand logic
+│   │   │   ├── diagnostics.rs   ← Diagnostic types, formatting, exit codes
+│   │   │   └── schema.rs        ← Version validation, migration scaffold
+│   │   └── tests/
+│   │       ├── golden.rs        ← Golden-file test runner
+│   │       └── fixtures/        ← Golden-file test repos
+│   └── liyi-cli/            ← binary crate
+│       ├── Cargo.toml
+│       └── src/
+│           ├── main.rs          ← CLI entry point
+│           └── cli.rs           ← Argument parsing (clap derive)
 │
 ├── schema/
 │   └── liyi.schema.json     ← JSON Schema for .liyi.jsonc v0.1
 │
-├── tests/
-│   ├── fixtures/            ← Golden-file test repos
-│   │   ├── basic_pass/
-│   │   ├── stale_hash/
-│   │   ├── shifted_span/
-│   │   ├── unreviewed/
-│   │   ├── orphaned_source/
-│   │   ├── req_changed/
-│   │   ├── req_cycle/
-│   │   ├── malformed_jsonc/
-│   │   ├── trivial_ignore/
-│   │   ├── liyiignore/
-│   │   ├── span_past_eof/
-│   │   ├── fullwidth_markers/
-│   │   └── multilingual_aliases/
-│   ├── golden.rs            ← Golden-file test runner
-│   └── shift_proptest.rs    ← Property-based tests for span-shift
-│
 ├── AGENTS.md                ← Agent instruction (dogfooded)
 ├── README.md                ← Project README with @liyi:module
-└── src/*.rs.liyi.jsonc      ← Dogfood: linter's own specs
+└── crates/liyi/src/*.rs.liyi.jsonc  ← Dogfood: linter's own specs
+```
+│   ├── fixtures/            ← Golden-file test repos (see Current Status for coverage)
+│   ├── golden.rs            ← Golden-file test runner
+│   └── shift_proptest.rs    ← Property-based tests for span-shift (planned)
 ```
 
 ---
@@ -710,70 +767,41 @@ All `source_span` values are 1-indexed closed intervals matching editor line num
 
 ---
 
-## Implementation Phases
+## Remaining Work for 0.1 Release
 
-### Phase 1: Scaffold & Core Types (~1 hour)
+### Must-have
 
-1. `cargo init liyi`
-2. Add dependencies: `clap`, `serde`, `serde_json`, `sha2`, `ignore`
-3. JSONC comment stripping (or add `json_comments` crate)
-4. Implement `sidecar.rs` — parse/serialize `.liyi.jsonc`
-5. Implement `hashing.rs` — span hashing and anchor extraction
-6. Implement `schema.rs` — version validation
-7. Write the JSON Schema file (`liyi.schema.json`)
+#### R1. Wire up remaining diagnostics (~1 hour)
 
-**Exit criterion:** Can parse a `.liyi.jsonc` file and hash a source span.
+1. **`RequirementCycle`**: In pass 2, when resolving `related` edges, track visited requirement names. If a cycle is detected, emit `RequirementCycle` diagnostic with the cycle path and stop traversing.
+2. **`Untracked`**: After pass 1, for each requirement found in source markers that has no corresponding `Spec::Requirement` in any sidecar, emit `Untracked` diagnostic.
+3. **`ReqNoRelated`**: After pass 2, for each requirement in the pass-1 map that no `Spec::Item` references via `related`, emit `ReqNoRelated` diagnostic (informational).
+4. **`MalformedHash`**: During sidecar parsing or check, validate that `source_hash` values match `^sha256:[0-9a-f]+$`. Emit `MalformedHash` on mismatch.
 
-### Phase 2: Marker Scanning (~1 hour)
+#### R2. Missing golden-file fixtures (~30 min)
 
-1. Implement `markers.rs` — full-width normalization, alias table, marker extraction
-2. Unit tests for normalization (half-width, full-width, mixed)
-3. Unit tests for name extraction (parens, bare tokens, CJK names)
-4. Unit tests for multilingual aliases
+1. **`req_changed/`**: Source file with a `@liyi:requirement`, sidecar with a `Spec::Item` referencing it via `related` with a stale hash. Expect `ReqChanged` diagnostic, exit 1.
+2. **`req_cycle/`**: Two requirements referencing each other transitively. Expect `RequirementCycle` diagnostic. (Depends on R1.)
 
-**Exit criterion:** Can scan a source file and return all discovered markers with correct types and positions.
+#### R3. CI setup (~30 min)
 
-### Phase 3: Discovery & Shift Detection (~1 hour)
+1. GitHub Actions workflow: `cargo test` on push/PR.
+2. Build `liyi` binary and run `liyi check --root .` as a CI step (dogfooding).
+3. Cache `target/` for fast builds.
 
-1. Implement `discovery.rs` — file walking with `ignore` crate
-2. Implement `shift.rs` — ±100-line scan, delta propagation
-3. Golden-file fixtures for `.liyiignore`, ambiguous sidecars
-4. Property-based tests for shift detection (`proptest` crate)
+### Nice-to-have before 0.1
 
-**Exit criterion:** Can walk a mock repo tree, discover sidecars, and detect span shifts.
+#### R4. Summary line output
 
-### Phase 4: Check Logic (~2 hours)
+Print a one-line summary after diagnostics: e.g., `12 current, 3 stale, 1 unreviewed`.
 
-1. Implement `check.rs` — two-pass logic
-2. Implement `diagnostics.rs` — all diagnostic types, formatting, exit codes
-3. Wire up pass 1 (requirement discovery) and pass 2 (item checking)
-4. Implement `--fix` write-back
-5. Golden-file tests for all diagnostic scenarios:
-   - `basic_pass`, `stale_hash`, `shifted_span`, `unreviewed`
-   - `orphaned_source`, `req_changed`, `req_cycle`, `malformed_jsonc`
-   - `trivial_ignore`, `span_past_eof`, `fullwidth_markers`, `multilingual_aliases`
+#### R5. Property-based tests for shift detection
 
-**Exit criterion:** `liyi check` runs on all golden-file fixtures and produces correct diagnostics + exit codes.
+`shift_proptest.rs`: generate random file content, insert/delete lines, verify shift detection correctness and delta propagation.
 
-### Phase 5: CLI & Reanchor (~30 min)
+#### R6. `liyiignore/` golden fixture
 
-1. Implement `cli.rs` — clap derive, subcommand dispatch
-2. Implement `reanchor.rs` — targeted and batch re-hashing
-3. Implement `main.rs` — entry point
-4. End-to-end test: `liyi check` + `liyi reanchor` cycle
-
-**Exit criterion:** Binary compiles, both subcommands work end-to-end.
-
-### Phase 6: Dogfooding & Polish (~1 hour)
-
-1. Write `AGENTS.md` for the project itself (the ~12-line instruction)
-2. Add `@liyi:module` marker to the project's `README.md`
-3. Generate `.liyi.jsonc` specs for the linter's own source modules (using an agent, following the instruction)
-4. Run `liyi check` on the linter's own codebase in CI
-5. Write the `README.md` — one-paragraph pitch, installation, quickstart, progressive adoption table
-6. CI setup: GitHub Actions workflow running `liyi check`
-
-**Exit criterion:** The linter passes `liyi check` on itself. CI is green. README is published.
+A dedicated golden fixture for `.liyiignore` behavior (currently only tested by unit test).
 
 ---
 
@@ -851,14 +879,14 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 ## Success Criteria for MVP
 
-1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics.
-2. **All golden-file tests pass** — covering every diagnostic in the catalog.
-3. **`liyi reanchor` re-hashes spans** correctly, including `--item`/`--span` targeting.
-4. **The agent instruction works** — an LLM reading `AGENTS.md` produces valid `.liyi.jsonc` files that `liyi check` can lint.
-5. **CI is green** — GitHub Actions runs `liyi check` on every push.
-6. **The binary is small** — single static binary, <5 MB, zero runtime dependencies.
-7. **The README conveys the pitch** — a developer reading it for 60 seconds understands what 立意 does and how to try it.
+1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (29 unit + 12 integration tests pass)
+2. **All golden-file tests pass** — covering every diagnostic in the catalog. 🟡 (10/12 planned fixtures exist; `req_changed/` and `req_cycle/` missing)
+3. **`liyi reanchor` re-hashes spans** correctly, including `--item`/`--span` targeting. ✅
+4. **The agent instruction works** — an LLM reading `AGENTS.md` produces valid `.liyi.jsonc` files that `liyi check` can lint. ✅
+5. **CI is green** — GitHub Actions runs `liyi check` on every push. ❌ (not set up)
+6. **The binary is small** — single static binary, <5 MB, zero runtime dependencies. ✅
+7. **The README conveys the pitch** — a developer reading it for 60 seconds understands what 立意 does and how to try it. ✅
 
 ---
 
-*立意 · MVP Implementation Roadmap · 2026-03-05*
+*立意 · MVP Implementation Roadmap · 2026-03-05 (updated 2026-03-06)*
