@@ -2,18 +2,23 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// The agent instruction block appended to AGENTS.md by `liyi init`.
-const AGENTS_MD_BLOCK: &str = r#"
-## 立意 (Intent Specs)
-
-When writing or modifying code:
-
-1. For each non-trivial item, infer what it SHOULD do. Write intent to `<source>.liyi.jsonc`. Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` — the tool fills them in. Use `"intent": "=doc"` only when the docstring contains behavioral requirements. For trivial items, annotate with `@liyi:trivial`.
-2. When module-level invariants are apparent, write an `@liyi:module` block.
-3. If a source item has `@liyi:related <name>`, record `"related": {"<name>": null}` in the sidecar.
-4. For each `@liyi:requirement <name>` block, ensure it has a sidecar entry.
-5. Only generate adversarial tests from items with `@liyi:intent` or `"reviewed": true`.
-6. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`.
-"#;
+/// Note that 立意 directives in the string must be quine-escaped to
+/// avoid mis-identification.
+/// <!-- @立意:有关 quine-escape -->
+const AGENTS_MD_BLOCK: &str = "\n\
+## 立意 (Intent Specs)\n\
+\n\
+When writing or modifying code:\n\
+\n\
+1. For each non-trivial item, infer what it SHOULD do. Write intent to `<source>.liyi.jsonc`. \
+Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` \
+— the tool fills them in. Use `\"intent\": \"=doc\"` only when the docstring contains \
+behavioral requirements. For trivial items, annotate with `\x40liyi:trivial`.\n\
+2. When module-level invariants are apparent, write an `\x40liyi:module` block.\n\
+3. If a source item has `\x40liyi:related <name>`, record `\"related\": {\"<name>\": null}` in the sidecar.\n\
+4. For each `\x40liyi:requirement <name>` block, ensure it has a sidecar entry.\n\
+5. Only generate adversarial tests from items with `\x40liyi:intent` or `\"reviewed\": true`.\n\
+6. Skip items annotated with `\x40liyi:ignore` or `\x40liyi:trivial`, and files matched by `.liyiignore`.\n";
 
 /// Skeleton sidecar content for a source file.
 fn skeleton_sidecar(source_relative: &str) -> String {

@@ -100,6 +100,23 @@ pub fn run_check(
         }
     }
 
+    // Collect related markers (`\x40liyi:related`) from all source files so that
+    // source-level references count toward requirement coverage even
+    // when the sidecar `related` edge has not been written yet.
+    let mut source_related_refs: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    for file_path in &disc.all_files {
+        let content = match read_cached(&mut source_cache, file_path) {
+            Some(c) => c,
+            None => continue,
+        };
+        for m in scan_markers(&content) {
+            if let SourceMarker::Related { name, .. } = m {
+                source_related_refs.insert(name);
+            }
+        }
+    }
+
     // Enrich requirement records with hashes from any existing sidecars.
     // Also track which requirements have a Spec::Requirement sidecar entry
     // and which requirement names are referenced by any Spec::Item via `related`.
@@ -199,9 +216,11 @@ pub fn run_check(
         }
     }
 
-    // ReqNoRelated: requirements with sidecar entries that no item references.
+    // ReqNoRelated: requirements with sidecar entries that no item references
+    // (neither via sidecar `related` edges nor via source related markers).
     for name in &requirements_with_sidecar {
         if !requirements_referenced.contains(name)
+            && !source_related_refs.contains(name)
             && let Some(rec) = requirements.get(name)
         {
             diagnostics.push(Diagnostic {
@@ -740,6 +759,39 @@ fn check_sidecar(
                                         message: format!("requirement \"{req_name}\" has changed"),
                                     });
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // e. Source related markers missing from sidecar
+                let span_start = item.source_span[0];
+                let span_end = item.source_span[1];
+                for m in &source_markers {
+                    if let SourceMarker::Related { name, line } = m {
+                        // Include doc-comment lines immediately before the span
+                        if *line >= span_start.saturating_sub(5) && *line <= span_end {
+                            let has_edge = item
+                                .related
+                                .as_ref()
+                                .is_some_and(|r| r.contains_key(name));
+                            if !has_edge {
+                                if fix {
+                                    let related = item.related.get_or_insert_with(HashMap::new);
+                                    related.insert(name.clone(), None);
+                                    modified = true;
+                                }
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label.clone(),
+                                    kind: DiagnosticKind::MissingRelatedEdge {
+                                        name: name.clone(),
+                                    },
+                                    severity: Severity::Error,
+                                    message: format!(
+                                        "source has \x40liyi:related \"{name}\" but sidecar is missing the related edge"
+                                    ),
+                                });
                             }
                         }
                     }
