@@ -284,9 +284,18 @@ fn check_sidecar(
                             };
 
                             if let Some(new_span) = tree_path_recovered {
-                                // tree_path resolved to a (possibly different) span
+                                // tree_path resolved — check whether the
+                                // content at new_span is unchanged (pure
+                                // shift) or also changed (semantic drift).
                                 let old_span = item.source_span;
-                                if new_span != old_span {
+                                let old_hash = item.source_hash.as_ref().unwrap();
+                                let content_unchanged = hash_span(&source_content, new_span)
+                                    .map(|(h, _)| h == *old_hash)
+                                    .unwrap_or(false);
+
+                                if new_span != old_span && content_unchanged {
+                                    // Pure shift — content intact, only
+                                    // position changed.  Safe to auto-fix.
                                     let delta = new_span[0] as i64 - old_span[0] as i64;
                                     if fix {
                                         item.source_span = new_span;
@@ -310,13 +319,32 @@ fn check_sidecar(
                                         ),
                                     });
                                 } else {
-                                    // Same span, but hash changed — genuine stale
+                                    // Content changed (semantic drift).
+                                    // Update span to track the item's
+                                    // current location but do NOT rehash —
+                                    // the stale hash is the signal that
+                                    // intent review is needed.
+                                    if fix && new_span != old_span {
+                                        item.source_span = new_span;
+                                        // Intentionally NOT updating hash —
+                                        // leaves the spec stale so the next
+                                        // `liyi check` flags it.
+                                        modified = true;
+                                    }
+                                    let msg = if new_span != old_span {
+                                        format!(
+                                            "source changed and shifted → [{}, {}] (tree_path resolved, not auto-rehashed)",
+                                            new_span[0], new_span[1]
+                                        )
+                                    } else {
+                                        "source changed at tree_path location".into()
+                                    };
                                     diagnostics.push(Diagnostic {
                                         file: entry.source_path.clone(),
                                         item_or_req: label.clone(),
                                         kind: DiagnosticKind::Stale,
                                         severity: Severity::Warning,
-                                        message: "source changed at tree_path location".into(),
+                                        message: msg,
                                     });
                                 }
                             } else {
@@ -387,29 +415,63 @@ fn check_sidecar(
                         };
 
                         if let Some(new_span) = recovered {
+                            // PastEof means old hash is unreliable (can't
+                            // hash a span past the file end).  Check
+                            // whether the content at the resolved span
+                            // matches the *recorded* hash to distinguish
+                            // pure shift from semantic drift.
                             let old_span = item.source_span;
-                            let delta = new_span[0] as i64 - old_span[0] as i64;
-                            if fix {
-                                item.source_span = new_span;
-                                if let Ok((h, a)) = hash_span(&source_content, new_span) {
-                                    item.source_hash = Some(h);
-                                    item.source_anchor = Some(a);
+                            let content_unchanged = item
+                                .source_hash
+                                .as_ref()
+                                .and_then(|old_h| {
+                                    hash_span(&source_content, new_span)
+                                        .ok()
+                                        .map(|(h, _)| h == *old_h)
+                                })
+                                .unwrap_or(false);
+
+                            if content_unchanged {
+                                let delta = new_span[0] as i64 - old_span[0] as i64;
+                                if fix {
+                                    item.source_span = new_span;
+                                    if let Ok((h, a)) = hash_span(&source_content, new_span) {
+                                        item.source_hash = Some(h);
+                                        item.source_anchor = Some(a);
+                                    }
+                                    modified = true;
                                 }
-                                modified = true;
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label.clone(),
+                                    kind: DiagnosticKind::Shifted {
+                                        from: old_span,
+                                        to: new_span,
+                                    },
+                                    severity: Severity::Warning,
+                                    message: format!(
+                                        "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+                                        new_span[0], new_span[1]
+                                    ),
+                                });
+                            } else {
+                                // Content also changed — relocate span
+                                // but leave hash stale.
+                                if fix {
+                                    item.source_span = new_span;
+                                    modified = true;
+                                }
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label.clone(),
+                                    kind: DiagnosticKind::Stale,
+                                    severity: Severity::Warning,
+                                    message: format!(
+                                        "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed)",
+                                        new_span[0], new_span[1]
+                                    ),
+                                });
                             }
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label.clone(),
-                                kind: DiagnosticKind::Shifted {
-                                    from: old_span,
-                                    to: new_span,
-                                },
-                                severity: Severity::Warning,
-                                message: format!(
-                                    "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
-                                    new_span[0], new_span[1]
-                                ),
-                            });
                         } else {
                             let detail = if tp_note.is_empty() {
                                 format!("span end {end} exceeds file length {total}")
@@ -581,28 +643,55 @@ fn check_sidecar(
 
                         if let Some(new_span) = recovered {
                             let old_span = req.source_span;
-                            let delta = new_span[0] as i64 - old_span[0] as i64;
-                            if fix {
-                                req.source_span = new_span;
-                                if let Ok((h, a)) = hash_span(&source_content, new_span) {
-                                    req.source_hash = Some(h);
-                                    req.source_anchor = Some(a);
+                            let content_unchanged = req
+                                .source_hash
+                                .as_ref()
+                                .and_then(|old_h| {
+                                    hash_span(&source_content, new_span)
+                                        .ok()
+                                        .map(|(h, _)| h == *old_h)
+                                })
+                                .unwrap_or(false);
+
+                            if content_unchanged {
+                                let delta = new_span[0] as i64 - old_span[0] as i64;
+                                if fix {
+                                    req.source_span = new_span;
+                                    if let Ok((h, a)) = hash_span(&source_content, new_span) {
+                                        req.source_hash = Some(h);
+                                        req.source_anchor = Some(a);
+                                    }
+                                    modified = true;
                                 }
-                                modified = true;
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label,
+                                    kind: DiagnosticKind::Shifted {
+                                        from: old_span,
+                                        to: new_span,
+                                    },
+                                    severity: Severity::Warning,
+                                    message: format!(
+                                        "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+                                        new_span[0], new_span[1]
+                                    ),
+                                });
+                            } else {
+                                if fix {
+                                    req.source_span = new_span;
+                                    modified = true;
+                                }
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label,
+                                    kind: DiagnosticKind::Stale,
+                                    severity: Severity::Warning,
+                                    message: format!(
+                                        "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed)",
+                                        new_span[0], new_span[1]
+                                    ),
+                                });
                             }
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label,
-                                kind: DiagnosticKind::Shifted {
-                                    from: old_span,
-                                    to: new_span,
-                                },
-                                severity: Severity::Warning,
-                                message: format!(
-                                    "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
-                                    new_span[0], new_span[1]
-                                ),
-                            });
                         } else {
                             let detail = if tp_note.is_empty() {
                                 format!("span end {end} exceeds file length {total}")
