@@ -1,0 +1,22 @@
+{
+  "version": "0.1",
+  "source": "beta.rs",
+  "specs": [
+    {
+      "requirement": "req-beta",
+      "source_span": [1, 2],
+      "source_hash": "sha256:51c723a205354cbb4f6bf3d235c8fb9bb6027223a07322ad8bd08c9137b7ad38"
+    },
+    {
+      "item": "beta_impl",
+      "reviewed": true,
+      "intent": "Implements beta logic",
+      "source_span": [4, 5],
+      "source_hash": "sha256:fc76cf8b9101195ccdbcb174918886d018f009d3696540da6c91d8f1bc83e06b",
+      "source_anchor": "// @liyi:related req-alpha",
+      "related": {
+        "req-alpha": "sha256:c02968b5169719510a748b6c73e2b20466f98c7469219540c106e0e8ae512337"
+      }
+    }
+  ]
+}

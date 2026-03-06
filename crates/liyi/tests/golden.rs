@@ -420,3 +420,19 @@ fn req_changed() {
     );
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
+
+#[test]
+fn req_cycle() {
+    let root = fixture_path("req_cycle");
+    let flags = default_flags();
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let has_cycle = diagnostics
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::RequirementCycle { .. }));
+    assert!(
+        has_cycle,
+        "expected RequirementCycle diagnostic, got: {diagnostics:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
+}

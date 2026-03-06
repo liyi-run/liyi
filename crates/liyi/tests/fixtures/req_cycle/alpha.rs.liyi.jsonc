@@ -1,0 +1,22 @@
+{
+  "version": "0.1",
+  "source": "alpha.rs",
+  "specs": [
+    {
+      "requirement": "req-alpha",
+      "source_span": [1, 2],
+      "source_hash": "sha256:c02968b5169719510a748b6c73e2b20466f98c7469219540c106e0e8ae512337"
+    },
+    {
+      "item": "alpha_impl",
+      "reviewed": true,
+      "intent": "Implements alpha logic",
+      "source_span": [4, 5],
+      "source_hash": "sha256:be8fe584be68d01125dfcb44dcc21262daa8581e42eec440bca508ef46e33376",
+      "source_anchor": "// @liyi:related req-beta",
+      "related": {
+        "req-beta": "sha256:51c723a205354cbb4f6bf3d235c8fb9bb6027223a07322ad8bd08c9137b7ad38"
+      }
+    }
+  ]
+}
