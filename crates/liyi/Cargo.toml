@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 description = "立意 — make intent explicit, persistent, and reviewable in AI-assisted development"
 license = "Apache-2.0 OR MIT"
+repository = "https://github.com/liyi-run/liyi"
+homepage = "https://github.com/liyi-run/liyi"
+readme = "../../README.md"
+keywords = ["intent", "linter", "ai-assisted", "sidecar", "code-review"]
+categories = ["development-tools", "command-line-utilities"]
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

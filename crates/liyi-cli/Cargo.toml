@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 description = "CLI for 立意 (liyi) — the intent linter"
 license = "Apache-2.0 OR MIT"
+repository = "https://github.com/liyi-run/liyi"
+homepage = "https://github.com/liyi-run/liyi"
+readme = "../../README.md"
+keywords = ["intent", "linter", "ai-assisted", "cli"]
+categories = ["development-tools", "command-line-utilities"]
 
 [[bin]]
 name = "liyi"
