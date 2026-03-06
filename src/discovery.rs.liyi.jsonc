@@ -42,9 +42,9 @@
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
         54,
-        147
+        151
       ],
-      "source_hash": "sha256:994fffc124d8517c2644e24af4bd2285387e127c20217a585e0b1cee7c6c678a",
+      "source_hash": "sha256:9e27142bd68d602d92947189dc94c275f4916a3cf43563c599b2166725ec4ebf",
       "source_anchor": "/// Walk the file tree rooted at `root`, collecting sidecar entries and all"
     }
   ]

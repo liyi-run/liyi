@@ -79,7 +79,7 @@ pub fn run_check(
                         kind: DiagnosticKind::DuplicateEntry,
                         severity: Severity::Error,
                         message: format!(
-                            "duplicate @liyi:requirement \"{name}\" (also in {}:{})",
+                            "duplicate \x40liyi:requirement \"{name}\" (also in {}:{})",
                             existing.file.display(),
                             existing.line,
                         ),
@@ -373,7 +373,7 @@ fn check_sidecar(
                                 item_or_req: label.clone(),
                                 kind: DiagnosticKind::Trivial,
                                 severity: Severity::Info,
-                                message: "marked @liyi:trivial".into(),
+                                message: "marked \x40liyi:trivial".into(),
                             });
                         }
                         SourceMarker::Ignore { line, .. }
@@ -385,7 +385,7 @@ fn check_sidecar(
                                 item_or_req: label.clone(),
                                 kind: DiagnosticKind::Ignored,
                                 severity: Severity::Info,
-                                message: "marked @liyi:ignore".into(),
+                                message: "marked \x40liyi:ignore".into(),
                             });
                         }
                         _ => {}

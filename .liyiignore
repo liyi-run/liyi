@@ -1,4 +1,8 @@
 # Exclude documentation files that contain example @liyi: markers
 docs/
+# Exclude agent instructions and READMEs (contain @liyi: examples in prose)
+AGENTS.md
+README.md
+README.zh.md
 # Exclude test fixtures
 tests/fixtures/

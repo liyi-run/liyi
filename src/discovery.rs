@@ -71,12 +71,16 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
         if !path.is_file() {
             continue;
         }
-        all_files.push(path.clone());
         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
             if name.ends_with(SIDECAR_SUFFIX) {
                 sidecar_paths.push(path);
+                // Sidecar files are metadata — do not include them in
+                // all_files so the marker scanner does not match literal
+                // marker text in JSON string values (source_anchor, intent).
+                continue;
             }
         }
+        all_files.push(path);
     }
 
     // Detect ambiguous sidecars: group by directory + base stem.
@@ -201,8 +205,10 @@ mod tests {
         let result = discover(root, &[]);
         assert_eq!(result.sidecars.len(), 1);
         assert_eq!(result.sidecars[0].repo_relative_source, "foo.rs");
-        // all_files includes every non-ignored file
-        assert!(result.all_files.len() >= 3);
+        // all_files includes every non-ignored file except sidecars
+        assert!(result.all_files.len() >= 2);
+        // Sidecar files must not appear in all_files
+        assert!(!result.all_files.iter().any(|p| p.to_string_lossy().ends_with(".liyi.jsonc")));
         assert!(result.warnings.is_empty());
     }
 
@@ -235,8 +241,8 @@ mod tests {
         assert_eq!(scoped.sidecars.len(), 1);
         assert_eq!(scoped.sidecars[0].repo_relative_source, "sub/inner.rs");
 
-        // all_files is unaffected by scope
-        assert!(scoped.all_files.len() >= 4);
+        // all_files is unaffected by scope (but excludes sidecars)
+        assert!(scoped.all_files.len() >= 2);
     }
 
     #[test]

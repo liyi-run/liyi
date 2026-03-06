@@ -71,6 +71,21 @@ As the project grows, expect additional top-level directories for implementation
 - Keep lines at a reasonable length (wrap around 80–100 characters where practical).
 - SPDX license headers (`<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->`) should appear at the top of documentation files.
 
+### Quine-escape convention
+
+The linter scans source files for `@liyi:*` markers using plain substring matching — it has no language awareness. This means string constants, format strings, and test data that contain literal marker text will be misidentified as real markers (the classic "quine" problem of a program reading its own source).
+
+To prevent self-triggering, **escape the `@` character** in any string literal that spells out a marker:
+
+| Language | Escape | Example |
+|---|---|---|
+| Rust | `\x40` | `"\x40liyi:ignore"` |
+| JSON | `\u0040` | `"\u0040liyi:requirement"` |
+
+Actual marker comments (e.g. `// @liyi:intent =doc`) must keep the literal `@` — they are real markers.
+
+This invariant is enforced as `@liyi:requirement(quine-escape)` in `src/markers.rs`.
+
 ### Chinese writing style
 
 When writing Chinese content, avoid **topic-comment sentence structures**. Use **subject-predicate constructions** with appropriate prepositions or particles instead, so that readers of all backgrounds can understand the text more easily.

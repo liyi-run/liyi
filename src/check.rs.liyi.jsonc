@@ -22,7 +22,7 @@
         30,
         144
       ],
-      "source_hash": "sha256:a697be37f71b2a1b17b600d4da056ec0bba4db09ba1ddd4efc7fb1fd23cef703",
+      "source_hash": "sha256:db3fd3e34dced08e14f184cdf523a36be9d2eee9a976113fd240fe176e55fb62",
       "source_anchor": "/// Run the two-pass check and optionally apply `--fix` corrections."
     },
     {
@@ -33,7 +33,7 @@
         150,
         507
       ],
-      "source_hash": "sha256:b36d2e0e6312f468dd7116339f54ba67bfa80b12fc914277cfb24ba190d1e4a5",
+      "source_hash": "sha256:e39d1426fbc42e9927db6a77b2d0d06ac75d2fc1bcdd478fd088f3008aff2ada",
       "source_anchor": "fn check_sidecar("
     },
     {

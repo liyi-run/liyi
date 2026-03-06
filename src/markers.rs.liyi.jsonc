@@ -4,6 +4,15 @@
   "source": "src/markers.rs",
   "specs": [
     {
+      "requirement": "quine-escape",
+      "source_span": [
+        38,
+        43
+      ],
+      "source_hash": "sha256:f7845eee92f8219bf7dc09aed02a92bf14ac16aa097994ed46dd8382f8583f35",
+      "source_anchor": "// @liyi:requirement(quine-escape)"
+    },
+    {
       "item": "SourceMarker",
       "reviewed": false,
       "intent": "Enumerate all recognized @liyi: marker types (Module, Requirement, Related, Intent, Trivial, Ignore, Nontrivial) with their associated data (name, prose, line number). Each variant carries a 1-indexed line number.",
@@ -30,10 +39,10 @@
       "reviewed": false,
       "intent": "Map every accepted marker alias (English canonical forms plus Chinese, Japanese, Korean, Spanish, French, Portuguese variants) to its canonical @liyi:* form. This table is the single source of truth for multilingual marker recognition.",
       "source_span": [
-        43,
-        92
+        52,
+        101
       ],
-      "source_hash": "sha256:e3142fa172ba7ebe5f5c60b7efab94ad561f0757fc7952031c293a934070c718",
+      "source_hash": "sha256:e37f7830bd0043268f210c53ec87ed519290dfbde4e7ecd00e03bc33e82af9cc",
       "source_anchor": "/// (alias, canonical) pairs.  Order does not matter."
     },
     {
@@ -41,8 +50,8 @@
       "reviewed": false,
       "intent": "Search a normalized line for any known marker alias from ALIAS_TABLE. Return the canonical marker keyword and the byte offset immediately after the matched alias, or None if no marker is found.",
       "source_span": [
-        94,
-        103
+        103,
+        112
       ],
       "source_hash": "sha256:03a8b361bfd2c5dc9a1191ae162f22407112afda0f27b86f3b123762818f4738",
       "source_anchor": "/// Try to find a known marker at any position in `normalized`."
@@ -52,8 +61,8 @@
       "reviewed": false,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present.",
       "source_span": [
-        105,
-        122
+        114,
+        131
       ],
       "source_hash": "sha256:84ffbaf818926dedb86acdc4cf1b3e96773ec1f9219b5c5cc31479b013162e21",
       "source_anchor": "/// Extract a name from the remainder after a keyword."
@@ -63,8 +72,8 @@
       "reviewed": false,
       "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
-        124,
-        174
+        133,
+        183
       ],
       "source_hash": "sha256:9fcda3928cbb965e545dd0dbab1927c75e9b80c9eb64d508dcd4443cce8041ba",
       "source_anchor": "/// Scan all lines of `content` and return discovered `@liyi:*` markers."

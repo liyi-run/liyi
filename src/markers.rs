@@ -32,63 +32,72 @@ pub fn normalize_line(line: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// Canonical marker keywords (without the leading `@`).
-const CANON_IGNORE: &str = "@liyi:ignore";
-const CANON_TRIVIAL: &str = "@liyi:trivial";
-const CANON_NONTRIVIAL: &str = "@liyi:nontrivial";
-const CANON_MODULE: &str = "@liyi:module";
-const CANON_REQUIREMENT: &str = "@liyi:requirement";
-const CANON_RELATED: &str = "@liyi:related";
-const CANON_INTENT: &str = "@liyi:intent";
+///
+/// NOTE: The `@` is escaped as `\x40` to avoid the linter's own marker
+/// scanner matching these string constants — the classic quine-escape problem.
+// @liyi:requirement(quine-escape)
+// The linter's own source files must not contain literal `@liyi:*` (or any
+// alias) marker strings inside string constants, format strings, or test
+// data.  Use `\x40` (Rust) or `\u0040` (JSON) to spell the `@` so the
+// scanner does not self-trigger.  Actual marker comments (like this one)
+// are the sole exception.
+const CANON_IGNORE: &str = "\x40liyi:ignore";
+const CANON_TRIVIAL: &str = "\x40liyi:trivial";
+const CANON_NONTRIVIAL: &str = "\x40liyi:nontrivial";
+const CANON_MODULE: &str = "\x40liyi:module";
+const CANON_REQUIREMENT: &str = "\x40liyi:requirement";
+const CANON_RELATED: &str = "\x40liyi:related";
+const CANON_INTENT: &str = "\x40liyi:intent";
 
 /// (alias, canonical) pairs.  Order does not matter.
 const ALIAS_TABLE: &[(&str, &str)] = &[
     // ignore
     (CANON_IGNORE, CANON_IGNORE),
-    ("@立意:忽略", CANON_IGNORE),
-    ("@liyi:ignorar", CANON_IGNORE),
-    ("@立意:無視", CANON_IGNORE),
-    ("@liyi:ignorer", CANON_IGNORE),
-    ("@립의:무시", CANON_IGNORE),
+    ("\x40立意:忽略", CANON_IGNORE),
+    ("\x40liyi:ignorar", CANON_IGNORE),
+    ("\x40立意:無視", CANON_IGNORE),
+    ("\x40liyi:ignorer", CANON_IGNORE),
+    ("\x40립의:무시", CANON_IGNORE),
     // trivial
     (CANON_TRIVIAL, CANON_TRIVIAL),
-    ("@立意:显然", CANON_TRIVIAL),
-    ("@立意:自明", CANON_TRIVIAL),
-    ("@립의:자명", CANON_TRIVIAL),
+    ("\x40立意:显然", CANON_TRIVIAL),
+    ("\x40立意:自明", CANON_TRIVIAL),
+    ("\x40립의:자명", CANON_TRIVIAL),
     // nontrivial
     (CANON_NONTRIVIAL, CANON_NONTRIVIAL),
-    ("@立意:并非显然", CANON_NONTRIVIAL),
-    ("@liyi:notrivial", CANON_NONTRIVIAL),
-    ("@立意:非自明", CANON_NONTRIVIAL),
-    ("@liyi:nãotrivial", CANON_NONTRIVIAL),
-    ("@립의:비자명", CANON_NONTRIVIAL),
+    ("\x40立意:并非显然", CANON_NONTRIVIAL),
+    ("\x40liyi:notrivial", CANON_NONTRIVIAL),
+    ("\x40立意:非自明", CANON_NONTRIVIAL),
+    ("\x40liyi:nãotrivial", CANON_NONTRIVIAL),
+    ("\x40립의:비자명", CANON_NONTRIVIAL),
     // module
     (CANON_MODULE, CANON_MODULE),
-    ("@立意:模块", CANON_MODULE),
-    ("@liyi:módulo", CANON_MODULE),
-    ("@立意:モジュール", CANON_MODULE),
-    ("@립의:모듈", CANON_MODULE),
+    ("\x40立意:模块", CANON_MODULE),
+    ("\x40liyi:módulo", CANON_MODULE),
+    ("\x40立意:モジュール", CANON_MODULE),
+    ("\x40립의:모듈", CANON_MODULE),
     // requirement
     (CANON_REQUIREMENT, CANON_REQUIREMENT),
-    ("@立意:需求", CANON_REQUIREMENT),
-    ("@liyi:requisito", CANON_REQUIREMENT),
-    ("@立意:要件", CANON_REQUIREMENT),
-    ("@liyi:exigence", CANON_REQUIREMENT),
-    ("@립의:요건", CANON_REQUIREMENT),
+    ("\x40立意:需求", CANON_REQUIREMENT),
+    ("\x40liyi:requisito", CANON_REQUIREMENT),
+    ("\x40立意:要件", CANON_REQUIREMENT),
+    ("\x40liyi:exigence", CANON_REQUIREMENT),
+    ("\x40립의:요건", CANON_REQUIREMENT),
     // related
     (CANON_RELATED, CANON_RELATED),
-    ("@立意:有关", CANON_RELATED),
-    ("@liyi:relacionado", CANON_RELATED),
-    ("@立意:関連", CANON_RELATED),
-    ("@liyi:lié", CANON_RELATED),
-    ("@립의:관련", CANON_RELATED),
+    ("\x40立意:有关", CANON_RELATED),
+    ("\x40liyi:relacionado", CANON_RELATED),
+    ("\x40立意:関連", CANON_RELATED),
+    ("\x40liyi:lié", CANON_RELATED),
+    ("\x40립의:관련", CANON_RELATED),
     // intent
     (CANON_INTENT, CANON_INTENT),
-    ("@立意:意图", CANON_INTENT),
-    ("@liyi:intención", CANON_INTENT),
-    ("@立意:意図", CANON_INTENT),
-    ("@liyi:intention", CANON_INTENT),
-    ("@립의:의도", CANON_INTENT),
-    ("@liyi:intenção", CANON_INTENT),
+    ("\x40立意:意图", CANON_INTENT),
+    ("\x40liyi:intención", CANON_INTENT),
+    ("\x40立意:意図", CANON_INTENT),
+    ("\x40liyi:intention", CANON_INTENT),
+    ("\x40립의:의도", CANON_INTENT),
+    ("\x40liyi:intenção", CANON_INTENT),
 ];
 
 /// Try to find a known marker at any position in `normalized`.
@@ -188,20 +197,20 @@ mod tests {
 
     #[test]
     fn normalize_fullwidth() {
-        assert_eq!(normalize_line("＠立意：忽略"), "@立意:忽略");
-        assert_eq!(normalize_line("＠liyi：intent（x）"), "@liyi:intent(x)");
+        assert_eq!(normalize_line("\u{FF20}立意\u{FF1A}忽略"), "\x40立意:忽略");
+        assert_eq!(normalize_line("\u{FF20}liyi\u{FF1A}intent\u{FF08}x\u{FF09}"), "\x40liyi:intent(x)");
     }
 
     #[test]
     fn scan_module() {
-        let m = scan_markers("// @liyi:module\n");
+        let m = scan_markers("// \x40liyi:module\n");
         assert_eq!(m.len(), 1);
         assert!(matches!(&m[0], SourceMarker::Module { line: 1 }));
     }
 
     #[test]
     fn scan_trivial_and_nontrivial() {
-        let m = scan_markers("x\n// @liyi:trivial\ny\n// @liyi:nontrivial\n");
+        let m = scan_markers("x\n// \x40liyi:trivial\ny\n// \x40liyi:nontrivial\n");
         assert_eq!(m.len(), 2);
         assert!(matches!(&m[0], SourceMarker::Trivial { line: 2 }));
         assert!(matches!(&m[1], SourceMarker::Nontrivial { line: 4 }));
@@ -209,49 +218,49 @@ mod tests {
 
     #[test]
     fn scan_ignore_with_reason() {
-        let m = scan_markers("// @liyi:ignore generated code\n");
+        let m = scan_markers("// \x40liyi:ignore generated code\n");
         assert!(matches!(&m[0], SourceMarker::Ignore { reason: Some(r), line: 1 } if r == "generated code"));
     }
 
     #[test]
     fn scan_requirement_paren() {
-        let m = scan_markers("// @liyi:requirement(currency-match) ...\n");
+        let m = scan_markers("// \x40liyi:requirement(currency-match) ...\n");
         assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match"));
     }
 
     #[test]
     fn scan_requirement_space() {
-        let m = scan_markers("// @liyi:requirement currency-match\n");
+        let m = scan_markers("// \x40liyi:requirement currency-match\n");
         assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match"));
     }
 
     #[test]
     fn scan_related() {
-        let m = scan_markers("// @liyi:related some_req\n");
+        let m = scan_markers("// \x40liyi:related some_req\n");
         assert!(matches!(&m[0], SourceMarker::Related { name, line: 1 } if name == "some_req"));
     }
 
     #[test]
     fn scan_intent_doc() {
-        let m = scan_markers("// @liyi:intent =doc\n");
+        let m = scan_markers("// \x40liyi:intent =doc\n");
         assert!(matches!(&m[0], SourceMarker::Intent { prose: None, is_doc: true, line: 1 }));
     }
 
     #[test]
     fn scan_intent_doc_chinese() {
-        let m = scan_markers("// @liyi:intent =文档\n");
+        let m = scan_markers("// \x40liyi:intent =文档\n");
         assert!(matches!(&m[0], SourceMarker::Intent { prose: None, is_doc: true, line: 1 }));
     }
 
     #[test]
     fn scan_intent_prose() {
-        let m = scan_markers("// @liyi:intent Must reject negative amounts\n");
+        let m = scan_markers("// \x40liyi:intent Must reject negative amounts\n");
         assert!(matches!(&m[0], SourceMarker::Intent { prose: Some(p), is_doc: false, line: 1 } if p == "Must reject negative amounts"));
     }
 
     #[test]
     fn scan_alias_chinese() {
-        let m = scan_markers("// @立意:忽略\n// @立意:模块\n");
+        let m = scan_markers("// \x40立意:忽略\n// \x40立意:模块\n");
         assert_eq!(m.len(), 2);
         assert!(matches!(&m[0], SourceMarker::Ignore { .. }));
         assert!(matches!(&m[1], SourceMarker::Module { .. }));
@@ -259,7 +268,7 @@ mod tests {
 
     #[test]
     fn scan_fullwidth_normalization() {
-        let m = scan_markers("// ＠立意：忽略\n");
+        let m = scan_markers("// \u{FF20}立意\u{FF1A}忽略\n");
         assert_eq!(m.len(), 1);
         assert!(matches!(&m[0], SourceMarker::Ignore { reason: None, line: 1 }));
     }
