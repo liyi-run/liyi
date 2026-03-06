@@ -87,6 +87,16 @@ pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> Liyi
             DiagnosticKind::ReqChanged { .. } if flags.fail_on_req_changed => {
                 has_check_failure = true;
             }
+            // Error-severity diagnostics always trigger check failure
+            DiagnosticKind::MalformedHash
+            | DiagnosticKind::UnknownRequirement { .. }
+            | DiagnosticKind::RequirementCycle { .. }
+            | DiagnosticKind::SpanPastEof { .. }
+            | DiagnosticKind::InvalidSpan { .. }
+            | DiagnosticKind::OrphanedSource
+            | DiagnosticKind::DuplicateEntry => {
+                has_check_failure = true;
+            }
             _ => {}
         }
     }

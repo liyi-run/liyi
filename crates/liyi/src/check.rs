@@ -204,6 +204,60 @@ fn check_sidecar(
         return;
     }
 
+    // 2b. Validate source_hash format on all specs
+    let hash_re = regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap();
+    for spec in &sidecar.specs {
+        match spec {
+            Spec::Item(item) => {
+                if let Some(ref h) = item.source_hash
+                    && !hash_re.is_match(h)
+                {
+                    diagnostics.push(Diagnostic {
+                        file: sidecar_path.clone(),
+                        item_or_req: item.item.clone(),
+                        kind: DiagnosticKind::MalformedHash,
+                        severity: Severity::Error,
+                        message: format!(
+                            "source_hash \"{h}\" does not match sha256:<hex>"
+                        ),
+                    });
+                }
+                if let Some(ref related) = item.related {
+                    for (name, hash_opt) in related {
+                        if let Some(h) = hash_opt
+                            && !hash_re.is_match(h)
+                        {
+                            diagnostics.push(Diagnostic {
+                                file: sidecar_path.clone(),
+                                item_or_req: item.item.clone(),
+                                kind: DiagnosticKind::MalformedHash,
+                                severity: Severity::Error,
+                                message: format!(
+                                    "related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
+                                ),
+                            });
+                        }
+                    }
+                }
+            }
+            Spec::Requirement(req) => {
+                if let Some(ref h) = req.source_hash
+                    && !hash_re.is_match(h)
+                {
+                    diagnostics.push(Diagnostic {
+                        file: sidecar_path.clone(),
+                        item_or_req: req.requirement.clone(),
+                        kind: DiagnosticKind::MalformedHash,
+                        severity: Severity::Error,
+                        message: format!(
+                            "source_hash \"{h}\" does not match sha256:<hex>"
+                        ),
+                    });
+                }
+            }
+        }
+    }
+
     // 3. Check source exists
     if !entry.source_path.is_file() {
         diagnostics.push(Diagnostic {
