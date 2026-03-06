@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://liyi.dev/schema/0.1/liyi.schema.json",
+  "title": "立意 sidecar spec file",
+  "type": "object",
+  "required": ["version", "source", "specs"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Schema version. The linter rejects unknown versions."
+    },
+    "source": {
+      "type": "string",
+      "description": "Path to the source file, relative to the repository root."
+    },
+    "specs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/itemSpec" },
+          { "$ref": "#/$defs/requirementSpec" }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "sourceSpan": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Closed interval of 1-indexed line numbers [start, end]. start must be <= end."
+    },
+    "sourceHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]+$",
+      "description": "SHA-256 hex digest of the source lines in the span, prefixed with 'sha256:'."
+    },
+    "itemSpec": {
+      "type": "object",
+      "required": ["item", "intent", "source_span"],
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "type": "string",
+          "description": "Display name of the item (function, struct, macro, etc.). Not a unique key — identity is item + source_span."
+        },
+        "reviewed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Optional. Whether a human has reviewed and accepted this intent via sidecar approval. Defaults to false when absent. The linter also considers an item reviewed if @liyi:intent is present in source."
+        },
+        "intent": {
+          "type": "string",
+          "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent."
+        },
+        "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "source_hash": {
+          "$ref": "#/$defs/sourceHash",
+          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
+        },
+        "source_anchor": {
+          "type": "string",
+          "description": "Literal text of the first line of the span. Tool-managed — agents should not produce this."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Optional. Agent's self-assessed confidence in the inferred intent. May be removed after review."
+        },
+        "related": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/sourceHash" },
+              { "type": "null" }
+            ]
+          },
+          "description": "Optional. Maps requirement names to their source_hash at time of last review. Agents write null; the tool fills in hashes."
+        }
+      }
+    },
+    "requirementSpec": {
+      "type": "object",
+      "required": ["requirement", "source_span"],
+      "additionalProperties": false,
+      "properties": {
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement. Unique per repository."
+        },
+        "source_span": { "$ref": "#/$defs/sourceSpan" },
+        "source_hash": {
+          "$ref": "#/$defs/sourceHash",
+          "description": "Tool-managed. Computed by liyi reanchor or the linter."
+        },
+        "source_anchor": {
+          "type": "string",
+          "description": "Literal text of the first line of the span. Tool-managed."
+        }
+      }
+    }
+  }
+}
