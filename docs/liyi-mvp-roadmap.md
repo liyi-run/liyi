@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — MVP Implementation Roadmap
 
-2026-03-05 (updated 2026-03-07)
+2026-03-05 (updated 2026-03-08)
 
 ---
 
@@ -19,21 +19,21 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 ---
 
-## Current Status (2026-03-07)
+## Current Status (2026-03-08)
 
-### Components — all implemented (tree_path pending)
+### Components — all implemented
 
 | Module | Status | Notes |
 |--------|--------|-------|
 | `cli.rs` | ✅ Done | `check` + `reanchor` subcommands, all planned flags |
 | `discovery.rs` | ✅ Done | `.liyiignore` support, ambiguous sidecar detection, scope filtering |
-| `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields`. `tree_path` field not yet added to structs |
+| `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields`, `tree_path` field |
 | `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
 | `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
 | `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
-| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back. Tree-sitter span recovery not yet wired |
-| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold. Tree-sitter span recovery not yet wired |
-| `tree_path.rs` | ❌ Not implemented | Tree-sitter structural identity & span recovery (R6) |
+| `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, tree-sitter span recovery via `tree_path` |
+| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, `--migrate` scaffold, tree-sitter span recovery |
+| `tree_path.rs` | ✅ Done | Tree-sitter structural identity & span recovery (R6). Resolve, compute, auto-populate. Rust grammar. |
 | `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes |
 | `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
 | JSON Schema | ✅ Done | `schema/liyi.schema.json` — `tree_path` field added |
@@ -154,7 +154,7 @@ A single Rust binary with subcommands:
 | `liyi check --json` | Machine-readable output with full context for each stale item (feeds `liyi triage`) |
 | `liyi approve [paths...] [--yes]` | Interactive review: mark specs as human-approved |
 | `liyi init [source-file]` | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
-| `liyi reanchor <sidecar> [--item <name> --span <s,e>]` | Manual span re-hashing for targeted fixes |
+| `liyi reanchor <files-or-dirs...> [--item <name> --span <s,e>]` | Manual span re-hashing (accepts files or directories, recursive) |
 | `liyi reanchor --migrate` | Schema version migration (no-op in 0.1, scaffolded) |
 | `liyi triage --prompt` | Assemble a self-contained LLM prompt from stale items (post-MVP) |
 | `liyi triage --validate <file>` | Validate an agent-produced triage report against the schema (post-MVP) |
@@ -252,8 +252,8 @@ enum Command {
 
     /// Re-hash source spans in sidecar files
     Reanchor {
-        /// Sidecar file to reanchor
-        file: PathBuf,
+        /// Sidecar files or directories to reanchor (recursive)
+        files: Vec<PathBuf>,
 
         /// Target a specific item by name
         #[arg(long)]
@@ -574,8 +574,11 @@ For each `.liyi.jsonc` in scope:
 When `--fix` is active:
 - Fill in missing `source_hash` and `source_anchor` (same as `reanchor`).
 - Auto-correct SHIFTED spans (write new span, recompute hash/anchor).
+- Attempt tree-path re-resolution **before** validating span boundaries — if `tree_path` is set and the current `source_span` is past EOF or otherwise invalid, resolve via tree-sitter first.
 - Write modified sidecars back to disk.
 - Do NOT modify `intent`, `reviewed`, `related`, or any human-authored field.
+
+`--fix --dry-run` shows what `--fix` would change without writing any files.
 
 **Key types:**
 
@@ -604,11 +607,11 @@ enum ExitCode {
 
 ### 8. `reanchor.rs` — Reanchor Subcommand
 
-**Purpose:** Re-hash source spans in a sidecar file. Manual tool for fixing spans after line shifts. When `tree_path` is populated, uses tree-sitter to locate items by structural identity before re-hashing.
+**Purpose:** Re-hash source spans in sidecar files. Manual tool for fixing spans after line shifts. Accepts one or more sidecar files or directories (recursive). When `tree_path` is populated, uses tree-sitter to locate items by structural identity before re-hashing.
 
 **Behavior:**
 
-1. Parse the target sidecar.
+1. Parse the target sidecar(s). If a directory is given, discover all `.liyi.jsonc` files under it recursively.
 2. If `--item` and `--span` are specified: find the named item, update its span, recompute hash/anchor.
 3. If neither: for every spec in the sidecar:
    a. If `tree_path` is non-empty and a tree-sitter grammar is available for the source language: parse the source file, locate the item by structural identity, update `source_span` to the item's current line range, recompute hash/anchor. This handles formatting changes, import additions, and any line-shifting edits.
@@ -838,16 +841,15 @@ Without this, bootstrapping requires hand-writing JSONC. Critical for first-run 
 2. Build `liyi` binary and run `liyi check --root .` as a CI step (dogfooding).
 3. Cache `target/` for fast builds.
 
-#### R6. `tree_path` — tree-sitter structural span recovery (~3 hours)
+#### R6. `tree_path` — tree-sitter structural span recovery ✅
 
-Implement the `tree_path` field for structural identity (design doc v8.4). This is the primary mitigation for `source_span` brittleness.
+Implemented. See `tree_path.rs`. The `tree_path` field provides structural identity for specs in supported languages (Rust in 0.1). `liyi reanchor` and `liyi check --fix` use tree-sitter to locate items by AST path, auto-populate `tree_path` from `source_span`, and recover spans across formatting and line-shifting changes.
 
-1. **`tree_path.rs` module** (~150 lines): Parse source files with `tree-sitter` + `tree-sitter-rust`. Given a `tree_path` string (e.g., `"fn::add_money"`, `"impl::Money::fn::new"`), walk the CST to find the matching node and return its line range. Given a `source_span`, walk the CST to construct the canonical `tree_path` for the node at that span.
-2. **`sidecar.rs`**: Add `tree_path: Option<String>` to `ItemSpec` and `RequirementSpec`. Serialize with `skip_serializing_if = "Option::is_none"`.
-3. **`reanchor.rs`**: When `tree_path` is non-empty and grammar is available, use tree-sitter to locate the item and update `source_span`. Populate/overwrite `tree_path` with canonical form. Fall back to current behavior when empty.
-4. **`check.rs`**: In pass 2, when hash mismatches and `tree_path` is available, use tree-sitter to verify/recover span before falling back to shift heuristic.
-5. **Golden-file test**: `tree_path_recovery/` fixture — source file reformatted (lines shifted), sidecar with `tree_path` populated, verify correct span recovery.
-6. **Language detection**: Infer language from file extension (`.rs` → Rust). Return `None` for unsupported languages (graceful fallback).
+Remaining improvements (design v8.5):
+- `liyi reanchor` should accept multiple files and directories.
+- `liyi check --fix` should attempt tree-path re-resolution before span validation (handles span-past-EOF).
+- Diagnostics should distinguish "no tree_path" from "tree_path resolution failed."
+- `--fix --dry-run` for previewing corrections.
 
 ### Nice-to-have before 0.1
 
