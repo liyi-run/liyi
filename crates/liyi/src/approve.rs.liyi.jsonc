@@ -57,10 +57,10 @@
       "intent": "Core per-sidecar logic: read and parse sidecar, iterate specs, apply item filter, skip already-reviewed, collect approve/reject/skip decisions (auto or interactive), reanchor hashes on approve, write back only if modified and not dry-run.",
       "source_span": [
         86,
-        188
+        183
       ],
       "tree_path": "fn::approve_sidecar",
-      "source_hash": "sha256:5c43f0ebfbf707715415cfd628de83b5c72b07c3f9fee204e511cdf34f371f27",
+      "source_hash": "sha256:f4acf21a09a3170dc74858e5d3101e2c190b75d5ab6a404f717012526b382a45",
       "source_anchor": "fn approve_sidecar("
     },
     {
@@ -68,8 +68,8 @@
       "reviewed": false,
       "intent": "Read a line from stdin and return Decision::Yes, Decision::No, or Decision::Skip. Must flush stdout before reading. Loop until a valid input is given.",
       "source_span": [
-        198,
-        220
+        193,
+        215
       ],
       "tree_path": "fn::prompt_user",
       "source_hash": "sha256:1da2906b05a1b4c868cabe60d3f8cc39b47788763805c0ef92412b06ee2bb4a9",

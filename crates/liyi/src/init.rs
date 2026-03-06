@@ -40,7 +40,11 @@ pub enum InitError {
 impl std::fmt::Display for InitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::AlreadyExists(p) => write!(f, "{} already exists (use --force to overwrite)", p.display()),
+            Self::AlreadyExists(p) => write!(
+                f,
+                "{} already exists (use --force to overwrite)",
+                p.display()
+            ),
             Self::Io(e) => write!(f, "{e}"),
         }
     }
@@ -85,7 +89,10 @@ pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
 pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {
     let sidecar_name = format!(
         "{}.liyi.jsonc",
-        source_file.file_name().unwrap_or_default().to_string_lossy()
+        source_file
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
     );
     let sidecar_path = source_file.with_file_name(&sidecar_name);
 

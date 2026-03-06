@@ -151,7 +151,10 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
         parts.push(format!("{unreviewed} unreviewed"));
     }
     if errors > 0 {
-        parts.push(format!("{errors} error{}", if errors == 1 { "" } else { "s" }));
+        parts.push(format!(
+            "{errors} error{}",
+            if errors == 1 { "" } else { "s" }
+        ));
     }
     if untracked > 0 {
         parts.push(format!("{untracked} untracked"));

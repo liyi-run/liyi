@@ -317,9 +317,7 @@ fn check_sidecar(
                         item_or_req: item.item.clone(),
                         kind: DiagnosticKind::MalformedHash,
                         severity: Severity::Error,
-                        message: format!(
-                            "source_hash \"{h}\" does not match sha256:<hex>"
-                        ),
+                        message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                     });
                 }
                 if let Some(ref related) = item.related {
@@ -349,9 +347,7 @@ fn check_sidecar(
                         item_or_req: req.requirement.clone(),
                         kind: DiagnosticKind::MalformedHash,
                         severity: Severity::Error,
-                        message: format!(
-                            "source_hash \"{h}\" does not match sha256:<hex>"
-                        ),
+                        message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                     });
                 }
             }
@@ -938,7 +934,14 @@ fn detect_requirement_cycles(graph: &HashMap<String, Vec<String>>) -> Vec<Vec<St
 
     for node in graph.keys() {
         if !visited.contains(node.as_str()) {
-            dfs(node, graph, &mut visited, &mut on_stack, &mut path, &mut cycles);
+            dfs(
+                node,
+                graph,
+                &mut visited,
+                &mut on_stack,
+                &mut path,
+                &mut cycles,
+            );
         }
     }
 

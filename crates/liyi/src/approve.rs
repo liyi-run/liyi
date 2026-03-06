@@ -120,10 +120,7 @@ fn approve_sidecar(
                 // Display context and prompt.
                 println!("─── {} ───", item.item);
                 println!("Intent: {}", item.intent);
-                println!(
-                    "Span:   [{}, {}]",
-                    item.source_span[0], item.source_span[1]
-                );
+                println!("Span:   [{}, {}]", item.source_span[0], item.source_span[1]);
 
                 // Show source lines.
                 let lines: Vec<&str> = source_content.lines().collect();
@@ -150,9 +147,7 @@ fn approve_sidecar(
                     } else {
                         item.reviewed = true;
                         // Reanchor: fill source_hash and source_anchor.
-                        if let Ok((hash, anchor)) =
-                            hash_span(&source_content, item.source_span)
-                        {
+                        if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span) {
                             item.source_hash = Some(hash);
                             item.source_anchor = Some(anchor);
                         }

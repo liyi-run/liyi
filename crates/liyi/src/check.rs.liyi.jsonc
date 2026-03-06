@@ -33,10 +33,10 @@
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         252,
-        891
+        887
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:f65514c8416526758da552732ff0d9dbf13204e63cf9da3d04637deda0d042a4",
+      "source_hash": "sha256:40b5ee8d74e71f20a8256fb896b23c8d8b45bac56bec7d77b8d7597b743a069e",
       "source_anchor": "fn check_sidecar("
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        949,
-        960
+        952,
+        963
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",
