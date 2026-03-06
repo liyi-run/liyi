@@ -34,6 +34,10 @@ pub enum Commands {
         /// Override repo root (default: walk up to .git/)
         #[arg(long)]
         root: Option<PathBuf>,
+
+        /// Show all diagnostics including "hash matches" (hidden by default)
+        #[arg(short, long)]
+        verbose: bool,
     },
 
     /// Re-hash source spans in sidecar files

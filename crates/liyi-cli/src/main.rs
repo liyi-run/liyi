@@ -19,6 +19,7 @@ fn main() {
             fail_on_unreviewed,
             fail_on_req_changed,
             root,
+            verbose,
         } => {
             let repo_root = root
                 .or_else(|| liyi::discovery::find_repo_root(&env::current_dir().unwrap_or_default()))
@@ -34,6 +35,9 @@ fn main() {
                 liyi::check::run_check(&repo_root, &paths, fix, &flags);
 
             for d in &diagnostics {
+                if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {
+                    continue;
+                }
                 println!("{d}");
             }
 
