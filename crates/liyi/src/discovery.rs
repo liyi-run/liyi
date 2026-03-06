@@ -132,7 +132,17 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
 
             // Scope filtering: if scope_paths is non-empty, only keep
             // sidecars whose source_path falls under one of the scopes.
-            if !scope_paths.is_empty() && !scope_paths.iter().any(|sp| source_path.starts_with(sp))
+            // Canonicalise scope paths relative to root so that relative CLI
+            // arguments (e.g. "crates/") match the absolute source_path.
+            if !scope_paths.is_empty()
+                && !scope_paths.iter().any(|sp| {
+                    let abs_scope = if sp.is_relative() {
+                        root.join(sp)
+                    } else {
+                        sp.clone()
+                    };
+                    source_path.starts_with(&abs_scope)
+                })
             {
                 return None;
             }
