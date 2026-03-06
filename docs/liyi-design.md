@@ -859,7 +859,7 @@ Exit codes: 0 = clean, 1 = check failures (stale, unreviewed, or diverged specs)
 
 - No LLM calls. No API keys. No network access.
 - No test generation. No spec inference.
-- No tree-sitter in 0.1. It reads line ranges from `source_span`, hashes them, and compares. Simple regex for `@liyi:ignore`, `@liyi:trivial`, `@liyi:intent`, `@liyi:requirement`, and `@liyi:related`.
+- No LLM-based analysis. It reads line ranges from `source_span`, hashes them, compares, and uses tree-sitter for structural span recovery. Simple regex for `@liyi:ignore`, `@liyi:trivial`, `@liyi:intent`, `@liyi:requirement`, and `@liyi:related`.
 
 ### Marker normalization (half-width / full-width equivalence)
 
@@ -1033,7 +1033,7 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 | Agent (next session) | `suggested_intent` for items with `verdict: semantic` | Read triage, propose intent updates in sidecar |
 | Human (terminal) | Formatted summary + triage table | `liyi triage --summary`; `--json` for raw |
 
-**Why the LLM is not in the binary.** Building LLM calls into `liyi` would require API key management, provider abstraction (OpenAI, Anthropic, Bedrock, Vertex, local models...), HTTP client + TLS, rate limit handling, token budgeting, and retry logic. It would bloat a 500-line binary with complexity that the agentic framework already solved. The binary stays deterministic, offline, and small. The reasoning lives where the model access already is.
+**Why the LLM is not in the binary.** Building LLM calls into `liyi` would require API key management, provider abstraction (OpenAI, Anthropic, Bedrock, Vertex, local models...), HTTP client + TLS, rate limit handling, token budgeting, and retry logic. It would bloat a ~3000-line binary with complexity that the agentic framework already solved. The binary stays deterministic, offline, and small. The reasoning lives where the model access already is.
 
 **Triage workflow:**
 
@@ -1077,7 +1077,7 @@ The shift heuristic (non-`tree_path` fallback) is inherently safe — it only ma
 
 ### Implementation
 
-~2000–3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~500 lines; the remainder covers CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `reanchor`, and `approve`. Dependencies: `clap`, `serde`, `serde_json`, `sha2`, `ignore`.
+~3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~900 lines; the remainder covers tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `reanchor`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
 
 No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are a post-MVP consideration.
 
@@ -1131,7 +1131,9 @@ The linter is tested at three levels:
 
 The agent instructions define the protocol. The CI linter enforces it.
 
-### Minimal instruction (~12 lines, for any AGENTS.md)
+### Minimal instruction (for any AGENTS.md)
+
+The full AGENTS.md section is ~300 lines: 10 behavioral rules (the part a human reads once) followed by two JSON schemas (machine-consumed reference that the agent uses to produce valid `.liyi.jsonc` and `triage.json` files). The schemas are not adoption cost — no human needs to memorize them — but they are part of the payload.
 
 ```markdown
 ## 立意 (Intent Specs)
@@ -1242,7 +1244,7 @@ liyi init              # scaffold AGENTS.md with the 立意 instruction paragrap
 liyi init --force      # overwrite existing AGENTS.md
 ```
 
-Appends the ~12-line agent instruction to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
+Appends the 立意 agent instruction section (~300 lines: 10 rules + two JSON schemas) to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
 
 **File initialization:**
 
@@ -1376,7 +1378,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 | Agent instruction (AGENTS.md paragraph) | 1 hour | 15 minutes |
 | `@liyi:module` convention + examples | 30 minutes | 10 minutes |
 | `.liyi.jsonc` examples for a demo repo | 1–2 hours | 20 minutes |
-| CI linter (`liyi check` + `liyi reanchor` + `liyi approve` + `liyi init`, ~2000–3000 lines) | 3–5 days | 2–4 hours |
+| CI linter (`liyi check` + `liyi reanchor` + `liyi approve` + `liyi init`, ~3000 lines) | 3–5 days | 2–4 hours |
 | Blog post explaining the practice | 1 day | 2–3 hours |
 | **Total** | **3–5 days** | **Half a day** |
 
@@ -1384,11 +1386,11 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 
 ## What This Is
 
-- A **CI linter** — `liyi check` + `liyi reanchor`, ~500–800 lines. The enforcement mechanism.
+- A **CI linter** — `liyi check` + `liyi reanchor`, ~3000 lines across two crates (with tree-sitter-based span recovery). The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
 - A **triage protocol** (post-MVP) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
-- **Agent instructions** — ~12 lines in AGENTS.md (plus a triage instruction for post-MVP).
+- **Agent instructions** — 10 behavioral rules + two JSON schemas in AGENTS.md (~300 lines; the schemas are machine-consumed reference, not human-read).
 - A **practice** — establish intent before (or alongside) execution.
 - A **challenge mechanism** (post-MVP) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
 
@@ -1421,7 +1423,7 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 
 | Level | What you do | What you get | Human cost |
 |---|---|---|---|
-| **0. The instruction** | Add ~12 lines to AGENTS.md | Agent writes `.liyi.jsonc` alongside code. You have a persistent record of what each item is meant to do. | 15 minutes |
+| **0. The instruction** | Copy the 立意 section into AGENTS.md (~300 lines: 10 rules the human reads once, two JSON schemas the agent consumes) | Agent writes `.liyi.jsonc` alongside code. You have a persistent record of what each item is meant to do. | 15 minutes |
 | **1. The review** | Review inferred intent in PRs — set `"reviewed": true` in sidecar (quick) or add `@liyi:intent` in source (explicit) | Reviewing 5 lines of intent is faster than reviewing 50 lines of implementation. You catch wrong intent before wrong code gets tested. Careless review undermines adversarial testing quality — see *Why careless review is self-limiting* in the Security Model. | Seconds per item |
 | **2. The docs** | Add `## 立意` sections to READMEs / doc comments | Module-level invariants are documented, visible in rendered docs, discoverable by agents and humans. This is just good documentation practice. | 5 min per module |
 | **3. The linter** | Run `liyi check` in CI | Stale specs fail the build. You know which items changed since their intent was written. Deterministic enforcement. | Install a binary |
@@ -1450,7 +1452,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - **Persistent by design.** Intent survives context windows, agent sessions, and team turnover. It's a file in the repo, not a message in a thread.
 - **Each level stands alone.** You can adopt the instruction without the linter, or the linter without adversarial tests.
 - **Nothing to learn.** JSONC, Markdown, SHA-256. No DSL, no specification language, no framework.
-- **Lightweight.** The linter is ~500–800 lines of Rust with 4 direct dependencies. Small enough to audit, understand, and port to another language if needed.
+- **Lightweight.** The linter is ~3000 lines of Rust across two crates with 7 direct runtime dependencies (including tree-sitter for structural span recovery). Small enough to audit, understand, and port to another language if needed.
 - **No lock-in.** `.liyi.jsonc` files are plain JSONC. `@liyi:module` markers are comments. Delete them and nothing breaks.
 - **Any programming language.** The linter doesn't parse source code. It reads line ranges from `source_span`, hashes them, compares. `.liyi.jsonc` is JSONC. `@liyi:module` markers use whatever comment syntax the host format already provides. Works with any language, any framework, any build system, any design pattern.
 - **Any human language.** Intent prose is natural language — write it in your team’s working language. Annotation markers accept aliases in any supported language (`@liyi:ignore` / `@立意:忽略` / `@liyi:ignorar`). No locale configuration; the linter accepts all aliases from a static table. The project’s Chinese cultural origin isn’t a barrier — it’s an invitation.
@@ -1514,7 +1516,7 @@ On adversarial testing specifically: AI generates code faster than humans can re
 
 ### 1. Positioning gap
 
-The design doc is 1400 lines of careful reasoning. The deliverable is a JSONC sidecar convention and a 250-line linter. The intellectual depth is real, but the surface artifact is simple enough that it risks being dismissed as "just a staleness checker for doc comments." The pitch must convey why persistent intent matters *without* requiring the reader to follow the full design evolution from verification language (v3) through proc macros (v4) through interchange format (v5) through adversarial CLI (v6) to the current convention.
+The design doc is 1800+ lines of careful reasoning. The deliverable is a JSONC sidecar convention and a ~3000-line linter (including tree-sitter-based span recovery). The intellectual depth is real, but the surface artifact is simple enough that it risks being dismissed as "just a staleness checker for doc comments." The pitch must convey why persistent intent matters *without* requiring the reader to follow the full design evolution from verification language (v3) through proc macros (v4) through interchange format (v5) through adversarial CLI (v6) to the current convention.
 
 The progressive adoption ladder already does this structurally — each level has a clear "what you do / what you get" — but the one-paragraph pitch ("AI writes code, you can't read it all, 立意 makes intent persistent and checkable") needs to land on first contact. The project competes for attention against tools with flashier architecture and larger scope. Simplicity is the design's strength; it must also be the pitch's strength, not its liability.
 
@@ -1572,7 +1574,7 @@ A well-funded competitor (Augment Code, with their Intent product) can absorb th
 2. **Reimplement the staleness model.** If their "living specs" prove unreliable (auto-updating specs drift silently), `source_hash` + `source_span` staleness is a public algorithm, fully specified in this document, trivially reimplementable. They ship "staleness alerts" as a feature.
 3. **Ship `.liyi.jsonc` import/export.** If the convention gains traction, they offer compatibility as a feature — their specs are primary, `.liyi.jsonc` is a second-class interop format. They absorb the convention's ecosystem without contributing to it.
 
-**No license can prevent this.** The convention is a file format (`.liyi.jsonc`), a set of marker strings (`@liyi:module`, `@liyi:intent`), and a staleness algorithm (hash lines, compare). These are ideas and data formats — not copyrightable expression. Even under AGPL, a competitor reimplements the algorithm from this public specification without touching the linter's source code. The JSON Schema is a functional specification. The linter is 500–800 lines of straightforward Rust — reimplementation cost is one engineer-day.
+**No license can prevent this.** The convention is a file format (`.liyi.jsonc`), a set of marker strings (`@liyi:module`, `@liyi:intent`), and a staleness algorithm (hash lines, compare). These are ideas and data formats — not copyrightable expression. Even under AGPL, a competitor reimplements the algorithm from this public specification without touching the linter's source code. The JSON Schema is a functional specification. The linter is ~3000 lines of Rust (including tree-sitter integration) — reimplementation cost is a few engineer-days.
 
 Copyleft (GPL, AGPL, MPL) would protect the **linter binary** from being embedded in a closed product without releasing source. But:
 
