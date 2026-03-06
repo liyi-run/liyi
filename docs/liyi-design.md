@@ -1240,6 +1240,36 @@ The remaining friction: between agent sessions, manual edits that shift lines wi
 
 **Mitigation already in design:** span-shift auto-correction, `liyi reanchor`, agent re-inference on next pass. **Mitigation to prioritize post-MVP:** tree-sitter-based span anchoring, which resolves positions by AST node identity rather than line numbers and eliminates this class of false positives entirely.
 
+### 5. Convention absorption and licensing (added 2026-03-06)
+
+A well-funded competitor (Augment Code, with their Intent product) can absorb the 立意 convention into a proprietary offering without contributing back. The absorption path is straightforward:
+
+1. **Index `.liyi.jsonc` as context.** Their Context Engine already indexes arbitrary project files. Adding `.liyi.jsonc` awareness improves their agents' context quality with structured intent data from any repo that adopts 立意. One-way value extraction.
+2. **Reimplement the staleness model.** If their "living specs" prove unreliable (auto-updating specs drift silently), `source_hash` + `source_span` staleness is a public algorithm, fully specified in this document, trivially reimplementable. They ship "staleness alerts" as a feature.
+3. **Ship `.liyi.jsonc` import/export.** If the convention gains traction, they offer compatibility as a feature — their specs are primary, `.liyi.jsonc` is a second-class interop format. They absorb the convention's ecosystem without contributing to it.
+
+**No license can prevent this.** The convention is a file format (`.liyi.jsonc`), a set of marker strings (`@liyi:module`, `@liyi:intent`), and a staleness algorithm (hash lines, compare). These are ideas and data formats — not copyrightable expression. Even under AGPL, a competitor reimplements the algorithm from this public specification without touching the linter's source code. The JSON Schema is a functional specification. The linter is 500–800 lines of straightforward Rust — reimplementation cost is one engineer-day.
+
+Copyleft (GPL, AGPL, MPL) would protect the **linter binary** from being embedded in a closed product without releasing source. But:
+
+- Augment wouldn't fork the linter; they'd reimplement it.
+- Copyleft on a convention chills enterprise adoption — the exact audience that would validate the thesis.
+- No convention or protocol in widespread use is copyleft: `.editorconfig` (MIT), semver (CC-BY-3.0), Conventional Commits (CC-BY-3.0), JSON Schema (Apache-2.0/MIT).
+
+**Licensing decision: Apache-2.0 OR MIT** (dual license, user's choice).
+
+- **Rust ecosystem convention.** The Rust project, serde, tokio, clap, and nearly every crate on crates.io use `Apache-2.0 OR MIT`. The linter is a Rust binary; following the ecosystem convention removes friction for Rust contributors and downstream packagers.
+- **Patent grant via Apache-2.0.** Apache-2.0 includes an explicit patent license, which MIT does not. Adopters who care about patent protection pick the Apache-2.0 side.
+- **Simplicity via MIT.** Some organizations have pre-approved MIT but haven't reviewed Apache-2.0. Some jurisdictions (notably parts of the CJK world, where early adopters are likely) have institutional workflows where MIT's brevity is an advantage.
+- **No GPL-incompatibility trap.** Apache-2.0 is incompatible with GPL-2.0-only. The MIT side covers anyone integrating into a GPL-2.0-only project.
+- **Convention gravity over exclusion.** Conventions win by adoption. Permissive licensing removes friction for the enterprise teams, polyglot shops, and platform integrators who are the primary adoption targets.
+- **Cultural attribution is the durable moat.** 立意 is a Chinese cultural concept. The `.liyi.jsonc` extension, the `@liyi:module` markers, the name, the design document's reasoning — these carry attribution that no license provides and no fork erases. If Augment ships "立意 compatibility," they're advertising the convention by name.
+- **Ecosystem gravity is the real defense.** If `liyi check` becomes the standard CI linter for intent specs — the way `rustfmt` is the standard formatter, the way `.editorconfig` is the standard config — competitors will interoperate with it rather than replace it. The tool is simple enough that reimplementation is pointless when the original works everywhere.
+
+**This is a deliberate trade.** The designer accepts that Augment (or anyone) can reimplement the convention, absorb it into a proprietary product, and monetize it without contributing back. By the project's own success criteria — "the practice of persisting AI-inferred intent gains traction, whether through this project's tooling or through the idea spreading independently" — that scenario is a form of success. The convention spreading inside a walled garden is less good than the convention spreading openly, but better than the convention not spreading at all.
+
+The risk that absorption *prevents* the open convention from thriving — by pulling potential adopters into a proprietary implementation — is real but mitigated by the same dynamics that keep `.editorconfig` alive despite every IDE having its own formatting settings: the open tool is simpler, works everywhere, and has no vendor lock-in. The bet is that simplicity and universality outweigh product polish.
+
 ---
 
 ## Appendix: Worked Example
