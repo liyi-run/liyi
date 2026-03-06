@@ -8,48 +8,48 @@
       "reviewed": false,
       "intent": "Represent a discovered .liyi.jsonc sidecar paired with its source file path and the repo-relative source path string.",
       "source_span": [
-        10,
+        11,
         15
       ],
       "tree_path": "struct::SidecarEntry",
-      "source_hash": "sha256:c83af3a3d0f3cc492c4ad70316a2a2003777c157849b9a83edc81c53ee86031c",
-      "source_anchor": "/// A discovered sidecar and its associated source file."
+      "source_hash": "sha256:3851a121c0b57a706cce72bdeed0299b99bdf9652be59bf55bd4b1e82456923f",
+      "source_anchor": "pub struct SidecarEntry {"
     },
     {
       "item": "DiscoveryResult",
       "reviewed": false,
       "intent": "Aggregate the results of a file-tree walk: collected sidecar entries (filtered by scope), all non-ignored files (for marker scanning), and any ambiguity warnings.",
       "source_span": [
-        17,
+        18,
         24
       ],
       "tree_path": "struct::DiscoveryResult",
-      "source_hash": "sha256:eecb9bf7f79f1ee7f5b9e8767778de82e11ca1af022ce6fa84d561d5216ce3cf",
-      "source_anchor": "/// Walk results."
+      "source_hash": "sha256:7ee0d9fc7aba40c9d92c4f135bd070963f71df094a771de00332c34cac790c96",
+      "source_anchor": "pub struct DiscoveryResult {"
     },
     {
       "item": "find_repo_root",
       "reviewed": false,
       "intent": "Walk up the directory tree from the given path to locate the nearest .git/ directory and return its parent as the repository root. Return None if no .git/ is found.",
       "source_span": [
-        32,
+        34,
         48
       ],
       "tree_path": "fn::find_repo_root",
-      "source_hash": "sha256:80fecaaaae50876ba418f244d5b3b55b800a1a127ed1d3556fb6255673bf3173",
-      "source_anchor": "/// Walk up from `from` looking for a `.git/` directory."
+      "source_hash": "sha256:5cb715f4b3ed1964ec75652a361dd67bea2a804c5c84f1326af878c38607d976",
+      "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {"
     },
     {
       "item": "discover",
       "reviewed": false,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
-        54,
-        153
+        59,
+        163
       ],
       "tree_path": "fn::discover",
-      "source_hash": "sha256:4d65760888eee560d42ca0f7dfd156f83f90cdf74854cbfd23b1d6f2f51c5ee0",
-      "source_anchor": "/// Walk the file tree rooted at `root`, collecting sidecar entries and all"
+      "source_hash": "sha256:bbf8f0dbae10a6ccccac3e288b8bc72b6c5563678e4584556920135e205ff1a1",
+      "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {"
     }
   ]
 }

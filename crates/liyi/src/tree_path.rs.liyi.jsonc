@@ -8,80 +8,80 @@
       "reviewed": false,
       "intent": "Define the bijective mapping between tree_path shorthand strings (fn, struct, enum, impl, trait, mod, const, static, type, macro) and tree-sitter-rust node kind strings (function_item, struct_item, etc.). This is the single source of truth for kind translation.",
       "source_span": [
-        16,
+        17,
         28
       ],
       "tree_path": "const::KIND_MAP",
-      "source_hash": "sha256:1fe5b5850032389533d0c00cbbd6ec14857ebc1dc806100f8b83818f2d9fac79",
-      "source_anchor": "/// Map from tree_path kind shorthand to tree-sitter-rust node kind strings."
+      "source_hash": "sha256:6a6b6eb7c463a163555dadc8f1cd701266d2d64cf6a06e75f4128feef9fe45ee",
+      "source_anchor": "const KIND_MAP: &[(&str, &str)] = &["
     },
     {
       "item": "detect_language",
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        46,
+        48,
         53
       ],
       "tree_path": "fn::detect_language",
-      "source_hash": "sha256:8974f69c30bf3f9f37e6927e27cb581e065127d71303175781a9950a3df9e1b6",
-      "source_anchor": "/// Detect language from file extension. Returns `None` for unsupported"
+      "source_hash": "sha256:2c784d4dfacb2142be9b46e13c2713208c7797747374057a65ae114fdb8be45c",
+      "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {"
     },
     {
       "item": "Language",
       "reviewed": false,
       "intent": "Enumerate supported tree-sitter languages for tree_path operations. In 0.1, only Rust is supported; the enum is the extension point for adding more languages.",
       "source_span": [
-        56,
+        57,
         59
       ],
       "tree_path": "enum::Language",
-      "source_hash": "sha256:c66d444a28340148332ce06ded8f3cc95403b1fdbd32087600eb41e1fdb09945",
-      "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
+      "source_hash": "sha256:6d0a6933befabccdcfc1030cac109588b55363bb531987e4aa7c9d4cf1a68e1e",
+      "source_anchor": "pub enum Language {"
     },
     {
       "item": "node_name",
       "reviewed": false,
       "intent": "Extract the user-visible name of an AST node. For impl_item, return the type field text (e.g., 'Money' from 'impl Money'). For all other item kinds, return the name field. Return None if the node has no name/type field.",
       "source_span": [
-        74,
+        79,
         89
       ],
       "tree_path": "fn::node_name",
-      "source_hash": "sha256:ff73ebf003fd539be4fbbadb196a9e27d2331cee16ab392fa68b1f53d95dc1e0",
-      "source_anchor": "/// Extract the name of a named AST node."
+      "source_hash": "sha256:b35a2bd695cb373f84ad62c1d483a893c9e0dcc93cc0d72f42a096cf1a16d79a",
+      "source_anchor": "fn node_name<'a>(node: &Node<'a>, source: &'a str) -> Option<&'a str> {"
     },
     {
       "item": "parse_tree_path",
       "reviewed": false,
       "intent": "Parse a tree_path string into segments of (kind, name) pairs by splitting on '::' and grouping consecutive pairs. Return None if the number of parts is odd (malformed). Validate each kind against the known shorthand set.",
       "source_span": [
-        98,
+        102,
         118
       ],
       "tree_path": "fn::parse_tree_path",
-      "source_hash": "sha256:dcf887d2cbc2069b087806efc91f7f2ec3aa0998fbca2113fdd99ffec43a803f",
-      "source_anchor": "/// Parse a tree_path string into segments."
+      "source_hash": "sha256:eb1bdb126bb090d769612797d5428edd3c20ba72ba04dad58071bbfa955240c2",
+      "source_anchor": "fn parse_tree_path(tree_path: &str) -> Option<Vec<PathSegment>> {"
     },
     {
       "item": "resolve_tree_path",
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        120,
-        145
+        125,
+        141
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:1121da782bb24997c0fefa1a1bfb31116476687b0cf76703d7fc04486ebd3d37",
-      "source_anchor": "/// Resolve a `tree_path` to a source span `[start_line, end_line]` (1-indexed,"
+      "source_hash": "sha256:3d7856a13db4b62a7800d9457c1b079a8aa5a99296d010d4196e97eb1465c8c9",
+      "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
       "item": "resolve_segments",
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments.",
       "source_span": [
-        148,
-        176
+        144,
+        172
       ],
       "tree_path": "fn::resolve_segments",
       "source_hash": "sha256:cb4227e128b6b2b7cf3766e0f8c492e21692cbcf44b5a4b95addffb34ad87451",
@@ -92,11 +92,11 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body or declaration_list. Try the 'body' field first (mod, fn), then fall back to looking for a declaration_list child (impl, trait). Delegate to resolve_segments for the recursive match.",
       "source_span": [
-        179,
-        196
+        175,
+        190
       ],
       "tree_path": "fn::resolve_in_body",
-      "source_hash": "sha256:470ba72b9ef02207aa4219a62a756cea99fcaea5c6c96d58081531d74ef3ee30",
+      "source_hash": "sha256:36340ecde43345970b601709b06045ce4eb2d59361073a740cffdc53dac11dbc",
       "source_anchor": "fn resolve_in_body<'a>("
     },
     {
@@ -104,35 +104,36 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        198,
-        227
+        197,
+        217
       ],
       "tree_path": "fn::compute_tree_path",
-      "source_hash": "sha256:98a155209516b28421b5ec1a3235fcc5ee34d94698202f899d76d01a81b74efc",
-      "source_anchor": "/// Compute the canonical `tree_path` for the AST node at the given span."
+      "source_hash": "sha256:da391fb9dcee5c9ba55d539a4c16eb60f51511713b9c843dfeb87409a2a6d96e",
+      "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
       "item": "find_item_in_range",
       "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        229,
-        279
+        225,
+        269
       ],
       "tree_path": "fn::find_item_in_range",
-      "source_hash": "sha256:3fdd46d2fbd1b9cf3c39bd6defc4658eada11f89d08edb956163de3863ad03c0",
-      "source_anchor": "/// Find the best item node within [target_start, target_end] (0-indexed rows)."
+      "source_hash": "sha256:23d04aca348b644f78e2415418361bf6c963c868b00ca9f3882483c511fe2d3d",
+      "source_anchor": "fn find_item_in_range<'a>("
     },
     {
       "item": "collect_path",
       "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        297,
-        338
+        287,
+        323
       ],
-      "source_hash": "sha256:53a929cfcb547ff364fb2784d6a34fbae9cb80922291cd3122e269dbccb98987",
-      "source_anchor": "fn collect_path("
+      "tree_path": "fn::collect_path",
+      "source_hash": "sha256:5596cd923fd63ffdcf3d5871e7b7e06e48f56cc5ac790aab5afa1e2351eb1046",
+      "source_anchor": "fn collect_path(node: &Node, target: &Node, source: &str, segments: &mut Vec<String>) -> bool {"
     }
   ]
 }

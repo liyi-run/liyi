@@ -8,47 +8,48 @@
       "reviewed": false,
       "intent": "Hold the file path, line number, and optional hash of a discovered @liyi:requirement, for use in cross-referencing related edges during the check pass.",
       "source_span": [
-        20,
+        21,
         25
       ],
       "tree_path": "struct::RequirementRecord",
-      "source_hash": "sha256:e0806a0187e7b543f0db5d6831aa5f8fdd038f082acba59e820e9ba98cfe621e",
-      "source_anchor": "/// A requirement discovered during pass 1."
+      "source_hash": "sha256:99358f1f35d2d934fe4eb3ff03b86b199b07d489afd88e54912af1635e5e980f",
+      "source_anchor": "struct RequirementRecord {"
     },
     {
       "item": "run_check",
       "reviewed": false,
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
-        31,
+        34,
         144
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:f3cdfe147bf08f0c563c97c65f247ce0c30b6c474465fb4c5b5ab563713fdb02",
-      "source_anchor": "/// Run the two-pass check and optionally apply `--fix` corrections."
+      "source_hash": "sha256:0e7c734b62e4458f00d3a7bd07b0317655a1c99233efe2e1ebd4d7b32076ab40",
+      "source_anchor": "pub fn run_check("
     },
     {
       "item": "check_sidecar",
       "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        149,
-        485
+        150,
+        535
       ],
-      "source_hash": "sha256:52763b7ddaf09536e8057a8f3eb643edd668389eb7036fafef3bbb6f7873c3d8",
-      "source_anchor": ""
+      "tree_path": "fn::check_sidecar",
+      "source_hash": "sha256:7a32f895617f40735aec86895decaf28bc8a42bc7556495c7ddf96ba745a84c3",
+      "source_anchor": "fn check_sidecar("
     },
     {
       "item": "read_cached",
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        546,
-        558
+        542,
+        553
       ],
       "tree_path": "fn::read_cached",
-      "source_hash": "sha256:b20544303bdf44801e41b81d30584f313f93e85397eb142ce4874fd96a556ae1",
-      "source_anchor": "/// Read a file into the cache and return a clone of its contents."
+      "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",
+      "source_anchor": "fn read_cached(cache: &mut HashMap<PathBuf, String>, path: &Path) -> Option<String> {"
     }
   ]
 }
