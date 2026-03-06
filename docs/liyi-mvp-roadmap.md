@@ -96,6 +96,9 @@ Four `DiagnosticKind` variants are defined but never emitted:
 │  ├── orders.rs.liyi.jsonc                                        │
 │  └── .liyiignore            ← file-level exclusions              │
 │                                                                  │
+│  .liyi/                                                          │
+│  └── triage.json            ← agent-produced triage report       │
+│                                                                  │
 │  AGENTS.md                  ← agent instruction (~12 lines)      │
 └──────────┬────────────┬──────────────────────────────────────────┘
            │            │
@@ -111,19 +114,32 @@ Four `DiagnosticKind` variants are defined but never emitted:
      │  markers  │ │ items with         │
      │           │ │ @liyi:trivial      │
      │ Pass 2:   │ │                    │
-     │  For each │ └────────────────────┘
-     │  .liyi.   │
-     │  jsonc:   │         ┌────────────────────┐
-     │  - hash   │         │ liyi reanchor      │
-     │    spans  │         │                    │
-     │  - check  │         │ Fills source_hash, │
-     │    review │         │ source_anchor from │
-     │  - resolve│         │ actual source file │
-     │    related│         │ bytes. No LLM.     │
-     │    edges  │         └────────────────────┘
-     │           │
-     │ Exit 0/1/2│
-     └───────────┘
+     │  For each │ │ Post-MVP: assesses │
+     │  .liyi.   │ │ stale items →      │
+     │  jsonc:   │ │ writes triage.json │
+     │  - hash   │ └────────────────────┘
+     │    spans  │
+     │  - check  │         ┌────────────────────┐
+     │    review │         │ liyi reanchor      │
+     │  - resolve│         │                    │
+     │    related│         │ Fills source_hash, │
+     │    edges  │         │ source_anchor from │
+     │           │         │ actual source file │
+     │ Exit 0/1/2│         │ bytes. No LLM.     │
+     └───────────┘         └────────────────────┘
+
+     Post-MVP triage workflow:
+     ┌────────────────────────────────────────────┐
+     │  liyi check --json                         │
+     │    → stale items with full context          │
+     │    → agent assesses (or: --prompt | llm)    │
+     │    → .liyi/triage.json                      │
+     │  liyi triage --validate                     │
+     │    → schema check                           │
+     │  liyi triage --apply                        │
+     │    → auto-reanchor cosmetic items            │
+     │    → present semantic/violation for review   │
+     └────────────────────────────────────────────┘
 ```
 
 ### Binary: `liyi`
@@ -134,10 +150,15 @@ A single Rust binary with subcommands:
 |---|---|
 | `liyi check [paths...]` | Lint: staleness, review status, requirement tracking |
 | `liyi check --fix` | Lint + auto-correct shifted spans, fill missing hashes |
+| `liyi check --json` | Machine-readable output with full context for each stale item (feeds `liyi triage`) |
 | `liyi approve [paths...] [--yes]` | Interactive review: mark specs as human-approved |
 | `liyi init [source-file]` | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
 | `liyi reanchor <sidecar> [--item <name> --span <s,e>]` | Manual span re-hashing for targeted fixes |
 | `liyi reanchor --migrate` | Schema version migration (no-op in 0.1, scaffolded) |
+| `liyi triage --prompt` | Assemble a self-contained LLM prompt from stale items (post-MVP) |
+| `liyi triage --validate <file>` | Validate an agent-produced triage report against the schema (post-MVP) |
+| `liyi triage --apply [file]` | Auto-reanchor cosmetic items, present remaining for review (post-MVP) |
+| `liyi triage --summary [file]` | Human-readable summary of a triage report (post-MVP) |
 
 ### Crate structure
 
@@ -883,10 +904,11 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 |---|---|
 | LSP server | Depends on stable protocol; UX layer, not core |
 | MCP server | Same — wrapper over CLI, not core |
-| Challenge (`liyi challenge`) | Requires LLM integration; post-MVP |
-| Adversarial test generation | Level 5; requires challenge + model integration |
+| `liyi triage` (agent-driven staleness assessment) | Post-MVP. `liyi` provides `--json` context and `--validate` / `--apply` subcommands (deterministic, no LLM); the agent does the reasoning using whatever model it already has. Replaces the previously planned `--smart` flag |
+| `liyi check --json` | Post-MVP convenience. Machine-readable output with full stale-item context for feeding triage. The triage `--prompt` flag assembles this into a self-contained LLM prompt |
+| Challenge (agent-driven semantic verification) | Post-MVP. Agent verifies code against intent on demand; `liyi` provides context, not reasoning |
+| Adversarial test generation | Level 6; requires reviewed intents + model integration |
 | Tree-sitter-based span anchoring | Post-MVP upgrade for `source_span` resilience |
-| `--smart` LLM-assisted staleness filter | Non-deterministic; developer-facing convenience |
 | `liyi review` CLI subcommand | Post-MVP convenience; `"reviewed": true` can be set manually |
 | Code-level dependency graph (`depends_on`) | Future direction for tighter staleness |
 | Coverage detection (items without specs) | Requires item definition detection in source |

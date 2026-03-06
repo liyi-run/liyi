@@ -1,6 +1,6 @@
-# 立意 (Lìyì) — Design v8.2
+# 立意 (Lìyì) — Design v8.3
 
-Establish intent before execution · 2026-03-05
+Establish intent before execution · 2026-03-06
 
 ---
 
@@ -54,6 +54,20 @@ src/billing/
 ├── orders.rs.liyi.jsonc
 └── .liyiignore                 ← file-level exclusions (gitignore syntax)
 ```
+
+### `.liyi/` directory
+
+Tool-generated artifacts live in a `.liyi/` directory at the repository root:
+
+```
+.liyi/
+├── triage.json                ← latest triage report (agent-produced, liyi-validated)
+└── (future: cache files, intermediate state)
+```
+
+`.liyi/` is `.gitignore`'d by default — the triage report is derived from sidecars + source + LLM, not a source of truth. Teams that want audit trails can commit it or archive it as a CI build artifact. This follows the same pattern as `.mypy_cache/`, `.ruff_cache/`, or `.pytest_cache/` — a project-level workspace for tool-generated artifacts that shouldn't pollute the source tree.
+
+The `.liyi/` directory is distinct from `.liyi.jsonc` sidecar files (which are co-located with source, committed, and are source of truth). Sidecars are durable; `.liyi/` contents are ephemeral.
 
 ### Scope: per-repository
 
@@ -800,17 +814,178 @@ All of the following are equivalent:
 
 This is strictly more robust than the alternative (doubling every regex to accept both forms), keeps the alias table simple, and confines the full-width concern to one function in the lexer.
 
-### Post-MVP: `--smart` (optional LLM-assisted staleness filter)
+### Post-MVP: `liyi triage` — agent-driven staleness assessment
+
+When `liyi check` reports stale items, the next question is: *does it matter?* A variable rename is cosmetic; a new code path is semantic; a contradiction to declared intent is a bug. Answering that question requires LLM reasoning — but `liyi` itself never calls an LLM.
+
+**Architectural principle: `liyi` is infrastructure; the agent is the brain.** The binary provides the index (hashes, spans, graphs), the schema (sidecar format, triage report format), and the ratchet (CI enforcement). The agent provides the reasoning (intent inference, triage assessment, challenge verdicts, adversarial tests). The contract between them is structured JSON.
+
+By 2026, every developer workflow that would adopt 立意 already has a model configured — Copilot in VS Code, Cursor, aider, CI pipelines with Codex, custom agent setups. Asking the user to configure *another* set of API keys and model preferences inside `liyi` is friction that buys nothing. The agent that's already running can do the triage.
+
+**How triage works.** Three paths to the same report:
+
+| Path | Who assembles the prompt? | Who calls the LLM? | Who validates? |
+|---|---|---|---|
+| IDE agent | Agent (from AGENTS.md instruction) | Agent | `liyi triage --validate` |
+| CI with `--prompt` | `liyi triage --prompt` | Team's LLM wrapper | `liyi triage --validate` |
+| Custom pipeline | Team's own template | Team's own code | `liyi triage --validate` |
+
+All three paths converge on the same report schema and the same `--validate` / `--apply` commands.
+
+**`liyi triage` subcommands:**
+
+| Subcommand | What it does | Calls LLM? |
+|---|---|---|
+| `liyi triage --prompt` | Assemble a self-contained prompt from `liyi check --json` output — includes stale items with full context, the triage schema, assessment instructions, and output format spec. Print to stdout. | No |
+| `liyi triage --validate <file>` | Validate an agent-produced triage report against the schema; check that every assessed item corresponds to a real stale item | No |
+| `liyi triage --apply [file]` | Auto-reanchor items with `cosmetic` verdict; present `semantic` items with suggested intents; flag `intent-violation` items for human review | No |
+| `liyi triage --summary [file]` | Print human-readable summary of a triage report | No |
+
+The `--prompt` flag is the bridge for CI/script pipelines that have an `llm` CLI or API wrapper but no full agentic framework:
+
+```bash
+liyi triage --prompt | llm-call > .liyi/triage.json
+liyi triage --validate .liyi/triage.json
+liyi triage --apply .liyi/triage.json
+```
+
+`liyi` knows the schema, knows what context to include, knows what output format to request. The team routes it to whatever model they have. The binary makes zero LLM calls.
+
+**`liyi check --json` output.** The triage workflow depends on a machine-readable output from `liyi check` that provides full context for each stale item:
+
+```jsonc
+{
+  "version": "0.1",
+  "root": ".",
+  "stale_items": [
+    {
+      "source": "src/billing/money.rs",
+      "sidecar": "src/billing/money.rs.liyi.jsonc",
+      "item": "Currency::convert",
+      "source_span": [60, 85],
+      "intent": "Must reject mismatched currencies with ConversionError",
+      "reviewed": true,
+      "old_hash": "sha256:a1b2c3...",
+      "new_hash": "sha256:d4e5f6...",
+      "new_source": "pub fn convert(...) {\n    ...\n}",
+      "related": {
+        "multi-currency-addition": {
+          "recorded_hash": "sha256:b7c8d9...",
+          "current_hash": "sha256:b7c8d9...",
+          "changed": false
+        }
+      },
+      "depended_on_by": [
+        { "source": "src/billing/money.rs", "item": "Money::add" },
+        { "source": "src/portfolio/rebalance.rs", "item": "Portfolio::rebalance" }
+      ]
+    }
+  ]
+}
+```
+
+This is the full context an assessor needs. The agent (or script, or CI wrapper) reads this, reasons about each item, and produces the triage report.
+
+**Triage report schema** (`.liyi/triage.json`):
+
+```jsonc
+{
+  "version": "0.1",
+  "generated": "2026-03-06T12:00:00Z",
+  "model": "claude-sonnet-4-20260514",
+  "root": ".",
+  "summary": {
+    "total_stale": 34,
+    "cosmetic": 28,
+    "semantic": 4,
+    "intent_violation": 2,
+    "unassessed": 0,
+    "impacted_transitively": 7
+  },
+  "items": [
+    {
+      "source": "src/billing/money.rs",
+      "item": "Currency::convert",
+      "source_span": [60, 85],
+      "verdict": "intent-violation",
+      "confidence": 0.92,
+      "change_summary": "Added a fallback path that silently returns 0.0 on currency mismatch.",
+      "invariant_summary": "The rejection-on-mismatch behavior is removed. All other logic is unchanged.",
+      "reasoning": "The declared intent says 'must reject mismatched currencies with ConversionError'. The new code returns Money { cents: 0, ... } on mismatch. This directly contradicts the intent.",
+      "action": "fix-code-or-update-intent",
+      "suggested_intent": null,
+      "impact": [
+        {
+          "source": "src/billing/money.rs",
+          "item": "Money::add",
+          "relationship": "related:multi-currency-addition",
+          "impact_summary": "Money::add's intent assumes convert rejects mismatches."
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Verdict enum:**
+
+| Verdict | Meaning | Default action |
+|---|---|---|
+| `cosmetic` | Variable rename, reformatting, comment edit — no behavioral change | Auto-reanchor (no human review needed) |
+| `semantic` | Code legitimately evolved — intent is stale but code is correct | Update intent (human reviews suggested intent) |
+| `intent-violation` | Code contradicts declared intent — either code is wrong or intent is wrong | Fix code or update intent (human decides) |
+| `unclear` | LLM can't determine with sufficient confidence | Manual review (human decides) |
+
+**Per-item fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `source` | string | Repo-relative source path |
+| `item` | string | Item name (matches sidecar) |
+| `source_span` | [int, int] | Current span (from sidecar) |
+| `verdict` | enum | cosmetic / semantic / intent-violation / unclear |
+| `confidence` | float | 0–1, model's self-assessed confidence in the verdict |
+| `change_summary` | string | What changed in the code (1–2 sentences) |
+| `invariant_summary` | string | What stayed the same (1–2 sentences) |
+| `reasoning` | string | Why the verdict was assigned (2–3 sentences, citable in reviews) |
+| `action` | enum | auto-reanchor / update-intent / fix-code-or-update-intent / manual-review |
+| `suggested_intent` | string? | Proposed new intent text (only for `semantic` verdict) |
+| `impact` | array | Transitively affected items via `related` graph |
+
+**Consumers and their read patterns:**
+
+| Consumer | What it reads | How |
+|---|---|---|
+| CI/PR comment | `summary` + items with verdict ≠ cosmetic | Format as markdown table in PR comment |
+| Dashboard | `summary` for aggregate view; items for drill-down | Read JSON, render charts / tables |
+| LSP | Items for inline diagnostics at `source_span` | Watch `.liyi/triage.json`, map items to diagnostic locations |
+| `liyi triage --apply` | Items with `verdict: cosmetic` | Auto-reanchor those items (write back to sidecars) |
+| Agent (next session) | `suggested_intent` for items with `verdict: semantic` | Read triage, propose intent updates in sidecar |
+| Human (terminal) | Formatted summary + triage table | `liyi triage --summary`; `--json` for raw |
+
+**Why the LLM is not in the binary.** Building LLM calls into `liyi` would require API key management, provider abstraction (OpenAI, Anthropic, Bedrock, Vertex, local models...), HTTP client + TLS, rate limit handling, token budgeting, and retry logic. It would bloat a 500-line binary with complexity that the agentic framework already solved. The binary stays deterministic, offline, and small. The reasoning lives where the model access already is.
+
+**Triage workflow:**
 
 ```
-$ liyi check --smart
-
-5 specs flagged stale by hash mismatch:
-  3 cosmetic (variable rename, comment edit) — auto-cleared
-  2 logic changes — require re-review
+liyi check              # deterministic, no LLM, produces diagnostics
+    │
+    │ stale items identified (exit code 1)
+    ▼
+agent assesses           # agent reads stale items, reasons about each
+    │                    # (or: liyi triage --prompt | llm-call)
+    │ writes .liyi/triage.json
+    ▼
+liyi triage --apply     # auto-reanchors cosmetic items
+    │                   # prints remaining items needing human review
+    ▼
+human reviews           # reads triage report or PR comment
+                        # accepts suggested intents or fixes code
 ```
 
-Sends old source, new source, and spec to an LLM. Asks "does this change affect the spec?" Reduces noise on large refactors. Never used as a CI gate — too slow, too non-deterministic. Developer-facing only.
+This replaces the previously described `--smart` flag. The split is cleaner: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
+
+**Relationship to challenge.** Triage and challenge are complementary. Triage answers "what changed and does it matter?" — a reactive assessment triggered by staleness. Challenge answers "does this code actually satisfy this intent?" — a proactive verification triggered by human curiosity. Both are agent-driven, both produce structured output, and neither is built into the binary. Triage operates on stale items (batch, CI-oriented); challenge operates on any specced item (on-demand, developer-oriented).
 
 ### `--fix` mode
 
@@ -894,6 +1069,7 @@ When writing or modifying code:
 7. Tests should target boundary conditions, error-handling gaps, property violations, and semantic mismatches. Prioritize tests a subtly wrong implementation would fail.
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
+10. When `liyi check` reports stale items, assess each: is the change cosmetic (rename, reformat — no behavioral change), semantic (code legitimately evolved — intent needs updating), or an intent violation (code contradicts declared intent)? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in the `suggested_intent` field. For intent violations, flag for human review.
 ```
 
 ### Key principles
@@ -931,10 +1107,14 @@ Candidate tools:
 | Tool | Description |
 |---|---|
 | `liyi_check` | Run `liyi check` on a path, return structured results (stale, reviewed, diverged) |
+| `liyi_check_json` | Run `liyi check --json` — return full context for stale items, suitable for agent-driven triage |
 | `liyi_reanchor` | Re-hash spans for a given file |
 | `liyi_get_requirement` | Look up a named requirement — return its text, location, and current hash |
 | `liyi_list_related` | List all items with `"related"` edges to a given requirement |
-| `liyi_challenge` | Verify code against intent, or intent against requirement — returns a structured verdict |
+| `liyi_triage_validate` | Validate an agent-produced triage report against the schema |
+| `liyi_triage_apply` | Apply a validated triage report — auto-reanchor cosmetic items |
+
+The MCP tools provide *context for* reasoning and *application of* results. The reasoning itself (triage assessment, challenge verdicts) happens in the agent — which already has model access, conversation context, and the AGENTS.md instruction. This avoids duplicating LLM call logic inside the MCP server.
 
 ~100 lines wrapping the CLI. Same stability dependency as LSP — the protocol must be settled first.
 
@@ -999,7 +1179,9 @@ Creates a skeleton `.liyi.jsonc` sidecar with `version`, `source`, and an empty 
 
 > **Note:** Challenge is explicitly deferred to post-0.1. The `liyi approve` workflow must be established first — challenge verifies edges that only exist after humans have reviewed intent.
 
-`liyi challenge` is a human- or agent-initiated action that asks a second model to verify whether an artifact satisfies its upstream — code against intent, intent against requirement, or requirement against parent requirement. It is not a source annotation or a linter marker. It works on any edge in the intent graph:
+Challenge is a human- or agent-initiated action that asks a model to verify whether an artifact satisfies its upstream — code against intent, intent against requirement, or requirement against parent requirement. Like triage, challenge follows the same architectural principle: `liyi` provides the context; the agent does the reasoning; the verdict is structured output.
+
+It is not a source annotation or a linter marker. It works on any edge in the intent graph:
 
 | Edge | Question | Input |
 |---|---|---|
@@ -1030,13 +1212,13 @@ Challenge code against intent "add_money":
   and wrap in release.
 ```
 
-**Integration.** In the LSP, challenge appears as a code action on specced items and on `@liyi:related` annotations. The user clicks "Challenge" → the LSP delegates to a challenge agent → the verdict appears as inline diagnostics. In the CLI, `liyi challenge src/billing/money.rs add_money` does the same thing non-interactively.
+**Integration.** In the LSP, challenge appears as a code action on specced items and on `@liyi:related` annotations. The user clicks "Challenge" → the LSP provides the context (source span, intent prose, requirement text) to the agent → the agent reasons and produces a clause-by-clause verdict → the verdict appears as inline diagnostics. In an agentic workflow, the agent runs challenge as part of its review loop — no CLI invocation needed.
 
-**Model selection.** The "different model" principle from adversarial testing applies. If Claude wrote the code and inferred the intent, having Claude challenge it is an echo chamber. The challenge agent should ideally be a different model — the extension/CLI accepts a `--model` flag or reads from configuration.
+**Model selection.** The "different model" principle from adversarial testing applies. If Claude wrote the code and inferred the intent, having Claude challenge it is an echo chamber. The challenge agent should ideally be a different model. Since the agent framework (not `liyi`) manages model access, model selection is a workflow concern, not a tool concern.
 
-**What challenge is not.** It is not a replacement for the linter (deterministic, no LLM) or for adversarial testing (generates persistent test files). It is zero-commitment verification — challenge when you're curious, skip when you're not. No pipeline, no batch process, no test files to maintain.
+**What challenge is not.** It is not a replacement for the linter (deterministic, no LLM), for triage (batch assessment of stale items), or for adversarial testing (generates persistent test files). It is zero-commitment verification — challenge when you're curious, skip when you're not. No pipeline, no batch process, no test files to maintain.
 
-**Why this matters.** Without challenge, the reviewer's options for verifying intent are: read the code (defeats the purpose of intent-level review) or trust the agent (defeats the purpose of 立意). Challenge gives a third option: ask a second model to verify. This closes the trust gap between reviewing intent and trusting it blindly. It also makes the requirements feature (Level 4) worth the investment — the payoff is no longer just "you get flagged when the requirement hash changes" but "you can verify whether your intent actually covers the requirement."
+**Why this matters.** Without challenge, the reviewer's options for verifying intent are: read the code (defeats the purpose of intent-level review) or trust the agent (defeats the purpose of 立意). Challenge gives a third option: ask a second model to verify. This closes the trust gap between reviewing intent and trusting it blindly. It also makes the requirements feature (Level 5) worth the investment — the payoff is no longer just "you get flagged when the requirement hash changes" but "you can verify whether your intent actually covers the requirement."
 
 ---
 
@@ -1067,7 +1249,7 @@ Adversarial testing is the indirect defense against careless review. The reasoni
 
 **What's honest about this.** The feedback loop depends on someone *reading the tests*. If the team also rubber-stamps adversarial test output, the signal is lost — the defense has no teeth. The claim is that vague intent produces *visibly* weak tests, making the failure mode detectable. It's not that vague intent *automatically* triggers an alert.
 
-**What's genuinely useful.** When the intent is specific and correct — "must reject mismatched currencies with an error, not a panic; must be commutative; must not overflow silently" — the adversarial tests are sharp: test with mismatched currencies, test commutativity with randomized inputs, test near `i64::MAX`. The quality difference between tests from good intent vs. tests from rubber-stamped intent is large enough to notice when the tests are generated side by side. Teams that adopt Level 5 (adversarial testing) are choosing to read those tests — the cost of that level is test review, and weak tests are the signal that the intent review was skipped.
+**What's genuinely useful.** When the intent is specific and correct — "must reject mismatched currencies with an error, not a panic; must be commutative; must not overflow silently" — the adversarial tests are sharp: test with mismatched currencies, test commutativity with randomized inputs, test near `i64::MAX`. The quality difference between tests from good intent vs. tests from rubber-stamped intent is large enough to notice when the tests are generated side by side. Teams that adopt Level 6 (adversarial testing) are choosing to read those tests — the cost of that level is test review, and weak tests are the signal that the intent review was skipped.
 
 This is a probabilistic defense, not a deterministic one. It complements the linter (deterministic, catches staleness) rather than replacing it. The document does not claim adversarial testing catches all rubber-stamping — it claims the combination of linter + adversarial testing makes careless review more costly than careful review, because careful review produces tests that actually find bugs.
 
@@ -1128,13 +1310,14 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 - A **CI linter** — `liyi check` + `liyi reanchor`, ~500–800 lines. The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
-- **Agent instructions** — ~12 lines in AGENTS.md.
+- A **triage protocol** (post-MVP) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
+- **Agent instructions** — ~12 lines in AGENTS.md (plus a triage instruction for post-MVP).
 - A **practice** — establish intent before (or alongside) execution.
-- A **challenge mechanism** (post-MVP) — on-demand semantic verification of code against intent, or intent against requirement, via a second model.
+- A **challenge mechanism** (post-MVP) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
 
 ## What This Is Not
 
-- Not a CLI that wraps LLM calls.
+- Not a CLI that wraps LLM calls. `liyi` never calls an LLM. The agent that's already running in the developer's workflow does the reasoning.
 - Not a parser.
 - Not a config system.
 - Not a multi-week project.
@@ -1165,13 +1348,15 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 | **1. The review** | Review inferred intent in PRs — set `"reviewed": true` in sidecar (quick) or add `@liyi:intent` in source (explicit) | Reviewing 5 lines of intent is faster than reviewing 50 lines of implementation. You catch wrong intent before wrong code gets tested. Careless review undermines adversarial testing quality — see *Why careless review is self-limiting* in the Security Model. | Seconds per item |
 | **2. The docs** | Add `## 立意` sections to READMEs / doc comments | Module-level invariants are documented, visible in rendered docs, discoverable by agents and humans. This is just good documentation practice. | 5 min per module |
 | **3. The linter** | Run `liyi check` in CI | Stale specs fail the build. You know which items changed since their intent was written. Deterministic enforcement. | Install a binary |
-| **3.5. Challenge** | Click "Challenge" on a specced item in the editor, or run `liyi challenge` | A second model verifies code against intent, or intent against requirement. On-demand semantic verification — no pipeline, no test files. The trust gap between reviewing intent and trusting it blindly closes. | One click per item |
-| **4. Requirements** | Write `@liyi:requirement` blocks and `@liyi:related` annotations for critical-path items | Requirements are tracked, hashable, versionable. When a requirement changes, all related items are transitively flagged. Challenge verifies intent actually covers the requirement, not just that hashes match. | Minutes per requirement |
-| **5. The adversarial tests** | Configure a different model for test generation from reviewed specs | A second model reads the *intent* (not the code) and tries to break the implementation. Different training data, different blind spots. | Agent configuration |
+| **3.5. Triage** | When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. `liyi triage --apply` auto-reanchors cosmetics. | Noise from refactors and renames is eliminated automatically. Remaining items are sorted by action type — update intent, fix code, or manual review. Graph-aware impact propagation flags transitively affected items. | Agent follows the triage instruction |
+| **4. Challenge** | Click "Challenge" on a specced item in the editor, or include challenge in the agent workflow | A second model verifies code against intent, or intent against requirement. On-demand semantic verification — no pipeline, no test files. The trust gap between reviewing intent and trusting it blindly closes. | One click / prompt per item |
+| **5. Requirements** | Write `@liyi:requirement` blocks and `@liyi:related` annotations for critical-path items | Requirements are tracked, hashable, versionable. When a requirement changes, all related items are transitively flagged. Challenge verifies intent actually covers the requirement, not just that hashes match. | Minutes per requirement |
+| **6. The adversarial tests** | Configure a different model for test generation from reviewed specs | A second model reads the *intent* (not the code) and tries to break the implementation. Different training data, different blind spots. | Agent configuration |
 
 ### Why this and not X
 
 - **vs. just writing good tests:** The same model wrote the code and the tests. 立意 splits the responsibility — one model states intent, a human reviews it, a different model attacks it.
+- **vs. prose requirements + periodic LLM check ("intent watchdog"):** A team can write intent as prose and set up a periodic trigger that asks an LLM "is the codebase still implementing this requirement?" This covers ~60–70% of the stated value. What it lacks: *addressability* (prose requirements are unaddressed blobs — no structural link from a sentence to a specific function, specific lines, specific test), *incrementality* (the LLM re-evaluates the entire codebase every run — O(codebase) not O(changed items)), *trust stratification* (no distinction between agent-inferred and human-reviewed intent), *graph propagation* (no `related` edges, so transitive impact is invisible), and *ratchet enforcement* (no CI gate, so coverage degrades silently). 立意 is the indexing structure that makes LLM-based intent reasoning tractable at scale — hashes answer "what changed?" cheaply and deterministically; the LLM answers "does it matter?" expensively but only on stale items; the graph answers "who else should care?"
 - **vs. AGENTS.md alone:** Agent instructions are probabilistic — compliance varies and can’t be verified. The linter is deterministic. Instructions tell agents what to do; the linter catches stale specs.
 - **vs. formal contracts (Design by Contract, refinement types):** Those require learning a specification language and significant ramp-up cost. 立意 specs are natural language — the same language agents and humans already use. Strictly less powerful, but the cost to adopt is near zero.
 - **vs. ADRs (Architecture Decision Records):** ADRs capture *why a decision was made* at a point in time. 立意 captures *what code should do right now*. ADRs are append-only history; 立意 specs are living artifacts that go stale when code changes. Complementary, not competing — ADRs explain the decision to adopt a module's design; `@liyi:module` captures the invariants that resulted.
@@ -1216,8 +1401,9 @@ What the day-to-day experience looks like once all deliverables exist:
 1. **Write code.** (Or have an agent write it.) The agent instruction in AGENTS.md tells it to also generate `.liyi.jsonc` specs alongside the code.
 2. **Review intent, not implementation.** The agent infers intent and writes the sidecar. Read the inferred intent (via IDE hover or in the sidecar diff). If correct, accept it — either set `"reviewed": true` (one click, zero source noise) or add `@liyi:intent=doc` in source (one line, maximum visibility). If wrong, correct the intent: write `@liyi:intent <prose>` in source with your own words, or edit the docstring. Reviewing 5 lines of intent is faster than reviewing 50 lines of implementation.
 3. **CI runs `liyi check`.** The linter verifies that existing specs aren't stale (source hash matches) and reports unreviewed specs. Stale specs fail the build.
-4. **Adversarial testing (optional).** A different model reads the reviewed intents and generates tests designed to break the implementation. Different training data, different blind spots.
-5. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent re-infers, the human re-reviews. The cycle is fast because reviewing intent is fast.
+4. **Triage (optional).** When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. Cosmetics are auto-reanchored. Semantic changes get suggested intent updates. Violations are flagged for human review. The agent writes `.liyi/triage.json`; `liyi triage --apply` acts on it. This eliminates noise from refactors and focuses human attention on items that actually need re-review.
+5. **Adversarial testing (optional).** A different model reads the reviewed intents and generates tests designed to break the implementation. Different training data, different blind spots.
+6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent triages or re-infers, the human re-reviews. The cycle is fast because reviewing intent is fast.
 
 **Steady state.** A team in steady state has reviewed intents for its critical-path items (not all items — trivial getters and simple wrappers use `@liyi:ignore`). The linter runs in CI and catches stale specs before they rot. Intent survives turnover: a new team member or agent reads the `.liyi.jsonc` files and understands what the code is *meant* to do, without reading every implementation.
 
@@ -1285,7 +1471,7 @@ But Augment Intent is a **product** — a closed workspace you develop inside. �
 
 ### 3. Adversarial testing hypothesis is unvalidated
 
-The strongest differentiator — "a second model, reading reviewed intent, catches bugs the first model missed" — is explicitly a hypothesis, not a demonstrated capability. The design correctly treats it as level 5 (last, optional) and doesn't make it load-bearing. Every prior level delivers value independently.
+The strongest differentiator — "a second model, reading reviewed intent, catches bugs the first model missed" — is explicitly a hypothesis, not a demonstrated capability. The design correctly treats it as level 6 (last, optional) and doesn't make it load-bearing. Every prior level delivers value independently.
 
 But validation is necessary for the project to be more than a staleness checker. The success criterion is clear: at least one team reports catching a real defect through adversarial testing against reviewed specs that same-model testing missed. Until then, the claim is architectural reasoning ("different model, different blind spots"), not evidence.
 
