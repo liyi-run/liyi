@@ -1,0 +1,4 @@
+# Exclude documentation files that contain example @liyi: markers
+docs/
+# Exclude test fixtures
+tests/fixtures/

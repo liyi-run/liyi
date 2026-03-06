@@ -1,0 +1,18 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/reanchor.rs",
+  "specs": [
+    {
+      "item": "run_reanchor",
+      "reviewed": false,
+      "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and recompute its hash/anchor. Otherwise recompute hash/anchor for every spec from the current source file. Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
+      "source_span": [
+        7,
+        72
+      ],
+      "source_hash": "sha256:aa78c1db923fbfed373bbea233dd5e67977c48233ab40703ccfb3c6f0bb9f5c2",
+      "source_anchor": "/// Re-hash source spans in a sidecar file."
+    }
+  ]
+}

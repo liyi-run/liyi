@@ -1,0 +1,40 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/cli.rs",
+  "specs": [
+    {
+      "item": "Cli",
+      "reviewed": false,
+      "intent": "Define the top-level CLI parser with a single required subcommand field, providing the tool name, version, and about string for help output.",
+      "source_span": [
+        4,
+        9
+      ],
+      "source_hash": "sha256:d4b501eeb55f38f950a19df994a7811a7c3d3b28b6935c20093c5cd5445844cd",
+      "source_anchor": "#[derive(Parser)]"
+    },
+    {
+      "item": "Commands",
+      "reviewed": false,
+      "intent": "Enumerate all CLI subcommands (Check, Reanchor) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate).",
+      "source_span": [
+        11,
+        57
+      ],
+      "source_hash": "sha256:15e43a6064dbf2504900f5086ad4f43a8423a93a3393a3ee9c3656365ef5c407",
+      "source_anchor": "#[derive(Subcommand)]"
+    },
+    {
+      "item": "parse_span",
+      "reviewed": false,
+      "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
+      "source_span": [
+        59,
+        74
+      ],
+      "source_hash": "sha256:12d104d2a3f7fb454dfbce61101cfe715d6d418a7c819d885b2956730964edc9",
+      "source_anchor": "/// Parse a \"start,end\" string into a [usize; 2] span."
+    }
+  ]
+}

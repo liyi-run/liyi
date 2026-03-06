@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "missing.rs",
+  "specs": [
+    {
+      "item": "gone",
+      "intent": "This function no longer exists",
+      "source_span": [1, 3]
+    }
+  ]
+}

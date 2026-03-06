@@ -1,0 +1,29 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/schema.rs",
+  "specs": [
+    {
+      "item": "validate_version",
+      "reviewed": false,
+      "intent": "Accept version '0.1' and reject all other version strings with a descriptive error message.",
+      "source_span": [
+        5,
+        14
+      ],
+      "source_hash": "sha256:1582772f4c3328250e4e075550a4da36a8e5c0abbbb64c9cdaad19634b158ed7",
+      "source_anchor": "/// Accept version \"0.1\" only; return an error for anything else."
+    },
+    {
+      "item": "migrate",
+      "reviewed": false,
+      "intent": "Migrate a sidecar file to the current schema version. In v0.1 this is a no-op that only validates the version, providing a scaffold for future migration logic.",
+      "source_span": [
+        16,
+        22
+      ],
+      "source_hash": "sha256:fa3c3ad6f30483f1a84b75218cc4af5ae83f52b405a95710142e570809ffb3df",
+      "source_anchor": "/// Migrate a sidecar file to the current schema version."
+    }
+  ]
+}

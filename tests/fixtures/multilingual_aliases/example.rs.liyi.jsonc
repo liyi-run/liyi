@@ -1,0 +1,18 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "legacy_code",
+      "reviewed": false,
+      "intent": "Legacy function",
+      "source_span": [
+        2,
+        4
+      ],
+      "source_hash": "sha256:ce4fa60bca2b1be57e639c94b5067501cc84afd6a8f9ee48650c6b32f0667fd8",
+      "source_anchor": "fn legacy_code() {"
+    }
+  ]
+}

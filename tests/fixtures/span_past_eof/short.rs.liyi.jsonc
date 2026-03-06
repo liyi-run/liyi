@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "short.rs",
+  "specs": [
+    {
+      "item": "tiny",
+      "intent": "A tiny function",
+      "source_span": [1, 100]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "get_name",
+      "reviewed": false,
+      "intent": "Simple getter",
+      "source_span": [
+        2,
+        4
+      ],
+      "source_hash": "sha256:7834d8e398d42127bf7250ed277c47d99d44fb58229f31cdf747c786e81bb475",
+      "source_anchor": "fn get_name() -> &'static str {"
+    },
+    {
+      "item": "old_function",
+      "reviewed": false,
+      "intent": "Legacy function",
+      "source_span": [
+        7,
+        9
+      ],
+      "source_hash": "sha256:5af3088e2d93bb7fe19180e240fdcb3b5d6b8379be0b24a0d6192abf9baefe04",
+      "source_anchor": "fn old_function() {"
+    }
+  ]
+}

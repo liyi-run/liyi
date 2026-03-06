@@ -1,0 +1,84 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/diagnostics.rs",
+  "specs": [
+    {
+      "item": "Severity",
+      "reviewed": false,
+      "intent": "Classify diagnostic severity into Info, Warning, and Error levels.",
+      "source_span": [
+        4,
+        9
+      ],
+      "source_hash": "sha256:e3aa56c7405cafa0a78eb8e18f77d896c7667041d2b72b42fb809d21ac33540b",
+      "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
+    },
+    {
+      "item": "DiagnosticKind",
+      "reviewed": false,
+      "intent": "Enumerate all distinct diagnostic conditions the linter can report: hash-current, unreviewed, stale, shifted span, requirement changed/unknown, untracked, trivial/ignored markers, span errors, malformed hashes, duplicates, orphaned sources, parse errors, unknown versions, requirement cycles, and ambiguous sidecars.",
+      "source_span": [
+        11,
+        32
+      ],
+      "source_hash": "sha256:4baad443b58740d5ad757b1277136ada6c4c1049a64a9726eccf7972a46f403f",
+      "source_anchor": "#[derive(Debug, Clone, PartialEq, Eq)]"
+    },
+    {
+      "item": "Diagnostic",
+      "reviewed": false,
+      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, and a human-readable message.",
+      "source_span": [
+        34,
+        41
+      ],
+      "source_hash": "sha256:ef5a8f83531ff72b1c74c80b7408b5c917d1d6ba5912ec38240474dba889e3b2",
+      "source_anchor": "#[derive(Debug, Clone)]"
+    },
+    {
+      "item": "impl Display for Diagnostic",
+      "reviewed": false,
+      "intent": "Format a diagnostic for terminal output: select an icon based on severity and kind (✓ for current, · for trivial/ignored, ↕ for shifted, ⚠ for warnings, ✗ for errors) and display as 'item_or_req: icon message'.",
+      "source_span": [
+        43,
+        61
+      ],
+      "source_hash": "sha256:5f7daf3b0b6e956c70e91a5c3b7a16c501d62d5f5c5e84a48824e6334b51a9b2",
+      "source_anchor": "impl fmt::Display for Diagnostic {"
+    },
+    {
+      "item": "CheckFlags",
+      "reviewed": false,
+      "intent": "Hold the three boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed) that control which diagnostic kinds escalate the exit code to CheckFailure.",
+      "source_span": [
+        63,
+        68
+      ],
+      "source_hash": "sha256:aac7f53b52c00b332097037be22f351f7cab3a9fdd7acb23c76635ef8a26fd6a",
+      "source_anchor": "#[derive(Debug, Clone)]"
+    },
+    {
+      "item": "LiyiExitCode",
+      "reviewed": false,
+      "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
+      "source_span": [
+        70,
+        75
+      ],
+      "source_hash": "sha256:6ebda039738b05d6cb149ea3c872accf764f674c93f0d111b6037c3c10c0ee0a",
+      "source_anchor": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]"
+    },
+    {
+      "item": "compute_exit_code",
+      "reviewed": false,
+      "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed) is present per the CheckFlags, otherwise Clean.",
+      "source_span": [
+        77,
+        99
+      ],
+      "source_hash": "sha256:40d1d1a16fdb85f853f14a08744bcebc27fbaa0965f64587b7d05dc89eacec66",
+      "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {"
+    }
+  ]
+}

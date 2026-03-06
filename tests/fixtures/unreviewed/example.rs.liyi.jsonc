@@ -1,0 +1,18 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "multiply",
+      "reviewed": false,
+      "intent": "Multiply two integers",
+      "source_span": [
+        1,
+        3
+      ],
+      "source_hash": "sha256:83d70615895244c6b4d64ad79cfaae320eded89c2ac585bc9afcd26e9049710f",
+      "source_anchor": "fn multiply(a: i32, b: i32) -> i32 {"
+    }
+  ]
+}

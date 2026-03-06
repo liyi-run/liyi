@@ -1,0 +1,51 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/check.rs",
+  "specs": [
+    {
+      "item": "RequirementRecord",
+      "reviewed": false,
+      "intent": "Hold the file path, line number, and optional hash of a discovered @liyi:requirement, for use in cross-referencing related edges during the check pass.",
+      "source_span": [
+        19,
+        24
+      ],
+      "source_hash": "sha256:e0806a0187e7b543f0db5d6831aa5f8fdd038f082acba59e820e9ba98cfe621e",
+      "source_anchor": "/// A requirement discovered during pass 1."
+    },
+    {
+      "item": "run_check",
+      "reviewed": false,
+      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
+      "source_span": [
+        30,
+        144
+      ],
+      "source_hash": "sha256:a697be37f71b2a1b17b600d4da056ec0bba4db09ba1ddd4efc7fb1fd23cef703",
+      "source_anchor": "/// Run the two-pass check and optionally apply `--fix` corrections."
+    },
+    {
+      "item": "check_sidecar",
+      "reviewed": false,
+      "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
+      "source_span": [
+        150,
+        507
+      ],
+      "source_hash": "sha256:b36d2e0e6312f468dd7116339f54ba67bfa80b12fc914277cfb24ba190d1e4a5",
+      "source_anchor": "fn check_sidecar("
+    },
+    {
+      "item": "read_cached",
+      "reviewed": false,
+      "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
+      "source_span": [
+        513,
+        525
+      ],
+      "source_hash": "sha256:b20544303bdf44801e41b81d30584f313f93e85397eb142ce4874fd96a556ae1",
+      "source_anchor": "/// Read a file into the cache and return a clone of its contents."
+    }
+  ]
+}

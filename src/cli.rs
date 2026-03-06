@@ -1,8 +1,8 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "liyi", version = "0.1.0", about = "Lìyì - Intent linter and toolkit")]
+#[command(name = "liyi", version = "0.1.0", about = "立意 — establish intent before execution")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -10,31 +10,65 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Lint: staleness, review status, requirement tracking
+    /// Check specs for staleness, review status, and requirement tracking
     Check {
-        /// Optional paths to check (defaults to current directory)
+        /// Paths to check (default: CWD, recursive)
         paths: Vec<PathBuf>,
 
-        /// Auto-correct shifted spans, fill missing hashes
+        /// Auto-correct shifted spans and fill missing hashes
         #[arg(long)]
         fix: bool,
-    },
-    /// Manual span re-hashing for targeted fixes
-    Reanchor {
-        /// Path to the sidecar file
-        #[arg(required_unless_present = "migrate")]
-        sidecar: Option<PathBuf>,
 
-        /// Specific item name to reanchor
+        /// Fail if any reviewed spec is stale
+        #[arg(long, default_value_t = true, action = ArgAction::Set)]
+        fail_on_stale: bool,
+
+        /// Fail if specs exist without review
+        #[arg(long, default_value_t = false, action = ArgAction::Set)]
+        fail_on_unreviewed: bool,
+
+        /// Fail if a reviewed spec references a changed requirement
+        #[arg(long, default_value_t = true, action = ArgAction::Set)]
+        fail_on_req_changed: bool,
+
+        /// Override repo root (default: walk up to .git/)
+        #[arg(long)]
+        root: Option<PathBuf>,
+    },
+
+    /// Re-hash source spans in sidecar files
+    Reanchor {
+        /// Sidecar file to reanchor
+        #[arg(required_unless_present = "migrate")]
+        file: Option<PathBuf>,
+
+        /// Target a specific item by name
         #[arg(long, requires = "span")]
         item: Option<String>,
 
-        /// Specific span to reanchor, format: start,end (e.g., 10,20)
-        #[arg(long, requires = "item")]
-        span: Option<String>,
+        /// Override span (start,end)
+        #[arg(long, requires = "item", value_parser = parse_span)]
+        span: Option<[usize; 2]>,
 
-        /// Schema version migration (no-op in 0.1, scaffolded)
-        #[arg(long, conflicts_with_all = ["sidecar", "item", "span"])]
+        /// Migrate sidecar to current schema version
+        #[arg(long)]
         migrate: bool,
     },
+}
+
+/// Parse a "start,end" string into a [usize; 2] span.
+fn parse_span(s: &str) -> Result<[usize; 2], String> {
+    let parts: Vec<&str> = s.split(',').collect();
+    if parts.len() != 2 {
+        return Err(format!("expected format 'start,end', got '{s}'"));
+    }
+    let start: usize = parts[0]
+        .trim()
+        .parse()
+        .map_err(|_| format!("invalid start: '{}'", parts[0].trim()))?;
+    let end: usize = parts[1]
+        .trim()
+        .parse()
+        .map_err(|_| format!("invalid end: '{}'", parts[1].trim()))?;
+    Ok([start, end])
 }

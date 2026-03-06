@@ -1,0 +1,18 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "add",
+      "reviewed": true,
+      "intent": "Add two integers, rejecting overflow",
+      "source_span": [
+        3,
+        5
+      ],
+      "source_hash": "sha256:21b3ad6b0689a685d082a047acb608ad67749293d1d98cab524a8cd4e9c8fa06",
+      "source_anchor": "fn add(a: i32, b: i32) -> i32 {"
+    }
+  ]
+}

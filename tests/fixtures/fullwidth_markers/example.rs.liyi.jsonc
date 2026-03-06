@@ -1,0 +1,18 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "simple",
+      "reviewed": false,
+      "intent": "Returns true",
+      "source_span": [
+        2,
+        4
+      ],
+      "source_hash": "sha256:683340b9dd8c8c6d0e21f126e071c4b175728bead5f3af28143fa7510e0c5b9d",
+      "source_anchor": "fn simple() -> bool {"
+    }
+  ]
+}

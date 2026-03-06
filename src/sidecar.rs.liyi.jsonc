@@ -1,0 +1,95 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "src/sidecar.rs",
+  "specs": [
+    {
+      "item": "SidecarFile",
+      "reviewed": false,
+      "intent": "Model the top-level .liyi.jsonc file with version, source path, and a list of specs. Enforce deny_unknown_fields to reject extraneous keys during deserialization.",
+      "source_span": [
+        4,
+        11
+      ],
+      "source_hash": "sha256:e832dbb2f978f79be6b0135630e2f5bbd314753f4ba09eee25a476ad4c1a622b",
+      "source_anchor": "/// Top-level `.liyi.jsonc` file representation"
+    },
+    {
+      "item": "Spec",
+      "reviewed": false,
+      "intent": "Discriminated union of ItemSpec and RequirementSpec, using untagged serde deserialization so the variant is inferred from the presence of 'item' vs 'requirement' keys.",
+      "source_span": [
+        13,
+        19
+      ],
+      "source_hash": "sha256:a3a7434250cc317950588f0ea7c5873d0c92103f84c8f2e435c3103d42d7326a",
+      "source_anchor": "/// Represents either an item or a requirement spec"
+    },
+    {
+      "item": "ItemSpec",
+      "reviewed": false,
+      "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, source_hash, source_anchor, confidence, related). Enforce deny_unknown_fields and skip serializing None optionals.",
+      "source_span": [
+        21,
+        45
+      ],
+      "source_hash": "sha256:2f385bbd6662fb1143ee58190a6ada9ffda58339874d44a6aa9aa926d6d8d722",
+      "source_anchor": "/// Details of a code item (function, struct, etc.)"
+    },
+    {
+      "item": "RequirementSpec",
+      "reviewed": false,
+      "intent": "Model a requirement spec entry with requirement name, source_span, and optional source_hash/source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
+      "source_span": [
+        47,
+        60
+      ],
+      "source_hash": "sha256:3df33f9d7d07763f351cdf2437a1495530f32bdcc91fc1100e3813656c57545a",
+      "source_anchor": "/// Details of a module requirement/invariant"
+    },
+    {
+      "item": "strip_jsonc_comments",
+      "reviewed": false,
+      "intent": "Remove // line comments and /* block comments from JSONC input while respecting JSON string boundaries and backslash escapes. Preserve newlines from line comments so downstream line numbers remain meaningful.",
+      "source_span": [
+        62,
+        114
+      ],
+      "source_hash": "sha256:9dc96d8d82dab62dc9874ea22649619671cb75068f9866011ddb7b09e24de922",
+      "source_anchor": "/// Strip `//` line comments and `/* */` block comments from JSONC input,"
+    },
+    {
+      "item": "parse_sidecar",
+      "reviewed": false,
+      "intent": "Parse a .liyi.jsonc string by stripping JSONC comments then deserializing into a SidecarFile. Return a human-readable error on parse failure.",
+      "source_span": [
+        116,
+        121
+      ],
+      "source_hash": "sha256:411392dde2425ae37d6f1437783764b15a77a00f83f2791eb285d37a3a314e91",
+      "source_anchor": "/// Parse a `.liyi.jsonc` file: strip JSONC comments then deserialize."
+    },
+    {
+      "item": "write_sidecar",
+      "reviewed": false,
+      "intent": "Serialize a SidecarFile to pretty-printed JSON prefixed with a '// liyi v0.1 spec file' header comment and a trailing newline.",
+      "source_span": [
+        123,
+        128
+      ],
+      "source_hash": "sha256:8a5e7d12800e936fa7e4bba8e3601a9c5a83eab649f674381910ed9a1faa18d8",
+      "source_anchor": "/// Serialize a `SidecarFile` to pretty-printed JSON with a JSONC header comment."
+    },
+    {
+      "item": "validate_sidecar",
+      "reviewed": false,
+      "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
+      "source_span": [
+        130,
+        200
+      ],
+      "source_hash": "sha256:7553ea387079f07df12b091d563d01c34f6134b4cf4a71ff5619f489d335314d",
+      "source_anchor": "/// Validate a parsed `SidecarFile`. Returns a list of error strings (empty = valid)."
+    }
+  ]
+}
