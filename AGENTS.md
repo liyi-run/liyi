@@ -28,6 +28,7 @@ When writing or modifying code:
 7. Tests should target boundary conditions, error-handling gaps, property violations, and semantic mismatches. Prioritize tests a subtly wrong implementation would fail.
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
+10. When `liyi check` reports stale items, assess each: is the change cosmetic (rename, reformat — no behavioral change), semantic (code legitimately evolved — intent needs updating), or an intent violation (code contradicts declared intent)? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in the `suggested_intent` field. For intent violations, flag for human review.
 
 ### `.liyi.jsonc` Schema (v0.1)
 
@@ -136,6 +137,177 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         "source_anchor": {
           "type": "string",
           "description": "Literal text of the first line of the span. Tool-managed."
+        }
+      }
+    }
+  }
+}
+```
+
+### Triage Report Schema (v0.1)
+
+When `liyi check` reports stale items, the agent assesses each and writes the result to `.liyi/triage.json`. The report must conform to the following JSON Schema (also available at `schema/triage.schema.json`):
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://liyi.run/schema/0.1/triage.schema.json",
+  "title": "立意 triage report",
+  "description": "Agent-produced assessment of stale intent specs, validated and consumed by liyi triage subcommands.",
+  "type": "object",
+  "required": ["version", "generated", "model", "summary", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Schema version. Must match the version understood by the liyi binary."
+    },
+    "generated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the triage report was produced."
+    },
+    "model": {
+      "type": "string",
+      "description": "Identifier of the model that produced the assessments (e.g. 'claude-sonnet-4-20260514')."
+    },
+    "root": {
+      "type": "string",
+      "default": ".",
+      "description": "Repository root relative to the working directory. Usually '.'."
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/triageItem" }
+    }
+  },
+  "$defs": {
+    "sourceSpan": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Closed interval of 1-indexed line numbers [start, end]. start must be <= end."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["cosmetic", "semantic", "intent-violation", "unclear"],
+      "description": "cosmetic: no behavioral change (rename, reformat). semantic: code evolved, intent is stale but code is correct. intent-violation: code contradicts declared intent. unclear: model cannot determine with sufficient confidence."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["auto-reanchor", "update-intent", "fix-code-or-update-intent", "manual-review"],
+      "description": "Recommended action. auto-reanchor for cosmetic, update-intent for semantic, fix-code-or-update-intent for intent-violation, manual-review for unclear."
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_stale", "cosmetic", "semantic", "intent_violation", "unassessed"],
+      "additionalProperties": false,
+      "properties": {
+        "total_stale": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of stale items assessed."
+        },
+        "cosmetic": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Items with verdict 'cosmetic'."
+        },
+        "semantic": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Items with verdict 'semantic'."
+        },
+        "intent_violation": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Items with verdict 'intent-violation'."
+        },
+        "unassessed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Stale items not yet assessed (should be 0 in a complete report)."
+        },
+        "impacted_transitively": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Items affected transitively via the related graph."
+        }
+      }
+    },
+    "impactEntry": {
+      "type": "object",
+      "required": ["source", "item", "relationship", "impact_summary"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Repo-relative path of the transitively affected source file."
+        },
+        "item": {
+          "type": "string",
+          "description": "Name of the transitively affected item."
+        },
+        "relationship": {
+          "type": "string",
+          "description": "The related edge that propagates the impact (e.g. 'related:multi-currency-addition')."
+        },
+        "impact_summary": {
+          "type": "string",
+          "description": "Why this item is affected (1–2 sentences)."
+        }
+      }
+    },
+    "triageItem": {
+      "type": "object",
+      "required": ["source", "item", "source_span", "verdict", "confidence", "change_summary", "invariant_summary", "reasoning", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Repo-relative source path."
+        },
+        "item": {
+          "type": "string",
+          "description": "Item name (matches the sidecar spec)."
+        },
+        "source_span": {
+          "$ref": "#/$defs/sourceSpan",
+          "description": "Current span from the sidecar."
+        },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Model's self-assessed confidence in the verdict (0–1)."
+        },
+        "change_summary": {
+          "type": "string",
+          "description": "What changed in the code (1–2 sentences)."
+        },
+        "invariant_summary": {
+          "type": "string",
+          "description": "What stayed the same (1–2 sentences)."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Why the verdict was assigned (2–3 sentences, citable in reviews)."
+        },
+        "action": { "$ref": "#/$defs/action" },
+        "suggested_intent": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Proposed new intent text. Expected for 'semantic' verdicts; null otherwise."
+        },
+        "impact": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/impactEntry" },
+          "default": [],
+          "description": "Transitively affected items via the related graph."
         }
       }
     }
