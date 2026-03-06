@@ -107,3 +107,60 @@ pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> Liyi
         LiyiExitCode::Clean
     }
 }
+
+/// Produce a one-line summary of check results.
+///
+/// Example output: `12 current, 3 stale, 1 unreviewed, 2 errors`
+pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
+    let mut current = 0usize;
+    let mut stale = 0usize;
+    let mut shifted = 0usize;
+    let mut unreviewed = 0usize;
+    let mut errors = 0usize;
+    let mut trivial = 0usize;
+    let mut ignored = 0usize;
+
+    for d in diagnostics {
+        match &d.kind {
+            DiagnosticKind::Current => current += 1,
+            DiagnosticKind::Stale => stale += 1,
+            DiagnosticKind::Shifted { .. } => shifted += 1,
+            DiagnosticKind::Unreviewed => unreviewed += 1,
+            DiagnosticKind::Trivial => trivial += 1,
+            DiagnosticKind::Ignored => ignored += 1,
+            DiagnosticKind::ReqNoRelated => {} // informational, not counted
+            _ if d.severity == Severity::Error => errors += 1,
+            _ if d.severity == Severity::Warning => stale += 1, // ReqChanged, Untracked, etc.
+            _ => {}
+        }
+    }
+
+    let mut parts: Vec<String> = Vec::new();
+    if current > 0 {
+        parts.push(format!("{current} current"));
+    }
+    if stale > 0 {
+        parts.push(format!("{stale} stale"));
+    }
+    if shifted > 0 {
+        parts.push(format!("{shifted} shifted"));
+    }
+    if unreviewed > 0 {
+        parts.push(format!("{unreviewed} unreviewed"));
+    }
+    if errors > 0 {
+        parts.push(format!("{errors} error{}", if errors == 1 { "" } else { "s" }));
+    }
+    if trivial > 0 {
+        parts.push(format!("{trivial} trivial"));
+    }
+    if ignored > 0 {
+        parts.push(format!("{ignored} ignored"));
+    }
+
+    if parts.is_empty() {
+        "no specs checked".to_string()
+    } else {
+        parts.join(", ")
+    }
+}

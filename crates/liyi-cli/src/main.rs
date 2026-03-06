@@ -44,6 +44,10 @@ fn main() {
                 println!("{d}");
             }
 
+            // Print summary line
+            let summary = liyi::diagnostics::format_summary(&diagnostics);
+            println!("\n{summary}");
+
             process::exit(exit_code as i32);
         }
         Commands::Reanchor {
