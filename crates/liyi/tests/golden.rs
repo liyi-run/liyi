@@ -361,3 +361,42 @@ fn tree_path_recovery_fix() {
     );
     assert_eq!(exit_code, LiyiExitCode::Clean);
 }
+
+/// Semantic drift: tree_path resolves the item to a new span, but the
+/// content at that span has also changed (not just shifted).  `--fix`
+/// should update the span to track the item, but NOT rewrite the hash,
+/// so the spec remains stale for human review.
+#[test]
+fn semantic_drift_fix_preserves_stale() {
+    let (_tmp, root) = fixture_in_tmp("semantic_drift");
+    let flags = CheckFlags {
+        fail_on_stale: true,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+    };
+
+    // First pass with --fix: should update span via tree_path but leave
+    // the hash stale because the content changed (x*2+1 → x*3+1).
+    let (diags_fix, _) = run_check(&root, &[], true, false, &flags);
+
+    let has_stale = diags_fix
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Stale));
+    assert!(
+        has_stale,
+        "expected Stale diagnostic during --fix pass, got: {diags_fix:#?}"
+    );
+
+    // Second pass WITHOUT --fix: the span should have been corrected to
+    // [4,6] but the hash should still be the OLD hash, so it remains Stale.
+    let (diags_recheck, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let still_stale = diags_recheck
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Stale));
+    assert!(
+        still_stale,
+        "expected Stale on re-check (semantic drift not silently blessed), got: {diags_recheck:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
+}
