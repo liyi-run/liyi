@@ -1396,7 +1396,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://liyi.dev/schema/0.1/liyi.schema.json",
+  "$id": "https://liyi.run/schema/0.1/liyi.schema.json",
   "title": "立意 sidecar spec file",
   "type": "object",
   "required": ["version", "source", "specs"],
@@ -1503,7 +1503,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
 }
 ```
 
-This schema ships as `liyi.schema.json` in the linter's release artifacts and is published at the `$id` URL. Editors that support JSON Schema (VSCode, IntelliJ, Neovim with `SchemaStore`) will provide validation and autocompletion for `.liyi.jsonc` files when configured with `"$schema": "https://liyi.dev/schema/0.1/liyi.schema.json"` at the top of the sidecar, or via a workspace-level `json.schemas` setting.
+This schema ships as `liyi.schema.json` in the linter's release artifacts and is published at the `$id` URL. Editors that support JSON Schema (VSCode, IntelliJ, Neovim with `SchemaStore`) will provide validation and autocompletion for `.liyi.jsonc` files when configured with `"$schema": "https://liyi.run/schema/0.1/liyi.schema.json"` at the top of the sidecar, or via a workspace-level `json.schemas` setting.
 
 ---
 

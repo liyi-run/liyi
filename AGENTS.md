@@ -36,7 +36,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://liyi.dev/schema/0.1/liyi.schema.json",
+  "$id": "https://liyi.run/schema/0.1/liyi.schema.json",
   "title": "立意 sidecar spec file",
   "type": "object",
   "required": ["version", "source", "specs"],
