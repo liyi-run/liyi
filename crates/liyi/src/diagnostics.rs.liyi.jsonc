@@ -68,20 +68,23 @@
       "reviewed": false,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        72,
-        76
+        75,
+        79
       ],
       "tree_path": "enum::LiyiExitCode",
       "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
-      "source_anchor": "pub enum LiyiExitCode {"
+      "source_anchor": "pub enum LiyiExitCode {",
+      "related": {
+        "liyi-check-exit-code": null
+      }
     },
     {
       "item": "compute_exit_code",
       "reviewed": false,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        78,
-        111
+        81,
+        114
       ],
       "tree_path": "fn::compute_exit_code",
       "source_hash": "sha256:fe6a985ac27234b520c4a90bcab352530cabf3d0a93d779628247a0dad0dfc52",
