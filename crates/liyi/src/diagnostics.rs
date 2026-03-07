@@ -68,6 +68,9 @@ pub struct CheckFlags {
     pub fail_on_req_changed: bool,
 }
 
+/// Process exit codes for `liyi check` and related commands.
+///
+/// <!-- @liyi:related liyi-check-exit-code -->
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LiyiExitCode {
     Clean = 0,

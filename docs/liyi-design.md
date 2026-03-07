@@ -919,11 +919,13 @@ get_name: · trivial
 ffi_binding: · ignored
 ```
 
+<!-- @liyi:requirement liyi-check-exit-code -->
 Exit codes: 0 = clean, 1 = check failures (stale, unreviewed, or diverged specs), 2 = internal error (malformed JSONC, missing files). CI flags control which conditions trigger exit 1:
 - `--fail-on-stale` (default: true) — exit 1 if any reviewed spec's source hash doesn't match
 - `--fail-on-unreviewed` (default: false) — exit 1 if specs exist without `@liyi:intent` in source or `"reviewed": true` in sidecar
 - `--fail-on-req-changed` (default: true) — exit 1 if any reviewed spec references a requirement whose hash changed
 - `--fail-on-untracked` (default: true) — exit 1 if any `@liyi:requirement` marker has no sidecar entry, or any `@liyi:related` marker has no corresponding edge in the enclosing item's sidecar spec
+<!-- /requirement -->
 
 ### What it doesn't do
 
