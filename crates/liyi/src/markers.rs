@@ -58,8 +58,11 @@ pub fn normalize_line(line: &str) -> String {
 // The linter's own source files must not contain literal `@liyi:*` (or any
 // alias) marker strings inside string constants, format strings, or test
 // data.  Use `\x40` (Rust) or `\u0040` (JSON) to spell the `@` so the
-// scanner does not self-trigger.  Actual marker comments (like this one)
-// are the sole exception.
+// scanner does not self-trigger.  In documentation files, the scanner
+// additionally suppresses markers inside fenced code blocks, inline
+// backtick spans, and markers preceded by quotation marks — see
+// *Self-hosting and the quine problem* in the design doc.  Actual marker
+// comments (like this one) are the sole exception.
 const CANON_IGNORE: &str = "\x40liyi:ignore";
 const CANON_TRIVIAL: &str = "\x40liyi:trivial";
 const CANON_NONTRIVIAL: &str = "\x40liyi:nontrivial";
@@ -120,11 +123,11 @@ const ALIAS_TABLE: &[(&str, &str)] = &[
 ];
 
 /// Try to find a known marker at any position in `normalized`.
-/// Returns `(canonical, byte-offset past the matched alias)` on success.
-fn find_marker(normalized: &str) -> Option<(&'static str, usize)> {
+/// Returns `(canonical, byte-offset of match start, byte-offset past the matched alias)` on success.
+fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {
     for &(alias, canon) in ALIAS_TABLE {
         if let Some(pos) = normalized.find(alias) {
-            return Some((canon, pos + alias.len()));
+            return Some((canon, pos, pos + alias.len()));
         }
     }
     None
@@ -152,19 +155,100 @@ fn extract_name(rest: &str) -> Option<String> {
     }
 }
 
+// ---------------------------------------------------------------------------
+// NL-quoting quine suppression
+// ---------------------------------------------------------------------------
+
+/// Characters that, when immediately preceding the `@` of a marker, cause
+/// the marker to be rejected as a documentary mention rather than a real
+/// directive.  Covers ASCII quotes, typographic quotes, CJK brackets, and
+/// guillemets.
+const QUOTE_CHARS: &[char] = &[
+    '\'',       // U+0027 apostrophe
+    '"',       // U+0022 quotation mark
+    '`',        // U+0060 grave accent (backtick) — defense-in-depth with span check
+    '\u{2018}', // ' left single quotation mark
+    '\u{2019}', // ' right single quotation mark
+    '\u{201C}', // " left double quotation mark
+    '\u{201D}', // " right double quotation mark
+    '\u{300C}', // 「 left corner bracket
+    '\u{300D}', // 」 right corner bracket
+    '\u{00AB}', // « left guillemet
+    '\u{00BB}', // » right guillemet
+];
+
+/// Returns true if `byte_pos` falls inside an inline backtick span.
+/// Determined by counting backtick characters before the position —
+/// an odd count means we are inside a code span.
+fn is_in_inline_code(line: &str, byte_pos: usize) -> bool {
+    let mut count = 0u32;
+    for (i, ch) in line.char_indices() {
+        if i >= byte_pos {
+            break;
+        }
+        if ch == '`' {
+            count += 1;
+        }
+    }
+    count % 2 != 0
+}
+
+/// Returns true if the character immediately before `byte_pos` in `line`
+/// is a quotation mark (ASCII, typographic, CJK, or guillemet).
+fn preceded_by_quote(line: &str, byte_pos: usize) -> bool {
+    // Find the last char before byte_pos.
+    let prefix = &line[..byte_pos];
+    match prefix.chars().next_back() {
+        Some(ch) => QUOTE_CHARS.contains(&ch),
+        None => false,
+    }
+}
+
+/// Returns true if a trimmed line opens or closes a fenced code block.
+fn is_fence_delimiter(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    trimmed.starts_with("```") || trimmed.starts_with("~~~")
+}
+
 /// Scan all lines of `content` and return discovered `@liyi:*` markers.
 /// Line numbers are 1-indexed.
+///
+/// Markers are suppressed (not returned) when they appear inside fenced
+/// code blocks, inside inline backtick spans, or immediately after a
+/// quotation-mark character.  See *Self-hosting and the quine problem*
+/// in the design doc.
 pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
     let mut markers = Vec::new();
+    let mut in_fenced_block = false;
 
     for (idx, raw_line) in content.lines().enumerate() {
         let line_num = idx + 1;
+
+        // Fenced code block toggle (``` or ~~~).
+        if is_fence_delimiter(raw_line) {
+            in_fenced_block = !in_fenced_block;
+            continue;
+        }
+        if in_fenced_block {
+            continue;
+        }
+
         let normalized = normalize_line(raw_line);
 
-        let (canon, after) = match find_marker(&normalized) {
-            Some(pair) => pair,
+        let (canon, match_start, after) = match find_marker(&normalized) {
+            Some(triple) => triple,
             None => continue,
         };
+
+        // NL-quoting suppression: inline backtick span.
+        if is_in_inline_code(&normalized, match_start) {
+            continue;
+        }
+
+        // NL-quoting suppression: preceding quote character.
+        if preceded_by_quote(&normalized, match_start) {
+            continue;
+        }
 
         let rest = &normalized[after..];
 
@@ -341,5 +425,113 @@ mod tests {
                 line: 1
             }
         ));
+    }
+
+    // -----------------------------------------------------------------------
+    // NL-quoting quine suppression tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn fenced_block_suppresses_markers() {
+        let input = "before\n```\n// \x40liyi:module\n```\nafter\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker inside fenced block should be suppressed");
+    }
+
+    #[test]
+    fn fenced_block_tilde_suppresses_markers() {
+        let input = "before\n~~~\n// \x40liyi:trivial\n~~~\nafter\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker inside ~~~ fenced block should be suppressed");
+    }
+
+    #[test]
+    fn marker_after_fenced_block_still_found() {
+        let input = "```\n// \x40liyi:module\n```\n// \x40liyi:trivial\n";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 1);
+        assert!(matches!(&m[0], SourceMarker::Trivial { line: 4 }));
+    }
+
+    #[test]
+    fn inline_backtick_suppresses_marker() {
+        let input = "use `\x40liyi:module` in your code\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker inside inline backticks should be suppressed");
+    }
+
+    #[test]
+    fn inline_backtick_with_surrounding_text() {
+        // Pattern from design doc: `<!-- @liyi:module -->`
+        let input = "The `<!-- \x40liyi:module -->` comment marks the block\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker inside backtick span with surrounding text should be suppressed");
+    }
+
+    #[test]
+    fn preceding_double_quote_suppresses() {
+        let input = "the string \"\x40liyi:intent\" is used\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker preceded by double quote should be suppressed");
+    }
+
+    #[test]
+    fn preceding_single_quote_suppresses() {
+        let input = "the string '\x40liyi:module' is used\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker preceded by single quote should be suppressed");
+    }
+
+    #[test]
+    fn preceding_curly_quote_suppresses() {
+        let input = "mention \u{201C}\x40liyi:intent\u{201D} in docs\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker preceded by curly quote should be suppressed");
+    }
+
+    #[test]
+    fn preceding_cjk_bracket_suppresses() {
+        let input = "use \u{300C}\x40liyi:requirement\u{300D}\n";
+        let m = scan_markers(input);
+        assert!(m.is_empty(), "marker preceded by CJK bracket should be suppressed");
+    }
+
+    #[test]
+    fn html_comment_marker_not_suppressed() {
+        // Real markers inside HTML comments should be detected
+        let input = "<!-- \x40liyi:module -->\n";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 1);
+        assert!(matches!(&m[0], SourceMarker::Module { line: 1 }));
+    }
+
+    #[test]
+    fn source_comment_marker_not_suppressed() {
+        // Normal source comment markers should be detected
+        let input = "// \x40liyi:requirement(auth-check)\n";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 1);
+        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "auth-check"));
+    }
+
+    #[test]
+    fn mixed_real_and_documentary_markers() {
+        // A realistic Markdown file: real marker + fenced example + inline mention
+        let input = "\
+<!-- \x40liyi:requirement(exit-codes) -->\n\
+Exit codes: 0 = clean, 1 = failures.\n\
+<!-- /requirement -->\n\
+\n\
+### Example\n\
+\n\
+```\n\
+// \x40liyi:intent Add two amounts\n\
+```\n\
+\n\
+Use `\x40liyi:intent` to annotate functions.\n\
+";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 1, "only the real requirement marker should be found");
+        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "exit-codes"));
     }
 }
