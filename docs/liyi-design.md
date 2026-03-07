@@ -956,6 +956,30 @@ All of the following are equivalent:
 
 This is strictly more robust than the alternative (doubling every regex to accept both forms), keeps the alias table simple, and confines the full-width concern to one function in the lexer.
 
+### Self-hosting and the quine problem
+
+立意 dogfoods its own convention: the linter's source has `.liyi.jsonc` specs, `@liyi:module` markers, and `@liyi:requirement` blocks. The design document you are reading contains a requirement block that is tracked by actual code via `@liyi:related` edges. This creates a bootstrapping problem.
+
+**The quine problem.** The linter's marker scanner uses plain substring matching — it has no language awareness. Any file that *mentions* a marker string (as documentation, as an example, or as a string constant) is indistinguishable from a file that *uses* that marker. A program that must read its own source without misinterpreting references to its own syntax is a quine — and quine-like self-reference requires escaping.
+
+**Two mechanisms, two domains.**
+
+In **source code**, the `@` character is escaped in string constants: `\x40` in Rust, `\u0040` in JSON. This is invisible to the reader (it's inside a string literal) and prevents the scanner from matching constants in the alias table, format strings, and test data. The `@liyi:requirement(quine-escape)` in `markers.rs` enforces this invariant.
+
+In **documentation and prose** — Markdown files, design docs, READMEs, contributing guides — character escapes are unacceptable. A design document that writes `\x40liyi:module` instead of `@liyi:module` is unreadable. The scanner instead uses **natural-language context** to distinguish real markers from mentions:
+
+1. **Fenced code blocks.** Lines inside Markdown fenced code blocks (`` ``` `` or `~~~` delimiters) are skipped entirely. The scanner tracks open/close state across lines — a single boolean toggle. This covers all code examples, CLI output samples, and JSON schema excerpts.
+
+2. **Inline code spans.** If the marker's position falls inside an inline backtick span on the same line (determined by counting backtick characters before the match position — odd count means inside code), the marker is rejected. This covers inline mentions like `` `@liyi:module` `` and `` `<!-- @liyi:module -->` ``.
+
+3. **Preceding quote characters.** If the character immediately before the `@` is a quotation mark — ASCII quotes (`'`, `"`), typographic quotes (`'`, `'`, `"`, `"`), CJK brackets (`「`, `」`), or guillemets (`«`, `»`) — the marker is rejected. This covers natural-language quoting conventions across locales: `"@liyi:intent"`, `'@liyi:module'`, `「@liyi:requirement」`, etc.
+
+Together, these three checks cover every conventional way that prose references a technical term without asserting it. The scanner remains line-oriented — fenced block state is a single boolean; inline code detection is a character count within one line; preceding-char is a one-character lookbehind. No Markdown parser is needed.
+
+**Residual gap.** An unquoted, unfenced, unbackticked mention of a marker string in flowing prose (e.g., "the linter looks for @liyi:module") will be matched as a real marker. The fix is editorial: backtick the technical term (`` `@liyi:module` ``), which is standard Markdown practice. For files where editorial cleanup is impractical, `.liyiignore` remains available.
+
+**Why not a separate prefix (`@metaliyi:`, etc.)?** An alternate prefix for self-referential use was considered and rejected. It would require a mode switch (env var, config file, or CLI flag) to tell the scanner which prefix to use, splitting the convention into two variants. The NL-quoting approach is simpler: one prefix, one alias table, one scanner — and the disambiguation rule (backtick your mentions) is already standard technical writing practice.
+
 ### Post-MVP: `liyi triage` — agent-driven staleness assessment
 
 When `liyi check` reports stale items, the next question is: *does it matter?* A variable rename is cosmetic; a new code path is semantic; a contradiction to declared intent is a bug. Answering that question requires LLM reasoning — but `liyi` itself never calls an LLM.
