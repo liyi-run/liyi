@@ -1617,6 +1617,38 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 | **5. Requirements** | Write `@liyi:requirement` blocks and `@liyi:related` annotations for critical-path items | Requirements are tracked, hashable, versionable. When a requirement changes, all related items are transitively flagged. Challenge verifies intent actually covers the requirement, not just that hashes match. | Minutes per requirement |
 | **6. The adversarial tests** | Configure a different model for test generation from reviewed specs | A second model reads the *intent* (not the code) and tries to break the implementation. Different training data, different blind spots. | Agent configuration |
 
+### Adoption paths: greenfield vs. brownfield
+
+The progressive adoption levels above describe *what* to adopt. The path to get there depends on whether the codebase already exists.
+
+```mermaid
+flowchart TD
+    Start([Adopt 立意]) --> HasCode{Existing<br/>codebase?}
+
+    %% ── Greenfield ──
+    HasCode -- No --> Init["liyi init<br/><i>scaffold AGENTS.md</i>"]
+    Init --> Write["Write code with agent<br/><i>agent writes .liyi.jsonc alongside</i>"]
+    Write --> Review["Review intent in PR<br/><i>set reviewed:true or @liyi:intent</i>"]
+    Review --> CIG["liyi check in CI<br/><i>enforce from day one</i>"]
+    CIG --> Steady([Steady state])
+
+    %% ── Brownfield ──
+    HasCode -- Yes --> InitB["liyi init<br/><i>scaffold AGENTS.md</i>"]
+    InitB --> Hints["liyi init --hints src/<br/><i>skeleton sidecars with _hints</i>"]
+    Hints --> Infer["Agent infers intent<br/><i>guided by hints — git history,<br/>test presence, churn signals</i>"]
+    Infer --> Incremental["Incremental review<br/><i>review on first touch,<br/>directory by directory</i>"]
+    Incremental --> CIB["liyi check in CI<br/><i>track progress, catch staleness</i>"]
+    CIB --> Steady
+
+    style Start fill:#f5f5f5,stroke:#333
+    style Steady fill:#f5f5f5,stroke:#333
+    style HasCode fill:#fff3cd,stroke:#333
+```
+
+**Greenfield** is straightforward: `liyi init` scaffolds the agent instruction into `AGENTS.md`, and every file the agent writes from that point forward gets specs alongside code. The codebase conforms from day one.
+
+**Brownfield** adds a bootstrapping step. `liyi init --hints` creates skeleton sidecars populated with cheap VCS/filesystem signals (`_hints`) — commit count, bug-fix frequency, test presence, docstring coverage. The agent reads these hints to prioritize where to invest inference effort: a function with 47 commits and 3 bug fixes warrants `git log` investigation; a simple getter written once and never touched can be inferred from source alone. Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
+
 ### Why this and not X
 
 - **vs. just writing good tests:** The same model wrote the code and the tests. 立意 splits the responsibility — one model states intent, a human reviews it, a different model attacks it.
@@ -1673,16 +1705,18 @@ What the day-to-day experience looks like once all deliverables exist:
 
 ### Migrating an existing project
 
-No migration tool is needed. The agent instruction *is* the migration script.
+`liyi init` is the bootstrap command (see the *Adoption paths* diagram above for the visual overview).
 
-Point an agent at the project with the 立意 instruction in its context and ask it to apply the convention, directory by directory. The agent reads each source file, infers intent for non-trivial items, writes `.liyi.jsonc` sidecar files, and adds `@liyi:module` blocks to existing READMEs or doc comments (or creates `LIYI.md` where none exist).
+1. **`liyi init`** — scaffolds the 立意 agent instruction section into `AGENTS.md`. This is the equivalent of the project’s own [commit 6b98652](https://github.com/liyi-run/liyi/commit/6b98652), adapted for downstream repos (no self-referential dogfooding language).
+2. **`liyi init --hints src/`** — creates skeleton `.liyi.jsonc` sidecars populated with `_hints` (VCS/filesystem signals). The agent reads hints to prioritize inference effort.
+3. **Agent infers intent**, guided by hints, directory by directory. The agent reads each source file, infers intent for non-trivial items, writes `.liyi.jsonc` sidecar files, and adds `@liyi:module` blocks to existing READMEs or doc comments (or creates `LIYI.md` where none exist).
+4. **Incremental review.** Everything starts unreviewed. Review at your own pace — on first touch, by directory, or by criticality.
 
 Practical notes:
 
 - **Work directory by directory**, not whole-project at once. Context windows have limits; chunking by directory keeps inference quality high.
-- **Everything starts unreviewed.** Bulk-inferred intents will be lower quality than intents written alongside code. That’s fine — no `"reviewed": true` and no `@liyi:intent` means the human hasn’t vouched for them yet. Review them at your own pace, or on first touch (set `"reviewed": true` via `liyi review`, or add `@liyi:intent=doc`).
+- **Everything starts unreviewed.** Bulk-inferred intents will be lower quality than intents written alongside code. That’s fine — no `"reviewed": true` and no `@liyi:intent` means the human hasn’t vouched for them yet. Review them at your own pace, or on first touch (set `"reviewed": true` via `liyi approve`, or add `@liyi:intent=doc`).
 - **The linter is immediately useful after bootstrap.** `liyi check` shows the full inventory: how many specs exist, how many are reviewed, how many are stale. It turns a vague "we should document intent" into a concrete progress tracker.
-- **No special bootstrap command.** The same instruction that governs day-to-day development also handles cold start. One convention, one workflow.
 
 ### Success criteria
 
