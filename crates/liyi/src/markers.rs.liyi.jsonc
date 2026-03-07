@@ -9,7 +9,7 @@
         57,
         62
       ],
-      "source_hash": "sha256:f7845eee92f8219bf7dc09aed02a92bf14ac16aa097994ed46dd8382f8583f35",
+      "source_hash": "sha256:dba525ee5855a8efce23d18e88b36ee0225aab0e93eaa7ac74dd735a22fc34a0",
       "source_anchor": "// @liyi:requirement(quine-escape)"
     },
     {
@@ -41,8 +41,8 @@
       "reviewed": false,
       "intent": "Map every accepted marker alias (English canonical forms plus Chinese, Japanese, Korean, Spanish, French, Portuguese variants) to its canonical @liyi:* form. This table is the single source of truth for multilingual marker recognition.",
       "source_span": [
-        72,
-        120
+        75,
+        123
       ],
       "tree_path": "const::ALIAS_TABLE",
       "source_hash": "sha256:0eebe3f11964541df61a658e4aa067747b473032480a5f3f0778ec8e5c88d9f4",
@@ -51,22 +51,74 @@
     {
       "item": "find_marker",
       "reviewed": false,
-      "intent": "Search a normalized line for any known marker alias from ALIAS_TABLE. Return the canonical marker keyword and the byte offset immediately after the matched alias, or None if no marker is found.",
+      "intent": "Search a normalized line for any known marker alias from ALIAS_TABLE. Return the canonical marker keyword, the byte offset of the match start, and the byte offset past the matched alias, or None if no marker is found.",
       "source_span": [
-        124,
-        131
+        127,
+        134
       ],
       "tree_path": "fn::find_marker",
-      "source_hash": "sha256:b5582e49e542c759c86939b556ddfefe338818898396c1d82476817f8b20b788",
-      "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize)> {"
+      "source_hash": "sha256:f69d93143a9f03203a2ea48d2342b9288d5ce42383a2d4bc0946567d0cdd6817",
+      "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {"
+    },
+    {
+      "item": "QUOTE_CHARS",
+      "reviewed": false,
+      "intent": "Define the set of quotation-mark characters that suppress marker detection when they immediately precede the @ of a marker. Must cover ASCII quotes, typographic quotes, CJK corner brackets, and guillemets.",
+      "source_span": [
+        166,
+        178
+      ],
+      "tree_path": "const::QUOTE_CHARS",
+      "source_hash": "sha256:616331b5136e7b04c9e82cc1e862737005be67e0e0148c5648ce7cf2bb929715",
+      "source_anchor": "const QUOTE_CHARS: &[char] = &[",
+      "confidence": 0.95
+    },
+    {
+      "item": "is_in_inline_code",
+      "reviewed": false,
+      "intent": "Determine whether a byte position on a line falls inside an inline backtick code span by counting backtick characters before the position. Odd count means inside code, even means outside.",
+      "source_span": [
+        183,
+        194
+      ],
+      "tree_path": "fn::is_in_inline_code",
+      "source_hash": "sha256:00de0427ee39a2f5e52cc774ed2ade406ab318f708618aa9550c1b195befe06a",
+      "source_anchor": "fn is_in_inline_code(line: &str, byte_pos: usize) -> bool {",
+      "confidence": 0.95
+    },
+    {
+      "item": "preceded_by_quote",
+      "reviewed": false,
+      "intent": "Return true if the character immediately before a byte position on a line is any character in the QUOTE_CHARS set (a quotation mark across locales).",
+      "source_span": [
+        198,
+        205
+      ],
+      "tree_path": "fn::preceded_by_quote",
+      "source_hash": "sha256:a88665af3e20b2f6f189402eeac2638e4f496bc80a54f9aa15e61d1ca8bfe1b2",
+      "source_anchor": "fn preceded_by_quote(line: &str, byte_pos: usize) -> bool {",
+      "confidence": 0.95
+    },
+    {
+      "item": "is_fence_delimiter",
+      "reviewed": false,
+      "intent": "Return true if a line (after stripping leading whitespace) starts with ``` or ~~~, indicating a Markdown fenced code block boundary.",
+      "source_span": [
+        208,
+        211
+      ],
+      "tree_path": "fn::is_fence_delimiter",
+      "source_hash": "sha256:711e776c8924917ac4ef11c26546de9e31a80c466b2512cb854135558b6b98fe",
+      "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
+      "confidence": 0.95
     },
     {
       "item": "extract_name",
       "reviewed": false,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present.",
       "source_span": [
-        136,
-        153
+        139,
+        156
       ],
       "tree_path": "fn::extract_name",
       "source_hash": "sha256:49fcb7884fcec40dcb0b329d971eddae3ee78ef7c167a0e63726c37a73ce2e50",
@@ -75,13 +127,13 @@
     {
       "item": "scan_markers",
       "reviewed": false,
-      "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Handles =doc and =文档 sentinels for intent markers.",
+      "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, or immediately after quotation marks are suppressed (NL-quoting). Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
-        157,
-        231
+        220,
+        315
       ],
       "tree_path": "fn::scan_markers",
-      "source_hash": "sha256:cefc61612b7a340a65aac138f1947ac29319d50199e1eec28f0c2c96e36f3e0e",
+      "source_hash": "sha256:5a9629649bab1ac1ed9efb15dfdf5ecb20973369de24b7fcaa12b8a0f12a87da",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {"
     }
   ]
