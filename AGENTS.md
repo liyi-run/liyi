@@ -87,7 +87,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         "reviewed": {
           "type": "boolean",
           "default": false,
-          "description": "Optional. Whether a human has reviewed and accepted this intent via sidecar approval. Defaults to false when absent. The linter also considers an item reviewed if @liyi:intent is present in source."
+          "description": "Optional. Whether a human has reviewed and accepted this intent via sidecar approval. Defaults to false when absent. The linter also considers an item reviewed if \u0040liyi:intent is present in source."
         },
         "intent": {
           "type": "string",
