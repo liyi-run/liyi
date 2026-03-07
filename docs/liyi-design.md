@@ -43,6 +43,14 @@ It occurred to the designer that 立意, a practice every Chinese student learns
 
 ---
 
+## Origin
+
+The three convictions at 立意's core — requirements as first-class tracked artifacts, natural-language intent persisted alongside code, and generated results frozen with their generative context — trace to a thought experiment called PMLang (2021–2023). Working in a Go shop writing billing and payment systems, the designer wanted product managers to write executable domain logic directly: PMs and programmers would agree on a core set of business-logic primitives, programmers would implement pattern matching and materialization, and NL prose following the Gherkin pattern would become executable, testable code. First-class requirement blocks captured what the business needed; first-class prompt blocks captured the NL instruction; frozen inference preserved the (then-scarce) correct AI output alongside the prompt that produced it.
+
+PMLang was never built, and, by the time the designer began drafting 算言 — a verification-first programming language explored over five days of intensive multi-model adversarial review (March 2–7, 2026) — the name and specific design decisions had been forgotten. The motivations survived as latent premises: every 算言 iteration, from the full dependent-type PL (v1) through Rust proc macros (v4), a JSON interchange format (v5), and an adversarial CLI (v6), independently re-derived first-class requirements, intent persistence, and frozen-inference provenance. 立意 is what remained after the language, the type system, and the execution model were stripped away. The capability inversion between 2023 and 2026 — AI going from unreliable (freeze results because regeneration is expensive) to prolific (track results because overwriting is easy) — transformed the same artifact from trophy case to staleness sensor, but the shape was already there.
+
+---
+
 ## File Layout
 
 Two levels of intent, two formats:
