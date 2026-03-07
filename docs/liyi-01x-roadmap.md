@@ -340,26 +340,87 @@ Add rule 11 to the project's own `AGENTS.md`:
 
 ---
 
+## M6. NL-quoting quine suppression in marker scanner
+
+**Goal:** Enable the scanner to process documentation files (Markdown, READMEs, design docs) without false-positive marker matches on documentary mentions. This unblocks removing `docs/`, `AGENTS.md`, and `README.md` from `.liyiignore`, enabling cross-boundary `@liyi:requirement` / `@liyi:related` edges between design docs and source code.
+
+**Design authority:** Design doc v8.7, *Self-hosting and the quine problem*.
+
+### M6.1. Fenced code block suppression (~30min)
+
+Add fenced-block state tracking to `scan_markers` in `markers.rs`.
+
+- Track a `bool` toggled on lines starting with `` ``` `` or `~~~` (after optional leading whitespace).
+- When inside a fenced block, skip all marker detection.
+- This is the multi-line component — all other checks remain per-line.
+
+### M6.2. Inline backtick span detection (~30min)
+
+Before returning a marker match from `find_marker`, check whether the match position falls inside an inline backtick span on the same line.
+
+- Count backtick characters before the match position. Odd count → inside inline code → reject.
+- Handles `` `@liyi:module` `` and `` `<!-- @liyi:module -->` `` alike.
+
+### M6.3. Preceding quote character rejection (~15min)
+
+If the character immediately before the `@` (or its full-width equivalent after normalization) is a quotation mark, reject the match.
+
+**Rejected characters:** `'` (U+0027), `"` (U+0022), `\`` (U+0060), `\u{2018}` (`'`), `\u{2019}` (`'`), `\u{201C}` (`"`), `\u{201D}` (`"`), `\u{300C}` (`「`), `\u{300D}` (`」`), `\u{00AB}` (`«`), `\u{00BB}` (`»`).
+
+The backtick in this list is redundant with M6.2 but retained as defense-in-depth.
+
+### M6.4. Update `.liyiignore` (~5min)
+
+Remove `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
+
+### M6.5. Escape `@liyi:intent` in AGENTS.md JSON schema (~5min)
+
+The one remaining unquoted `@liyi:intent` string in AGENTS.md is inside a JSON `"description"` field within a fenced code block. It is handled by M6.1. Additionally, escape the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
+
+### M6.6. Golden-file fixtures and unit tests (~1h)
+
+1. Unit tests in `markers.rs` for:
+   - Fenced code block suppression (markers inside `` ``` `` blocks not found)
+   - Inline backtick suppression (`` `@liyi:module` `` not matched)
+   - Preceding-quote suppression (`"@liyi:intent"` not matched)
+   - Real markers adjacent to these constructs still matched
+2. Golden-file fixture `nl_quoting/` with a Markdown file containing mixed real markers and documentary mentions.
+
+### M6.7. Update contributing guides (~15min)
+
+Extend the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
+
+**Acceptance criteria:**
+- `liyi check` on the project's own repo (with `docs/` no longer ignored) produces no false-positive markers from the design doc.
+- The `<!-- @liyi:requirement liyi-check-exit-code -->` block in the design doc is correctly detected as a real marker.
+- All existing tests pass.
+
+---
+
 ## Priority order
 
 | Priority | Item | Effort | Unlocks |
 |---|---|---|---|
-| 1 | M1.1 `LanguageConfig` refactor | ~4h | All subsequent language support |
-| 2 | M3.5 CI setup | ~30min | Automated quality gate |
-| 3 | M3.1 `liyi approve` | ~2h | Human review workflow |
-| 4 | M3.2 `liyi init` (incl. `--hints`) | ~3h | First-run experience, cold-start inference aids |
-| 5 | M5.1 `MissingRelated` diagnostic | ~2h | Deterministic annotation coverage |
-| 6 | M5.2 Promote `Untracked` to exit 1 | ~30min | CI-gateable coverage |
-| 7 | M5.3 `--prompt` output mode | ~3h | Agent-consumable gap resolution |
-| 8 | M5.4 Golden-file fixtures | ~30min | Test coverage for M5 |
-| 9 | M5.5 AGENTS.md rule 11 | ~15min | Convention completeness |
-| 10 | M1.2 Python | ~2h | First non-Rust language |
-| 11 | M1.4 JavaScript | ~2h | JS ecosystem |
-| 12 | M1.5 TypeScript | ~1h | Incremental over JS |
-| 13 | M1.3 Go | ~3h | Go ecosystem (receiver encoding) |
-| 14 | M3.3 Wire remaining diagnostics | ~1h | Complete diagnostic coverage |
-| 15 | M3.4 Missing fixtures | ~30min | Complete test coverage |
-| 16 | M3.6 Summary line | ~20min | UX polish |
+| 1 | M6.1–M6.3 NL-quoting scanner | ~1.5h | Docs processable without `.liyiignore` |
+| 2 | M6.4–M6.5 `.liyiignore` + AGENTS.md | ~10min | Self-hosting with requirement tracking |
+| 3 | M6.6 Tests | ~1h | Regression guard for quine suppression |
+| 4 | M6.7 Contributing guides | ~15min | Convention documentation |
+| 5 | M1.1 `LanguageConfig` refactor | ~4h | All subsequent language support |
+| 6 | M3.5 CI setup | ~30min | Automated quality gate |
+| 7 | M3.1 `liyi approve` | ~2h | Human review workflow |
+| 8 | M3.2 `liyi init` (incl. `--hints`) | ~3h | First-run experience, cold-start inference aids |
+| 9 | M5.1 `MissingRelated` diagnostic | ~2h | Deterministic annotation coverage |
+| 10 | M5.2 Promote `Untracked` to exit 1 | ~30min | CI-gateable coverage |
+| 11 | M5.3 `--prompt` output mode | ~3h | Agent-consumable gap resolution |
+| 12 | M5.4 Golden-file fixtures | ~30min | Test coverage for M5 |
+| 13 | M5.5 AGENTS.md rule 11 | ~15min | Convention completeness |
+| 14 | M1.2 Python | ~2h | First non-Rust language |
+| 15 | M1.4 JavaScript | ~2h | JS ecosystem |
+| 16 | M1.5 TypeScript | ~1h | Incremental over JS |
+| 17 | M1.3 Go | ~3h | Go ecosystem (receiver encoding) |
+| 18 | M3.3 Wire remaining diagnostics | ~1h | Complete diagnostic coverage |
+| 19 | M3.4 Missing fixtures | ~30min | Complete test coverage |
+| 20 | M3.6 Summary line | ~20min | UX polish |
 
 ---
 

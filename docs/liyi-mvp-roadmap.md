@@ -449,6 +449,7 @@ enum SourceMarker {
 - Normalization applies only to lines being scanned, not entire files.
 - The alias table is `const` — no runtime configuration, no locale files.
 - Both prefix forms accepted: `@立意:忽略` and `@liyi:忽略`. The scanner matches the full `@prefix:keyword` string against the alias set.
+- **NL-quoting suppression (0.1.x):** Markers inside fenced code blocks, inline backtick spans, or immediately preceded by a quotation mark are rejected. See M6 in `liyi-01x-roadmap.md` and *Self-hosting and the quine problem* in the design doc.
 
 **Size estimate:** ~150 lines.
 
