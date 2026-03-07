@@ -705,13 +705,20 @@ If the agent re-infers and its new `"intent"` text differs substantially from th
 
 In steady state with IDE integration:
 
-1. Agent infers intent → writes sidecar (`"reviewed"` absent or `false`, no `@liyi:intent` in source yet).
-2. LSP shows inferred intent inline (hover or code action).
-3. Human accepts one of:
-   - **Quick approval**: IDE sets `"reviewed": true` in sidecar (code action: "Accept inferred intent"). Zero source change.
-   - **Explicit override**: IDE inserts `@liyi:intent` annotation in source (code action: "Assert intent in source"). Human can edit the prose.
-   - **Docstring shorthand**: Human writes `@liyi:intent=doc` if the docstring suffices.
-4. Linter sees either path → item is reviewed.
+```mermaid
+flowchart TD
+    Infer["Agent infers intent<br/><i>writes sidecar with reviewed: false</i>"]
+    Infer --> LSP["LSP shows inferred intent<br/><i>hover or code action</i>"]
+    LSP --> Accept{Human accepts}
+
+    Accept -- "Quick approval" --> Sidecar["Set reviewed: true in sidecar<br/><i>zero source change</i>"]
+    Accept -- "Explicit override" --> Source["Insert @liyi:intent in source<br/><i>human can edit the prose</i>"]
+    Accept -- "Docstring shorthand" --> Doc["Write @liyi:intent=doc<br/><i>docstring captures intent</i>"]
+
+    Sidecar --> Reviewed([Item reviewed])
+    Source --> Reviewed
+    Doc --> Reviewed
+```
 
 Without IDE integration, the human edits the sidecar directly (setting `"reviewed": true`) or adds `@liyi:intent` in source. Both work. A dedicated `liyi review` CLI subcommand is a post-MVP convenience.
 
