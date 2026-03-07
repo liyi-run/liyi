@@ -85,6 +85,10 @@
             ]
           },
           "description": "Optional. Maps requirement names to their source_hash at time of last review. Agents write null; the tool fills in hashes."
+        },
+        "_hints": {
+          "type": "object",
+          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi reanchor after initial review. Tools MUST NOT rely on any specific shape."
         }
       }
     },

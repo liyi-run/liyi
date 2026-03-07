@@ -1326,6 +1326,67 @@ liyi init src/money.rs   # create money.rs.liyi.jsonc with empty specs array
 
 Creates a skeleton `.liyi.jsonc` sidecar with `version`, `source`, and an empty `specs` array. The agent (or human) populates specs afterwards.
 
+#### `_hints` — cold-start inference aids
+
+When `liyi init <source-file>` creates a skeleton sidecar for an existing file under version control, it can populate each spec entry with a `_hints` field containing cheap, deterministic signals from the filesystem and VCS. These are *clues*, not *content* — the tool observes structural signals and leaves breadcrumbs; the agent decides whether to follow them, using its own judgment and token/call budget.
+
+**What hints contain.** Examples (not exhaustive, intentionally underspecified):
+
+| Signal | What it suggests |
+|---|---|
+| `"commits": 47` | High churn — worth investigating with `git log` |
+| `"commits": 1, "age_days": 1400` | Written once, never touched — infer from source alone |
+| `"has_tests": true` | Tests exist — read them for intent evidence |
+| `"doc_lines": 0` | No docstring — higher ambiguity |
+| `"fix_commits": 3` | Bug fixes reveal invariants — worth investigating |
+| `"last_modified_days": 7` | Recently changed — fresh intent may be in recent commit |
+
+**Why intentionally unstructured.** The consumer is an LLM, not a parser. The `_hints` field is `"type": "object"` with no further property constraints. This is deliberate:
+
+- No schema versioning concerns — the field is single-use (stripped after first review pass), so no artifact from a previous `liyi` version survives to conflict with a new one.
+- The absence of a schema contract *is* the contract. Downstream tooling cannot build on `_hints` because the shape is not guaranteed. This prevents accidental coupling to an ephemeral inference aid.
+- `liyi init` can freely evolve what hints it emits without breaking anything.
+
+**Lifecycle.** `liyi init` writes `_hints` → the agent reads hints, infers intent, fills the `"intent"` field → `liyi reanchor` strips `_hints` from all spec entries. The linter ignores `_hints` (does not error on its presence). Hints are never committed in steady-state sidecars — they exist only during the cold-start inference window.
+
+**Per-item, not per-file.** Each spec entry gets its own `_hints` based on that item's span. A function with 47 commits and 3 bug fixes gets different hints than the simple getter next to it.
+
+**Example** skeleton sidecar after `liyi init src/billing/money.rs --hints`:
+
+```jsonc
+{
+  "version": "0.1",
+  "source": "src/billing/money.rs",
+  "specs": [
+    {
+      "item": "add_money",
+      "intent": "",
+      "source_span": [15, 42],
+      "_hints": {
+        "commits": 12,
+        "fix_commits": 3,
+        "has_tests": true,
+        "doc_lines": 0,
+        "last_modified_days": 45
+      }
+    },
+    {
+      "item": "Money::new",
+      "intent": "",
+      "source_span": [5, 13],
+      "_hints": {
+        "commits": 1,
+        "has_tests": false,
+        "doc_lines": 4,
+        "last_modified_days": 380
+      }
+    }
+  ]
+}
+```
+
+**Graceful degradation.** When not in a git repository, `liyi init --hints` omits VCS-derived signals and emits only filesystem signals (file age, docstring line count, test file presence). When `--hints` is not given, `liyi init` behaves as before — skeleton sidecar with empty specs.
+
 ### Challenge: on-demand semantic verification (post-MVP)
 
 > **Note:** Challenge is explicitly deferred to post-0.1. The `liyi approve` workflow must be established first — challenge verifies edges that only exist after humans have reviewed intent.

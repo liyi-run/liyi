@@ -203,6 +203,7 @@ The primary mechanism for transitioning intent from "agent-inferred" to "human-a
 - `liyi init` — append agent instruction to `AGENTS.md`.
 - `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
 - `--force` flag for overwriting existing files.
+- `liyi init <source-file> --hints` — populate `_hints` in skeleton sidecar entries with VCS/filesystem signals (commit count, fix-commit count, test presence, docstring lines, file age). Requires git; gracefully degrades (omits VCS hints) when not in a git repo. Opt-in in 0.1.x, may become default later.
 
 ### M3.3. Wire remaining diagnostics
 
@@ -346,7 +347,7 @@ Add rule 11 to the project's own `AGENTS.md`:
 | 1 | M1.1 `LanguageConfig` refactor | ~4h | All subsequent language support |
 | 2 | M3.5 CI setup | ~30min | Automated quality gate |
 | 3 | M3.1 `liyi approve` | ~2h | Human review workflow |
-| 4 | M3.2 `liyi init` | ~1h | First-run experience |
+| 4 | M3.2 `liyi init` (incl. `--hints`) | ~3h | First-run experience, cold-start inference aids |
 | 5 | M5.1 `MissingRelated` diagnostic | ~2h | Deterministic annotation coverage |
 | 6 | M5.2 Promote `Untracked` to exit 1 | ~30min | CI-gateable coverage |
 | 7 | M5.3 `--prompt` output mode | ~3h | Agent-consumable gap resolution |
