@@ -165,7 +165,7 @@ fn extract_name(rest: &str) -> Option<String> {
 /// guillemets.
 const QUOTE_CHARS: &[char] = &[
     '\'',       // U+0027 apostrophe
-    '"',       // U+0022 quotation mark
+    '"',        // U+0022 quotation mark
     '`',        // U+0060 grave accent (backtick) — defense-in-depth with span check
     '\u{2018}', // ' left single quotation mark
     '\u{2019}', // ' right single quotation mark
@@ -435,14 +435,20 @@ mod tests {
     fn fenced_block_suppresses_markers() {
         let input = "before\n```\n// \x40liyi:module\n```\nafter\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker inside fenced block should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker inside fenced block should be suppressed"
+        );
     }
 
     #[test]
     fn fenced_block_tilde_suppresses_markers() {
         let input = "before\n~~~\n// \x40liyi:trivial\n~~~\nafter\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker inside ~~~ fenced block should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker inside ~~~ fenced block should be suppressed"
+        );
     }
 
     #[test]
@@ -457,7 +463,10 @@ mod tests {
     fn inline_backtick_suppresses_marker() {
         let input = "use `\x40liyi:module` in your code\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker inside inline backticks should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker inside inline backticks should be suppressed"
+        );
     }
 
     #[test]
@@ -465,35 +474,50 @@ mod tests {
         // Pattern from design doc: `<!-- @liyi:module -->`
         let input = "The `<!-- \x40liyi:module -->` comment marks the block\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker inside backtick span with surrounding text should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker inside backtick span with surrounding text should be suppressed"
+        );
     }
 
     #[test]
     fn preceding_double_quote_suppresses() {
         let input = "the string \"\x40liyi:intent\" is used\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker preceded by double quote should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker preceded by double quote should be suppressed"
+        );
     }
 
     #[test]
     fn preceding_single_quote_suppresses() {
         let input = "the string '\x40liyi:module' is used\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker preceded by single quote should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker preceded by single quote should be suppressed"
+        );
     }
 
     #[test]
     fn preceding_curly_quote_suppresses() {
         let input = "mention \u{201C}\x40liyi:intent\u{201D} in docs\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker preceded by curly quote should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker preceded by curly quote should be suppressed"
+        );
     }
 
     #[test]
     fn preceding_cjk_bracket_suppresses() {
         let input = "use \u{300C}\x40liyi:requirement\u{300D}\n";
         let m = scan_markers(input);
-        assert!(m.is_empty(), "marker preceded by CJK bracket should be suppressed");
+        assert!(
+            m.is_empty(),
+            "marker preceded by CJK bracket should be suppressed"
+        );
     }
 
     #[test]
@@ -511,7 +535,9 @@ mod tests {
         let input = "// \x40liyi:requirement(auth-check)\n";
         let m = scan_markers(input);
         assert_eq!(m.len(), 1);
-        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "auth-check"));
+        assert!(
+            matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "auth-check")
+        );
     }
 
     #[test]
@@ -531,7 +557,13 @@ Exit codes: 0 = clean, 1 = failures.\n\
 Use `\x40liyi:intent` to annotate functions.\n\
 ";
         let m = scan_markers(input);
-        assert_eq!(m.len(), 1, "only the real requirement marker should be found");
-        assert!(matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "exit-codes"));
+        assert_eq!(
+            m.len(),
+            1,
+            "only the real requirement marker should be found"
+        );
+        assert!(
+            matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "exit-codes")
+        );
     }
 }

@@ -771,10 +771,8 @@ fn check_sidecar(
                     if let SourceMarker::Related { name, line } = m {
                         // Include doc-comment lines immediately before the span
                         if *line >= span_start.saturating_sub(5) && *line <= span_end {
-                            let has_edge = item
-                                .related
-                                .as_ref()
-                                .is_some_and(|r| r.contains_key(name));
+                            let has_edge =
+                                item.related.as_ref().is_some_and(|r| r.contains_key(name));
                             if !has_edge {
                                 if fix {
                                     let related = item.related.get_or_insert_with(HashMap::new);
