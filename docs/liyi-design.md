@@ -1133,27 +1133,18 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 
 **Triage workflow:**
 
-```
-liyi check              # deterministic, no LLM, produces diagnostics
-    │
-    │ stale items identified (exit code 1)
-    ▼
-    ├── direct re-inference   # fast path: agent re-reads source,
-    │   │                     # updates source_span + intent in sidecar,
-    │   │                     # leaves "reviewed" unset
-    │   ▼
-    │   human reviews         # sees fresh unreviewed spec in PR diff
-    │
-    └── triage                # batch path: agent reads stale items,
-        │                     # reasons about each
-        │                     # (or: liyi triage --prompt | llm-call)
-        │ writes .liyi/triage.json
-        ▼
-    liyi triage --apply       # auto-reanchors cosmetic items
-        │                     # prints remaining items needing review
-        ▼
-    human reviews             # reads triage report or PR comment
-                              # accepts suggested intents or fixes code
+```mermaid
+flowchart TD
+    Check["liyi check<br/><i>deterministic, no LLM</i>"] -- "stale items identified<br/>(exit code 1)" --> Decision{Path?}
+
+    %% ── Fast path ──
+    Decision -- "fast path<br/>(few items, agent has context)" --> ReInfer["Direct re-inference<br/><i>agent re-reads source,<br/>updates source_span + intent,<br/>leaves reviewed unset</i>"]
+    ReInfer --> HumanA["Human reviews<br/><i>sees fresh unreviewed spec<br/>in PR diff</i>"]
+
+    %% ── Batch path ──
+    Decision -- "batch path<br/>(many items, CI)" --> Triage["Agent triages<br/><i>reads stale items, reasons about each<br/>(or: liyi triage --prompt | llm-call)</i>"]
+    Triage -- "writes .liyi/triage.json" --> Apply["liyi triage --apply<br/><i>auto-reanchors cosmetic items,<br/>prints remaining for review</i>"]
+    Apply --> HumanB["Human reviews<br/><i>reads triage report or PR comment,<br/>accepts suggested intents or fixes code</i>"]
 ```
 
 This replaces the previously described `--smart` flag. The split is cleaner: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
