@@ -75,7 +75,7 @@ As the project grows, expect additional top-level directories for implementation
 
 The linter scans source files for `@liyi:*` markers using plain substring matching — it has no language awareness. This means string constants, format strings, and test data that contain literal marker text will be misidentified as real markers (the classic "quine" problem of a program reading its own source).
 
-To prevent self-triggering, **escape the `@` character** in any string literal that spells out a marker:
+**In source code**, escape the `@` character in any string literal that spells out a marker:
 
 | Language | Escape | Example |
 |---|---|---|
@@ -83,6 +83,8 @@ To prevent self-triggering, **escape the `@` character** in any string literal t
 | JSON | `\u0040` | `"\u0040liyi:requirement"` |
 
 Actual marker comments (e.g. `// @liyi:intent =doc`) must keep the literal `@` — they are real markers.
+
+**In documentation files** (Markdown, READMEs, design docs), the scanner suppresses markers that appear inside fenced code blocks, inline backtick spans, or immediately after a quotation mark. When *mentioning* a marker in prose, backtick it: `` `@liyi:module` ``. When *using* a marker as a real directive, leave it bare: `<!-- @liyi:requirement(name) -->`. See *Self-hosting and the quine problem* in the design doc for details.
 
 This invariant is enforced as `@liyi:requirement(quine-escape)` in `src/markers.rs`.
 
