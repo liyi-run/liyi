@@ -6,8 +6,8 @@
     {
       "requirement": "liyi-check-exit-code",
       "source_span": [
-        1005,
-        1011
+        1013,
+        1019
       ],
       "source_hash": "sha256:6ed25f14e08ea936e927150a3d0cc82f881011edcd1360b5401e7a03658f53f9",
       "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
