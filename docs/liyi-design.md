@@ -1,6 +1,6 @@
-# 立意 (Lìyì) — Design v8.6
+# 立意 (Lìyì) — Design v8.7
 
-Establish intent before execution · 2026-03-06
+Establish intent before execution · 2026-03-07
 
 ---
 
@@ -832,7 +832,76 @@ In 0.1, the linter checks the *quality* of existing specs, not the *coverage* of
 
 What it does *not* do in 0.1: detect items that have no spec and no annotation. That requires identifying item definitions in source — either via regex heuristics or tree-sitter. The agent handles coverage during inference; the linter enforces quality of what the agent wrote. Item detection can be added when demand justifies it or when another feature (e.g., a coverage report) needs it anyway.
 
+This limitation applies to *item coverage* — detecting unlabeled code definitions that lack specs. A narrower and mechanically solvable gap exists: *annotation coverage* — ensuring that every explicit `@liyi:requirement` and `@liyi:related` marker in source has a corresponding entry in the co-located sidecar. See *Annotation coverage* below.
+
 **Caveat: green linter ≠ full coverage.** A passing `liyi check` means every *existing* spec is current and not stale. It does not mean every item in the codebase has a spec. Files the agent never touched will have no `.liyi.jsonc` at all, and the linter won't complain. Teams should be aware that `liyi check` guards quality, not completeness — the agent's coverage during inference is the first line of defense. Imperfect coverage is strictly better than no coverage; the convention makes intent *possible* to persist, not *guaranteed* to be persisted.
+
+### Annotation coverage: deterministic enforcement of source markers
+
+The AGENTS.md instruction tells agents to create sidecar entries for every `@liyi:requirement` block (rule 4) and to record `"related"` edges for every `@liyi:related` annotation (rule 3). But agent compliance is probabilistic — in practice, inconsistent and unverifiable. Without deterministic enforcement, gaps are invisible: a developer writes `@liyi:requirement auth-check` in a source comment, the agent doesn't create the `requirementSpec` in the sidecar, and nobody notices. The requirement is declared but untracked. The `related` graph has a blind spot — if the requirement later changes, items that should be flagged `REQ CHANGED` aren't, because the edge was never recorded.
+
+The existing `Untracked` diagnostic partially addresses this for requirements — it flags `@liyi:requirement` markers that have no corresponding `requirementSpec` in any sidecar. The complementary check for `@liyi:related` edges fills the remaining gap.
+
+**Annotation coverage checks.** `liyi check` performs four cross-referencing checks on source annotations vs. sidecar entries:
+
+| Check | Source | Sidecar | Diagnostic |
+|---|---|---|---|
+| Requirement coverage | `@liyi:requirement <name>` in source | No `requirementSpec` with matching name in co-located sidecar | `UNTRACKED` (existing) |
+| Related edge coverage | `@liyi:related <name>` in source within an item's span | No `"related": {"<name>": ...}` on the enclosing item's spec | `MISSING RELATED` (new) |
+| Dangling related edge | — | `"related": {"<name>": ...}` references a requirement name not found in any sidecar | `ERROR: unknown requirement` (existing) |
+| Stale related hash | — | `"related": {"<name>": "<hash>"}` where hash differs from the requirement's current `source_hash` | `REQ CHANGED` (existing) |
+
+All four checks are deterministic — text scan of source markers plus JSON parse of sidecars, no LLM reasoning required. The first two are *coverage* checks (annotation exists in source but not in sidecar); the last two are *consistency* checks (sidecar entry exists but is invalid or stale).
+
+The `--fail-on-untracked` flag (default: true) controls whether `UNTRACKED` and `MISSING RELATED` diagnostics trigger exit 1. When enabled, CI rejects merges where source annotations exist without corresponding sidecar entries.
+
+**`--prompt` mode.** `liyi check --prompt` emits agent-consumable structured output listing every coverage gap, with enough context for the agent to resolve each one without additional file discovery:
+
+```jsonc
+{
+  "version": "0.1",
+  "gaps": [
+    {
+      "type": "missing_requirement_spec",
+      "requirement": "auth-check",
+      "source_file": "src/auth/middleware.rs",
+      "annotation_line": 15,
+      "expected_sidecar": "src/auth/middleware.rs.liyi.jsonc",
+      "instruction": "Add a requirementSpec with \"requirement\": \"auth-check\" and \"source_span\" covering the @liyi:requirement block at line 15."
+    },
+    {
+      "type": "missing_related_edge",
+      "requirement": "auth-check",
+      "source_file": "src/auth/middleware.rs",
+      "annotation_line": 42,
+      "enclosing_item": "verify_session",
+      "expected_sidecar": "src/auth/middleware.rs.liyi.jsonc",
+      "instruction": "In the itemSpec for \"verify_session\", add \"related\": {\"auth-check\": null}."
+    }
+  ],
+  "exit_code": 1
+}
+```
+
+Three output modes share the same detection engine:
+
+| Mode | Audience | Format |
+|---|---|---|
+| `liyi check` (default) | Human (terminal) | One-line diagnostics with icons |
+| `liyi check --json` | CI, dashboards, scripts | Machine-readable JSON (post-MVP) |
+| `liyi check --prompt` | Agent (AGENTS.md workflow) | Structured JSON with resolution instructions |
+
+The `--prompt` flag is a *formatter*, not a different check. All modes exit nonzero when gaps exist. The flags (`--fail-on-stale`, `--fail-on-untracked`, etc.) control which conditions are failures in all modes.
+
+**Paired AGENTS.md directive.** The coverage checks are deterministic; the resolution is the agent's responsibility. An additional AGENTS.md rule closes the loop:
+
+> 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
+
+This makes the gap between source annotations and sidecar entries CI-gateable: the linter detects gaps deterministically, the agent resolves them, and CI enforces that no gaps survive to merge.
+
+**What's deterministic and what's not.** Detection of coverage gaps is fully deterministic — text scanning and set comparison. Resolution (writing the missing sidecar entry with correct `source_span` and `intent`) is agent-authored and probabilistic. This is the correct separation of concerns: the linter guarantees that every explicit annotation has a sidecar entry, but the *quality* of that entry remains a review concern — which is what `"reviewed": false` already models.
+
+**Limitation: explicit annotations only.** This mechanism enforces that every *existing* `@liyi:related` annotation has a corresponding sidecar edge. It does not detect *missing* annotations — items that semantically depend on a requirement but lack an `@liyi:related` marker in source. That is an inference problem (the agent or human must recognize the semantic dependency), not a coverage-checking problem, and is outside the linter's deterministic scope.
 
 ### What it does
 
@@ -854,6 +923,7 @@ Exit codes: 0 = clean, 1 = check failures (stale, unreviewed, or diverged specs)
 - `--fail-on-stale` (default: true) — exit 1 if any reviewed spec's source hash doesn't match
 - `--fail-on-unreviewed` (default: false) — exit 1 if specs exist without `@liyi:intent` in source or `"reviewed": true` in sidecar
 - `--fail-on-req-changed` (default: true) — exit 1 if any reviewed spec references a requirement whose hash changed
+- `--fail-on-untracked` (default: true) — exit 1 if any `@liyi:requirement` marker has no sidecar entry, or any `@liyi:related` marker has no corresponding edge in the enclosing item's sidecar spec
 
 ### What it doesn't do
 
@@ -1099,7 +1169,8 @@ Every diagnostic the linter can emit, with its severity, exit code contribution,
 | Source hash found at offset (shifted) | info | 0 (auto-corrected with `--fix`) | `<item>: ↕ SHIFTED [old]→[new] — span auto-corrected` |
 | Referenced requirement hash changed | warning | 1 if `--fail-on-req-changed` | `<item>: ⚠ REQ CHANGED — requirement "<name>" updated` |
 | `@liyi:related X` where X doesn't exist | error | 1 | `<item>: ✗ ERROR — unknown requirement "<name>"` |
-| Requirement exists but untracked in sidecar | warning | 0 | `<name>: ⚠ UNTRACKED — requirement exists in source but not in sidecar` |
+| Requirement exists but untracked in sidecar | warning | 1 if `--fail-on-untracked` | `<name>: ⚠ UNTRACKED — requirement exists in source but not in sidecar` |
+| `@liyi:related` in source without sidecar edge | warning | 1 if `--fail-on-untracked` | `<item>: ⚠ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar` |
 | Requirement with no referencing items | info | 0 | `<name>: · requirement has no related items` |
 | Item annotated `@liyi:trivial` | info | 0 | `<item>: · trivial` |
 | Item annotated `@liyi:ignore` | info | 0 | `<item>: · ignored` |
@@ -1149,6 +1220,7 @@ When writing or modifying code:
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
 10. When `liyi check` reports stale items, assess each: is the change cosmetic (rename, reformat — no behavioral change), semantic (code legitimately evolved — intent needs updating), or an intent violation (code contradicts declared intent)? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in the `suggested_intent` field. For intent violations, flag for human review.
+11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 ```
 
 ### Key principles
