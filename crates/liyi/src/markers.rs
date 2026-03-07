@@ -190,7 +190,7 @@ fn is_in_inline_code(line: &str, byte_pos: usize) -> bool {
             count += 1;
         }
     }
-    count % 2 != 0
+    !count.is_multiple_of(2)
 }
 
 /// Returns true if the character immediately before `byte_pos` in `line`
