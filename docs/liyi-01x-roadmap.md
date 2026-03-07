@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — 0.1.x Roadmap
 
-2026-03-06
+2026-03-06 (updated 2026-03-07)
 
 ---
 
@@ -10,7 +10,7 @@ This document covers post-MVP work that ships as 0.1.x patch releases. Everythin
 
 The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This document picks up where it leaves off.
 
-**Design authority:** `docs/liyi-design.md` v8.6 — see *Structural identity via `tree_path`* and *Multi-language architecture (`LanguageConfig`)*.
+**Design authority:** `docs/liyi-design.md` v8.7 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
 
 ---
 
@@ -242,6 +242,103 @@ Considered and explicitly rejected for 0.1.x. Recorded here for posterity.
 
 ---
 
+## M5. Annotation coverage checks and `--prompt` mode
+
+**Goal:** Deterministically enforce that every `@liyi:requirement` and `@liyi:related` marker in source has a corresponding sidecar entry. Emit agent-consumable output for gap resolution.
+
+**Design authority:** Design doc v8.7, *Annotation coverage: deterministic enforcement of source markers*.
+
+### M5.1. `MissingRelated` diagnostic (~2h)
+
+Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers discovered during pass 1 against `"related"` edges in the enclosing item's sidecar spec.
+
+**Implementation:**
+
+1. During pass 1, in addition to collecting `@liyi:requirement` markers, also collect `@liyi:related` markers with their source file, line number, and requirement name.
+2. In the post-pass (after pass 2), for each `@liyi:related` marker:
+   a. Find the sidecar for the marker's source file.
+   b. Find the `itemSpec` whose `source_span` encloses the marker's line number.
+   c. If no enclosing item exists, or the enclosing item has no `"related"` key containing the marker's requirement name, emit `MissingRelated`.
+3. Add `MissingRelated` variant to `DiagnosticKind` in `diagnostics.rs` with severity `Warning`.
+
+**New types:**
+
+```rust
+// In diagnostics.rs
+enum DiagnosticKind {
+    // ...existing variants...
+    MissingRelated { requirement: String },
+}
+```
+
+**Message template:** `<item>: ⚠ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar`
+
+**Exit code:** 1 if `--fail-on-untracked` (default: true).
+
+**Acceptance criteria:**
+- Golden-file fixture `missing_related/` with an `@liyi:related` annotation in source, an enclosing itemSpec in the sidecar, but no matching `"related"` edge. Expected output: `MISSING RELATED` diagnostic.
+- Fixture variant where the edge exists — no diagnostic emitted.
+- `--no-fail-on-untracked` suppresses exit 1.
+
+### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` (~30min)
+
+The existing `Untracked` diagnostic (requirements in source but absent from sidecars) currently exits 0. Update it to exit 1 when `--fail-on-untracked` is set (default: true).
+
+**Changes:**
+- Add `--fail-on-untracked` / `--no-fail-on-untracked` flag to `cli.rs`.
+- Update `compute_exit_code` in `diagnostics.rs` to check this flag for both `Untracked` and `MissingRelated`.
+- Update existing `untracked` golden fixture expected output if exit code changes.
+
+### M5.3. `--prompt` output mode (~3h)
+
+Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
+
+**Implementation:**
+
+1. Add `--prompt` flag to the `Check` variant in `cli.rs`.
+2. After the check pass, if `--prompt` is active, serialize all `Untracked` and `MissingRelated` diagnostics into the prompt JSON schema (see design doc v8.7).
+3. Print to stdout and exit with the appropriate code.
+4. `--prompt` is mutually exclusive with `--json` (when `--json` is implemented).
+
+**Output schema:**
+
+```jsonc
+{
+  "version": "0.1",
+  "gaps": [
+    {
+      "type": "missing_requirement_spec" | "missing_related_edge",
+      "requirement": "<name>",
+      "source_file": "<repo-relative path>",
+      "annotation_line": <line number>,
+      "enclosing_item": "<item name>",        // only for missing_related_edge
+      "expected_sidecar": "<repo-relative path>",
+      "instruction": "<natural-language resolution instruction>"
+    }
+  ],
+  "exit_code": 0 | 1
+}
+```
+
+**Acceptance criteria:**
+- `liyi check --prompt` on a fixture with gaps produces valid JSON matching the schema.
+- `liyi check --prompt` on a clean repo produces `{"version": "0.1", "gaps": [], "exit_code": 0}`.
+- The JSON includes both `missing_requirement_spec` and `missing_related_edge` gap types.
+
+### M5.4. Golden-file fixtures (~30min)
+
+1. **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
+2. **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
+3. **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
+
+### M5.5. AGENTS.md rule 11 (~15min)
+
+Add rule 11 to the project's own `AGENTS.md`:
+
+> 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
+
+---
+
 ## Priority order
 
 | Priority | Item | Effort | Unlocks |
@@ -250,13 +347,18 @@ Considered and explicitly rejected for 0.1.x. Recorded here for posterity.
 | 2 | M3.5 CI setup | ~30min | Automated quality gate |
 | 3 | M3.1 `liyi approve` | ~2h | Human review workflow |
 | 4 | M3.2 `liyi init` | ~1h | First-run experience |
-| 5 | M1.2 Python | ~2h | First non-Rust language |
-| 6 | M1.4 JavaScript | ~2h | JS ecosystem |
-| 7 | M1.5 TypeScript | ~1h | Incremental over JS |
-| 8 | M1.3 Go | ~3h | Go ecosystem (receiver encoding) |
-| 9 | M3.3 Wire remaining diagnostics | ~1h | Complete diagnostic coverage |
-| 10 | M3.4 Missing fixtures | ~30min | Complete test coverage |
-| 11 | M3.6 Summary line | ~20min | UX polish |
+| 5 | M5.1 `MissingRelated` diagnostic | ~2h | Deterministic annotation coverage |
+| 6 | M5.2 Promote `Untracked` to exit 1 | ~30min | CI-gateable coverage |
+| 7 | M5.3 `--prompt` output mode | ~3h | Agent-consumable gap resolution |
+| 8 | M5.4 Golden-file fixtures | ~30min | Test coverage for M5 |
+| 9 | M5.5 AGENTS.md rule 11 | ~15min | Convention completeness |
+| 10 | M1.2 Python | ~2h | First non-Rust language |
+| 11 | M1.4 JavaScript | ~2h | JS ecosystem |
+| 12 | M1.5 TypeScript | ~1h | Incremental over JS |
+| 13 | M1.3 Go | ~3h | Go ecosystem (receiver encoding) |
+| 14 | M3.3 Wire remaining diagnostics | ~1h | Complete diagnostic coverage |
+| 15 | M3.4 Missing fixtures | ~30min | Complete test coverage |
+| 16 | M3.6 Summary line | ~20min | UX polish |
 
 ---
 
