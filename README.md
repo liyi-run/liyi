@@ -7,7 +7,7 @@
 
 > ⚠️ **Work in progress** — the spec format and CLI are under active evolution. Expect breaking changes.
 >
-> 🐕 **Self-hosted** — `liyi check` runs on its own codebase. When an agent changes the linter's source, `liyi check` surfaces the staleness, and the agent resolves it — no human instruction needed. The gap between code and intent stays closed automatically.
+> 🐕 **Bootstrapped — intent before execution:** we wrote the design doc first, then agents bootstrapped the entire project from it, following the full 立意 pattern before the first line of code. **Specs track code:** when source or requirements change, `liyi check` detects staleness and the agent resolves it automatically — code and intent stay in sync.
 
 **立意** is a convention and CLI tool that makes intent explicit, persistent, and reviewable in AI-assisted software development. It pairs every code item with a human-readable statement of what the item *should* do, stored in language-agnostic sidecar files (`.liyi.jsonc`). A CI linter (`liyi check`) detects when source changes outpace intent — catching staleness, orphaned specs, and broken requirement edges — so that the gap between "what the AI wrote" and "what the human intended" never grows silently.
 
