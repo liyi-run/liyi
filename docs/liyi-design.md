@@ -31,11 +31,11 @@ The agent instructions are the protocol. The CI linter is what makes it determin
 
 立意 (lìyì) — "establish intent" — is a concept taught in Chinese elementary writing education (语文课). Before composing an essay, every student learns to 立意: decide the central idea, the purpose, the thesis — before writing a single sentence. 意在笔先: intent before brush.
 
-The concept originates in classical Chinese literary criticism and extends to painting (画论) and calligraphy, where 立意 is the non-negotiable first step of any creative work. The artist decides what the piece is *meant to invoke* before executing it.
+The concept roots in calligraphy and painting (画论), where 立意 is the non-negotiable first step of any creative work — the artist decides what the piece is *meant to invoke* before executing it — and extends into literary criticism and composition pedagogy. Literary critics name the complementary motion: 文随意转 — the writing follows as intent turns. When purpose evolves, the work adapts to track it.
 
 English has analogues — "thesis statement," "controlling idea," "premise" — but none that name the act of *deciding intent as a prerequisite step*. We transliterate rather than translate because no English term carries the same connotation: intent first, everything else follows.
 
-In the classroom, 立意 is not complete at declaration — the teacher challenges it: 太浅了 (too shallow), 偏题了 (off-topic), 太俗了 (too cliché). The student refines before writing. Challenge is part of the practice, not an addition to it. The software convention preserves both steps: establish intent, then challenge it.
+In the classroom, 立意 works in both directions. Before writing, the teacher challenges the thesis: 太浅了 (too shallow), 偏题了 (off-topic), 太俗了 (too cliché) — the student refines before composing. After writing, the teacher critiques the finished piece against its declared intent: the verdict is appraisal (premise well executed) or disagreement (the essay wandered from its thesis). The software convention preserves both phases: challenge intent before execution, then verify the result against it afterward.
 
 It occurred to the designer that 立意, a practice every Chinese student learns before age ten, names exactly the gap described above: intent is ephemeral in AI-assisted development, and the missing step is establishing it before execution. The name is recognition, not metaphor — the practice already existed; the software convention formalizes it.
 
