@@ -1138,18 +1138,42 @@ liyi check              # deterministic, no LLM, produces diagnostics
     │
     │ stale items identified (exit code 1)
     ▼
-agent assesses           # agent reads stale items, reasons about each
-    │                    # (or: liyi triage --prompt | llm-call)
-    │ writes .liyi/triage.json
-    ▼
-liyi triage --apply     # auto-reanchors cosmetic items
-    │                   # prints remaining items needing human review
-    ▼
-human reviews           # reads triage report or PR comment
-                        # accepts suggested intents or fixes code
+    ├── direct re-inference   # fast path: agent re-reads source,
+    │   │                     # updates source_span + intent in sidecar,
+    │   │                     # leaves "reviewed" unset
+    │   ▼
+    │   human reviews         # sees fresh unreviewed spec in PR diff
+    │
+    └── triage                # batch path: agent reads stale items,
+        │                     # reasons about each
+        │                     # (or: liyi triage --prompt | llm-call)
+        │ writes .liyi/triage.json
+        ▼
+    liyi triage --apply       # auto-reanchors cosmetic items
+        │                     # prints remaining items needing review
+        ▼
+    human reviews             # reads triage report or PR comment
+                              # accepts suggested intents or fixes code
 ```
 
 This replaces the previously described `--smart` flag. The split is cleaner: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
+
+**Direct re-inference: the fast path.** Triage adds value when many items are stale and a human needs to prioritize — a refactor that touches 30 functions, a CI pipeline processing a large PR. But during interactive editing — an agent making focused changes to 2-3 functions in a single session — triage is overhead. The agent already knows what it changed and why.
+
+The alternative is **direct re-inference**: the agent re-reads the source, updates `source_span` and `intent` in the sidecar, and leaves `"reviewed"` unset (or absent). The human sees a fresh unreviewed spec on the next `liyi check` or PR review and decides whether to approve it. No triage report, no classification step, no `.liyi/triage.json`.
+
+The tradeoff: direct re-inference does not distinguish intent violations from legitimate evolution. If the agent itself introduced a bug, it will re-infer intent that matches the buggy code — the intent and the code agree, but both are wrong. Triage, by comparing new code against *old* intent, can surface this discrepancy ("the old intent said X, the new code does Y — is that intentional?"). Direct re-inference skips that check.
+
+| Situation | Preferred path | Why |
+|---|---|---|
+| Agent just wrote or modified the code in the current session | Direct re-inference | The agent has full context; triage would assess its own changes against its own prior inference — little value added. |
+| Few stale items (≤ 5) from straightforward changes | Direct re-inference | The overhead of a structured triage report exceeds the classification benefit. |
+| Many stale items from a large refactor or merge | Triage | The structured report helps humans prioritize which items need re-review vs. auto-reanchor. |
+| Stale items from changes made by a *different* agent or human | Triage | The assessing agent lacks the original author's context; the old-intent-vs-new-code comparison is more valuable. |
+| CI pipeline processing a PR | Triage | Batch assessment with structured output is the natural fit for non-interactive workflows. |
+| Items with `"reviewed": true` or `@liyi:intent` in source | Triage recommended | These items have human-vouched intent. When they go stale, the change deserves explicit assessment against the human's stated intent, not silent re-inference. |
+
+The agent instruction (rule 10) permits both paths. Teams can mandate triage for reviewed items by convention or CI policy — e.g., requiring `.liyi/triage.json` for any PR that changes items with `"reviewed": true`. The linter does not enforce this; it's a workflow choice.
 
 **Relationship to challenge.** Triage and challenge are complementary. Triage answers "what changed and does it matter?" — a reactive assessment triggered by staleness. Challenge answers "does this code actually satisfy this intent?" — a proactive verification triggered by human curiosity. Both are agent-driven, both produce structured output, and neither is built into the binary. Triage operates on stale items (batch, CI-oriented); challenge operates on any specced item (on-demand, developer-oriented).
 
@@ -1245,7 +1269,9 @@ When writing or modifying code:
 7. Tests should target boundary conditions, error-handling gaps, property violations, and semantic mismatches. Prioritize tests a subtly wrong implementation would fail.
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
-10. When `liyi check` reports stale items, assess each: is the change cosmetic (rename, reformat — no behavioral change), semantic (code legitimately evolved — intent needs updating), or an intent violation (code contradicts declared intent)? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in the `suggested_intent` field. For intent violations, flag for human review.
+10. When `liyi check` reports stale items, choose one of two paths:
+    - **Direct re-inference** (preferred during interactive editing with few stale items): re-read the source, update `source_span` and `intent` in the sidecar, leave `"reviewed"` unset. Appropriate when you are the agent that just made the change, the number of stale items is small, and the changes are straightforward.
+    - **Triage** (preferred for batch workflows, CI, or when many items are stale): assess each item — is the change cosmetic, semantic, or an intent violation? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in `suggested_intent`. For intent violations, flag for human review. Prefer triage when stale items have `"reviewed": true` or `@liyi:intent` in source — these carry human-vouched intent that deserves explicit assessment, not silent re-inference.
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 ```
 
@@ -1586,7 +1612,7 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 | **1. The review** | Review inferred intent in PRs — set `"reviewed": true` in sidecar (quick) or add `@liyi:intent` in source (explicit) | Reviewing 5 lines of intent is faster than reviewing 50 lines of implementation. You catch wrong intent before wrong code gets tested. Careless review undermines adversarial testing quality — see *Why careless review is self-limiting* in the Security Model. | Seconds per item |
 | **2. The docs** | Add `## 立意` sections to READMEs / doc comments | Module-level invariants are documented, visible in rendered docs, discoverable by agents and humans. This is just good documentation practice. | 5 min per module |
 | **3. The linter** | Run `liyi check` in CI | Stale specs fail the build. You know which items changed since their intent was written. Deterministic enforcement. | Install a binary |
-| **3.5. Triage** | When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. `liyi triage --apply` auto-reanchors cosmetics. | Noise from refactors and renames is eliminated automatically. Remaining items are sorted by action type — update intent, fix code, or manual review. Graph-aware impact propagation flags transitively affected items. | Agent follows the triage instruction |
+| **3.5. Triage** | When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. `liyi triage --apply` auto-reanchors cosmetics. Skippable — agents can directly re-infer intent instead (see *Direct re-inference* in the triage section). Triage is most valuable for batch workflows (CI, large PRs) and when stale items carry human-reviewed intent. | Noise from refactors and renames is eliminated automatically. Remaining items are sorted by action type — update intent, fix code, or manual review. Graph-aware impact propagation flags transitively affected items. | Agent follows the triage instruction (or skips triage and re-infers directly) |
 | **4. Challenge** | Click "Challenge" on a specced item in the editor, or include challenge in the agent workflow | A second model verifies code against intent, or intent against requirement. On-demand semantic verification — no pipeline, no test files. The trust gap between reviewing intent and trusting it blindly closes. | One click / prompt per item |
 | **5. Requirements** | Write `@liyi:requirement` blocks and `@liyi:related` annotations for critical-path items | Requirements are tracked, hashable, versionable. When a requirement changes, all related items are transitively flagged. Challenge verifies intent actually covers the requirement, not just that hashes match. | Minutes per requirement |
 | **6. The adversarial tests** | Configure a different model for test generation from reviewed specs | A second model reads the *intent* (not the code) and tries to break the implementation. Different training data, different blind spots. | Agent configuration |
@@ -1639,9 +1665,9 @@ What the day-to-day experience looks like once all deliverables exist:
 1. **Write code.** (Or have an agent write it.) The agent instruction in AGENTS.md tells it to also generate `.liyi.jsonc` specs alongside the code.
 2. **Review intent, not implementation.** The agent infers intent and writes the sidecar. Read the inferred intent (via IDE hover or in the sidecar diff). If correct, accept it — either set `"reviewed": true` (one click, zero source noise) or add `@liyi:intent=doc` in source (one line, maximum visibility). If wrong, correct the intent: write `@liyi:intent <prose>` in source with your own words, or edit the docstring. Reviewing 5 lines of intent is faster than reviewing 50 lines of implementation.
 3. **CI runs `liyi check`.** The linter verifies that existing specs aren't stale (source hash matches) and reports unreviewed specs. Stale specs fail the build.
-4. **Triage (optional).** When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. Cosmetics are auto-reanchored. Semantic changes get suggested intent updates. Violations are flagged for human review. The agent writes `.liyi/triage.json`; `liyi triage --apply` acts on it. This eliminates noise from refactors and focuses human attention on items that actually need re-review.
+4. **Handle staleness.** When stale items are flagged, the agent takes one of two paths. **Direct re-inference** (the fast path): the agent re-reads the source, updates `source_span` and `intent` in the sidecar, and leaves `"reviewed"` unset — appropriate during interactive editing with few stale items. **Triage** (the batch path, optional): the agent assesses each stale item as cosmetic, semantic, or intent violation, writes `.liyi/triage.json`, and `liyi triage --apply` auto-reanchors cosmetics. Triage is most valuable for large PRs, CI pipelines, or when stale items have human-reviewed intent (`"reviewed": true` or `@liyi:intent`).
 5. **Adversarial testing (optional).** A different model reads the reviewed intents and generates tests designed to break the implementation. Different training data, different blind spots.
-6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent triages or re-infers, the human re-reviews. The cycle is fast because reviewing intent is fast.
+6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent re-infers or triages, the human re-reviews. The cycle is fast because reviewing intent is fast.
 
 **Steady state.** A team in steady state has reviewed intents for its critical-path items (not all items — trivial getters and simple wrappers use `@liyi:ignore`). The linter runs in CI and catches stale specs before they rot. Intent survives turnover: a new team member or agent reads the `.liyi.jsonc` files and understands what the code is *meant* to do, without reading every implementation.
 
