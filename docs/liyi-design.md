@@ -29,6 +29,65 @@ The agent instructions are the protocol. The CI linter is what makes it determin
 
 ---
 
+## The Two Pillars: First-Class Requirements and First-Class Intent
+
+立意 promotes two kinds of knowledge from informal prose to **first-class artifacts** — named, hashed, tracked by CI, and composable through dependency edges. They participate in the development toolchain the same way source code does: they have identity, they go stale, and they break the build when they drift.
+
+| | **Requirement** (prescriptive) | **Intent** (descriptive) |
+|---|---|---|
+| **What it captures** | What code *must* satisfy | What existing code *should* do |
+| **Direction** | Spec → code (stated before or alongside) | Code → spec (inferred after the fact) |
+| **Who writes it** | Human (or agent) asserts | Agent infers, human reviews |
+| **Where it lives** | Anywhere the linter walks — source comments, Markdown, doc comments | `.liyi.jsonc` sidecar, co-located with source |
+| **Marker** | `@liyi:requirement <name>` | `@liyi:intent` (source) or `"intent"` field (sidecar) |
+| **Staleness trigger** | Requirement prose changes → all `related` items flagged | Source code at `source_span` changes |
+| **Review semantics** | Writing the requirement *is* the assertion — VCS provenance suffices | "The agent got it right" (approve) or "here's what I meant" (override) |
+| **Ownership** | The authority that owns the invariant | The team that writes the code |
+| **Locality** | Can be centralized (shared via submodule) | Must be co-located (same repo as source) |
+| **Schema key** | `"requirement"` | `"item"` + `"intent"` |
+
+**What makes them first-class.** Comments, ADRs, and Confluence pages are persistent but not first-class — no tool hashes them, no CI detects when they drift from code, no dependency graph connects them to implementations. First-class means the properties that source code enjoys:
+
+- **Named** — requirements have explicit names; intents have item + span identity
+- **Content-addressed** — SHA-256 hashes detect any change, no matter how small
+- **Tracked by CI** — `liyi check` fails the build on staleness, just as a compiler fails on type errors
+- **Composable** — `@liyi:related` edges form a dependency graph between requirements and the code that satisfies them
+
+**The novelty is asymmetric.** First-class requirements exist in requirements engineering (DOORS, ReqIF, Polarion). First-class *inferred intent* alongside code does not. No existing tool takes an agent's inference of what code should do, persists it as a hashed artifact, and subjects it to deterministic staleness tracking. That is the new artifact type 立意 introduces.
+
+### When to use which — rules of thumb
+
+| Situation | Use |
+|---|---|
+| You're reading existing code and writing down what it should do | **Intent** |
+| You're stating a business rule before (or independent of) any implementation | **Requirement** |
+| The statement is owned by the team that writes the code | **Intent** |
+| The statement is owned by someone who doesn't write the implementation (PM, architect, compliance) | **Requirement** |
+| It applies to one function or struct | **Intent** |
+| It applies across multiple items, modules, or repos | **Requirement** (with `@liyi:related` edges) |
+| It needs to survive even if the implementation is rewritten from scratch | **Requirement** |
+| It describes *this specific implementation's* contract | **Intent** |
+
+### They work together
+
+A requirement states *what must hold*. An intent describes *how this code satisfies it*. The `@liyi:related` edge connects them:
+
+```
+@liyi:requirement no-double-charge
+─── "Never charge a customer twice for the same order"
+
+            │ related edge
+            ▼
+
+@liyi:intent "Check idempotency key before charging.
+Return cached result if key exists."
+fn charge_order(...)
+```
+
+The requirement is prescriptive and stable — it changes when the business rule changes. The intent is descriptive and tracks the implementation — it changes when the code changes. When the requirement changes, all related intents are flagged. When the code changes, only that item's intent is flagged. The two layers give you both top-down traceability and bottom-up staleness detection.
+
+---
+
 ## The Name
 
 立意 (lìyì) — "establish intent" — is a concept taught in Chinese elementary writing education (语文课). Before composing an essay, every student learns to 立意: decide the central idea, the purpose, the thesis — before writing a single sentence. 意在笔先: intent before brush.
@@ -83,7 +142,7 @@ The `.liyi/` directory is distinct from `.liyi.jsonc` sidecar files (which are c
 
 立意 operates on one checkout. The linter walks one tree; the agent reads one codebase; specs reference repo-relative paths.
 
-This scope constraint has different implications for the two artifact types the design distinguishes — **item-level intents** (descriptive, agent-inferred, co-located with code) and **requirements** (prescriptive, human-asserted, authoritatively owned). Conway’s law cuts both ways: intents are local knowledge and belong with the code team; requirements are often organizational knowledge and belong with the authority that owns the invariant. The tool treats both uniformly (same schema, same hash-based staleness), but their locality rules differ.
+This scope constraint has different implications for the two pillars (see *The Two Pillars* above). The tool treats both uniformly (same schema, same hash-based staleness), but their locality rules differ — intents must be co-located with code; requirements can be centralized.
 
 - **Monorepo**: both intents and requirements flow freely. The linter walks the whole tree. Module-level invariants can span directories. The intent dependency graph (future) resolves to local paths.
 - **Polyrepo**: item-level intents stop at the repo boundary — each repo specs its own code, including its assumptions about dependencies (“I call `verify_token` and expect it to return `Claims` or error”). Requirements, however, can be shared across repos via the centralized requirements pattern described below.
@@ -133,7 +192,7 @@ This works with the existing mechanism, no schema or linter changes required:
 - When the requirements repo is updated, downstream repos update their submodule pin. The pin update appears in the PR diff. `liyi check` detects hash mismatches on `related` edges and flags affected items — the same transitive staleness mechanism that works for in-repo requirements.
 - `git blame` on the requirements repo gives provenance for who wrote the requirement and when. `git log` on the submodule pin in the downstream repo gives adoption history.
 
-**This is Conway-correct.** The authority to define “no service charges a customer twice” lives at the organizational level, not with any single service team. Centralizing requirements in a dedicated repo — owned by the team with that authority — mirrors the communication structure. Each downstream team retains ownership of their item-level intents (co-located with their code) and their `@liyi:related` edges (declaring which requirements their code participates in). The requirements repo is prescriptive; the item specs are descriptive. Both are tracked by the same linter.
+**This is Conway-correct.** The ownership split mirrors *The Two Pillars*: the authority to define “no service charges a customer twice” lives at the organizational level (requirement), not with any single service team. Each downstream team retains ownership of their item-level intents (co-located with their code) and their `@liyi:related` edges (declaring which requirements their code participates in). Both are tracked by the same linter.
 
 **When to use this pattern:**
 
@@ -489,7 +548,7 @@ This is an inherent limitation of per-item staleness (tests have it too — a pa
 
 ## Requirements and Dependency Edges
 
-Intent flows in two directions. The default 立意 workflow is **descriptive**: an agent reads code and infers what it should do. But intent can also be **prescriptive**: a human (or agent) states a requirement, and code must satisfy it. Both produce tracked artifacts; the linter handles both.
+This section covers the mechanics of the prescriptive pillar — requirements and the `@liyi:related` edges that connect them to code items. For the conceptual distinction between requirements and intents, see *The Two Pillars* above.
 
 ### `@立意:需求` / `@liyi:requirement` — named requirements
 
@@ -712,7 +771,7 @@ This is a *human decision*, not an inference — the annotation says "I want thi
 
 ### Review scaling and complexity
 
-The review surface for intent is typically ~10% of the code surface per item: a few lines of constraints and invariants instead of the full implementation. This ratio holds across codebase sizes, but the absolute numbers scale linearly — a 100k LOC codebase with ~2,000 non-trivial items produces ~10,000 lines of intent, not 5.
+Both pillars (see *The Two Pillars* above) are first-class artifacts, and being first-class is what makes review compression possible — you review a few lines of hashed, tracked intent instead of the full implementation. The review surface per item is typically ~10% of the code surface. This ratio holds across codebase sizes, but the absolute numbers scale linearly — a 100k LOC codebase with ~2,000 non-trivial items produces ~10,000 lines of intent, not 5.
 
 **Hierarchical requirements compress the review surface further.** When requirements and `@liyi:module` blocks organize intent into layers, reviewers don't need to read every item spec for every change:
 
