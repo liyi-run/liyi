@@ -1864,6 +1864,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - **Lightweight.** The linter is ~3000 lines of Rust across two crates with 7 direct runtime dependencies (including tree-sitter for structural span recovery). Small enough to audit, understand, and port to another language if needed.
 - **No lock-in.** `.liyi.jsonc` files are plain JSONC. `@liyi:module` markers are comments. Delete them and nothing breaks.
 - **Any programming language.** The linter doesn't parse source code. It reads line ranges from `source_span`, hashes them, compares. `.liyi.jsonc` is JSONC. `@liyi:module` markers use whatever comment syntax the host format already provides. Works with any language, any framework, any build system, any design pattern.
+- **Hardware RTL too.** The convention applies at the RTL level (Verilog, SystemVerilog, VHDL, Chisel) with no design changes — sidecars co-locate with `.v`/`.vhd`/`.scala` files, `source_span` and `source_hash` work on any text, and tree-sitter grammars exist for Verilog and VHDL. In hardware domains where requirements traceability is a compliance obligation (DO-254, ISO 26262, IEC 61508), 立意 functions as a lightweight shim between a requirements management system and RTL source: a `liyi import-reqif` command (post-MVP) can consume ReqIF — the open OMG standard (ReqIF 1.2, `formal/2016-07-01`) that DOORS, Polarion, and other tools export — and emit `@liyi:requirement` blocks, connecting managed requirements to RTL implementations with hash-based staleness detection. The tool doesn't replace DOORS; it fills the last mile that DOORS doesn't cover.
 - **Any human language.** Intent prose is natural language — write it in your team’s working language. Annotation markers accept aliases in any supported language (`@liyi:ignore` / `@立意:忽略` / `@liyi:ignorar`). No locale configuration; the linter accepts all aliases from a static table. The project’s Chinese cultural origin isn’t a barrier — it’s an invitation.
 
 ### Who this is for
@@ -1873,6 +1874,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - Solo developers who use AI agents and can't hold all intent in their head across weeks and months.
 - Teams that want adversarial testing without building a framework.
 - Any domain with testable correctness requirements — not just web services.
+- Hardware teams writing RTL (Verilog, VHDL, Chisel) under traceability-mandatory standards (DO-254, ISO 26262) — 立意 bridges the gap between DOORS/ReqIF and implementation with hash-tracked `@liyi:related` edges, without replacing the requirements management lifecycle.
 - Polyglot projects where the same business rule is implemented in multiple languages — one requirement, N implementations, shared traceability.
 
 ### Who this is not for
