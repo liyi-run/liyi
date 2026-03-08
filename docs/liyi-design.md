@@ -79,26 +79,71 @@ Tool-generated artifacts live in a `.liyi/` directory at the repository root:
 
 The `.liyi/` directory is distinct from `.liyi.jsonc` sidecar files (which are co-located with source, committed, and are source of truth). Sidecars are durable; `.liyi/` contents are ephemeral.
 
-### Scope: per-repository
+### Scope: per-checkout
 
-立意 operates within one repository. The linter walks one tree; the agent reads one codebase; specs reference paths within that repo.
+立意 operates on one checkout. The linter walks one tree; the agent reads one codebase; specs reference repo-relative paths.
 
-This is a deliberate scope constraint with known tradeoffs. The linter's staleness model depends on co-located source files and line-number spans; crossing repo boundaries would require the linter to access source files outside its checkout, something neither CI environments nor agent sandboxes provide by default. Conway's law (software structure mirrors communication structure) explains why per-repo scope often works: repo boundaries tend to reflect organizational boundaries, and intent is local knowledge.
+This scope constraint has different implications for the two artifact types the design distinguishes — **item-level intents** (descriptive, agent-inferred, co-located with code) and **requirements** (prescriptive, human-asserted, authoritatively owned). Conway’s law cuts both ways: intents are local knowledge and belong with the code team; requirements are often organizational knowledge and belong with the authority that owns the invariant. The tool treats both uniformly (same schema, same hash-based staleness), but their locality rules differ.
 
-- **Monorepo**: intent flows freely. An agent working in `src/billing/` can read `src/auth/`’s `@liyi:module` block. The linter walks the whole tree. Module-level invariants can span directories. The intent dependency graph (future) resolves to local paths.
-- **Polyrepo**: intent stops at the repo boundary. Each repo specs its own code — including its assumptions about dependencies (“I call `verify_token` and expect it to return `Claims` or error”). The consuming repo’s intent describes *how it uses* the dependency, not *what the dependency does internally*.
+- **Monorepo**: both intents and requirements flow freely. The linter walks the whole tree. Module-level invariants can span directories. The intent dependency graph (future) resolves to local paths.
+- **Polyrepo**: item-level intents stop at the repo boundary — each repo specs its own code, including its assumptions about dependencies (“I call `verify_token` and expect it to return `Claims` or error”). Requirements, however, can be shared across repos via the centralized requirements pattern described below.
 
 Cross-repo intent *sharing* can be useful context — an agent reading a dependency’s shipped `.liyi.jsonc` from a package tree gathers context to write its own specs — but it’s not a transitive obligation. The intent informs; it doesn’t cascade. No mechanism for cross-repo intent enforcement is planned.
 
-**Why not a centralized "spec repo"?** It's tempting to keep all intents in one repository — a single place to review intent across the organization, decoupled from implementation repos. This doesn't work with 立意, and the reasons are structural:
+**Why item-level intents must stay co-located.** It’s tempting to keep all specs in one repository — a single place to review intent across the organization, decoupled from implementation repos. For item-level intents, this doesn’t work, and the reasons are structural:
 
-- **Staleness requires co-location.** `source_span` and `source_hash` reference lines in the source file. If the spec lives in a different repo, the linter can't hash the source. Cross-repo file access is a security boundary, not a missing feature.
-- **PR review flow requires co-location.** When a developer changes `money.rs`, the co-located `money.rs.liyi.jsonc` diff appears in the same PR. Separating specs into another repo means code changes silently leave specs behind — staleness becomes the norm, not the exception.
-- **It fights Conway's law.** A centralized spec repo implies centralized authority over intent. But intent is local knowledge: the agent or developer working on the code understands what the function should do. Separating intent from code re-creates the communication gap Conway's law says produces bad software.
+- **Staleness requires co-location.** An item spec’s `source_span` and `source_hash` reference lines in the *source file*. If the spec lives in a different repo, the linter can’t hash the source. Cross-repo file access is a security boundary, not a missing feature.
+- **PR review flow requires co-location.** When a developer changes `money.rs`, the co-located `money.rs.liyi.jsonc` diff appears in the same PR. Separating item specs into another repo means code changes silently leave specs behind — staleness becomes the norm, not the exception.
+- **It fights Conway’s law.** A centralized item-spec repo implies centralized authority over local implementation knowledge. But the agent or developer working on the code understands what the function should do. Separating that knowledge from the code re-creates the communication gap Conway’s law says produces bad software.
 
-System-level architectural constraints ("all inter-service communication uses mTLS," "no service charges a customer twice for the same order") are legitimately centralized — but those are architecture documents and ADRs, not item-level specs. They don't need `source_span` or `source_hash`; they're prose. 立意's item-level convention stays co-located, per repo.
+**Requirements are different.** A requirement’s `source_span` references *its own prose*, not implementation code. Its staleness is tracked via hash comparison on `related` edges — downstream items record the requirement’s hash and are flagged when it changes. The requirement doesn’t need to live next to the code that satisfies it; it needs to be readable by the linter (i.e., present in the checkout) and owned by the authority that defines the invariant.
 
-The gap is genuine: in a polyrepo setup, no mechanism deterministically verifies that `service-a`'s assumptions about `auth-lib` match `auth-lib`'s actual behavior. Repo-level and module-level intent prose (`@liyi:module`) can *state* these cross-boundary assumptions ("this service expects `auth-lib` to return `Claims` or error, never panic"), and adversarial tests can *exercise* them — but the linter can't check them against the upstream source. This is an honest limitation of per-repo scope, bridged by prose and testing, not by tooling. Closing it deterministically would require workspace-scoped SCM — a system where cross-repo content dependencies are a native primitive — which no publicly available SCM provides today. Complementary tools (contract testing, API schema validation, integration tests) address parts of the problem from a different angle; 立意 doesn't replace them and isn't replaced by them.
+System-level constraints — “all inter-service communication uses mTLS,” “no service charges a customer twice for the same order” — are not just ADRs. They are first-class `@liyi:requirement` candidates: hash-tracked, linked to implementations via `@liyi:related`, with deterministic staleness detection when the requirement changes. Treating them as untracked prose throws away the requirement mechanism the design provides.
+
+#### Centralized requirements via submodule
+
+For polyrepo organizations, the recommended pattern for cross-cutting requirements is a **dedicated requirements repository** consumed by downstream repos as a git submodule (or equivalent content dependency mechanism):
+
+```
+org-requirements/              ← standalone repo, owned by platform/architecture team
+├── billing/
+│   └── invariants.md          ← @liyi:requirement blocks
+├── security/
+│   └── invariants.md
+└── data/
+    └── invariants.md
+
+service-a/                     ← downstream repo
+├── requirements/              ← git submodule → org-requirements
+│   ├── billing/
+│   │   └── invariants.md
+│   └── security/
+│       └── invariants.md
+├── src/
+│   ├── payments.rs
+│   ├── payments.rs.liyi.jsonc ← @liyi:related no-double-charge
+│   └── ...
+└── .gitmodules
+```
+
+This works with the existing mechanism, no schema or linter changes required:
+
+- The submodule directory is part of the checkout. The linter’s file walk discovers `requirements/billing/invariants.md` and its `@liyi:requirement` markers. Paths are repo-relative (`requirements/billing/invariants.md`), which is how they appear in sidecars.
+- `@liyi:related no-double-charge` in `payments.rs.liyi.jsonc` resolves to the requirement in the submodule path. The linter hashes the requirement text and compares against the recorded hash — standard staleness detection.
+- When the requirements repo is updated, downstream repos update their submodule pin. The pin update appears in the PR diff. `liyi check` detects hash mismatches on `related` edges and flags affected items — the same transitive staleness mechanism that works for in-repo requirements.
+- `git blame` on the requirements repo gives provenance for who wrote the requirement and when. `git log` on the submodule pin in the downstream repo gives adoption history.
+
+**This is Conway-correct.** The authority to define “no service charges a customer twice” lives at the organizational level, not with any single service team. Centralizing requirements in a dedicated repo — owned by the team with that authority — mirrors the communication structure. Each downstream team retains ownership of their item-level intents (co-located with their code) and their `@liyi:related` edges (declaring which requirements their code participates in). The requirements repo is prescriptive; the item specs are descriptive. Both are tracked by the same linter.
+
+**When to use this pattern:**
+
+- Polyrepo organizations with cross-cutting invariants that multiple services must satisfy
+- Regulated industries where requirement provenance and traceability are audited
+- Teams that already manage shared ADRs, API contracts, or compliance rules centrally
+
+**When not to use this pattern:** Monorepos (requirements already flow freely), single-repo projects, or teams whose requirements are all local to one service.
+
+**Residual gap.** Even with shared requirements, there is no mechanism to verify that a downstream repo *has* `@liyi:related` edges for requirements it should satisfy — only that the edges it *does* have are checked for staleness. Discovering which requirements apply to which repos is an organizational process, not a linter feature. Complementary tools (contract testing, API schema validation, integration tests) address parts of this from a different angle; 立意 doesn’t replace them and isn’t replaced by them.
 
 ### Module-level: `@liyi:module` marker
 
@@ -615,6 +660,8 @@ If `payment-security` changes → `multi-currency-addition` is flagged REQ CHANG
 The linter detects cycles (A → B → A) and reports them as errors without looping.
 
 **Use this sparingly.** Most teams should use flat requirements — one level of `@liyi:requirement` blocks with `@liyi:related` edges from code items. Requirement hierarchies are for organizations that already think in terms of system requirements decomposing into subsystem requirements (defense, aerospace, regulated industries). If you don't already have a requirement hierarchy, don't build one just because the tool allows it — the cascading noise from deep trees (a change at the root flags everything below) can be worse than the traceability it provides.
+
+Requirement hierarchies combine naturally with the centralized requirements pattern (see *Scope: per-checkout* above). A requirements repo can define top-level system requirements that decompose into subsystem requirements, all consumed by downstream repos via submodule. The hierarchy lives in the requirements repo; downstream repos reference leaf requirements via `@liyi:related`. A change at the root cascades through the hierarchy within the requirements repo and transitively flags all downstream items — the full traceability chain, across repo boundaries, using the existing mechanism.
 
 ### Cross-cutting concerns and aspect-oriented invariants
 
