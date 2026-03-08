@@ -94,6 +94,8 @@ The requirement is prescriptive and stable — it changes when the business rule
 
 The concept roots in calligraphy and painting (画论), where 立意 is the non-negotiable first step of any creative work — the artist decides what the piece is *meant to invoke* before executing it — and extends into literary criticism and composition pedagogy. Literary critics name the complementary motion: 文随意转 — the writing follows as intent turns. When purpose evolves, the work adapts to track it.
 
+There is a deliberate irony. Literary 文随意转 celebrates intent's fluidity — the transformation *is* the creative act. The engineering tool treats that same motion as staleness: it detects that intent turned, flags the divergence, and asks a human to adjudicate. We capture the subset of intent where durability outranks fluidity; the rest belongs to genres where betraying intent is growth.
+
 English has analogues — "thesis statement," "controlling idea," "premise" — but none that name the act of *deciding intent as a prerequisite step*. We transliterate rather than translate because no English term carries the same connotation: intent first, everything else follows.
 
 In the classroom, 立意 works in both directions. Before writing, the teacher challenges the thesis: 太浅了 (too shallow), 偏题了 (off-topic), 太俗了 (too cliché) — the student refines before composing. After writing, the teacher critiques the finished piece against its declared intent: the verdict is appraisal (premise well executed) or disagreement (the essay wandered from its thesis). The software convention preserves both phases: challenge intent before execution, then verify the result against it afterward.
@@ -1883,6 +1885,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - Teams not using AI agents for code generation.
 - Projects with formal verification or contracts already in place.
 - Domains where the primary failure mode is performance or perceptual (rendering, audio, latency-critical hot paths) — NL specs can express constraints, but adversarial tests can't see pixels or measure nanoseconds.
+- Writers and poets — where betraying your original intent *is* the breakthrough. (The "any human language" selling point applies to formalized intent, not to the 文随意转 kind that must stay fluid to survive.)
 
 ### Intended workflow
 
