@@ -496,8 +496,9 @@ fn missing_related() {
         has_missing_related,
         "expected MissingRelatedEdge diagnostic, got: {diagnostics:#?}"
     );
-    // Exit code is Clean because we disabled all failure flags, but the
-    // MissingRelatedEdge diagnostic should still be present (just not failing)
+    // MissingRelatedEdge is treated as an unconditional check failure,
+    // so the exit code is CheckFailure even with all failure flags disabled.
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
 
 #[test]

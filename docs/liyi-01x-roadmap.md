@@ -24,7 +24,11 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 | M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
 | M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
 | M5.3 `--prompt` mode | ⏳ Design | Design doc at `docs/prompt-mode-design.md` |
-| M6 NL-quoting | ✅ Complete | All items done (M6.1–M6.7) |
+| M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
+| M6.4 `.liyiignore` cleanup | ✅ Complete | docs/ removed from ignore |
+| M6.5 AGENTS.md escape | ✅ Complete | Unicode escape for @ in JSON |
+| M6.6 Tests | ✅ Complete | Unit tests for NL-quoting |
+| M6.7 Contributing guides | ✅ Complete | NL-quoting documented |
 
 ---
 
@@ -398,15 +402,15 @@ The backtick in this list is redundant with M6.2 but retained as defense-in-dept
 
 ### M6.4. Update `.liyiignore` (~5min)
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
-Remove `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
+Removed `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
 
 ### M6.5. Escape `@liyi:intent` in AGENTS.md JSON schema (~5min)
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
-The one remaining unquoted `@liyi:intent` string in AGENTS.md is inside a JSON `"description"` field within a fenced code block. It is handled by M6.1. Additionally, escape the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
+The one remaining unquoted `@liyi:intent` string in AGENTS.md was inside a JSON `"description"` field within a fenced code block (handled by M6.1). Additionally, escaped the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
 
 ### M6.6. Golden-file fixtures and unit tests ✅
 
@@ -421,9 +425,9 @@ The one remaining unquoted `@liyi:intent` string in AGENTS.md is inside a JSON `
 
 ### M6.7. Update contributing guides (~15min)
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
-Extend the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
+Extended the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
 
 **Acceptance criteria:**
 - `liyi check` on the project's own repo (with `docs/` no longer ignored) produces no false-positive markers from the design doc.
