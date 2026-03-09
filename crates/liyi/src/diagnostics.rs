@@ -41,23 +41,48 @@ pub struct Diagnostic {
     pub message: String,
 }
 
-impl fmt::Display for Diagnostic {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let icon = match self.severity {
-            Severity::Info => match self.kind {
+impl Diagnostic {
+    /// Format this diagnostic with a repo-root prefix stripped from the
+    /// file path so that output shows repo-relative paths.
+    pub fn display_with_root(&self, root: &std::path::Path) -> String {
+        let rel = self
+            .file
+            .strip_prefix(root)
+            .unwrap_or(&self.file);
+        let icon = Self::icon(&self.kind, self.severity);
+        if self.item_or_req.is_empty() {
+            format!("{}: {} {}", rel.display(), icon, self.message)
+        } else {
+            format!("{}: {}: {} {}", rel.display(), self.item_or_req, icon, self.message)
+        }
+    }
+
+    fn icon(kind: &DiagnosticKind, severity: Severity) -> &'static str {
+        match severity {
+            Severity::Info => match kind {
                 DiagnosticKind::Current => "✓",
                 DiagnosticKind::Trivial => "·",
                 DiagnosticKind::Ignored => "·",
                 DiagnosticKind::ReqNoRelated => "·",
                 _ => "·",
             },
-            Severity::Warning => match self.kind {
+            Severity::Warning => match kind {
                 DiagnosticKind::Shifted { .. } => "↕",
                 _ => "⚠",
             },
             Severity::Error => "✗",
-        };
-        write!(f, "{}: {} {}", self.item_or_req, icon, self.message)
+        }
+    }
+}
+
+impl fmt::Display for Diagnostic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let icon = Self::icon(&self.kind, self.severity);
+        if self.item_or_req.is_empty() {
+            write!(f, "{}: {} {}", self.file.display(), icon, self.message)
+        } else {
+            write!(f, "{}: {}: {} {}", self.file.display(), self.item_or_req, icon, self.message)
+        }
     }
 }
 

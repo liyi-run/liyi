@@ -50,7 +50,7 @@ fn main() {
                 if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {
                     continue;
                 }
-                println!("{d}");
+                println!("{}", d.display_with_root(&repo_root));
             }
 
             // Print summary line
