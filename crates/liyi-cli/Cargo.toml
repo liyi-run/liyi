@@ -17,3 +17,5 @@ path = "src/main.rs"
 [dependencies]
 liyi = { path = "../liyi" }
 clap = { version = "4.5.60", features = ["derive"] }
+ratatui = "0.29"
+crossterm = "0.28"

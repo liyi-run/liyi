@@ -5,6 +5,7 @@ use std::process;
 use clap::Parser;
 
 mod cli;
+mod tui_approve;
 
 use cli::{Cli, Commands};
 use liyi::diagnostics::CheckFlags;
@@ -134,34 +135,83 @@ fn main() {
                 paths
             };
 
-            // Use batch mode if --yes or stdin is not a TTY.
-            let use_batch = yes || !atty_is_tty();
+            let is_interactive = !yes && is_tty();
 
-            let result = if use_batch {
-                liyi::approve::approve_batch(&targets, item.as_deref(), dry_run)
-            } else {
-                liyi::approve::approve_interactive(&targets, item.as_deref(), dry_run)
-            };
+            if is_interactive {
+                // Collect candidates, run TUI, apply decisions.
+                let candidates = match liyi::approve::collect_approval_candidates(
+                    &targets,
+                    item.as_deref(),
+                ) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                };
 
-            match result {
-                Ok(results) => {
-                    let total_approved: usize = results.iter().map(|r| r.approved).sum();
-                    let total_skipped: usize = results.iter().map(|r| r.skipped).sum();
-                    let total_rejected: usize = results.iter().map(|r| r.rejected).sum();
-                    println!(
-                        "{total_approved} approved, {total_skipped} skipped, {total_rejected} rejected"
-                    );
+                if candidates.is_empty() {
+                    println!("nothing to approve");
+                    return;
                 }
-                Err(e) => {
-                    eprintln!("Error: {e}");
-                    process::exit(2);
+
+                let decisions = match tui_approve::run_tui(&candidates) {
+                    Ok(d) => d,
+                    Err(e) => {
+                        eprintln!("TUI error: {e}");
+                        process::exit(2);
+                    }
+                };
+
+                match liyi::approve::apply_approval_decisions(&candidates, &decisions, dry_run) {
+                    Ok(results) => {
+                        let total_approved: usize = results.iter().map(|r| r.approved).sum();
+                        let total_skipped: usize = results.iter().map(|r| r.skipped).sum();
+                        let total_rejected: usize = results.iter().map(|r| r.rejected).sum();
+                        println!(
+                            "{total_approved} approved, {total_skipped} skipped, {total_rejected} rejected"
+                        );
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                }
+            } else {
+                // Batch mode: collect + auto-approve all.
+                let candidates = match liyi::approve::collect_approval_candidates(
+                    &targets,
+                    item.as_deref(),
+                ) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                };
+
+                let decisions = vec![liyi::approve::Decision::Yes; candidates.len()];
+                match liyi::approve::apply_approval_decisions(&candidates, &decisions, dry_run) {
+                    Ok(results) => {
+                        let total_approved: usize = results.iter().map(|r| r.approved).sum();
+                        let total_skipped: usize = results.iter().map(|r| r.skipped).sum();
+                        let total_rejected: usize = results.iter().map(|r| r.rejected).sum();
+                        println!(
+                            "{total_approved} approved, {total_skipped} skipped, {total_rejected} rejected"
+                        );
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
                 }
             }
         }
     }
 }
 
-/// Check if stdin is a TTY (for interactive mode detection).
-fn atty_is_tty() -> bool {
-    io::stdin().is_terminal()
+/// Check if stderr is a TTY (for interactive mode detection).
+/// Uses stderr since the TUI renders there.
+fn is_tty() -> bool {
+    io::stderr().is_terminal()
 }
