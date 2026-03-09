@@ -1,0 +1,18 @@
+{
+  "version": "0.1",
+  "source": "work.rs",
+  "specs": [
+    {
+      "requirement": "logging",
+      "source_span": [1, 2]
+    },
+    {
+      "item": "do_work",
+      "intent": "Perform work with logging",
+      "source_span": [5, 7],
+      "related": {
+        "logging": null
+      }
+    }
+  ]
+}

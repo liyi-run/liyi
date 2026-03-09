@@ -474,3 +474,49 @@ fn liyiignore() {
     );
     assert_eq!(exit_code, LiyiExitCode::Clean);
 }
+
+#[test]
+fn missing_related() {
+    // Copy to tmp so check runs in isolation (no repo root detection issues)
+    let (_tmp, root) = fixture_in_tmp("missing_related");
+    // Use lenient flags - we only care about MissingRelatedEdge, not other issues
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let has_missing_related = diagnostics
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::MissingRelatedEdge { .. }));
+    assert!(
+        has_missing_related,
+        "expected MissingRelatedEdge diagnostic, got: {diagnostics:#?}"
+    );
+    // Exit code is Clean because we disabled all failure flags, but the
+    // MissingRelatedEdge diagnostic should still be present (just not failing)
+}
+
+#[test]
+fn missing_related_pass() {
+    // Copy to tmp so check runs in isolation (no repo root detection issues)
+    let (_tmp, root) = fixture_in_tmp("missing_related_pass");
+    let flags = default_flags();
+
+    // Fix hashes first so we don't get Stale diagnostics
+    let _ = run_check(&root, &[], true, false, &flags);
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let has_missing_related = diagnostics
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::MissingRelatedEdge { .. }));
+    assert!(
+        !has_missing_related,
+        "expected no MissingRelatedEdge diagnostic when edge exists, got: {diagnostics:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::Clean);
+}
