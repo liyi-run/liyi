@@ -36,7 +36,7 @@
         156
       ],
       "tree_path": "fn::run_tui",
-      "source_hash": "sha256:229a4e1463e7a53fdf15c461709f1b4e9c97f660b53eec0e46d002bedad33841",
+      "source_hash": "sha256:ac647b13c854f8e4da3ca2983c8ccad22334de34e7e1255340e2827cda1e4773",
       "source_anchor": "pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {"
     },
     {
@@ -59,7 +59,8 @@
         86,
         92
       ],
-      "tree_path": "impl::ApproveTui::fn::go_forward"
+      "source_hash": "sha256:a5001a7df93509eeb75dcc3c99dbdfcae321bc79a38bcebaf0a0c2cf74858b7a",
+      "source_anchor": "            self.current += 1;"
     },
     {
       "item": "file_highlight_enabled",

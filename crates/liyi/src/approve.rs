@@ -91,7 +91,9 @@ pub fn collect_approval_candidates(
 
         for (spec_index, spec) in sidecar.specs.iter().enumerate() {
             if let Spec::Item(item) = spec {
-                if let Some(filter) = item_filter && item.item != filter {
+                if let Some(filter) = item_filter
+                    && item.item != filter
+                {
                     continue;
                 }
                 if item.reviewed {
