@@ -1,79 +1,67 @@
 // liyi v0.1 spec file
 {
-  "version": "0.1",
-  "source": "crates/liyi/src/approve.rs",
-  "specs": [
-    {
-      "item": "ApproveResult",
-      "reviewed": false,
-      "intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
-      "source_span": [
-        11,
-        16
-      ],
-      "tree_path": "struct::ApproveResult",
-      "source_hash": "sha256:c508a96f425f3db28dbead37eafe6c7dc6c16d95fce87747cbd36bc60b62812c",
-      "source_anchor": "pub struct ApproveResult {"
-    },
-    {
-      "item": "ApproveError",
-      "reviewed": false,
-      "intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
-      "source_span": [
-        20,
-        24
-      ],
-      "tree_path": "enum::ApproveError",
-      "source_hash": "sha256:173a61b1f98538798224266b4af28015e5332da0463f5c4b360c60d0f784f801",
-      "source_anchor": "pub enum ApproveError {"
-    },
-    {
-      "item": "approve_batch",
-      "reviewed": false,
-      "intent": "Resolve sidecar targets from paths, then approve all (or filtered by item name) unreviewed items without prompting. Supports dry-run mode. Returns error if no targets found.",
-      "source_span": [
-        46,
-        62
-      ],
-      "tree_path": "fn::approve_batch",
-      "source_hash": "sha256:9a4bcff26a13992016c8414456252834e3a45993df4c86e22caba3417418f926",
-      "source_anchor": "pub fn approve_batch("
-    },
-    {
-      "item": "approve_interactive",
-      "reviewed": false,
-      "intent": "Resolve sidecar targets from paths, then for each unreviewed item display source context and prompt y/n/s. Supports dry-run and item filtering. Returns error if no targets found.",
-      "source_span": [
-        67,
-        83
-      ],
-      "tree_path": "fn::approve_interactive",
-      "source_hash": "sha256:60a399bd7f96a352aa9c6cb3d89fb7039a1bfad59b853b0e2468b172a2de1fa5",
-      "source_anchor": "pub fn approve_interactive("
-    },
-    {
-      "item": "approve_sidecar",
-      "reviewed": false,
-      "intent": "Core per-sidecar logic: read and parse sidecar, iterate specs, apply item filter, skip already-reviewed, collect approve/reject/skip decisions (auto or interactive), reanchor hashes on approve, write back only if modified and not dry-run.",
-      "source_span": [
-        86,
-        183
-      ],
-      "tree_path": "fn::approve_sidecar",
-      "source_hash": "sha256:f4acf21a09a3170dc74858e5d3101e2c190b75d5ab6a404f717012526b382a45",
-      "source_anchor": "fn approve_sidecar("
-    },
-    {
-      "item": "prompt_user",
-      "reviewed": false,
-      "intent": "Read a line from stdin and return Decision::Yes, Decision::No, or Decision::Skip. Must flush stdout before reading. Loop until a valid input is given.",
-      "source_span": [
-        193,
-        215
-      ],
-      "tree_path": "fn::prompt_user",
-      "source_hash": "sha256:1da2906b05a1b4c868cabe60d3f8cc39b47788763805c0ef92412b06ee2bb4a9",
-      "source_anchor": "fn prompt_user() -> Decision {"
-    }
-  ]
+	"version": "0.1",
+	"source": "crates/liyi/src/approve.rs",
+	"specs": [
+		{
+			"item": "ApproveResult",
+			"reviewed": false,
+			"intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
+			"source_span": [
+				10,
+				15
+			],
+			"tree_path": "struct::ApproveResult"
+		},
+		{
+			"item": "ApproveError",
+			"reviewed": false,
+			"intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
+			"source_span": [
+				19,
+				23
+			],
+			"tree_path": "enum::ApproveError"
+		},
+		{
+			"item": "Decision",
+			"reviewed": false,
+			"intent": "Public enum representing a user's approval decision: Yes (approve item), No (reject), or Skip (defer). Used by both interactive TUI and batch workflows.",
+			"source_span": [
+				44,
+				48
+			],
+			"tree_path": "enum::Decision"
+		},
+		{
+			"item": "ApprovalCandidate",
+			"reviewed": false,
+			"intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, and source code lines. Decouples data gathering from presentation.",
+			"source_span": [
+				51,
+				68
+			],
+			"tree_path": "struct::ApprovalCandidate"
+		},
+		{
+			"item": "collect_approval_candidates",
+			"reviewed": false,
+			"intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with source context for display. Applies item name filter if specified. Returns error if no targets found.",
+			"source_span": [
+				71,
+				116
+			],
+			"tree_path": "fn::collect_approval_candidates"
+		},
+		{
+			"item": "apply_approval_decisions",
+			"reviewed": false,
+			"intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
+			"source_span": [
+				121,
+				178
+			],
+			"tree_path": "fn::apply_approval_decisions"
+		}
+	]
 }

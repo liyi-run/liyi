@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{self, BufRead, Write};
+use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::hashing::hash_span;
@@ -39,177 +39,162 @@ impl From<io::Error> for ApproveError {
     }
 }
 
-/// Run `liyi approve` in batch mode (`--yes`).
-///
-/// Approves all (or filtered) items in the given sidecar files, setting
-/// `reviewed: true` and reanchoring hashes.
-pub fn approve_batch(
-    paths: &[PathBuf],
-    item_filter: Option<&str>,
-    dry_run: bool,
-) -> Result<Vec<ApproveResult>, ApproveError> {
-    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
-    if targets.is_empty() {
-        return Err(ApproveError::NoTargets);
-    }
-
-    let mut results = Vec::new();
-    for sidecar_path in &targets {
-        let result = approve_sidecar(sidecar_path, item_filter, dry_run, false)?;
-        results.push(result);
-    }
-    Ok(results)
-}
-
-/// Run `liyi approve` in interactive mode.
-///
-/// For each unreviewed item, displays context and prompts the user.
-pub fn approve_interactive(
-    paths: &[PathBuf],
-    item_filter: Option<&str>,
-    dry_run: bool,
-) -> Result<Vec<ApproveResult>, ApproveError> {
-    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
-    if targets.is_empty() {
-        return Err(ApproveError::NoTargets);
-    }
-
-    let mut results = Vec::new();
-    for sidecar_path in &targets {
-        let result = approve_sidecar(sidecar_path, item_filter, dry_run, true)?;
-        results.push(result);
-    }
-    Ok(results)
-}
-
-/// Approve items in a single sidecar file.
-fn approve_sidecar(
-    sidecar_path: &Path,
-    item_filter: Option<&str>,
-    dry_run: bool,
-    interactive: bool,
-) -> Result<ApproveResult, ApproveError> {
-    let sc_content = fs::read_to_string(sidecar_path)?;
-    let mut sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
-
-    // Read source file for context display and hashing.
-    let source_path = sidecar_path.with_file_name(&sidecar.source);
-    let source_content = fs::read_to_string(&source_path).unwrap_or_default();
-
-    let mut approved = 0usize;
-    let mut skipped = 0usize;
-    let mut rejected = 0usize;
-    let mut modified = false;
-
-    for spec in &mut sidecar.specs {
-        if let Spec::Item(item) = spec {
-            // Apply item name filter if specified.
-            if let Some(filter) = item_filter
-                && item.item != filter
-            {
-                continue;
-            }
-
-            // Skip already reviewed items.
-            if item.reviewed {
-                skipped += 1;
-                continue;
-            }
-
-            let decision = if interactive {
-                // Display context and prompt.
-                println!("─── {} ───", item.item);
-                println!("Intent: {}", item.intent);
-                println!("Span:   [{}, {}]", item.source_span[0], item.source_span[1]);
-
-                // Show source lines.
-                let lines: Vec<&str> = source_content.lines().collect();
-                let start = item.source_span[0].saturating_sub(1);
-                let end = item.source_span[1].min(lines.len());
-                if start < end {
-                    println!();
-                    for (i, line) in lines[start..end].iter().enumerate() {
-                        println!("  {:>4} │ {}", start + i + 1, line);
-                    }
-                    println!();
-                }
-
-                prompt_user()
-            } else {
-                // Batch mode: auto-approve.
-                Decision::Yes
-            };
-
-            match decision {
-                Decision::Yes => {
-                    if dry_run {
-                        println!("would approve: {}", item.item);
-                    } else {
-                        item.reviewed = true;
-                        // Reanchor: fill source_hash and source_anchor.
-                        if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span) {
-                            item.source_hash = Some(hash);
-                            item.source_anchor = Some(anchor);
-                        }
-                        modified = true;
-                    }
-                    approved += 1;
-                }
-                Decision::No => {
-                    if !dry_run {
-                        item.reviewed = false;
-                    }
-                    rejected += 1;
-                }
-                Decision::Skip => {
-                    skipped += 1;
-                }
-            }
-        }
-    }
-
-    // Write back if modified.
-    if modified && !dry_run {
-        let output = write_sidecar(&sidecar);
-        fs::write(sidecar_path, output)?;
-    }
-
-    Ok(ApproveResult {
-        sidecar_path: sidecar_path.to_path_buf(),
-        approved,
-        skipped,
-        rejected,
-    })
-}
-
-/// User decision for interactive mode.
-enum Decision {
+/// User decision for an approval candidate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Decision {
     Yes,
     No,
     Skip,
 }
 
-/// Prompt the user for a decision.
-fn prompt_user() -> Decision {
-    let stdin = io::stdin();
-    let mut stdout = io::stdout();
+/// A single item pending approval, with all context needed for display.
+#[derive(Debug)]
+pub struct ApprovalCandidate {
+    /// Path to the sidecar file.
+    pub sidecar_path: PathBuf,
+    /// Display name of the source file (from the sidecar's `source` field).
+    pub source_display: String,
+    /// Index of this spec in the sidecar's specs array.
+    pub spec_index: usize,
+    /// Item name.
+    pub item_name: String,
+    /// Inferred intent text.
+    pub intent: String,
+    /// Source span [start, end] (1-indexed).
+    pub source_span: [usize; 2],
+    /// Source lines within the span: (line_number, line_content).
+    pub source_lines: Vec<(usize, String)>,
+}
 
-    loop {
-        print!("approve? [y]es / [n]o / [s]kip: ");
-        stdout.flush().ok();
+/// Collect all unreviewed items as approval candidates.
+pub fn collect_approval_candidates(
+    paths: &[PathBuf],
+    item_filter: Option<&str>,
+) -> Result<Vec<ApprovalCandidate>, ApproveError> {
+    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
+    if targets.is_empty() {
+        return Err(ApproveError::NoTargets);
+    }
 
-        let mut line = String::new();
-        if stdin.lock().read_line(&mut line).is_err() {
-            return Decision::Skip;
-        }
+    let mut candidates = Vec::new();
+    for sidecar_path in &targets {
+        let sc_content = fs::read_to_string(sidecar_path)?;
+        let sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
 
-        match line.trim().to_lowercase().as_str() {
-            "y" | "yes" => return Decision::Yes,
-            "n" | "no" => return Decision::No,
-            "s" | "skip" | "" => return Decision::Skip,
-            _ => {
-                println!("  (enter y, n, or s)");
+        let source_path = sidecar_path.with_file_name(&sidecar.source);
+        let source_content = fs::read_to_string(&source_path).unwrap_or_default();
+        let all_lines: Vec<&str> = source_content.lines().collect();
+
+        for (spec_index, spec) in sidecar.specs.iter().enumerate() {
+            if let Spec::Item(item) = spec {
+                if let Some(filter) = item_filter {
+                    if item.item != filter {
+                        continue;
+                    }
+                }
+                if item.reviewed {
+                    continue;
+                }
+
+                let start = item.source_span[0].saturating_sub(1);
+                let end = item.source_span[1].min(all_lines.len());
+                let source_lines = if start < end {
+                    all_lines[start..end]
+                        .iter()
+                        .enumerate()
+                        .map(|(i, line)| (start + i + 1, line.to_string()))
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+
+                candidates.push(ApprovalCandidate {
+                    sidecar_path: sidecar_path.clone(),
+                    source_display: sidecar.source.clone(),
+                    spec_index,
+                    item_name: item.item.clone(),
+                    intent: item.intent.clone(),
+                    source_span: item.source_span,
+                    source_lines,
+                });
             }
         }
     }
+    Ok(candidates)
+}
+
+/// Apply approval decisions to sidecars.
+///
+/// `decisions` is a slice parallel to the candidates returned by
+/// `collect_approval_candidates`.
+pub fn apply_approval_decisions(
+    candidates: &[ApprovalCandidate],
+    decisions: &[Decision],
+    dry_run: bool,
+) -> Result<Vec<ApproveResult>, ApproveError> {
+    use std::collections::HashMap;
+
+    // Group decisions by sidecar path.
+    let mut per_sidecar: HashMap<&Path, Vec<(usize, Decision)>> = HashMap::new();
+    for (candidate, &decision) in candidates.iter().zip(decisions.iter()) {
+        per_sidecar
+            .entry(candidate.sidecar_path.as_path())
+            .or_default()
+            .push((candidate.spec_index, decision));
+    }
+
+    let mut results = Vec::new();
+    for (sidecar_path, item_decisions) in &per_sidecar {
+        let sc_content = fs::read_to_string(sidecar_path)?;
+        let mut sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
+        let source_path = sidecar_path.with_file_name(&sidecar.source);
+        let source_content = fs::read_to_string(&source_path).unwrap_or_default();
+
+        let mut approved = 0usize;
+        let mut skipped = 0usize;
+        let mut rejected = 0usize;
+        let mut modified = false;
+
+        for &(spec_index, decision) in item_decisions {
+            if let Some(Spec::Item(item)) = sidecar.specs.get_mut(spec_index) {
+                match decision {
+                    Decision::Yes => {
+                        if !dry_run {
+                            item.reviewed = true;
+                            if let Ok((hash, anchor)) =
+                                hash_span(&source_content, item.source_span)
+                            {
+                                item.source_hash = Some(hash);
+                                item.source_anchor = Some(anchor);
+                            }
+                            modified = true;
+                        }
+                        approved += 1;
+                    }
+                    Decision::No => {
+                        if !dry_run {
+                            item.reviewed = false;
+                        }
+                        rejected += 1;
+                    }
+                    Decision::Skip => {
+                        skipped += 1;
+                    }
+                }
+            }
+        }
+
+        if modified && !dry_run {
+            let output = write_sidecar(&sidecar);
+            fs::write(sidecar_path, output)?;
+        }
+
+        results.push(ApproveResult {
+            sidecar_path: sidecar_path.to_path_buf(),
+            approved,
+            skipped,
+            rejected,
+        });
+    }
+    Ok(results)
 }
