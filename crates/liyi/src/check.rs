@@ -52,7 +52,7 @@ pub fn run_check(
             },
             severity: Severity::Warning,
             message: w.clone(),
-        fix_hint: None,
+            fix_hint: None,
         });
     }
 
@@ -86,7 +86,7 @@ pub fn run_check(
                             existing.file.display(),
                             existing.line,
                         ),
-                    fix_hint: None,
+                        fix_hint: None,
                     });
                 } else {
                     requirements.insert(
@@ -215,7 +215,7 @@ pub fn run_check(
                     "\x40liyi:requirement \"{name}\" at line {} has no sidecar entry",
                     rec.line,
                 ),
-            fix_hint: None,
+                fix_hint: None,
             });
         }
     }
@@ -233,7 +233,7 @@ pub fn run_check(
                 kind: DiagnosticKind::ReqNoRelated,
                 severity: Severity::Info,
                 message: format!("requirement \"{name}\" is not referenced by any item"),
-            fix_hint: None,
+                fix_hint: None,
             });
         }
     }
@@ -255,7 +255,7 @@ pub fn run_check(
             },
             severity: Severity::Error,
             message: format!("requirement cycle detected: {cycle_display}"),
-        fix_hint: None,
+            fix_hint: None,
         });
     }
 
@@ -302,7 +302,7 @@ fn check_sidecar(
                 },
                 severity: Severity::Error,
                 message: format!("cannot read sidecar: {e}"),
-            fix_hint: None,
+                fix_hint: None,
             });
             return;
         }
@@ -317,7 +317,7 @@ fn check_sidecar(
                 kind: DiagnosticKind::ParseError { detail: e.clone() },
                 severity: Severity::Error,
                 message: e,
-            fix_hint: None,
+                fix_hint: None,
             });
             return;
         }
@@ -333,7 +333,7 @@ fn check_sidecar(
             },
             severity: Severity::Error,
             message: e,
-        fix_hint: Some(format!("liyi reanchor --migrate {rel_sidecar}")),
+            fix_hint: Some(format!("liyi reanchor --migrate {rel_sidecar}")),
         });
         return;
     }
@@ -352,7 +352,7 @@ fn check_sidecar(
                         kind: DiagnosticKind::MalformedHash,
                         severity: Severity::Error,
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
-                    fix_hint: None,
+                        fix_hint: None,
                     });
                 }
                 if let Some(ref related) = item.related {
@@ -368,7 +368,7 @@ fn check_sidecar(
                                 message: format!(
                                     "related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
                                 ),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         }
                     }
@@ -384,7 +384,7 @@ fn check_sidecar(
                         kind: DiagnosticKind::MalformedHash,
                         severity: Severity::Error,
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
-                    fix_hint: None,
+                        fix_hint: None,
                     });
                 }
             }
@@ -399,7 +399,7 @@ fn check_sidecar(
             kind: DiagnosticKind::OrphanedSource,
             severity: Severity::Error,
             message: format!("source file {} not found", entry.source_path.display()),
-        fix_hint: None,
+            fix_hint: None,
         });
         return;
     }
@@ -432,7 +432,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Current,
                                 severity: Severity::Info,
                                 message: "hash matches".into(),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         } else if item.source_hash.is_none() {
                             // No hash yet — fill it if --fix
@@ -447,7 +447,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Stale,
                                 severity: Severity::Warning,
                                 message: "missing source_hash".into(),
-                            fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
                             });
                         } else {
                             // Hash mismatch — try tree_path first, then shift
@@ -536,7 +536,7 @@ fn check_sidecar(
                                         kind: DiagnosticKind::Stale,
                                         severity: Severity::Warning,
                                         message: msg,
-                                    fix_hint: None,
+                                        fix_hint: None,
                                     });
                                 }
                             } else {
@@ -567,7 +567,7 @@ fn check_sidecar(
                                                 "span shifted by {delta:+} → [{}, {}]",
                                                 new_span[0], new_span[1]
                                             ),
-                                        fix_hint: Some("liyi check --fix".into()),
+                                            fix_hint: Some("liyi check --fix".into()),
                                         });
                                     }
                                     ShiftResult::Stale => {
@@ -584,7 +584,7 @@ fn check_sidecar(
                                             kind: DiagnosticKind::Stale,
                                             severity: Severity::Warning,
                                             message: detail,
-                                        fix_hint: None,
+                                            fix_hint: None,
                                         });
                                     }
                                 }
@@ -683,7 +683,7 @@ fn check_sidecar(
                                 },
                                 severity: Severity::Error,
                                 message: detail,
-                            fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
                             });
                         }
                     }
@@ -699,7 +699,7 @@ fn check_sidecar(
                                 "invalid span [{}, {}]",
                                 item.source_span[0], item.source_span[1]
                             ),
-                        fix_hint: None,
+                            fix_hint: None,
                         });
                     }
                 }
@@ -720,7 +720,7 @@ fn check_sidecar(
                         kind: DiagnosticKind::Unreviewed,
                         severity: Severity::Warning,
                         message: "not reviewed".into(),
-                    fix_hint: Some(format!("liyi approve {rel_sidecar}")),
+                        fix_hint: Some(format!("liyi approve {rel_sidecar}")),
                     });
                 }
 
@@ -738,7 +738,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Trivial,
                                 severity: Severity::Info,
                                 message: "marked \x40liyi:trivial".into(),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         }
                         SourceMarker::Ignore { line, .. }
@@ -750,7 +750,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Ignored,
                                 severity: Severity::Info,
                                 message: "marked \x40liyi:ignore".into(),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         }
                         _ => {}
@@ -772,7 +772,7 @@ fn check_sidecar(
                                     message: format!(
                                         "related requirement \"{req_name}\" not found"
                                     ),
-                                fix_hint: None,
+                                    fix_hint: None,
                                 });
                             }
                             Some(rec) => {
@@ -790,7 +790,7 @@ fn check_sidecar(
                                         },
                                         severity: Severity::Warning,
                                         message: format!("requirement \"{req_name}\" has changed"),
-                                    fix_hint: None,
+                                        fix_hint: None,
                                     });
                                 }
                             }
@@ -843,7 +843,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Current,
                                 severity: Severity::Info,
                                 message: "requirement hash matches".into(),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         } else {
                             if fix {
@@ -857,7 +857,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Stale,
                                 severity: Severity::Warning,
                                 message: "requirement hash mismatch or missing".into(),
-                            fix_hint: None,
+                                fix_hint: None,
                             });
                         }
                     }
@@ -946,7 +946,7 @@ fn check_sidecar(
                                 },
                                 severity: Severity::Error,
                                 message: detail,
-                            fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
                             });
                         }
                     }
@@ -962,7 +962,7 @@ fn check_sidecar(
                                 "invalid span [{}, {}]",
                                 req.source_span[0], req.source_span[1]
                             ),
-                        fix_hint: None,
+                            fix_hint: None,
                         });
                     }
                 }

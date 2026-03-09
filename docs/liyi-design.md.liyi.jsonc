@@ -18,8 +18,8 @@
         1121,
         1127
       ],
-      "source_hash": "sha256:eb8f74b02389b2db169ca869e2e25c649b85cf0399fa6114085e44dcd6b9f9bb",
-      "source_anchor": "```"
+      "source_hash": "sha256:9d2978f3bc8bf0f72551c94e7b9262f9beed2d38132b7897db07c61b9274b9c2",
+      "source_anchor": "src/billing/money.rs: convert_currency: ⚠ STALE — source changed since spec was written"
     }
   ]
 }

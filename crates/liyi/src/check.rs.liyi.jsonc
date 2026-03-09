@@ -21,10 +21,10 @@
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         34,
-        265
+        271
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:994599bab6fa8e4f10898fca1ce8d82f40e2936af319ebe7aef8467a424fe86c",
+      "source_hash": "sha256:13ca74d5432770cc302492fcc1b8c60cee849726441dc80547cf0d20917209f6",
       "source_anchor": "pub fn run_check("
     },
     {
@@ -32,11 +32,11 @@
       "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        271,
-        937
+        277,
+        978
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:a3c1a22805176fc64e09d3b87585f76e7f1a6e44f726c00fa46529f9578e22f2",
+      "source_hash": "sha256:b7c41f6a0bc447eebcff97a683a73aac09b1ada8ba9cfcf6d99d4a113a8a9a45",
       "source_anchor": "fn check_sidecar("
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": false,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1002,
-        1013
+        1043,
+        1054
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",

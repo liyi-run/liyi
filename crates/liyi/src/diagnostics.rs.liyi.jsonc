@@ -30,34 +30,34 @@
     {
       "item": "Diagnostic",
       "reviewed": false,
-      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, and a human-readable message.",
+      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, and an optional fix hint command.",
       "source_span": [
         36,
-        42
+        44
       ],
       "tree_path": "struct::Diagnostic",
-      "source_hash": "sha256:ac8791f99477bdf747c7c4b20d4f635c0f0879e0b22f5b517731f915a7cd0e35",
+      "source_hash": "sha256:6b250c9ef83fc98a2dbe02f2d2e390035c30b957274bc120ca82cf5c717661ff",
       "source_anchor": "pub struct Diagnostic {"
     },
     {
       "item": "impl Display for Diagnostic",
       "reviewed": false,
-      "intent": "Format a diagnostic for terminal output: select an icon based on severity and kind (✓ for current, · for trivial/ignored, ↕ for shifted, ⚠ for warnings, ✗ for errors) and display as 'item_or_req: icon message'.",
+      "intent": "Format a diagnostic for terminal output. display_with_root shows a repo-relative file path, selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
-        44,
-        62
+        46,
+        85
       ],
       "tree_path": "impl::Diagnostic",
-      "source_hash": "sha256:5f7daf3b0b6e956c70e91a5c3b7a16c501d62d5f5c5e84a48824e6334b51a9b2",
-      "source_anchor": "impl fmt::Display for Diagnostic {"
+      "source_hash": "sha256:4b4454e7d8492552129dee158f3f0d268af4835a58aee6bc8130e0657d164e51",
+      "source_anchor": "impl Diagnostic {"
     },
     {
       "item": "CheckFlags",
       "reviewed": false,
       "intent": "Hold the four boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed, fail_on_untracked) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
-        65,
-        70
+        106,
+        111
       ],
       "tree_path": "struct::CheckFlags",
       "source_hash": "sha256:eb21294a5b2b980a87e2c81ac57dd1be6f31cf4494b882d3b81dd3413f62bcd4",
@@ -68,8 +68,8 @@
       "reviewed": false,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        76,
-        80
+        117,
+        121
       ],
       "tree_path": "enum::LiyiExitCode",
       "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
@@ -83,8 +83,8 @@
       "reviewed": false,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        82,
-        116
+        123,
+        157
       ],
       "tree_path": "fn::compute_exit_code",
       "source_hash": "sha256:b6e34bbbb7428d119352d9c2b04786b60881ba6c991ece2203cd4670c204f792",

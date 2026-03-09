@@ -47,15 +47,18 @@ impl Diagnostic {
     /// Format this diagnostic with a repo-root prefix stripped from the
     /// file path so that output shows repo-relative paths.
     pub fn display_with_root(&self, root: &std::path::Path) -> String {
-        let rel = self
-            .file
-            .strip_prefix(root)
-            .unwrap_or(&self.file);
+        let rel = self.file.strip_prefix(root).unwrap_or(&self.file);
         let icon = Self::icon(&self.kind, self.severity);
         let main_line = if self.item_or_req.is_empty() {
             format!("{}: {} {}", rel.display(), icon, self.message)
         } else {
-            format!("{}: {}: {} {}", rel.display(), self.item_or_req, icon, self.message)
+            format!(
+                "{}: {}: {} {}",
+                rel.display(),
+                self.item_or_req,
+                icon,
+                self.message
+            )
         };
         match &self.fix_hint {
             Some(hint) => format!("{main_line}\n  fix: {hint}"),
@@ -87,7 +90,14 @@ impl fmt::Display for Diagnostic {
         if self.item_or_req.is_empty() {
             write!(f, "{}: {} {}", self.file.display(), icon, self.message)
         } else {
-            write!(f, "{}: {}: {} {}", self.file.display(), self.item_or_req, icon, self.message)
+            write!(
+                f,
+                "{}: {}: {} {}",
+                self.file.display(),
+                self.item_or_req,
+                icon,
+                self.message
+            )
         }
     }
 }
