@@ -40,39 +40,27 @@
       "source_anchor": "pub enum Decision {"
     },
     {
-      "item": "CONTEXT_LINES",
-      "reviewed": false,
-      "intent": "Number of surrounding context lines shown before and after the span in the approval TUI. Defaults to 5.",
-      "source_span": [
-        51,
-        51
-      ],
-      "tree_path": "const::CONTEXT_LINES",
-      "source_hash": "sha256:d67624cf432a8ad2b8f8c19f5a299abff11e76d396ae8cabc4c33cfa237ce23d",
-      "source_anchor": "pub const CONTEXT_LINES: usize = 5;"
-    },
-    {
       "item": "ApprovalCandidate",
       "reviewed": false,
-      "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, source code lines (including surrounding context), span_offset (index into source_lines where the actual span begins), and span_len (number of span lines). Decouples data gathering from presentation.",
+      "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), and span_len (number of span lines). Decouples data gathering from presentation.",
       "source_span": [
-        55,
-        74
+        52,
+        71
       ],
       "tree_path": "struct::ApprovalCandidate",
-      "source_hash": "sha256:acb1d7029f55ff71935d6cb3a67302cdbcac32923c098fbbe396cc6ad6caa5c4",
+      "source_hash": "sha256:10f31e4fa2425ab1fd8c4b5ee39eebe1600fbe1dcf73a8cc703ab929fb395fff",
       "source_anchor": "pub struct ApprovalCandidate {"
     },
     {
       "item": "collect_approval_candidates",
       "reviewed": false,
-      "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with source context (including CONTEXT_LINES surrounding lines) for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish span from context. Returns error if no targets found.",
+      "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Returns error if no targets found.",
       "source_span": [
-        77,
-        138
+        74,
+        130
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:4b99969115e887e4790ed40a7d553d5b8a822848d8c7175cb997a0a108fa1cc2",
+      "source_hash": "sha256:b3bb2c78f9828e966b4a2bb8c2ec6aa3183470cf390a3d0d3eb3d5b3acc3a757",
       "source_anchor": "pub fn collect_approval_candidates("
     },
     {
@@ -80,8 +68,8 @@
       "reviewed": false,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        144,
-        214
+        136,
+        206
       ],
       "tree_path": "fn::apply_approval_decisions",
       "source_hash": "sha256:90e28bd9e136dde5bf312c794d3c0bffc32246487408a6976b89ec55a66c9617",
@@ -92,8 +80,8 @@
       "reviewed": false,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        217,
-        228
+        209,
+        220
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",

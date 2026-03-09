@@ -18,7 +18,7 @@
     {
       "item": "ApproveTui",
       "reviewed": false,
-      "intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, a quit flag, and a Highlighter for syntax colouring. On construction, loads syntect default syntaxes and the base16-eighties.dark theme. Provides methods to advance (decide), go back, and check completion.",
+      "intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, a quit flag, and a Highlighter for syntax colouring. On construction, loads syntect default syntaxes and the base16-eighties.dark theme and sets initial scroll to centre on the first candidate's span. Provides methods to advance (decide), go back (both auto-centre scroll on the new span), and check completion.",
       "source_span": [
         26,
         34
@@ -32,8 +32,8 @@
       "reviewed": false,
       "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, j/Down and k/Up=scroll source, q/Esc=quit.",
       "source_span": [
-        77,
-        130
+        90,
+        143
       ],
       "tree_path": "fn::run_tui",
       "source_hash": "sha256:229a4e1463e7a53fdf15c461709f1b4e9c97f660b53eec0e46d002bedad33841",
@@ -44,8 +44,8 @@
       "reviewed": false,
       "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
       "source_span": [
-        132,
-        154
+        145,
+        167
       ],
       "tree_path": "fn::draw",
       "source_hash": "sha256:75dc16c6f960851f65f5ad42fc90ced41fe2d35a656feac8617f7cd5114d1e08",
@@ -54,10 +54,10 @@
     {
       "item": "draw_source",
       "reviewed": false,
-      "intent": "Render the source code pane with syntect-based syntax highlighting. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each source line, and maps syntect styles (foreground colour, bold, italic, underline) to ratatui Span styles. Context lines outside the span are rendered dimmed in DarkGray. Prepends a dim line-number gutter. Supports vertical scrolling.",
+      "intent": "Render the source code pane with syntect-based syntax highlighting. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each source line, and maps syntect styles (foreground colour, bold, italic, underline) to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
-        201,
-        278
+        214,
+        291
       ],
       "tree_path": "fn::draw_source",
       "source_hash": "sha256:d3535104277fa41e30f2bcfa31b00972fa5582ef97631cc9ff0c6073f0d45029",

@@ -37,17 +37,28 @@ impl<'a> ApproveTui<'a> {
     fn new(candidates: &'a [ApprovalCandidate]) -> Self {
         let ts = ThemeSet::load_defaults();
         let theme = ts.themes["base16-eighties.dark"].clone();
+        let scroll = Self::initial_scroll(&candidates[0]);
         Self {
             candidates,
             decisions: vec![Decision::Skip; candidates.len()],
             current: 0,
-            scroll: 0,
+            scroll,
             quit_all: false,
             highlighter: Highlighter {
                 syntax_set: SyntaxSet::load_defaults_newlines(),
                 theme,
             },
         }
+    }
+
+    /// Compute an initial scroll offset that centres the span in the
+    /// source pane (assuming ~20 visible lines as a reasonable default).
+    fn initial_scroll(candidate: &ApprovalCandidate) -> u16 {
+        let visible_estimate: usize = 20;
+        candidate
+            .span_offset
+            .saturating_sub(visible_estimate / 4)
+            as u16
     }
 
     fn candidate(&self) -> &ApprovalCandidate {
@@ -61,13 +72,15 @@ impl<'a> ApproveTui<'a> {
     fn decide(&mut self, d: Decision) {
         self.decisions[self.current] = d;
         self.current += 1;
-        self.scroll = 0;
+        if !self.done() {
+            self.scroll = Self::initial_scroll(self.candidate());
+        }
     }
 
     fn go_back(&mut self) {
         if self.current > 0 {
             self.current -= 1;
-            self.scroll = 0;
+            self.scroll = Self::initial_scroll(self.candidate());
         }
     }
 }

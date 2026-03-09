@@ -47,9 +47,6 @@ pub enum Decision {
     Skip,
 }
 
-/// Number of surrounding context lines shown before and after the span.
-pub const CONTEXT_LINES: usize = 5;
-
 /// A single item pending approval, with all context needed for display.
 #[derive(Debug)]
 pub struct ApprovalCandidate {
@@ -65,11 +62,11 @@ pub struct ApprovalCandidate {
     pub intent: String,
     /// Source span [start, end] (1-indexed).
     pub source_span: [usize; 2],
-    /// Source lines including surrounding context: (line_number, line_content).
+    /// All lines of the source file: (line_number, line_content).
     pub source_lines: Vec<(usize, String)>,
-    /// Index into `source_lines` where the actual span begins.
+    /// Index into `source_lines` where the reviewed span begins.
     pub span_offset: usize,
-    /// Number of lines in the actual span (within `source_lines`).
+    /// Number of lines in the reviewed span.
     pub span_len: usize,
 }
 
@@ -106,19 +103,14 @@ pub fn collect_approval_candidates(
                 let span_start = item.source_span[0].saturating_sub(1);
                 let span_end = item.source_span[1].min(all_lines.len());
 
-                // Include surrounding context lines.
-                let ctx_start = span_start.saturating_sub(CONTEXT_LINES);
-                let ctx_end = (span_end + CONTEXT_LINES).min(all_lines.len());
-
                 let source_lines: Vec<(usize, String)> = all_lines
-                    [ctx_start..ctx_end]
                     .iter()
                     .enumerate()
-                    .map(|(i, line)| (ctx_start + i + 1, line.to_string()))
+                    .map(|(i, line)| (i + 1, line.to_string()))
                     .collect();
 
-                let span_offset = span_start - ctx_start;
-                let span_len = span_end - span_start;
+                let span_offset = span_start;
+                let span_len = span_end.saturating_sub(span_start);
 
                 candidates.push(ApprovalCandidate {
                     sidecar_path: sidecar_path.clone(),
