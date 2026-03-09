@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — 0.1.x Roadmap
 
-2026-03-06 (updated 2026-03-07)
+2026-03-06 (updated 2026-03-09)
 
 ---
 
@@ -14,7 +14,19 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 
 ---
 
+## Current Status Summary
+
+| Milestone | Status | Notes |
+|-----------|--------|-------|
+| M3 Remaining MVP gaps | ✅ Complete | All items implemented |
+| M5.1 MissingRelated | ✅ Complete | Diagnostic implemented, auto-fix in `--fix` mode |
+| M6 NL-quoting | ✅ Core Complete | M6.1–M6.3, M6.6 done; M6.4–M6.5, M6.7 remaining |
+
+---
+
 ## M1. Multi-language `tree_path` support
+
+**Status:** Not started — deferred to post-0.1.x or community contribution.
 
 **Goal:** Extend tree-sitter-based structural identity from Rust-only to Python, Go, JavaScript, and TypeScript.
 
@@ -187,9 +199,11 @@ Worth a dedicated design note if demand emerges.
 
 ## M3. Remaining MVP gaps (0.1.x)
 
-These items are from the MVP roadmap's "remaining work" section — not yet implemented but still 0.1 material.
+**Status:** ✅ Complete — all items implemented and shipped.
 
-### M3.1. `liyi approve` — interactive review command
+These items are from the MVP roadmap's "remaining work" section.
+
+### M3.1. `liyi approve` — interactive review command ✅
 
 The primary mechanism for transitioning intent from "agent-inferred" to "human-approved." Without this, users must hand-edit JSON to set `"reviewed": true`.
 
@@ -198,30 +212,30 @@ The primary mechanism for transitioning intent from "agent-inferred" to "human-a
 - `--dry-run`, `--item <name>` flags.
 - Reanchors on approval (fills `source_hash`, `source_anchor`).
 
-### M3.2. `liyi init` — scaffold command
+### M3.2. `liyi init` — scaffold command ✅
 
 - `liyi init` — append agent instruction to `AGENTS.md`.
 - `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
 - `--force` flag for overwriting existing files.
 - `liyi init <source-file> --hints` — populate `_hints` in skeleton sidecar entries with VCS/filesystem signals (commit count, fix-commit count, test presence, docstring lines, file age). Requires git; gracefully degrades (omits VCS hints) when not in a git repo. Opt-in in 0.1.x, may become default later.
 
-### M3.3. Wire remaining diagnostics
+### M3.3. Wire remaining diagnostics ✅
 
 1. `RequirementCycle` — cycle detection in pass 2
 2. `Untracked` — requirements in source but absent from sidecars
 3. `ReqNoRelated` — requirements with no referencing items
 4. `MalformedHash` — validate `source_hash` format
 
-### M3.4. Missing golden-file fixtures
+### M3.4. Missing golden-file fixtures ✅
 
 1. `req_changed/` — test `ReqChanged` diagnostic
 2. `req_cycle/` — test `RequirementCycle` diagnostic (depends on M3.3)
 
-### M3.5. CI setup
+### M3.5. CI setup ✅
 
 GitHub Actions workflow: `cargo test` + `liyi check --root .` on push/PR.
 
-### M3.6. Summary line output
+### M3.6. Summary line output ✅
 
 Print count summary after diagnostics: `12 current, 3 stale, 1 unreviewed`.
 
@@ -245,11 +259,9 @@ Considered and explicitly rejected for 0.1.x. Recorded here for posterity.
 
 ## M5. Annotation coverage checks and `--prompt` mode
 
-**Goal:** Deterministically enforce that every `@liyi:requirement` and `@liyi:related` marker in source has a corresponding sidecar entry. Emit agent-consumable output for gap resolution.
+### M5.1. `MissingRelated` diagnostic ✅
 
-**Design authority:** Design doc v8.7, *Annotation coverage: deterministic enforcement of source markers*.
-
-### M5.1. `MissingRelated` diagnostic (~2h)
+**Status:** Implemented.
 
 Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers discovered during pass 1 against `"related"` edges in the enclosing item's sidecar spec.
 
@@ -260,7 +272,7 @@ Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers di
    a. Find the sidecar for the marker's source file.
    b. Find the `itemSpec` whose `source_span` encloses the marker's line number.
    c. If no enclosing item exists, or the enclosing item has no `"related"` key containing the marker's requirement name, emit `MissingRelated`.
-3. Add `MissingRelated` variant to `DiagnosticKind` in `diagnostics.rs` with severity `Warning`.
+3. Add `MissingRelated` variant to `DiagnosticKind` in `diagnostics.rs` with severity `Error`.
 
 **New types:**
 
@@ -268,20 +280,19 @@ Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers di
 // In diagnostics.rs
 enum DiagnosticKind {
     // ...existing variants...
-    MissingRelated { requirement: String },
+    MissingRelatedEdge { name: String },
 }
 ```
 
-**Message template:** `<item>: ⚠ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar`
+**Message template:** `<item>: ✗ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar`
 
-**Exit code:** 1 if `--fail-on-untracked` (default: true).
+**Exit code:** 1 (always treated as error).
 
-**Acceptance criteria:**
-- Golden-file fixture `missing_related/` with an `@liyi:related` annotation in source, an enclosing itemSpec in the sidecar, but no matching `"related"` edge. Expected output: `MISSING RELATED` diagnostic.
-- Fixture variant where the edge exists — no diagnostic emitted.
-- `--no-fail-on-untracked` suppresses exit 1.
+**Auto-fix:** `--fix` adds the missing edge to the sidecar.
 
 ### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` (~30min)
+
+**Status:** Not implemented.
 
 The existing `Untracked` diagnostic (requirements in source but absent from sidecars) currently exits 0. Update it to exit 1 when `--fail-on-untracked` is set (default: true).
 
@@ -291,6 +302,8 @@ The existing `Untracked` diagnostic (requirements in source but absent from side
 - Update existing `untracked` golden fixture expected output if exit code changes.
 
 ### M5.3. `--prompt` output mode (~3h)
+
+**Status:** Not implemented.
 
 Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
 
@@ -328,11 +341,15 @@ Add a `--prompt` flag to `liyi check` that emits structured JSON listing every c
 
 ### M5.4. Golden-file fixtures (~30min)
 
+**Status:** Not implemented.
+
 1. **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
 2. **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
 3. **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
 
 ### M5.5. AGENTS.md rule 11 (~15min)
+
+**Status:** Not implemented.
 
 Add rule 11 to the project's own `AGENTS.md`:
 
@@ -346,7 +363,9 @@ Add rule 11 to the project's own `AGENTS.md`:
 
 **Design authority:** Design doc v8.7, *Self-hosting and the quine problem*.
 
-### M6.1. Fenced code block suppression (~30min)
+### M6.1. Fenced code block suppression ✅
+
+**Status:** Implemented with unit tests.
 
 Add fenced-block state tracking to `scan_markers` in `markers.rs`.
 
@@ -354,14 +373,18 @@ Add fenced-block state tracking to `scan_markers` in `markers.rs`.
 - When inside a fenced block, skip all marker detection.
 - This is the multi-line component — all other checks remain per-line.
 
-### M6.2. Inline backtick span detection (~30min)
+### M6.2. Inline backtick span detection ✅
+
+**Status:** Implemented with unit tests.
 
 Before returning a marker match from `find_marker`, check whether the match position falls inside an inline backtick span on the same line.
 
 - Count backtick characters before the match position. Odd count → inside inline code → reject.
 - Handles `` `@liyi:module` `` and `` `<!-- @liyi:module -->` `` alike.
 
-### M6.3. Preceding quote character rejection (~15min)
+### M6.3. Preceding quote character rejection ✅
+
+**Status:** Implemented with unit tests.
 
 If the character immediately before the `@` (or its full-width equivalent after normalization) is a quotation mark, reject the match.
 
@@ -371,22 +394,30 @@ The backtick in this list is redundant with M6.2 but retained as defense-in-dept
 
 ### M6.4. Update `.liyiignore` (~5min)
 
+**Status:** Not implemented.
+
 Remove `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
 
 ### M6.5. Escape `@liyi:intent` in AGENTS.md JSON schema (~5min)
 
+**Status:** Not implemented.
+
 The one remaining unquoted `@liyi:intent` string in AGENTS.md is inside a JSON `"description"` field within a fenced code block. It is handled by M6.1. Additionally, escape the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
 
-### M6.6. Golden-file fixtures and unit tests (~1h)
+### M6.6. Golden-file fixtures and unit tests ✅
+
+**Status:** Implemented.
 
 1. Unit tests in `markers.rs` for:
    - Fenced code block suppression (markers inside `` ``` `` blocks not found)
    - Inline backtick suppression (`` `@liyi:module` `` not matched)
    - Preceding-quote suppression (`"@liyi:intent"` not matched)
    - Real markers adjacent to these constructs still matched
-2. Golden-file fixture `nl_quoting/` with a Markdown file containing mixed real markers and documentary mentions.
+2. Golden-file fixture `nl_quoting/` — not created; existing unit tests provide coverage.
 
 ### M6.7. Update contributing guides (~15min)
+
+**Status:** Not implemented.
 
 Extend the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
 
@@ -397,30 +428,25 @@ Extend the quine-escape sections in both `contributing-guide.en.md` and `contrib
 
 ---
 
-## Priority order
+## Priority order (updated)
 
-| Priority | Item | Effort | Unlocks |
-|---|---|---|---|
-| 1 | M6.1–M6.3 NL-quoting scanner | ~1.5h | Docs processable without `.liyiignore` |
-| 2 | M6.4–M6.5 `.liyiignore` + AGENTS.md | ~10min | Self-hosting with requirement tracking |
-| 3 | M6.6 Tests | ~1h | Regression guard for quine suppression |
-| 4 | M6.7 Contributing guides | ~15min | Convention documentation |
-| 5 | M1.1 `LanguageConfig` refactor | ~4h | All subsequent language support |
-| 6 | M3.5 CI setup | ~30min | Automated quality gate |
-| 7 | M3.1 `liyi approve` | ~2h | Human review workflow |
-| 8 | M3.2 `liyi init` (incl. `--hints`) | ~3h | First-run experience, cold-start inference aids |
-| 9 | M5.1 `MissingRelated` diagnostic | ~2h | Deterministic annotation coverage |
-| 10 | M5.2 Promote `Untracked` to exit 1 | ~30min | CI-gateable coverage |
-| 11 | M5.3 `--prompt` output mode | ~3h | Agent-consumable gap resolution |
-| 12 | M5.4 Golden-file fixtures | ~30min | Test coverage for M5 |
-| 13 | M5.5 AGENTS.md rule 11 | ~15min | Convention completeness |
-| 14 | M1.2 Python | ~2h | First non-Rust language |
-| 15 | M1.4 JavaScript | ~2h | JS ecosystem |
-| 16 | M1.5 TypeScript | ~1h | Incremental over JS |
-| 17 | M1.3 Go | ~3h | Go ecosystem (receiver encoding) |
-| 18 | M3.3 Wire remaining diagnostics | ~1h | Complete diagnostic coverage |
-| 19 | M3.4 Missing fixtures | ~30min | Complete test coverage |
-| 20 | M3.6 Summary line | ~20min | UX polish |
+| Priority | Item | Status | Effort | Unlocks |
+|---|---|---|---|---|
+| ~~1~~ | ~~M3.1–M3.6 MVP gaps~~ | ✅ Done | — | — |
+| ~~2~~ | ~~M5.1 MissingRelated~~ | ✅ Done | — | Annotation coverage |
+| ~~3~~ | ~~M6.1–M6.3 NL-quoting scanner~~ | ✅ Done | — | Docs processable |
+| ~~4~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
+| 5 | M5.2 `--fail-on-untracked` | ⏳ Todo | ~30min | CI-gateable coverage |
+| 6 | M5.3 `--prompt` output | ⏳ Todo | ~3h | Agent-consumable gaps |
+| 7 | M5.4 Golden fixtures | ⏳ Todo | ~30min | Test coverage for M5 |
+| 8 | M5.5 AGENTS.md rule 11 | ⏳ Todo | ~15min | Convention completeness |
+| 9 | M6.4–M6.5 `.liyiignore` + AGENTS.md | ⏳ Todo | ~10min | Self-hosting docs |
+| 10 | M6.7 Contributing guides | ⏳ Todo | ~15min | Convention documentation |
+| 11 | M1.1 `LanguageConfig` refactor | ⏳ Todo | ~4h | All language support |
+| 12 | M1.2 Python | ⏳ Todo | ~2h | Python ecosystem |
+| 13 | M1.4 JavaScript | ⏳ Todo | ~2h | JS ecosystem |
+| 14 | M1.5 TypeScript | ⏳ Todo | ~1h | TS ecosystem |
+| 15 | M1.3 Go | ⏳ Todo | ~3h | Go ecosystem |
 
 ---
 
