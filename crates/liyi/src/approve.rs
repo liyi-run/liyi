@@ -167,8 +167,7 @@ pub fn apply_approval_decisions(
                     Decision::Yes => {
                         if !dry_run {
                             item.reviewed = true;
-                            if let Ok((hash, anchor)) =
-                                hash_span(&source_content, item.source_span)
+                            if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span)
                             {
                                 item.source_hash = Some(hash);
                                 item.source_anchor = Some(anchor);

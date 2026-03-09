@@ -5,12 +5,12 @@ use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Gauge, Paragraph, Wrap};
-use ratatui::Terminal;
 use syntect::highlighting::{self, ThemeSet};
 use syntect::parsing::SyntaxSet;
 
@@ -55,10 +55,7 @@ impl<'a> ApproveTui<'a> {
     /// source pane (assuming ~20 visible lines as a reasonable default).
     fn initial_scroll(candidate: &ApprovalCandidate) -> u16 {
         let visible_estimate: usize = 20;
-        candidate
-            .span_offset
-            .saturating_sub(visible_estimate / 4)
-            as u16
+        candidate.span_offset.saturating_sub(visible_estimate / 4) as u16
     }
 
     fn candidate(&self) -> &ApprovalCandidate {
@@ -152,8 +149,8 @@ fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {
     // progress bar (3), keybindings (3).
     let chunks = Layout::vertical([
         Constraint::Length(3), // header
-        Constraint::Min(4),   // intent
-        Constraint::Min(6),   // source
+        Constraint::Min(4),    // intent
+        Constraint::Min(6),    // source
         Constraint::Length(3), // progress
         Constraint::Length(2), // keybindings
     ])
@@ -292,7 +289,10 @@ fn draw_source(
                     if style.font_style.contains(highlighting::FontStyle::ITALIC) {
                         s = s.add_modifier(Modifier::ITALIC);
                     }
-                    if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+                    if style
+                        .font_style
+                        .contains(highlighting::FontStyle::UNDERLINE)
+                    {
                         s = s.add_modifier(Modifier::UNDERLINED);
                     }
                     if in_span {

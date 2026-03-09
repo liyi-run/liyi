@@ -69,10 +69,10 @@
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
         136,
-        206
+        205
       ],
       "tree_path": "fn::apply_approval_decisions",
-      "source_hash": "sha256:90e28bd9e136dde5bf312c794d3c0bffc32246487408a6976b89ec55a66c9617",
+      "source_hash": "sha256:9c0d764481d5db271b8bb7bf96b2f6d13e040cad09b4845010123ff5c2cd1a87",
       "source_anchor": "pub fn apply_approval_decisions("
     },
     {
@@ -80,8 +80,8 @@
       "reviewed": false,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        209,
-        220
+        208,
+        219
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",
