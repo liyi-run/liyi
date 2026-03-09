@@ -4,13 +4,22 @@
   "source": "docs/liyi-design.md",
   "specs": [
     {
+      "requirement": "liyi-sidecar-naming-convention",
+      "source_span": [
+        343,
+        345
+      ],
+      "source_hash": "sha256:0000eb15eb6a1ebe192c1f1b3d43b1f60e619935997bbfd8df5d1e80c02fe163",
+      "source_anchor": "<!-- @liyi:requirement liyi-sidecar-naming-convention -->"
+    },
+    {
       "requirement": "liyi-check-exit-code",
       "source_span": [
         1121,
         1127
       ],
-      "source_hash": "sha256:6ed25f14e08ea936e927150a3d0cc82f881011edcd1360b5401e7a03658f53f9",
-      "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
+      "source_hash": "sha256:eb8f74b02389b2db169ca869e2e25c649b85cf0399fa6114085e44dcd6b9f9bb",
+      "source_anchor": "```"
     }
   ]
 }

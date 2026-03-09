@@ -59,12 +59,15 @@
       "reviewed": false,
       "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
-        94,
-        118
+        96,
+        120
       ],
       "tree_path": "fn::init_sidecar",
       "source_hash": "sha256:c48941b60c40308ca5c1913be1b0561aafd83ef93a56eeb19a7088bfd0db405a",
-      "source_anchor": "pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {"
+      "source_anchor": "pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {",
+      "related": {
+        "liyi-sidecar-naming-convention": null
+      }
     }
   ]
 }
