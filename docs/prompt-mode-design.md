@@ -63,7 +63,7 @@ The `--prompt` flag for `liyi check` emits structured JSON listing every coverag
 | `gaps[].source_file` | string | Yes | Repo-relative path to source file containing the annotation |
 | `gaps[].annotation_line` | number | Yes | 1-indexed line number of the `@liyi:requirement` or `@liyi:related` marker |
 | `gaps[].expected_sidecar` | string | Yes | Repo-relative path to the sidecar file that should contain the spec/edge |
-| `gaps[].enclosing_item` | string | No | For `missing_related_edge`, the name of the item whose spec should contain the edge |
+| `gaps[].enclosing_item` | string | Yes for `missing_related_edge` | The name of the item whose spec should contain the edge; required when `type` is `missing_related_edge` |
 | `gaps[].instruction` | string | Yes | Natural-language instruction for resolving the gap |
 | `exit_code` | number | Yes | Exit code that `liyi check` would return (0, 1, or 2) |
 

@@ -306,7 +306,7 @@ The existing `Untracked` diagnostic (requirements in source but absent from side
 
 **Changes:**
 - Add `--fail-on-untracked` / `--no-fail-on-untracked` flag to `cli.rs`.
-- Update `compute_exit_code` in `diagnostics.rs` to check this flag for both `Untracked` and `MissingRelated`.
+- Update `compute_exit_code` in `diagnostics.rs` so that `Untracked` respects this flag; `MissingRelatedEdge` remains an unconditional error (exit 1).
 - Update existing `untracked` golden fixture expected output if exit code changes.
 
 ### M5.3. `--prompt` output mode ⏳
@@ -349,11 +349,11 @@ Add a `--prompt` flag to `liyi check` that emits structured JSON listing every c
 
 ### M5.4. Golden-file fixtures ✅
 
-**Status:** Implemented.
+**Status:** Partially implemented.
 
-1. **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
-2. **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
-3. **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
+1. ✅ **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
+2. ✅ **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
+3. ⏳ **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot. (Pending M5.3)
 
 ### M5.5. AGENTS.md rule 11 ✅
 
