@@ -220,12 +220,16 @@ fn draw_source(
     let span_start = candidate.span_offset;
     let span_end = candidate.span_offset + candidate.span_len;
 
+    /// Subtle background colour applied to span lines to distinguish them
+    /// from surrounding context.  All lines get full syntax highlighting.
+    const SPAN_BG: Color = Color::Rgb(50, 60, 75);
+
     let lines: Vec<Line> = candidate
         .source_lines
         .iter()
         .enumerate()
         .map(|(idx, (lineno, content))| {
-            let is_context = idx < span_start || idx >= span_end;
+            let in_span = idx >= span_start && idx < span_end;
 
             let ranges = h
                 .highlight_line(content, &hl.syntax_set)
@@ -233,37 +237,29 @@ fn draw_source(
 
             let mut spans: Vec<Span> = Vec::with_capacity(ranges.len() + 1);
 
-            // Line-number gutter: use a dim style for context, slightly
-            // brighter for span lines.
-            let gutter_style = if is_context {
-                Style::default()
-                    .fg(Color::DarkGray)
-                    .add_modifier(Modifier::DIM)
+            let gutter_style = Style::default().fg(Color::DarkGray);
+            let gutter_style = if in_span {
+                gutter_style.bg(SPAN_BG)
             } else {
-                Style::default().fg(Color::DarkGray)
+                gutter_style
             };
             spans.push(Span::styled(format!(" {lineno:>4} │ "), gutter_style));
 
             for (style, text) in &ranges {
-                let ratatui_style = if is_context {
-                    // Context lines: dimmed and desaturated.
-                    Style::default()
-                        .fg(Color::DarkGray)
-                        .add_modifier(Modifier::DIM)
-                } else {
-                    let mut s = Style::default().fg(to_ratatui_color(style.foreground));
-                    if style.font_style.contains(highlighting::FontStyle::BOLD) {
-                        s = s.add_modifier(Modifier::BOLD);
-                    }
-                    if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-                        s = s.add_modifier(Modifier::ITALIC);
-                    }
-                    if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-                        s = s.add_modifier(Modifier::UNDERLINED);
-                    }
-                    s
-                };
-                spans.push(Span::styled((*text).to_string(), ratatui_style));
+                let mut s = Style::default().fg(to_ratatui_color(style.foreground));
+                if style.font_style.contains(highlighting::FontStyle::BOLD) {
+                    s = s.add_modifier(Modifier::BOLD);
+                }
+                if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+                    s = s.add_modifier(Modifier::ITALIC);
+                }
+                if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+                    s = s.add_modifier(Modifier::UNDERLINED);
+                }
+                if in_span {
+                    s = s.bg(SPAN_BG);
+                }
+                spans.push(Span::styled((*text).to_string(), s));
             }
 
             Line::from(spans)

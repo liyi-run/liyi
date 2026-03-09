@@ -57,10 +57,10 @@
       "intent": "Render the source code pane with syntect-based syntax highlighting. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each source line, and maps syntect styles (foreground colour, bold, italic, underline) to ratatui Span styles. Context lines outside the span are rendered dimmed in DarkGray. Prepends a dim line-number gutter. Supports vertical scrolling.",
       "source_span": [
         201,
-        282
+        278
       ],
       "tree_path": "fn::draw_source",
-      "source_hash": "sha256:7a57abbbd903d13e811c84bd7ab5ed9b2ff95154d69ee8158dfe6280aef315f4",
+      "source_hash": "sha256:d3535104277fa41e30f2bcfa31b00972fa5582ef97631cc9ff0c6073f0d45029",
       "source_anchor": "fn draw_source("
     }
   ]
