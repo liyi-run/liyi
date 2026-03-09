@@ -217,33 +217,52 @@ fn draw_source(
 
     let mut h = syntect::easy::HighlightLines::new(syntax, &hl.theme);
 
+    let span_start = candidate.span_offset;
+    let span_end = candidate.span_offset + candidate.span_len;
+
     let lines: Vec<Line> = candidate
         .source_lines
         .iter()
-        .map(|(lineno, content)| {
+        .enumerate()
+        .map(|(idx, (lineno, content))| {
+            let is_context = idx < span_start || idx >= span_end;
+
             let ranges = h
                 .highlight_line(content, &hl.syntax_set)
                 .unwrap_or_default();
 
             let mut spans: Vec<Span> = Vec::with_capacity(ranges.len() + 1);
-            spans.push(Span::styled(
-                format!(" {lineno:>4} │ "),
+
+            // Line-number gutter: use a dim style for context, slightly
+            // brighter for span lines.
+            let gutter_style = if is_context {
                 Style::default()
                     .fg(Color::DarkGray)
-                    .add_modifier(Modifier::DIM),
-            ));
+                    .add_modifier(Modifier::DIM)
+            } else {
+                Style::default().fg(Color::DarkGray)
+            };
+            spans.push(Span::styled(format!(" {lineno:>4} │ "), gutter_style));
 
             for (style, text) in &ranges {
-                let mut ratatui_style = Style::default().fg(to_ratatui_color(style.foreground));
-                if style.font_style.contains(highlighting::FontStyle::BOLD) {
-                    ratatui_style = ratatui_style.add_modifier(Modifier::BOLD);
-                }
-                if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-                    ratatui_style = ratatui_style.add_modifier(Modifier::ITALIC);
-                }
-                if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-                    ratatui_style = ratatui_style.add_modifier(Modifier::UNDERLINED);
-                }
+                let ratatui_style = if is_context {
+                    // Context lines: dimmed and desaturated.
+                    Style::default()
+                        .fg(Color::DarkGray)
+                        .add_modifier(Modifier::DIM)
+                } else {
+                    let mut s = Style::default().fg(to_ratatui_color(style.foreground));
+                    if style.font_style.contains(highlighting::FontStyle::BOLD) {
+                        s = s.add_modifier(Modifier::BOLD);
+                    }
+                    if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+                        s = s.add_modifier(Modifier::ITALIC);
+                    }
+                    if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+                        s = s.add_modifier(Modifier::UNDERLINED);
+                    }
+                    s
+                };
                 spans.push(Span::styled((*text).to_string(), ratatui_style));
             }
 

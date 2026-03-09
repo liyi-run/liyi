@@ -47,6 +47,9 @@ pub enum Decision {
     Skip,
 }
 
+/// Number of surrounding context lines shown before and after the span.
+pub const CONTEXT_LINES: usize = 5;
+
 /// A single item pending approval, with all context needed for display.
 #[derive(Debug)]
 pub struct ApprovalCandidate {
@@ -62,8 +65,12 @@ pub struct ApprovalCandidate {
     pub intent: String,
     /// Source span [start, end] (1-indexed).
     pub source_span: [usize; 2],
-    /// Source lines within the span: (line_number, line_content).
+    /// Source lines including surrounding context: (line_number, line_content).
     pub source_lines: Vec<(usize, String)>,
+    /// Index into `source_lines` where the actual span begins.
+    pub span_offset: usize,
+    /// Number of lines in the actual span (within `source_lines`).
+    pub span_len: usize,
 }
 
 /// Collect all unreviewed items as approval candidates.
@@ -96,17 +103,22 @@ pub fn collect_approval_candidates(
                     continue;
                 }
 
-                let start = item.source_span[0].saturating_sub(1);
-                let end = item.source_span[1].min(all_lines.len());
-                let source_lines = if start < end {
-                    all_lines[start..end]
-                        .iter()
-                        .enumerate()
-                        .map(|(i, line)| (start + i + 1, line.to_string()))
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let span_start = item.source_span[0].saturating_sub(1);
+                let span_end = item.source_span[1].min(all_lines.len());
+
+                // Include surrounding context lines.
+                let ctx_start = span_start.saturating_sub(CONTEXT_LINES);
+                let ctx_end = (span_end + CONTEXT_LINES).min(all_lines.len());
+
+                let source_lines: Vec<(usize, String)> = all_lines
+                    [ctx_start..ctx_end]
+                    .iter()
+                    .enumerate()
+                    .map(|(i, line)| (ctx_start + i + 1, line.to_string()))
+                    .collect();
+
+                let span_offset = span_start - ctx_start;
+                let span_len = span_end - span_start;
 
                 candidates.push(ApprovalCandidate {
                     sidecar_path: sidecar_path.clone(),
@@ -116,6 +128,8 @@ pub fn collect_approval_candidates(
                     intent: item.intent.clone(),
                     source_span: item.source_span,
                     source_lines,
+                    span_offset,
+                    span_len,
                 });
             }
         }
