@@ -340,7 +340,9 @@ The linter only checks for the *presence* of `@liyi:module` in a directory's fil
 
 "Item" rather than "function" — because `source_span` can point to a function, a struct with derive attributes, a macro invocation, a decorated endpoint, or any other intent site. The term follows Rust specification prior art, where "item" is anything that can appear at module level.
 
+<!-- @liyi:requirement liyi-sidecar-naming-convention -->
 **Naming convention.** The sidecar filename is the source filename with `.liyi.jsonc` appended: `money.rs` → `money.rs.liyi.jsonc`. Always append to the full filename, never strip the extension. This avoids ambiguity when files share a stem but differ in extension (`money.rs` and `money.py` would otherwise both claim `money.liyi.jsonc`). The rule is mechanical: one source file, one sidecar, derivable by concatenation.
+<!-- /requirement -->
 
 One per source file, co-located:
 
@@ -1157,7 +1159,7 @@ This is strictly more robust than the alternative (doubling every regex to accep
 
 ### Self-hosting and the quine problem
 
-立意 dogfoods its own convention: the linter's source has `.liyi.jsonc` specs, `@liyi:module` markers, and `@liyi:requirement` blocks. The design document you are reading contains a requirement block that is tracked by actual code via `@liyi:related` edges. This creates a bootstrapping problem.
+立意 dogfoods its own convention: the linter's source has `.liyi.jsonc` specs, `@liyi:module` markers, and `@liyi:requirement` blocks. The design document you are reading contains requirement blocks that are tracked by actual code via `@liyi:related` edges. This creates a bootstrapping problem.
 
 **The quine problem.** The linter's marker scanner uses plain substring matching — it has no language awareness. Any file that *mentions* a marker string (as documentation, as an example, or as a string constant) is indistinguishable from a file that *uses* that marker. A program that must read its own source without misinterpreting references to its own syntax is a quine — and quine-like self-reference requires escaping.
 
