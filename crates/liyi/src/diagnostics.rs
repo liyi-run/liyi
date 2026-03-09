@@ -39,6 +39,8 @@ pub struct Diagnostic {
     pub kind: DiagnosticKind,
     pub severity: Severity,
     pub message: String,
+    /// Optional fix hint — the exact command to resolve this diagnostic.
+    pub fix_hint: Option<String>,
 }
 
 impl Diagnostic {
@@ -50,10 +52,14 @@ impl Diagnostic {
             .strip_prefix(root)
             .unwrap_or(&self.file);
         let icon = Self::icon(&self.kind, self.severity);
-        if self.item_or_req.is_empty() {
+        let main_line = if self.item_or_req.is_empty() {
             format!("{}: {} {}", rel.display(), icon, self.message)
         } else {
             format!("{}: {}: {} {}", rel.display(), self.item_or_req, icon, self.message)
+        };
+        match &self.fix_hint {
+            Some(hint) => format!("{main_line}\n  fix: {hint}"),
+            None => main_line,
         }
     }
 
