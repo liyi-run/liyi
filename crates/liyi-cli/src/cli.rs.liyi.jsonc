@@ -16,15 +16,27 @@
       "source_anchor": "pub struct Cli {"
     },
     {
-      "item": "Commands",
-      "reviewed": true,
-      "intent": "Enumerate all CLI subcommands (Check, Reanchor) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate).",
+      "item": "DiagnosticLevel",
+      "reviewed": false,
+      "intent": "Define three severity filter levels (All, Warning, Error) that the --level CLI flag uses to control which diagnostics are displayed.",
       "source_span": [
         16,
-        102
+        25
+      ],
+      "tree_path": "enum::DiagnosticLevel",
+      "source_hash": "sha256:209ab65d3d606a5bee1ecdd46f9db1ae0963cb9016b31b35e5e8947abb4b81dd",
+      "source_anchor": "#[derive(Debug, Clone, Copy, ValueEnum, Default)]"
+    },
+    {
+      "item": "Commands",
+      "reviewed": false,
+      "intent": "Enumerate all CLI subcommands (Check, Reanchor, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate, --level filters diagnostic output).",
+      "source_span": [
+        28,
+        118
       ],
       "tree_path": "enum::Commands",
-      "source_hash": "sha256:2a5520a5f7e344208f6c5ca567e2a1cbdc1c1a33a8230d72d5824e4ca7ffc24e",
+      "source_hash": "sha256:383b23d5dbade566788d2673cb55fc05e8e7e33b70f4e2edd77df0245d09db65",
       "source_anchor": "pub enum Commands {"
     },
     {
@@ -32,8 +44,8 @@
       "reviewed": true,
       "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
       "source_span": [
-        105,
-        119
+        121,
+        135
       ],
       "tree_path": "fn::parse_span",
       "source_hash": "sha256:d57d01b6fb8d7fbefc54c62e3240b46d80cc2370a7d148811caad6d809b23977",

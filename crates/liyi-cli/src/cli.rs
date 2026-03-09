@@ -1,4 +1,4 @@
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -10,6 +10,18 @@ use std::path::PathBuf;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
+}
+
+/// Minimum severity level for displayed diagnostics.
+#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+pub enum DiagnosticLevel {
+    /// Show everything — current, trivial, ignored, unreviewed, stale, errors
+    #[default]
+    All,
+    /// Show warnings and errors only
+    Warning,
+    /// Show errors only
+    Error,
 }
 
 #[derive(Subcommand)]
@@ -50,6 +62,10 @@ pub enum Commands {
         /// Show all diagnostics including "hash matches" (hidden by default)
         #[arg(short, long)]
         verbose: bool,
+
+        /// Minimum severity level for displayed diagnostics
+        #[arg(long, value_enum, default_value_t = DiagnosticLevel::All)]
+        level: DiagnosticLevel,
     },
 
     /// Re-hash source spans in sidecar files

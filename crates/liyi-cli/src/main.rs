@@ -29,6 +29,7 @@ fn main() {
             fail_on_untracked,
             root,
             verbose,
+            level,
         } => {
             let repo_root = root
                 .or_else(|| {
@@ -50,9 +51,29 @@ fn main() {
             let summary = liyi::diagnostics::format_summary(&diagnostics);
             println!("{summary}\n");
 
+            let min_severity = match level {
+                cli::DiagnosticLevel::All => None,
+                cli::DiagnosticLevel::Warning => Some(liyi::diagnostics::Severity::Warning),
+                cli::DiagnosticLevel::Error => Some(liyi::diagnostics::Severity::Error),
+            };
+
             for d in &diagnostics {
                 if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {
                     continue;
+                }
+                if let Some(min) = min_severity {
+                    let dominated = match min {
+                        liyi::diagnostics::Severity::Warning => {
+                            d.severity == liyi::diagnostics::Severity::Info
+                        }
+                        liyi::diagnostics::Severity::Error => {
+                            d.severity != liyi::diagnostics::Severity::Error
+                        }
+                        _ => false,
+                    };
+                    if dominated {
+                        continue;
+                    }
                 }
                 println!("{}", d.display_with_root(&repo_root));
             }
