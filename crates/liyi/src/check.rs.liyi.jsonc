@@ -18,7 +18,7 @@
     {
       "item": "run_check",
       "reviewed": false,
-      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers). When --fix is set, shifted spans and missing hashes are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
+      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         34,
         265

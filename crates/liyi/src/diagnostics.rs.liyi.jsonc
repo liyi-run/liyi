@@ -54,7 +54,7 @@
     {
       "item": "CheckFlags",
       "reviewed": false,
-      "intent": "Hold the three boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed) that control which diagnostic kinds escalate the exit code to CheckFailure.",
+      "intent": "Hold the four boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed, fail_on_untracked) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
         65,
         70
@@ -81,7 +81,7 @@
     {
       "item": "compute_exit_code",
       "reviewed": false,
-      "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed) is present per the CheckFlags, otherwise Clean.",
+      "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
         82,
         116
