@@ -46,16 +46,16 @@ fn main() {
             let (diagnostics, exit_code) =
                 liyi::check::run_check(&repo_root, &paths, fix, dry_run, &flags);
 
+            // Print summary first for immediate visibility
+            let summary = liyi::diagnostics::format_summary(&diagnostics);
+            println!("{summary}\n");
+
             for d in &diagnostics {
                 if !verbose && d.kind == liyi::diagnostics::DiagnosticKind::Current {
                     continue;
                 }
                 println!("{}", d.display_with_root(&repo_root));
             }
-
-            // Print summary line
-            let summary = liyi::diagnostics::format_summary(&diagnostics);
-            println!("\n{summary}");
 
             process::exit(exit_code as i32);
         }
