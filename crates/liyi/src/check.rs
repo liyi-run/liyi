@@ -720,7 +720,7 @@ fn check_sidecar(
                         kind: DiagnosticKind::Unreviewed,
                         severity: Severity::Warning,
                         message: "not reviewed".into(),
-                        fix_hint: Some(format!("liyi approve {rel_sidecar}")),
+                        fix_hint: None,
                     });
                 }
 

@@ -36,7 +36,7 @@
         978
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:b7c41f6a0bc447eebcff97a683a73aac09b1ada8ba9cfcf6d99d4a113a8a9a45",
+      "source_hash": "sha256:6e82d215922ba7812b9fd20e105f32469e581ac5d863e9e007c8c57dbd7c8484",
       "source_anchor": "fn check_sidecar("
     },
     {
