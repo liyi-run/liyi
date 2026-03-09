@@ -211,6 +211,26 @@ fn to_ratatui_color(c: highlighting::Color) -> Color {
     Color::Rgb(c.r, c.g, c.b)
 }
 
+/// Maximum file size (in lines) for which syntax highlighting is enabled.
+/// Beyond this threshold the highlighter is skipped to avoid UI lag.
+const MAX_HIGHLIGHT_LINES: usize = 10_000;
+
+/// Maximum byte length of a single line for which syntax highlighting is
+/// applied.  Longer lines fall back to plain text to prevent the regex
+/// engine from stalling.
+const MAX_LINE_LEN: usize = 4_096;
+
+/// Returns `true` if the file is small enough for syntax highlighting.
+fn file_highlight_enabled(candidate: &ApprovalCandidate) -> bool {
+    candidate.source_lines.len() <= MAX_HIGHLIGHT_LINES
+}
+
+/// Returns `true` if an individual line is short enough for syntax
+/// highlighting.
+fn line_highlight_enabled(line: &str) -> bool {
+    line.len() <= MAX_LINE_LEN
+}
+
 fn draw_source(
     f: &mut ratatui::Frame,
     area: Rect,
@@ -218,15 +238,20 @@ fn draw_source(
     scroll: u16,
     hl: &Highlighter,
 ) {
-    let syntax = hl
-        .syntax_set
-        .find_syntax_by_extension(
-            Path::new(&candidate.source_display)
-                .extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or(""),
-        )
-        .unwrap_or_else(|| hl.syntax_set.find_syntax_plain_text());
+    let use_highlighting = file_highlight_enabled(candidate);
+
+    let syntax = if use_highlighting {
+        hl.syntax_set
+            .find_syntax_by_extension(
+                Path::new(&candidate.source_display)
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or(""),
+            )
+            .unwrap_or_else(|| hl.syntax_set.find_syntax_plain_text())
+    } else {
+        hl.syntax_set.find_syntax_plain_text()
+    };
 
     let mut h = syntect::easy::HighlightLines::new(syntax, &hl.theme);
 
@@ -244,11 +269,7 @@ fn draw_source(
         .map(|(idx, (lineno, content))| {
             let in_span = idx >= span_start && idx < span_end;
 
-            let ranges = h
-                .highlight_line(content, &hl.syntax_set)
-                .unwrap_or_default();
-
-            let mut spans: Vec<Span> = Vec::with_capacity(ranges.len() + 1);
+            let mut spans: Vec<Span> = Vec::new();
 
             let gutter_style = Style::default().fg(Color::DarkGray);
             let gutter_style = if in_span {
@@ -258,21 +279,34 @@ fn draw_source(
             };
             spans.push(Span::styled(format!(" {lineno:>4} │ "), gutter_style));
 
-            for (style, text) in &ranges {
-                let mut s = Style::default().fg(to_ratatui_color(style.foreground));
-                if style.font_style.contains(highlighting::FontStyle::BOLD) {
-                    s = s.add_modifier(Modifier::BOLD);
+            if use_highlighting && line_highlight_enabled(content) {
+                let ranges = h
+                    .highlight_line(content, &hl.syntax_set)
+                    .unwrap_or_default();
+
+                for (style, text) in &ranges {
+                    let mut s = Style::default().fg(to_ratatui_color(style.foreground));
+                    if style.font_style.contains(highlighting::FontStyle::BOLD) {
+                        s = s.add_modifier(Modifier::BOLD);
+                    }
+                    if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+                        s = s.add_modifier(Modifier::ITALIC);
+                    }
+                    if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+                        s = s.add_modifier(Modifier::UNDERLINED);
+                    }
+                    if in_span {
+                        s = s.bg(SPAN_BG);
+                    }
+                    spans.push(Span::styled((*text).to_string(), s));
                 }
-                if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-                    s = s.add_modifier(Modifier::ITALIC);
-                }
-                if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-                    s = s.add_modifier(Modifier::UNDERLINED);
-                }
-                if in_span {
-                    s = s.bg(SPAN_BG);
-                }
-                spans.push(Span::styled((*text).to_string(), s));
+            } else {
+                let s = if in_span {
+                    Style::default().bg(SPAN_BG)
+                } else {
+                    Style::default()
+                };
+                spans.push(Span::styled(content.as_str(), s));
             }
 
             Line::from(spans)
