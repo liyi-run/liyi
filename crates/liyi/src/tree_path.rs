@@ -115,12 +115,28 @@ static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
 };
 
+/// Go language configuration (requires `lang-go` feature).
+#[cfg(feature = "lang-go")]
+static GO_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_go::LANGUAGE.into(),
+    extensions: &["go"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("method", "method_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+};
+
 /// Supported languages for tree_path resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     Rust,
     #[cfg(feature = "lang-python")]
     Python,
+    #[cfg(feature = "lang-go")]
+    Go,
 }
 
 impl Language {
@@ -130,6 +146,8 @@ impl Language {
             Language::Rust => &RUST_CONFIG,
             #[cfg(feature = "lang-python")]
             Language::Python => &PYTHON_CONFIG,
+            #[cfg(feature = "lang-go")]
+            Language::Go => &GO_CONFIG,
         }
     }
 
@@ -152,6 +170,11 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     #[cfg(feature = "lang-python")]
     if PYTHON_CONFIG.extensions.contains(&ext) {
         return Some(Language::Python);
+    }
+
+    #[cfg(feature = "lang-go")]
+    if GO_CONFIG.extensions.contains(&ext) {
+        return Some(Language::Go);
     }
 
     None
@@ -788,6 +811,114 @@ def calculate_total(items):
             assert_eq!(computed_path, "fn::calculate_total");
 
             let re_resolved = resolve_tree_path(SAMPLE_PYTHON, &computed_path, Language::Python).unwrap();
+            assert_eq!(re_resolved, resolved_span);
+        }
+    }
+
+    #[cfg(feature = "lang-go")]
+    mod go_tests {
+        use super::*;
+
+        const SAMPLE_GO: &str = r#"package main
+
+import "fmt"
+
+// Calculator performs arithmetic operations
+type Calculator struct {
+    value int
+}
+
+// Add adds a number to the calculator's value
+func (c *Calculator) Add(n int) {
+    c.value += n
+}
+
+// Value returns the current value
+func (c Calculator) Value() int {
+    return c.value
+}
+
+// Add is a standalone function
+func Add(a, b int) int {
+    return a + b
+}
+"#;
+
+        #[test]
+        fn resolve_go_function() {
+            let span = resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go);
+            assert!(span.is_some(), "should resolve fn::Add");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("func Add("),
+                "span should point to Add function, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_go_method() {
+            let span = resolve_tree_path(SAMPLE_GO, "method::Add", Language::Go);
+            assert!(span.is_some(), "should resolve method::Add");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("func (c *Calculator) Add"),
+                "span should point to Add method, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn compute_go_function_path() {
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            // Find the standalone Add function (last one in file)
+            let start = lines
+                .iter()
+                .enumerate()
+                .rev()
+                .find(|(_, l)| l.contains("func Add("))
+                .unwrap()
+                .0
+                + 1;
+            let end = lines.len();
+
+            let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
+            assert_eq!(path, "fn::Add");
+        }
+
+        #[test]
+        fn compute_go_method_path() {
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            let start = lines
+                .iter()
+                .position(|l| l.contains("func (c *Calculator) Add"))
+                .unwrap()
+                + 1;
+            // Find end of method (next closing brace at start of line or end of file)
+            let end = lines
+                .iter()
+                .enumerate()
+                .skip(start)
+                .find(|(_, l)| l.starts_with('}'))
+                .map(|(i, _)| i + 1)
+                .unwrap_or(lines.len());
+
+            let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
+            assert_eq!(path, "method::Add");
+        }
+
+        #[test]
+        fn roundtrip_go() {
+            // Compute path for fn::Add, then resolve it
+            let resolved_span =
+                resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go).unwrap();
+
+            let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
+            assert_eq!(computed_path, "fn::Add");
+
+            let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
     }
