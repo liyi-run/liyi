@@ -57,10 +57,10 @@
       "intent": "Hold the three boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
         65,
-        69
+        70
       ],
       "tree_path": "struct::CheckFlags",
-      "source_hash": "sha256:40eb242caad90c8b6df9cf43ca15c88f4cb13833c34371fbe2fa2fb2f9a8c819",
+      "source_hash": "sha256:eb21294a5b2b980a87e2c81ac57dd1be6f31cf4494b882d3b81dd3413f62bcd4",
       "source_anchor": "pub struct CheckFlags {"
     },
     {
@@ -68,8 +68,8 @@
       "reviewed": false,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        75,
-        79
+        76,
+        80
       ],
       "tree_path": "enum::LiyiExitCode",
       "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
@@ -83,11 +83,11 @@
       "reviewed": false,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        81,
-        114
+        82,
+        116
       ],
       "tree_path": "fn::compute_exit_code",
-      "source_hash": "sha256:fe6a985ac27234b520c4a90bcab352530cabf3d0a93d779628247a0dad0dfc52",
+      "source_hash": "sha256:b6e34bbbb7428d119352d9c2b04786b60881ba6c991ece2203cd4670c204f792",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {"
     }
   ]
