@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "Cli",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the top-level CLI parser with a single required subcommand field, providing the tool name, version, and about string for help output.",
       "source_span": [
         10,
@@ -17,7 +17,7 @@
     },
     {
       "item": "Commands",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all CLI subcommands (Check, Reanchor) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate).",
       "source_span": [
         16,
@@ -29,7 +29,7 @@
     },
     {
       "item": "parse_span",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
       "source_span": [
         105,
