@@ -20,7 +20,11 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 |-----------|--------|-------|
 | M3 Remaining MVP gaps | ✅ Complete | All items implemented |
 | M5.1 MissingRelated | ✅ Complete | Diagnostic implemented, auto-fix in `--fix` mode |
-| M6 NL-quoting | ✅ Core Complete | M6.1–M6.3, M6.6 done; M6.4–M6.5, M6.7 remaining |
+| M5.2 `--fail-on-untracked` | ✅ Complete | Flag implemented with tests |
+| M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
+| M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
+| M5.3 `--prompt` mode | ⏳ Design | Design doc at `docs/prompt-mode-design.md` |
+| M6 NL-quoting | ✅ Complete | All items done (M6.1–M6.7) |
 
 ---
 
@@ -290,9 +294,9 @@ enum DiagnosticKind {
 
 **Auto-fix:** `--fix` adds the missing edge to the sidecar.
 
-### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` (~30min)
+### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` ✅
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
 The existing `Untracked` diagnostic (requirements in source but absent from sidecars) currently exits 0. Update it to exit 1 when `--fail-on-untracked` is set (default: true).
 
@@ -301,9 +305,9 @@ The existing `Untracked` diagnostic (requirements in source but absent from side
 - Update `compute_exit_code` in `diagnostics.rs` to check this flag for both `Untracked` and `MissingRelated`.
 - Update existing `untracked` golden fixture expected output if exit code changes.
 
-### M5.3. `--prompt` output mode (~3h)
+### M5.3. `--prompt` output mode ⏳
 
-**Status:** Not implemented.
+**Status:** Design complete, implementation pending. See `docs/prompt-mode-design.md`.
 
 Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
 
@@ -339,17 +343,17 @@ Add a `--prompt` flag to `liyi check` that emits structured JSON listing every c
 - `liyi check --prompt` on a clean repo produces `{"version": "0.1", "gaps": [], "exit_code": 0}`.
 - The JSON includes both `missing_requirement_spec` and `missing_related_edge` gap types.
 
-### M5.4. Golden-file fixtures (~30min)
+### M5.4. Golden-file fixtures ✅
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
 1. **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
 2. **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
 3. **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
 
-### M5.5. AGENTS.md rule 11 (~15min)
+### M5.5. AGENTS.md rule 11 ✅
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
 Add rule 11 to the project's own `AGENTS.md`:
 
@@ -434,14 +438,14 @@ Extend the quine-escape sections in both `contributing-guide.en.md` and `contrib
 |---|---|---|---|---|
 | ~~1~~ | ~~M3.1–M3.6 MVP gaps~~ | ✅ Done | — | — |
 | ~~2~~ | ~~M5.1 MissingRelated~~ | ✅ Done | — | Annotation coverage |
-| ~~3~~ | ~~M6.1–M6.3 NL-quoting scanner~~ | ✅ Done | — | Docs processable |
-| ~~4~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
-| 5 | M5.2 `--fail-on-untracked` | ⏳ Todo | ~30min | CI-gateable coverage |
-| 6 | M5.3 `--prompt` output | ⏳ Todo | ~3h | Agent-consumable gaps |
-| 7 | M5.4 Golden fixtures | ⏳ Todo | ~30min | Test coverage for M5 |
-| 8 | M5.5 AGENTS.md rule 11 | ⏳ Todo | ~15min | Convention completeness |
-| 9 | M6.4–M6.5 `.liyiignore` + AGENTS.md | ⏳ Todo | ~10min | Self-hosting docs |
-| 10 | M6.7 Contributing guides | ⏳ Todo | ~15min | Convention documentation |
+| ~~3~~ | ~~M5.2 `--fail-on-untracked`~~ | ✅ Done | — | CI-gateable coverage |
+| ~~4~~ | ~~M5.4 Golden fixtures~~ | ✅ Done | — | Test coverage for M5 |
+| ~~5~~ | ~~M5.5 AGENTS.md rule 11~~ | ✅ Done | — | Convention completeness |
+| ~~6~~ | ~~M6.1–M6.3 NL-quoting scanner~~ | ✅ Done | — | Docs processable |
+| ~~7~~ | ~~M6.4–M6.5 `.liyiignore` + AGENTS.md~~ | ✅ Done | — | Self-hosting docs |
+| ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
+| ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
+| 10 | M5.3 `--prompt` output | ⏳ Design | ~3h | Agent-consumable gaps |
 | 11 | M1.1 `LanguageConfig` refactor | ⏳ Todo | ~4h | All language support |
 | 12 | M1.2 Python | ⏳ Todo | ~2h | Python ecosystem |
 | 13 | M1.4 JavaScript | ⏳ Todo | ~2h | JS ecosystem |
