@@ -129,6 +129,57 @@ static GO_CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
 };
 
+/// JavaScript language configuration (requires `lang-javascript` feature).
+#[cfg(feature = "lang-javascript")]
+static JAVASCRIPT_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_javascript::LANGUAGE.into(),
+    extensions: &["js", "mjs", "cjs", "jsx"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+};
+
+/// TypeScript language configuration (requires `lang-typescript` feature).
+#[cfg(feature = "lang-typescript")]
+static TYPESCRIPT_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+    extensions: &["ts", "mts", "cts"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+        ("interface", "interface_declaration"),
+        ("type", "type_alias_declaration"),
+        ("enum", "enum_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+};
+
+/// TSX language configuration (requires `lang-typescript` feature).
+#[cfg(feature = "lang-typescript")]
+static TSX_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_typescript::LANGUAGE_TSX.into(),
+    extensions: &["tsx"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+        ("interface", "interface_declaration"),
+        ("type", "type_alias_declaration"),
+        ("enum", "enum_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+};
+
 /// Supported languages for tree_path resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
@@ -137,6 +188,12 @@ pub enum Language {
     Python,
     #[cfg(feature = "lang-go")]
     Go,
+    #[cfg(feature = "lang-javascript")]
+    JavaScript,
+    #[cfg(feature = "lang-typescript")]
+    TypeScript,
+    #[cfg(feature = "lang-typescript")]
+    Tsx,
 }
 
 impl Language {
@@ -148,6 +205,12 @@ impl Language {
             Language::Python => &PYTHON_CONFIG,
             #[cfg(feature = "lang-go")]
             Language::Go => &GO_CONFIG,
+            #[cfg(feature = "lang-javascript")]
+            Language::JavaScript => &JAVASCRIPT_CONFIG,
+            #[cfg(feature = "lang-typescript")]
+            Language::TypeScript => &TYPESCRIPT_CONFIG,
+            #[cfg(feature = "lang-typescript")]
+            Language::Tsx => &TSX_CONFIG,
         }
     }
 
@@ -175,6 +238,21 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     #[cfg(feature = "lang-go")]
     if GO_CONFIG.extensions.contains(&ext) {
         return Some(Language::Go);
+    }
+
+    #[cfg(feature = "lang-javascript")]
+    if JAVASCRIPT_CONFIG.extensions.contains(&ext) {
+        return Some(Language::JavaScript);
+    }
+
+    #[cfg(feature = "lang-typescript")]
+    {
+        if TYPESCRIPT_CONFIG.extensions.contains(&ext) {
+            return Some(Language::TypeScript);
+        }
+        if TSX_CONFIG.extensions.contains(&ext) {
+            return Some(Language::Tsx);
+        }
     }
 
     None
@@ -919,6 +997,209 @@ func Add(a, b int) int {
             assert_eq!(computed_path, "fn::Add");
 
             let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
+            assert_eq!(re_resolved, resolved_span);
+        }
+    }
+
+    #[cfg(feature = "lang-javascript")]
+    mod javascript_tests {
+        use super::*;
+
+        const SAMPLE_JS: &str = r#"// A simple counter module
+
+class Counter {
+    constructor(initial = 0) {
+        this.count = initial;
+    }
+
+    increment() {
+        this.count++;
+    }
+
+    getValue() {
+        return this.count;
+    }
+}
+
+function createCounter(initial) {
+    return new Counter(initial);
+}
+
+const utils = {
+    formatCount: (n) => `${n} items`
+};
+"#;
+
+        #[test]
+        fn resolve_js_function() {
+            let span = resolve_tree_path(SAMPLE_JS, "fn::createCounter", Language::JavaScript);
+            assert!(span.is_some(), "should resolve fn::createCounter");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_JS.lines().collect();
+            assert!(
+                lines[start - 1].contains("function createCounter"),
+                "span should point to createCounter function"
+            );
+        }
+
+        #[test]
+        fn resolve_js_class() {
+            let span = resolve_tree_path(SAMPLE_JS, "class::Counter", Language::JavaScript);
+            assert!(span.is_some(), "should resolve class::Counter");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_JS.lines().collect();
+            assert!(
+                lines[start - 1].contains("class Counter"),
+                "span should point to Counter class"
+            );
+        }
+
+        #[test]
+        fn resolve_js_method() {
+            let span = resolve_tree_path(SAMPLE_JS, "class::Counter::method::increment", Language::JavaScript);
+            assert!(span.is_some(), "should resolve class::Counter::method::increment");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_JS.lines().collect();
+            assert!(
+                lines[start - 1].contains("increment()"),
+                "span should point to increment method"
+            );
+        }
+
+        #[test]
+        fn compute_js_function_path() {
+            let lines: Vec<&str> = SAMPLE_JS.lines().collect();
+            let start = lines
+                .iter()
+                .position(|l| l.contains("function createCounter"))
+                .unwrap()
+                + 1;
+            let end = lines.len() - 3; // Rough end
+
+            let path = compute_tree_path(SAMPLE_JS, [start, end], Language::JavaScript);
+            assert_eq!(path, "fn::createCounter");
+        }
+
+        #[test]
+        fn roundtrip_js() {
+            let resolved_span =
+                resolve_tree_path(SAMPLE_JS, "class::Counter::method::getValue", Language::JavaScript).unwrap();
+
+            let computed_path = compute_tree_path(SAMPLE_JS, resolved_span, Language::JavaScript);
+            assert_eq!(computed_path, "class::Counter::method::getValue");
+
+            let re_resolved = resolve_tree_path(SAMPLE_JS, &computed_path, Language::JavaScript).unwrap();
+            assert_eq!(re_resolved, resolved_span);
+        }
+    }
+
+    #[cfg(feature = "lang-typescript")]
+    mod typescript_tests {
+        use super::*;
+
+        const SAMPLE_TS: &str = r#"// A typed user service
+
+interface User {
+    id: number;
+    name: string;
+}
+
+type UserId = number;
+
+enum UserRole {
+    Admin,
+    User,
+    Guest
+}
+
+class UserService {
+    private users: User[] = [];
+
+    addUser(user: User): void {
+        this.users.push(user);
+    }
+
+    findById(id: UserId): User | undefined {
+        return this.users.find(u => u.id === id);
+    }
+}
+
+function createUser(name: string): User {
+    return { id: Date.now(), name };
+}
+"#;
+
+        #[test]
+        fn resolve_ts_interface() {
+            let span = resolve_tree_path(SAMPLE_TS, "interface::User", Language::TypeScript);
+            assert!(span.is_some(), "should resolve interface::User");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TS.lines().collect();
+            assert!(
+                lines[start - 1].contains("interface User"),
+                "span should point to User interface"
+            );
+        }
+
+        #[test]
+        fn resolve_ts_type_alias() {
+            let span = resolve_tree_path(SAMPLE_TS, "type::UserId", Language::TypeScript);
+            assert!(span.is_some(), "should resolve type::UserId");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TS.lines().collect();
+            assert!(
+                lines[start - 1].contains("type UserId"),
+                "span should point to UserId type alias"
+            );
+        }
+
+        #[test]
+        fn resolve_ts_enum() {
+            let span = resolve_tree_path(SAMPLE_TS, "enum::UserRole", Language::TypeScript);
+            assert!(span.is_some(), "should resolve enum::UserRole");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TS.lines().collect();
+            assert!(
+                lines[start - 1].contains("enum UserRole"),
+                "span should point to UserRole enum"
+            );
+        }
+
+        #[test]
+        fn resolve_ts_class_method() {
+            let span = resolve_tree_path(SAMPLE_TS, "class::UserService::method::findById", Language::TypeScript);
+            assert!(span.is_some(), "should resolve class::UserService::method::findById");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TS.lines().collect();
+            assert!(
+                lines[start - 1].contains("findById("),
+                "span should point to findById method"
+            );
+        }
+
+        #[test]
+        fn compute_ts_interface_path() {
+            let lines: Vec<&str> = SAMPLE_TS.lines().collect();
+            let start = lines
+                .iter()
+                .position(|l| l.contains("interface User"))
+                .unwrap()
+                + 1;
+            let end = start + 3;
+
+            let path = compute_tree_path(SAMPLE_TS, [start, end], Language::TypeScript);
+            assert_eq!(path, "interface::User");
+        }
+
+        #[test]
+        fn roundtrip_ts() {
+            let resolved_span =
+                resolve_tree_path(SAMPLE_TS, "enum::UserRole", Language::TypeScript).unwrap();
+
+            let computed_path = compute_tree_path(SAMPLE_TS, resolved_span, Language::TypeScript);
+            assert_eq!(computed_path, "enum::UserRole");
+
+            let re_resolved = resolve_tree_path(SAMPLE_TS, &computed_path, Language::TypeScript).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
     }
