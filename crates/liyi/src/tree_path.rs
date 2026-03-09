@@ -106,10 +106,7 @@ static RUST_CONFIG: LanguageConfig = LanguageConfig {
 static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_python::LANGUAGE.into(),
     extensions: &["py", "pyi"],
-    kind_map: &[
-        ("fn", "function_definition"),
-        ("class", "class_definition"),
-    ],
+    kind_map: &[("fn", "function_definition"), ("class", "class_definition")],
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
@@ -451,12 +448,7 @@ fn is_item_node(config: &LanguageConfig, node: &Node) -> bool {
 }
 
 /// Build the tree_path string for a given target node by walking from root.
-fn build_path_to_node(
-    config: &LanguageConfig,
-    root: &Node,
-    target: &Node,
-    source: &str,
-) -> String {
+fn build_path_to_node(config: &LanguageConfig, root: &Node, target: &Node, source: &str) -> String {
     let mut segments: Vec<String> = Vec::new();
     if collect_path(config, root, target, source, &mut segments) {
         segments.join("::")
@@ -475,9 +467,10 @@ fn collect_path(
 ) -> bool {
     if node.id() == target.id() {
         // We found the target — add this node's segment if it's an item
-        if let (Some(short), Some(name)) =
-            (config.kind_to_shorthand(node.kind()), config.node_name(node, source))
-        {
+        if let (Some(short), Some(name)) = (
+            config.kind_to_shorthand(node.kind()),
+            config.node_name(node, source),
+        ) {
             segments.push(format!("{short}::{name}"));
             return true;
         }
@@ -498,12 +491,13 @@ fn collect_path(
             && collect_path(config, &child, target, source, segments)
         {
             // If this node is an item node, prepend its segment
-            if is_item_node(config, node) {
-                if let (Some(short), Some(name)) =
-                    (config.kind_to_shorthand(node.kind()), config.node_name(node, source))
-                {
-                    segments.insert(0, format!("{short}::{name}"));
-                }
+            if is_item_node(config, node)
+                && let (Some(short), Some(name)) = (
+                    config.kind_to_shorthand(node.kind()),
+                    config.node_name(node, source),
+                )
+            {
+                segments.insert(0, format!("{short}::{name}"));
             }
             return true;
         }
@@ -739,10 +733,7 @@ fn standalone() -> i32 {
         );
         // Python detection depends on the lang-python feature
         #[cfg(feature = "lang-python")]
-        assert_eq!(
-            detect_language(Path::new("foo.py")),
-            Some(Language::Python)
-        );
+        assert_eq!(detect_language(Path::new("foo.py")), Some(Language::Python));
         #[cfg(not(feature = "lang-python"))]
         assert_eq!(detect_language(Path::new("foo.py")), None);
     }
@@ -828,7 +819,8 @@ def calculate_total(items):
 
         #[test]
         fn resolve_python_class_method() {
-            let span = resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::process", Language::Python);
+            let span =
+                resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::process", Language::Python);
             assert!(span.is_some(), "should resolve class::Order::fn::process");
             let [start, _end] = span.unwrap();
             let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
@@ -840,7 +832,11 @@ def calculate_total(items):
 
         #[test]
         fn resolve_python_init_method() {
-            let span = resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::__init__", Language::Python);
+            let span = resolve_tree_path(
+                SAMPLE_PYTHON,
+                "class::Order::fn::__init__",
+                Language::Python,
+            );
             assert!(span.is_some(), "should resolve class::Order::fn::__init__");
             let [start, _end] = span.unwrap();
             let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
@@ -888,7 +884,8 @@ def calculate_total(items):
             let computed_path = compute_tree_path(SAMPLE_PYTHON, resolved_span, Language::Python);
             assert_eq!(computed_path, "fn::calculate_total");
 
-            let re_resolved = resolve_tree_path(SAMPLE_PYTHON, &computed_path, Language::Python).unwrap();
+            let re_resolved =
+                resolve_tree_path(SAMPLE_PYTHON, &computed_path, Language::Python).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
     }
@@ -990,8 +987,7 @@ func Add(a, b int) int {
         #[test]
         fn roundtrip_go() {
             // Compute path for fn::Add, then resolve it
-            let resolved_span =
-                resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go).unwrap();
+            let resolved_span = resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go).unwrap();
 
             let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
             assert_eq!(computed_path, "fn::Add");
@@ -1056,8 +1052,15 @@ const utils = {
 
         #[test]
         fn resolve_js_method() {
-            let span = resolve_tree_path(SAMPLE_JS, "class::Counter::method::increment", Language::JavaScript);
-            assert!(span.is_some(), "should resolve class::Counter::method::increment");
+            let span = resolve_tree_path(
+                SAMPLE_JS,
+                "class::Counter::method::increment",
+                Language::JavaScript,
+            );
+            assert!(
+                span.is_some(),
+                "should resolve class::Counter::method::increment"
+            );
             let [start, _end] = span.unwrap();
             let lines: Vec<&str> = SAMPLE_JS.lines().collect();
             assert!(
@@ -1082,13 +1085,18 @@ const utils = {
 
         #[test]
         fn roundtrip_js() {
-            let resolved_span =
-                resolve_tree_path(SAMPLE_JS, "class::Counter::method::getValue", Language::JavaScript).unwrap();
+            let resolved_span = resolve_tree_path(
+                SAMPLE_JS,
+                "class::Counter::method::getValue",
+                Language::JavaScript,
+            )
+            .unwrap();
 
             let computed_path = compute_tree_path(SAMPLE_JS, resolved_span, Language::JavaScript);
             assert_eq!(computed_path, "class::Counter::method::getValue");
 
-            let re_resolved = resolve_tree_path(SAMPLE_JS, &computed_path, Language::JavaScript).unwrap();
+            let re_resolved =
+                resolve_tree_path(SAMPLE_JS, &computed_path, Language::JavaScript).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
     }
@@ -1167,8 +1175,15 @@ function createUser(name: string): User {
 
         #[test]
         fn resolve_ts_class_method() {
-            let span = resolve_tree_path(SAMPLE_TS, "class::UserService::method::findById", Language::TypeScript);
-            assert!(span.is_some(), "should resolve class::UserService::method::findById");
+            let span = resolve_tree_path(
+                SAMPLE_TS,
+                "class::UserService::method::findById",
+                Language::TypeScript,
+            );
+            assert!(
+                span.is_some(),
+                "should resolve class::UserService::method::findById"
+            );
             let [start, _end] = span.unwrap();
             let lines: Vec<&str> = SAMPLE_TS.lines().collect();
             assert!(
@@ -1199,7 +1214,8 @@ function createUser(name: string): User {
             let computed_path = compute_tree_path(SAMPLE_TS, resolved_span, Language::TypeScript);
             assert_eq!(computed_path, "enum::UserRole");
 
-            let re_resolved = resolve_tree_path(SAMPLE_TS, &computed_path, Language::TypeScript).unwrap();
+            let re_resolved =
+                resolve_tree_path(SAMPLE_TS, &computed_path, Language::TypeScript).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
     }

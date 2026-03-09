@@ -11,20 +11,19 @@
         17,
         28
       ],
-      "tree_path": "const::KIND_MAP",
-      "source_hash": "sha256:6a6b6eb7c463a163555dadc8f1cd701266d2d64cf6a06e75f4128feef9fe45ee",
-      "source_anchor": "const KIND_MAP: &[(&str, &str)] = &["
+      "source_hash": "sha256:cc43689510347aa1bf287146ee2bae19e2407df0ee82c7c74a35cf3010d1520d",
+      "source_anchor": "///"
     },
     {
       "item": "detect_language",
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        48,
-        53
+        223,
+        256
       ],
       "tree_path": "fn::detect_language",
-      "source_hash": "sha256:2c784d4dfacb2142be9b46e13c2713208c7797747374057a65ae114fdb8be45c",
+      "source_hash": "sha256:1647b004bc523d06b5484b9d29412743ae6bfdf02f5d512970fd0a20a157a7cf",
       "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {"
     },
     {
@@ -32,11 +31,11 @@
       "reviewed": false,
       "intent": "Enumerate supported tree-sitter languages for tree_path operations. In 0.1, only Rust is supported; the enum is the extension point for adding more languages.",
       "source_span": [
-        57,
-        59
+        182,
+        194
       ],
       "tree_path": "enum::Language",
-      "source_hash": "sha256:6d0a6933befabccdcfc1030cac109588b55363bb531987e4aa7c9d4cf1a68e1e",
+      "source_hash": "sha256:21e32f4b83f6a26fe960a8f51a2fbc1a57882b926696e78d8a7adb3da6ecc762",
       "source_anchor": "pub enum Language {"
     },
     {
@@ -47,17 +46,16 @@
         79,
         89
       ],
-      "tree_path": "fn::node_name",
-      "source_hash": "sha256:b35a2bd695cb373f84ad62c1d483a893c9e0dcc93cc0d72f42a096cf1a16d79a",
-      "source_anchor": "fn node_name<'a>(node: &Node<'a>, source: &'a str) -> Option<&'a str> {"
+      "source_hash": "sha256:47528f806c78bceecea2d90ee823c37ae25540f399ac9fa3c8c42264648826f4",
+      "source_anchor": "            .find(|c| c.kind() == \"declaration_list\")"
     },
     {
       "item": "parse_tree_path",
       "reviewed": false,
       "intent": "Parse a tree_path string into segments of (kind, name) pairs by splitting on '::' and grouping consecutive pairs. Return None if the number of parts is odd (malformed). Validate each kind against the known shorthand set.",
       "source_span": [
-        102,
-        118
+        278,
+        294
       ],
       "tree_path": "fn::parse_tree_path",
       "source_hash": "sha256:eb1bdb126bb090d769612797d5428edd3c20ba72ba04dad58071bbfa955240c2",
@@ -68,11 +66,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        125,
-        141
+        301,
+        318
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:3d7856a13db4b62a7800d9457c1b079a8aa5a99296d010d4196e97eb1465c8c9",
+      "source_hash": "sha256:8cd19d6e6704970f8cbead0b56b05a9196ca29b0439b37b31a819a958dc03dbe",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -80,11 +78,11 @@
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments.",
       "source_span": [
-        144,
-        172
+        321,
+        350
       ],
       "tree_path": "fn::resolve_segments",
-      "source_hash": "sha256:cb4227e128b6b2b7cf3766e0f8c492e21692cbcf44b5a4b95addffb34ad87451",
+      "source_hash": "sha256:1fcaea1f0eccde605bcd9de4094980378600d7a8d221aed55dc8fad1f60cf48b",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
@@ -92,11 +90,11 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body or declaration_list. Try the 'body' field first (mod, fn), then fall back to looking for a declaration_list child (impl, trait). Delegate to resolve_segments for the recursive match.",
       "source_span": [
-        175,
-        190
+        353,
+        361
       ],
       "tree_path": "fn::resolve_in_body",
-      "source_hash": "sha256:36340ecde43345970b601709b06045ce4eb2d59361073a740cffdc53dac11dbc",
+      "source_hash": "sha256:f1514f012bc8d300c425867e4a1cce1aaf72f1f58885eeaf24456114234473d6",
       "source_anchor": "fn resolve_in_body<'a>("
     },
     {
@@ -104,11 +102,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        197,
-        217
+        368,
+        389
       ],
       "tree_path": "fn::compute_tree_path",
-      "source_hash": "sha256:da391fb9dcee5c9ba55d539a4c16eb60f51511713b9c843dfeb87409a2a6d96e",
+      "source_hash": "sha256:30ecd47287f846a39cdbd906075c6eae16d286eda5c3bc92d87cfbae67ec2e74",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
@@ -116,11 +114,11 @@
       "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        225,
-        269
+        397,
+        443
       ],
       "tree_path": "fn::find_item_in_range",
-      "source_hash": "sha256:23d04aca348b644f78e2415418361bf6c963c868b00ca9f3882483c511fe2d3d",
+      "source_hash": "sha256:187c06169aae241150cb9bd88810da07aef5d967431ae25b50aab3ff111fc220",
       "source_anchor": "fn find_item_in_range<'a>("
     },
     {
@@ -128,12 +126,12 @@
       "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        287,
-        323
+        461,
+        507
       ],
       "tree_path": "fn::collect_path",
-      "source_hash": "sha256:5596cd923fd63ffdcf3d5871e7b7e06e48f56cc5ac790aab5afa1e2351eb1046",
-      "source_anchor": "fn collect_path(node: &Node, target: &Node, source: &str, segments: &mut Vec<String>) -> bool {"
+      "source_hash": "sha256:0086ee43dc7c085025e553af9914df58fab43d8e8b579486f21d5788d8d0d221",
+      "source_anchor": "fn collect_path("
     }
   ]
 }
