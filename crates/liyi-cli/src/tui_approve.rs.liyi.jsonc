@@ -30,10 +30,10 @@
     {
       "item": "run_tui",
       "reviewed": false,
-      "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, j/Down and k/Up=scroll source, q/Esc=quit.",
+      "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit.",
       "source_span": [
-        87,
-        140
+        94,
+        156
       ],
       "tree_path": "fn::run_tui",
       "source_hash": "sha256:229a4e1463e7a53fdf15c461709f1b4e9c97f660b53eec0e46d002bedad33841",
@@ -44,20 +44,30 @@
       "reviewed": false,
       "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
       "source_span": [
-        142,
-        164
+        158,
+        180
       ],
       "tree_path": "fn::draw",
       "source_hash": "sha256:6650e4e5f3c9a926b94ca1fced17ebb189572e68e04611b39b6dadd944d64a84",
       "source_anchor": "fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {"
     },
     {
+      "item": "go_forward",
+      "reviewed": false,
+      "intent": "Advance to the next candidate without changing its decision. If already on the last candidate, do nothing. Resets scroll to centre on the new candidate's span.",
+      "source_span": [
+        86,
+        92
+      ],
+      "tree_path": "impl::ApproveTui::fn::go_forward"
+    },
+    {
       "item": "file_highlight_enabled",
       "reviewed": false,
       "intent": "Return true if the source file is small enough for syntax highlighting (at most MAX_HIGHLIGHT_LINES lines). Files exceeding this threshold fall back to plain text to avoid UI lag.",
       "source_span": [
-        221,
-        223
+        237,
+        239
       ],
       "tree_path": "fn::file_highlight_enabled",
       "source_hash": "sha256:821830209cdb75e5eb3b1150ee23a4d64f85784dbe745ca74e452e1bc824ad94",
@@ -68,8 +78,8 @@
       "reviewed": false,
       "intent": "Return true if a single line is short enough for syntax highlighting (at most MAX_LINE_LEN bytes). Longer lines fall back to plain text to prevent the regex engine from stalling.",
       "source_span": [
-        227,
-        229
+        243,
+        245
       ],
       "tree_path": "fn::line_highlight_enabled",
       "source_hash": "sha256:4d7b4288503aacc75636635972c3155aa6a58a175264395d9f79d8b10947fa86",
@@ -80,8 +90,8 @@
       "reviewed": false,
       "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line, and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
-        231,
-        325
+        247,
+        341
       ],
       "tree_path": "fn::draw_source",
       "source_hash": "sha256:5ea7fd49aaa4f40cb48ed4292b8474f55b11b20de125aa3a95e28f2af673a0c7",

@@ -80,6 +80,13 @@ impl<'a> ApproveTui<'a> {
             self.scroll = Self::initial_scroll(self.candidate());
         }
     }
+
+    fn go_forward(&mut self) {
+        if self.current + 1 < self.candidates.len() {
+            self.current += 1;
+            self.scroll = Self::initial_scroll(self.candidate());
+        }
+    }
 }
 
 /// Run the interactive TUI approval flow. Returns decisions parallel to
@@ -122,11 +129,20 @@ pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {
                 KeyCode::Char('b') | KeyCode::Char('B') | KeyCode::Left => {
                     app.go_back();
                 }
+                KeyCode::Right => {
+                    app.go_forward();
+                }
                 KeyCode::Down | KeyCode::Char('j') => {
                     app.scroll = app.scroll.saturating_add(1);
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     app.scroll = app.scroll.saturating_sub(1);
+                }
+                KeyCode::PageDown => {
+                    app.scroll = app.scroll.saturating_add(15);
+                }
+                KeyCode::PageUp => {
+                    app.scroll = app.scroll.saturating_sub(15);
                 }
                 _ => {}
             }
@@ -354,10 +370,12 @@ fn draw_keys(f: &mut ratatui::Frame, area: Rect) {
         Span::raw(" approve all  "),
         Span::styled("b", Style::default().fg(Color::Blue).bold()),
         Span::raw("/"),
-        Span::styled("←", Style::default().fg(Color::Blue).bold()),
-        Span::raw(" back  "),
+        Span::styled("←→", Style::default().fg(Color::Blue).bold()),
+        Span::raw(" prev/next  "),
         Span::styled("j/k", Style::default().fg(Color::DarkGray).bold()),
         Span::raw(" scroll  "),
+        Span::styled("PgUp/Dn", Style::default().fg(Color::DarkGray).bold()),
+        Span::raw(" page  "),
         Span::styled("q", Style::default().fg(Color::Red).bold()),
         Span::raw("/"),
         Span::styled("esc", Style::default().fg(Color::Red).bold()),
