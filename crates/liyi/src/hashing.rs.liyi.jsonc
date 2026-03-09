@@ -24,7 +24,7 @@
         59
       ],
       "tree_path": "fn::hash_span",
-      "source_hash": "sha256:330db49b980b8d6e93fc853a8b490581aa5e0c7307b9f3f733e5e99ddc66cd80",
+      "source_hash": "sha256:25f017e0659e036f84cde56d738ec09d73a4c9bcb6f4f713d69fea684ad2a85b",
       "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {"
     }
   ]

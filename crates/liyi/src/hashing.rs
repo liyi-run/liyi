@@ -52,7 +52,7 @@ pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, Stri
     let joined = selected.join("\n");
 
     let hash = Sha256::digest(joined.as_bytes());
-    let hex = format!("sha256:{:x}", hash);
+    let hex = format!("sha256:{hash:x}");
     let anchor = selected[0].to_owned();
 
     Ok((hex, anchor))

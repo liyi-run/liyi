@@ -163,8 +163,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                     && !hash_re.is_match(h)
                 {
                     errors.push(format!(
-                        "{label}: source_hash \"{}\" does not match sha256:<hex>",
-                        h
+                        "{label}: source_hash \"{h}\" does not match sha256:<hex>"
                     ));
                 }
                 if let Some(ref related) = item.related {
@@ -194,8 +193,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                     && !hash_re.is_match(h)
                 {
                     errors.push(format!(
-                        "{label}: source_hash \"{}\" does not match sha256:<hex>",
-                        h
+                        "{label}: source_hash \"{h}\" does not match sha256:<hex>"
                     ));
                 }
             }
