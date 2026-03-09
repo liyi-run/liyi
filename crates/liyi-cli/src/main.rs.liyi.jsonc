@@ -5,11 +5,11 @@
   "specs": [
     {
       "item": "main",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        16,
-        214
+        18,
+        216
       ],
       "tree_path": "fn::main",
       "source_hash": "sha256:ee296855e022c9269cd3b4ca0cc59cd6a7ef75ecffec823aec72fa2e070691af",
@@ -17,11 +17,11 @@
     },
     {
       "item": "is_tty",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        220,
-        222
+        222,
+        224
       ],
       "tree_path": "fn::is_tty",
       "source_hash": "sha256:36dcd447c8fa9e666c6682395c3148c216b7c07dce8cc88f3d76f90714207ccd",

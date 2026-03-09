@@ -10,7 +10,9 @@ mod tui_approve;
 use cli::{Cli, Commands};
 use liyi::diagnostics::CheckFlags;
 
-/// CLI entrypoint.
+/// CLI entrypoint. Dispatches to sub-commands; implementations of some are
+/// delegated but some are not. Must exit process explicitly with return code
+/// for spec compliance.
 ///
 /// <!-- @liyi:intent=doc -->
 fn main() {
