@@ -1,0 +1,37 @@
+// liyi v0.1 spec file
+{
+	"version": "0.1",
+	"source": "crates/liyi-cli/src/tui_approve.rs",
+	"specs": [
+		{
+			"item": "ApproveTui",
+			"reviewed": false,
+			"intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, and a quit flag. Provides methods to advance (decide), go back, and check completion.",
+			"source_span": [
+				17,
+				58
+			],
+			"tree_path": "struct::ApproveTui"
+		},
+		{
+			"item": "run_tui",
+			"reviewed": false,
+			"intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, j/Down and k/Up=scroll source, q/Esc=quit.",
+			"source_span": [
+				61,
+				113
+			],
+			"tree_path": "fn::run_tui"
+		},
+		{
+			"item": "draw",
+			"reviewed": false,
+			"intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions.",
+			"source_span": [
+				116,
+				137
+			],
+			"tree_path": "fn::draw"
+		}
+	]
+}

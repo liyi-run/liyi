@@ -8,8 +8,8 @@
 			"reviewed": false,
 			"intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
 			"source_span": [
-				10,
-				15
+				11,
+				16
 			],
 			"tree_path": "struct::ApproveResult"
 		},
@@ -18,8 +18,8 @@
 			"reviewed": false,
 			"intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
 			"source_span": [
-				19,
-				23
+				20,
+				24
 			],
 			"tree_path": "enum::ApproveError"
 		},
@@ -29,7 +29,7 @@
 			"intent": "Public enum representing a user's approval decision: Yes (approve item), No (reject), or Skip (defer). Used by both interactive TUI and batch workflows.",
 			"source_span": [
 				44,
-				48
+				49
 			],
 			"tree_path": "enum::Decision"
 		},
@@ -38,18 +38,18 @@
 			"reviewed": false,
 			"intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, and source code lines. Decouples data gathering from presentation.",
 			"source_span": [
-				51,
-				68
+				52,
+				69
 			],
 			"tree_path": "struct::ApprovalCandidate"
 		},
 		{
 			"item": "collect_approval_candidates",
 			"reviewed": false,
-			"intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with source context for display. Applies item name filter if specified. Returns error if no targets found.",
+			"intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with source context for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Returns error if no targets found.",
 			"source_span": [
-				71,
-				116
+				72,
+				124
 			],
 			"tree_path": "fn::collect_approval_candidates"
 		},
@@ -58,10 +58,20 @@
 			"reviewed": false,
 			"intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
 			"source_span": [
-				121,
-				178
+				130,
+				200
 			],
 			"tree_path": "fn::apply_approval_decisions"
+		},
+		{
+			"item": "source_path_from_sidecar",
+			"reviewed": false,
+			"intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
+			"source_span": [
+				203,
+				214
+			],
+			"tree_path": "fn::source_path_from_sidecar"
 		}
 	]
 }
