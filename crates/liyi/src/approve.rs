@@ -81,7 +81,7 @@ pub fn collect_approval_candidates(
         let sc_content = fs::read_to_string(sidecar_path)?;
         let sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
 
-        let source_path = sidecar_path.with_file_name(&sidecar.source);
+        let source_path = source_path_from_sidecar(sidecar_path)?;
         let source_content = fs::read_to_string(&source_path).unwrap_or_default();
         let all_lines: Vec<&str> = source_content.lines().collect();
 
@@ -147,7 +147,7 @@ pub fn apply_approval_decisions(
     for (sidecar_path, item_decisions) in &per_sidecar {
         let sc_content = fs::read_to_string(sidecar_path)?;
         let mut sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
-        let source_path = sidecar_path.with_file_name(&sidecar.source);
+        let source_path = source_path_from_sidecar(sidecar_path)?;
         let source_content = fs::read_to_string(&source_path).unwrap_or_default();
 
         let mut approved = 0usize;
@@ -197,4 +197,18 @@ pub fn apply_approval_decisions(
         });
     }
     Ok(results)
+}
+
+/// Derive the source file path by stripping the `.liyi.jsonc` suffix.
+fn source_path_from_sidecar(sidecar_path: &Path) -> Result<PathBuf, ApproveError> {
+    let s = sidecar_path
+        .to_str()
+        .and_then(|s| s.strip_suffix(".liyi.jsonc"))
+        .ok_or_else(|| {
+            ApproveError::Parse(format!(
+                "sidecar path does not end in .liyi.jsonc: {}",
+                sidecar_path.display()
+            ))
+        })?;
+    Ok(PathBuf::from(s))
 }
