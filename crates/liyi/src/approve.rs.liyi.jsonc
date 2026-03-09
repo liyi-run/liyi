@@ -57,10 +57,10 @@
       "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Returns error if no targets found.",
       "source_span": [
         74,
-        130
+        128
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:b3bb2c78f9828e966b4a2bb8c2ec6aa3183470cf390a3d0d3eb3d5b3acc3a757",
+      "source_hash": "sha256:856aa4806d5d8036bfe1b1f91e0ab84f23565f63ebb3a43dd87cb5565479e0f2",
       "source_anchor": "pub fn collect_approval_candidates("
     },
     {
@@ -68,8 +68,8 @@
       "reviewed": false,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        136,
-        205
+        134,
+        203
       ],
       "tree_path": "fn::apply_approval_decisions",
       "source_hash": "sha256:9c0d764481d5db271b8bb7bf96b2f6d13e040cad09b4845010123ff5c2cd1a87",
@@ -80,8 +80,8 @@
       "reviewed": false,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        208,
-        219
+        206,
+        217
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",
