@@ -1106,19 +1106,38 @@ This makes the gap between source annotations and sidecar entries CI-gateable: t
 
 ### What it does
 
+**Summary-first output.** The summary line is printed before the per-item diagnostics, so that in large projects the user sees the aggregate picture immediately — without scrolling past hundreds of lines. (When the output is short enough, this also serves as a final line for quick scanning.)
+
+**File paths in diagnostics.** Every per-item diagnostic includes the source file path (repo-relative) before the item name, so that in a multi-crate / multi-module project the reader can locate the item without additional searching. Diagnostics that relate to the sidecar itself (parse errors, version errors) show the sidecar path.
+
+**Fix hints.** When the tool knows a deterministic fix for a diagnostic, it appends a `fix:` hint — the exact command the user (or agent) can run. This mirrors `rustc`'s `help:` lines and eliminates the need for agents to memorize the fix-command mapping.
+
 ```
 $ liyi check
 
-add_money: ✓ reviewed, current
-convert_currency: ⚠ STALE — source changed since spec was written
-validate_order: ⚠ unreviewed
-add_money: ⚠ REQ CHANGED — requirement "multi-currency-addition" updated
-process_refund: ↕ SHIFTED [120,135]→[123,138] — span auto-corrected
-refund-policy: ⚠ UNTRACKED — requirement exists in source but not in sidecar
-multi-currency-addition: ✓ requirement, tracked
-get_name: · trivial
-ffi_binding: · ignored
+2 stale, 1 unreviewed, 6 current
+
+src/billing/money.rs: add_money: ✓ reviewed, current
+src/billing/money.rs: convert_currency: ⚠ STALE — source changed since spec was written
+src/billing/orders.rs: validate_order: ⚠ unreviewed
+src/billing/money.rs: add_money: ⚠ REQ CHANGED — requirement "multi-currency-addition" updated
+src/billing/refund.rs: process_refund: ↕ SHIFTED [120,135]→[123,138] — span auto-corrected
+docs/requirements.md: refund-policy: ⚠ UNTRACKED — requirement exists in source but not in sidecar
+  fix: add requirementSpec to src/billing/refund.rs.liyi.jsonc
+src/billing/money.rs: multi-currency-addition: ✓ requirement, tracked
+src/billing/money.rs: get_name: · trivial
+src/ffi/binding.rs: ffi_binding: · ignored
 ```
+
+**Output filtering.** `--level` controls the minimum severity of diagnostics printed to the terminal:
+
+| `--level` | Shows |
+|---|---|
+| `all` (default) | Everything — current, trivial, ignored, unreviewed, stale, errors |
+| `warning` | Warnings and errors only — stale, unreviewed, untracked, req-changed, etc. |
+| `error` | Errors only — parse errors, unknown versions, orphaned sources |
+
+`--level` controls *display*, not exit code. A `--level=error` run with stale items still exits 1 if `--fail-on-stale` is set — the diagnostics are computed regardless, just not printed. This lets agents suppress noisy informational output (75 "not reviewed" lines) while still surfacing the 2 actionable items, without losing CI enforcement.
 
 <!-- @liyi:requirement liyi-check-exit-code -->
 Exit codes: 0 = clean, 1 = check failures (stale, unreviewed, or diverged specs), 2 = internal error (malformed JSONC, missing files). CI flags control which conditions trigger exit 1:
@@ -1401,30 +1420,43 @@ No config file reader. `.liyiignore` handles file exclusion; config-based ignore
 
 ### Diagnostic catalog
 
-Every diagnostic the linter can emit, with its severity, exit code contribution, and message template:
+Every diagnostic the linter can emit, with its severity, audience, exit code contribution, message template, and fix hint (if deterministic):
 
-| Condition | Severity | Exit code | Message template |
-|---|---|---|---|
-| Spec current and reviewed | info | 0 | `<item>: ✓ reviewed, current` |
-| Spec current but unreviewed | warning | 1 if `--fail-on-unreviewed` | `<item>: ⚠ unreviewed (no @liyi:intent, no reviewed:true)` |
-| Source hash mismatch (stale) | warning | 1 if `--fail-on-stale` | `<item>: ⚠ STALE — source changed since spec was written` |
-| Source hash found at offset (shifted) | info | 0 (auto-corrected with `--fix`) | `<item>: ↕ SHIFTED [old]→[new] — span auto-corrected` |
-| Referenced requirement hash changed | warning | 1 if `--fail-on-req-changed` | `<item>: ⚠ REQ CHANGED — requirement "<name>" updated` |
-| `@liyi:related X` where X doesn't exist | error | 1 | `<item>: ✗ ERROR — unknown requirement "<name>"` |
-| Requirement exists but untracked in sidecar | warning | 1 if `--fail-on-untracked` | `<name>: ⚠ UNTRACKED — requirement exists in source but not in sidecar` |
-| `@liyi:related` in source without sidecar edge | warning | 1 if `--fail-on-untracked` | `<item>: ⚠ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar` |
-| Requirement with no referencing items | info | 0 | `<name>: · requirement has no related items` |
-| Item annotated `@liyi:trivial` | info | 0 | `<item>: · trivial` |
-| Item annotated `@liyi:ignore` | info | 0 | `<item>: · ignored` |
-| `source_span` past EOF | error | 1 | `<item>: ✗ source_span [s, e] extends past end of file (<n> lines)` |
-| Inverted or zero-length `source_span` | error | 1 | `<item>: ✗ invalid source_span [e, s]` or `empty source_span [s, s]` |
-| Malformed `source_hash` | error | 1 | `<item>: ✗ malformed source_hash` |
-| Duplicate item + span | warning | 0 | `<item>: ⚠ duplicate entry (same item name and source_span)` |
-| Source file deleted / not found | error | 1 | `<file>: ✗ source file not found — spec is orphaned` |
-| Malformed JSONC | error | 2 | `<file>: ✗ parse error: <detail>` |
-| Unknown `"version"` | error | 2 | `<file>: ✗ unknown version "<v>"` |
-| Cycle in requirement hierarchy | error | 1 | `<name>: ✗ requirement cycle detected: <path>` |
-| Ambiguous sidecar (duplicate naming) | warning | 0 | `<file>: ⚠ ambiguous sidecar — both <correct>.liyi.jsonc and <wrong>.liyi.jsonc exist. Only <correct>.liyi.jsonc will be used.` |
+**Audience** indicates who is expected to act on the diagnostic:
+
+| Audience | Meaning | Examples |
+|---|---|---|
+| `tool` | Fixable by `liyi reanchor` or `liyi check --fix` — no reasoning required | missing `source_hash`, SHIFTED |
+| `agent` | Fixable by agent re-inference or sidecar editing — requires reading source but no human judgment | STALE (content changed), UNTRACKED, MISSING RELATED |
+| `human` | Requires human judgment — review, approval, or design decision | unreviewed, intent-violation, unknown requirement |
+
+This distinction was motivated by dogfooding experience: an AI agent maintaining sidecars during interactive editing found `liyi check` output dominated by 75 "not reviewed" diagnostics (human-required) that buried 2 actionable errors (tool-fixable). Without audience tagging, agents must grep and filter manually. The `--json` output (post-MVP) will include the audience field; the terminal output uses `--level` filtering as a pragmatic proxy.
+
+| Condition | Severity | Audience | Exit code | Message template | Fix hint |
+|---|---|---|---|---|---|
+| Spec current and reviewed | info | — | 0 | `<source>: <item>: ✓ reviewed, current` | — |
+| Spec current but unreviewed | warning | human | 1 if `--fail-on-unreviewed` | `<source>: <item>: ⚠ unreviewed` | `liyi approve <sidecar>` |
+| Source hash mismatch (stale) | warning | agent | 1 if `--fail-on-stale` | `<source>: <item>: ⚠ STALE — source changed since spec was written` | — |
+| Missing source_hash (fresh spec) | warning | tool | 1 if `--fail-on-stale` | `<source>: <item>: ⚠ missing source_hash` | `liyi reanchor <sidecar>` |
+| Source hash found at offset (shifted) | info | tool | 0 (auto-corrected with `--fix`) | `<source>: <item>: ↕ SHIFTED [old]→[new]` | `liyi check --fix` |
+| Referenced requirement hash changed | warning | agent | 1 if `--fail-on-req-changed` | `<source>: <item>: ⚠ REQ CHANGED — requirement "<name>" updated` | — |
+| `@liyi:related X` where X doesn't exist | error | human | 1 | `<source>: <item>: ✗ ERROR — unknown requirement "<name>"` | — |
+| Requirement exists but untracked in sidecar | warning | agent | 1 if `--fail-on-untracked` | `<source>: <name>: ⚠ UNTRACKED — no sidecar entry` | `add requirementSpec to <sidecar>` |
+| `@liyi:related` in source without sidecar edge | warning | agent | 1 if `--fail-on-untracked` | `<source>: <item>: ⚠ MISSING RELATED — no related edge for "<name>"` | `add related edge to <sidecar>` |
+| Requirement with no referencing items | info | — | 0 | `<source>: <name>: · requirement has no related items` | — |
+| Item annotated `@liyi:trivial` | info | — | 0 | `<source>: <item>: · trivial` | — |
+| Item annotated `@liyi:ignore` | info | — | 0 | `<source>: <item>: · ignored` | — |
+| `source_span` past EOF | error | tool | 1 | `<source>: <item>: ✗ source_span [s, e] extends past end of file (<n> lines)` | `liyi reanchor <sidecar>` |
+| Inverted or zero-length `source_span` | error | human | 1 | `<sidecar>: <item>: ✗ invalid source_span [e, s]` | — |
+| Malformed `source_hash` | error | human | 1 | `<sidecar>: <item>: ✗ malformed source_hash` | — |
+| Duplicate item + span | warning | human | 0 | `<sidecar>: <item>: ⚠ duplicate entry` | — |
+| Source file deleted / not found | error | human | 1 | `<sidecar>: ✗ source file not found — spec is orphaned` | — |
+| Malformed JSONC | error | human | 2 | `<sidecar>: ✗ parse error: <detail>` | — |
+| Unknown `"version"` | error | tool | 2 | `<sidecar>: ✗ unknown version "<v>"` | `liyi reanchor --migrate <sidecar>` |
+| Cycle in requirement hierarchy | error | human | 1 | `<source>: <name>: ✗ requirement cycle detected: <path>` | — |
+| Ambiguous sidecar (duplicate naming) | warning | human | 0 | `<sidecar>: ⚠ ambiguous sidecar — both <correct>.liyi.jsonc and <wrong>.liyi.jsonc exist` | — |
+
+The `<source>` and `<sidecar>` placeholders are repo-relative paths. Item-level diagnostics use `<source>` (the file the developer cares about); sidecar-structural diagnostics (parse errors, version errors) use `<sidecar>` (the file that needs fixing).
 
 When both `money.rs.liyi.jsonc` (canonical) and `money.liyi.jsonc` (wrong) exist, the linter uses only the canonical form and warns about the other. The canonical name is always `<source_filename>.liyi.jsonc` — derived by appending `.liyi.jsonc` to the full source filename.
 
