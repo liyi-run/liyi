@@ -10,6 +10,9 @@ mod tui_approve;
 use cli::{Cli, Commands};
 use liyi::diagnostics::CheckFlags;
 
+/// CLI entrypoint.
+///
+/// <!-- @liyi:intent=doc -->
 fn main() {
     let cli = Cli::parse();
 
@@ -212,6 +215,8 @@ fn main() {
 
 /// Check if stderr is a TTY (for interactive mode detection).
 /// Uses stderr since the TUI renders there.
+///
+/// <!-- @liyi:intent=doc -->
 fn is_tty() -> bool {
     io::stderr().is_terminal()
 }

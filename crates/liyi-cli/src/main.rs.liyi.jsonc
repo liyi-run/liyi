@@ -1,17 +1,31 @@
 // liyi v0.1 spec file
 {
-	"version": "0.1",
-	"source": "crates/liyi-cli/src/main.rs",
-	"specs": [
-		{
-			"item": "main",
-			"reviewed": false,
-			"intent": "Parse CLI args via clap and dispatch to the appropriate subcommand handler. For Approve: detect TTY on stderr to choose between TUI-interactive mode (collect candidates, run TUI, apply decisions) and batch mode (auto-approve all). Print summary counts on success, exit 2 on error.",
-			"source_span": [
-				13,
-				212
-			],
-			"tree_path": "fn::main"
-		}
-	]
+  "version": "0.1",
+  "source": "crates/liyi-cli/src/main.rs",
+  "specs": [
+    {
+      "item": "main",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        16,
+        214
+      ],
+      "tree_path": "fn::main",
+      "source_hash": "sha256:ee296855e022c9269cd3b4ca0cc59cd6a7ef75ecffec823aec72fa2e070691af",
+      "source_anchor": "fn main() {"
+    },
+    {
+      "item": "is_tty",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        220,
+        222
+      ],
+      "tree_path": "fn::is_tty",
+      "source_hash": "sha256:36dcd447c8fa9e666c6682395c3148c216b7c07dce8cc88f3d76f90714207ccd",
+      "source_anchor": "fn is_tty() -> bool {"
+    }
+  ]
 }
