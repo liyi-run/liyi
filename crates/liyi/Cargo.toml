@@ -24,7 +24,7 @@ tree-sitter-javascript = { version = "0.25.0", optional = true }
 tree-sitter-typescript = { version = "0.23.2", optional = true }
 
 [features]
-default = []
+default = ["lang-python", "lang-go", "lang-javascript", "lang-typescript"]
 lang-python = ["dep:tree-sitter-python"]
 lang-go = ["dep:tree-sitter-go"]
 lang-javascript = ["dep:tree-sitter-javascript"]
