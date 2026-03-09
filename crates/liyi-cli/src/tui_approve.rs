@@ -1,4 +1,5 @@
 use std::io;
+use std::path::Path;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{
@@ -10,8 +11,16 @@ use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Gauge, Paragraph, Wrap};
 use ratatui::Terminal;
+use syntect::highlighting::{self, ThemeSet};
+use syntect::parsing::SyntaxSet;
 
 use liyi::approve::{ApprovalCandidate, Decision};
+
+/// Shared syntax-highlighting resources, initialised once per TUI session.
+struct Highlighter {
+    syntax_set: SyntaxSet,
+    theme: highlighting::Theme,
+}
 
 /// TUI state for the approval workflow.
 struct ApproveTui<'a> {
@@ -21,16 +30,23 @@ struct ApproveTui<'a> {
     /// Vertical scroll offset for the source code pane.
     scroll: u16,
     quit_all: bool,
+    highlighter: Highlighter,
 }
 
 impl<'a> ApproveTui<'a> {
     fn new(candidates: &'a [ApprovalCandidate]) -> Self {
+        let ts = ThemeSet::load_defaults();
+        let theme = ts.themes["base16-eighties.dark"].clone();
         Self {
             candidates,
             decisions: vec![Decision::Skip; candidates.len()],
             current: 0,
             scroll: 0,
             quit_all: false,
+            highlighter: Highlighter {
+                syntax_set: SyntaxSet::load_defaults_newlines(),
+                theme,
+            },
         }
     }
 
@@ -132,7 +148,7 @@ fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {
 
     draw_header(f, chunks[0], candidate, current, total);
     draw_intent(f, chunks[1], candidate);
-    draw_source(f, chunks[2], candidate, app.scroll);
+    draw_source(f, chunks[2], candidate, app.scroll, &app.highlighter);
     draw_progress(f, chunks[3], current, total);
     draw_keys(f, chunks[4]);
 }
@@ -177,25 +193,61 @@ fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate
     f.render_widget(paragraph, area);
 }
 
+/// Convert a syntect `Color` to a ratatui `Color`.
+fn to_ratatui_color(c: highlighting::Color) -> Color {
+    Color::Rgb(c.r, c.g, c.b)
+}
+
 fn draw_source(
     f: &mut ratatui::Frame,
     area: Rect,
     candidate: &ApprovalCandidate,
     scroll: u16,
+    hl: &Highlighter,
 ) {
+    let syntax = hl
+        .syntax_set
+        .find_syntax_by_extension(
+            Path::new(&candidate.source_display)
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or(""),
+        )
+        .unwrap_or_else(|| hl.syntax_set.find_syntax_plain_text());
+
+    let mut h = syntect::easy::HighlightLines::new(syntax, &hl.theme);
+
     let lines: Vec<Line> = candidate
         .source_lines
         .iter()
         .map(|(lineno, content)| {
-            Line::from(vec![
-                Span::styled(
-                    format!(" {lineno:>4} │ "),
-                    Style::default()
-                        .fg(Color::DarkGray)
-                        .add_modifier(Modifier::DIM),
-                ),
-                Span::raw(content),
-            ])
+            let ranges = h
+                .highlight_line(content, &hl.syntax_set)
+                .unwrap_or_default();
+
+            let mut spans: Vec<Span> = Vec::with_capacity(ranges.len() + 1);
+            spans.push(Span::styled(
+                format!(" {lineno:>4} │ "),
+                Style::default()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::DIM),
+            ));
+
+            for (style, text) in &ranges {
+                let mut ratatui_style = Style::default().fg(to_ratatui_color(style.foreground));
+                if style.font_style.contains(highlighting::FontStyle::BOLD) {
+                    ratatui_style = ratatui_style.add_modifier(Modifier::BOLD);
+                }
+                if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+                    ratatui_style = ratatui_style.add_modifier(Modifier::ITALIC);
+                }
+                if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+                    ratatui_style = ratatui_style.add_modifier(Modifier::UNDERLINED);
+                }
+                spans.push(Span::styled((*text).to_string(), ratatui_style));
+            }
+
+            Line::from(spans)
         })
         .collect();
 

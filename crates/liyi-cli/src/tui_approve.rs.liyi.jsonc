@@ -1,37 +1,67 @@
 // liyi v0.1 spec file
 {
-	"version": "0.1",
-	"source": "crates/liyi-cli/src/tui_approve.rs",
-	"specs": [
-		{
-			"item": "ApproveTui",
-			"reviewed": false,
-			"intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, and a quit flag. Provides methods to advance (decide), go back, and check completion.",
-			"source_span": [
-				17,
-				58
-			],
-			"tree_path": "struct::ApproveTui"
-		},
-		{
-			"item": "run_tui",
-			"reviewed": false,
-			"intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, j/Down and k/Up=scroll source, q/Esc=quit.",
-			"source_span": [
-				61,
-				113
-			],
-			"tree_path": "fn::run_tui"
-		},
-		{
-			"item": "draw",
-			"reviewed": false,
-			"intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions.",
-			"source_span": [
-				116,
-				137
-			],
-			"tree_path": "fn::draw"
-		}
-	]
+  "version": "0.1",
+  "source": "crates/liyi-cli/src/tui_approve.rs",
+  "specs": [
+    {
+      "item": "Highlighter",
+      "reviewed": false,
+      "intent": "Hold shared syntax-highlighting resources (SyntaxSet and Theme) that are initialised once per TUI session and reused across all candidates to avoid repeated loading.",
+      "source_span": [
+        20,
+        23
+      ],
+      "tree_path": "struct::Highlighter",
+      "source_hash": "sha256:6f587bdd27e8479b8d1da76b5a04e96990e65a23b22737b1c93175f8585e9b00",
+      "source_anchor": "struct Highlighter {"
+    },
+    {
+      "item": "ApproveTui",
+      "reviewed": false,
+      "intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, a quit flag, and a Highlighter for syntax colouring. On construction, loads syntect default syntaxes and the base16-eighties.dark theme. Provides methods to advance (decide), go back, and check completion.",
+      "source_span": [
+        26,
+        34
+      ],
+      "tree_path": "struct::ApproveTui",
+      "source_hash": "sha256:2b3c0b9d640826313723410910daa03ae18e8f98035e928627be44313fada02e",
+      "source_anchor": "struct ApproveTui<'a> {"
+    },
+    {
+      "item": "run_tui",
+      "reviewed": false,
+      "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, j/Down and k/Up=scroll source, q/Esc=quit.",
+      "source_span": [
+        77,
+        130
+      ],
+      "tree_path": "fn::run_tui",
+      "source_hash": "sha256:229a4e1463e7a53fdf15c461709f1b4e9c97f660b53eec0e46d002bedad33841",
+      "source_anchor": "pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {"
+    },
+    {
+      "item": "draw",
+      "reviewed": false,
+      "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
+      "source_span": [
+        132,
+        154
+      ],
+      "tree_path": "fn::draw",
+      "source_hash": "sha256:75dc16c6f960851f65f5ad42fc90ced41fe2d35a656feac8617f7cd5114d1e08",
+      "source_anchor": "fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {"
+    },
+    {
+      "item": "draw_source",
+      "reviewed": false,
+      "intent": "Render the source code pane with syntect-based syntax highlighting. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each source line, and maps syntect styles (foreground colour, bold, italic, underline) to ratatui Span styles. Prepends a dim line-number gutter. Supports vertical scrolling.",
+      "source_span": [
+        201,
+        263
+      ],
+      "tree_path": "fn::draw_source",
+      "source_hash": "sha256:8a68e02b3586ff58dca9be4e49bf83bd095af2fbf9ac21ad796016f482f5eb5b",
+      "source_anchor": "fn draw_source("
+    }
+  ]
 }
