@@ -66,6 +66,7 @@ pub struct CheckFlags {
     pub fail_on_stale: bool,
     pub fail_on_unreviewed: bool,
     pub fail_on_req_changed: bool,
+    pub fail_on_untracked: bool,
 }
 
 /// Process exit codes for `liyi check` and related commands.
@@ -91,6 +92,7 @@ pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> Liyi
             DiagnosticKind::ReqChanged { .. } if flags.fail_on_req_changed => {
                 has_check_failure = true;
             }
+            DiagnosticKind::Untracked if flags.fail_on_untracked => has_check_failure = true,
             // Error-severity diagnostics always trigger check failure
             DiagnosticKind::MalformedHash
             | DiagnosticKind::UnknownRequirement { .. }

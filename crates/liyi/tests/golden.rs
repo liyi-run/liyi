@@ -30,6 +30,7 @@ fn default_flags() -> CheckFlags {
         fail_on_stale: true,
         fail_on_unreviewed: false,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     }
 }
 
@@ -116,6 +117,7 @@ fn unreviewed_lenient() {
         fail_on_stale: true,
         fail_on_unreviewed: false,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     };
 
     // Fix hashes first
@@ -142,6 +144,7 @@ fn unreviewed_strict() {
         fail_on_stale: true,
         fail_on_unreviewed: false,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     };
     // Fix hashes first
     let _ = run_check(&root, &[], true, false, &flags_fix);
@@ -150,6 +153,7 @@ fn unreviewed_strict() {
         fail_on_stale: true,
         fail_on_unreviewed: true,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     };
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags_strict);
     let has_unreviewed = diagnostics
@@ -234,6 +238,7 @@ fn fullwidth_markers() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     let (diagnostics, _) = run_check(&root, &[], true, false, &flags);
 
@@ -253,6 +258,7 @@ fn multilingual_aliases() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     let (diagnostics, _) = run_check(&root, &[], true, false, &flags);
 
@@ -272,6 +278,7 @@ fn shifted_span() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     let (diagnostics, _) = run_check(&root, &[], false, false, &flags);
 
@@ -297,6 +304,7 @@ fn shifted_span_fix() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     // Fix should auto-correct the span
     let _ = run_check(&root, &[], true, false, &flags);
@@ -320,6 +328,7 @@ fn tree_path_recovery() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     let (diagnostics, _) = run_check(&root, &[], false, false, &flags);
 
@@ -346,6 +355,7 @@ fn tree_path_recovery_fix() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: false,
+        fail_on_untracked: false,
     };
     // Fix should auto-correct the span via tree_path
     let _ = run_check(&root, &[], true, false, &flags);
@@ -373,6 +383,7 @@ fn semantic_drift_fix_preserves_stale() {
         fail_on_stale: true,
         fail_on_unreviewed: false,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     };
 
     // First pass with --fix: should update span via tree_path but leave
@@ -408,6 +419,7 @@ fn req_changed() {
         fail_on_stale: false,
         fail_on_unreviewed: false,
         fail_on_req_changed: true,
+        fail_on_untracked: true,
     };
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
 

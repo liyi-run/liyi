@@ -20,6 +20,7 @@ fn main() {
             fail_on_stale,
             fail_on_unreviewed,
             fail_on_req_changed,
+            fail_on_untracked,
             root,
             verbose,
         } => {
@@ -33,6 +34,7 @@ fn main() {
                 fail_on_stale,
                 fail_on_unreviewed,
                 fail_on_req_changed,
+                fail_on_untracked,
             };
 
             let (diagnostics, exit_code) =

@@ -39,6 +39,10 @@ pub enum Commands {
         #[arg(long, default_value_t = true, action = ArgAction::Set)]
         fail_on_req_changed: bool,
 
+        /// Fail if requirements exist in source but not in sidecars
+        #[arg(long, default_value_t = true, action = ArgAction::Set)]
+        fail_on_untracked: bool,
+
         /// Override repo root (default: walk up to .git/)
         #[arg(long)]
         root: Option<PathBuf>,
