@@ -1,6 +1,6 @@
-# 立意 (Lìyì) — Design v8.8
+# 立意 (Lìyì) — Design v8.9
 
-Establish intent before execution · 2026-03-07
+Establish intent before execution · 2026-03-10
 
 ---
 
@@ -492,12 +492,27 @@ All languages are built-in — the binary ships with every supported tree-sitter
 | JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
 
+**Planned languages (0.1.x, see roadmap M7–M9):**
+
+| Language | Grammar | Notes |
+|---|---|---|
+| Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods need `custom_name` callback. |
+| Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
+| Dart | `tree-sitter-dart` | `class`, `method`, `mixin`, `extension`, `enum`. Grammar crate stability TBD. |
+| Zig | `tree-sitter-zig` | `fn`, `const`, `test`. Struct-as-namespace pattern (`const Foo = struct { ... }`) needs `custom_name`. |
+| TOML | `tree-sitter-toml` | Data file — `table`, `key`. Key-path identity, not named items. |
+| JSON | `tree-sitter-json` | Data file — `key` (from `pair`). Targets schemas, `package.json`. |
+| YAML | `tree-sitter-yaml` | Data file — `key` (from `block_mapping_pair`). Limited without injection framework (M9). |
+
 **Deferred languages:**
 
 | Language | Reason |
 |---|---|
-| Vue | SFCs are a meta-language with embedded JS/TS inside `<script>` blocks. Requires language-in-language extraction not supported by the current single-grammar-per-file architecture. `tree-sitter-vue` (v0.0.3) is low-maturity. Vue users can still use liyi — `tree_path` is empty, shift heuristic applies. |
-| Markdown | Heading-based tree_path (`heading::Installation::heading::Prerequisites`) is technically feasible and useful for tracking intent on documentation sections. But it's a conceptual extension — the item vocabulary (`fn`, `struct`) doesn't apply, requiring a Markdown-specific vocabulary (`heading`, `code_block`). Deferred as a distinct design note. |
+| Vue | SFCs require the language injection framework (M9). `tree-sitter-vue` (v0.0.3) is low-maturity. Vue users can still use liyi — `tree_path` is empty, shift heuristic applies. |
+| Markdown | Heading-based tree_path is a conceptual extension — the item vocabulary (`fn`, `struct`) doesn't apply, requiring a Markdown-specific vocabulary (`heading`, `code_block`). Deferred as a distinct design note. |
+| Scala | Grammar less actively maintained. Rich item vocabulary but incremental coverage over Java + Kotlin is modest. Revisit on demand. |
+| JSONC/JSON5 | JSONC files are almost exclusively liyi sidecars (depgraph leaves, excluded by design) or VS Code settings. JSON5 is rare. Neither justifies a grammar dependency. |
+| SQL | Dialect fragmentation (PostgreSQL, MySQL, SQLite) makes a single grammar impractical. Deferred. |
 
 ### Edge cases
 

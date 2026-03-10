@@ -10,7 +10,7 @@ This document covers post-MVP work that ships as 0.1.x patch releases. Everythin
 
 The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This document picks up where it leaves off.
 
-**Design authority:** `docs/liyi-design.md` v8.8 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
+**Design authority:** `docs/liyi-design.md` v8.9 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
 
 ---
 
@@ -26,6 +26,9 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 | M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
 | M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
 | M5.3 `--prompt` mode | ⏳ Design | Design doc at `docs/prompt-mode-design.md` |
+| M7 Additional languages | ⏳ Planned | Ruby, Bash, Dart, Zig |
+| M8 Data file support | ⏳ Design | TOML, JSON, YAML; key-path tree_path paradigm |
+| M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
 | M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
 | M6.4 `.liyiignore` cleanup | ✅ Complete | docs/ removed from ignore |
 | M6.5 AGENTS.md escape | ✅ Complete | Unicode escape for @ in JSON |
@@ -409,32 +412,255 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 
 ---
 
-## M2.9. Deferred languages — design notes
+## M7. Additional language support
 
-These languages are tracked but not planned for 0.1.x.
+**Status:** ⏳ Planned
 
-### Vue
+**Goal:** Extend tree-sitter structural identity to Ruby, Bash, Dart, and Zig. All grammars are compiled into the binary unconditionally, matching the M1/M2 design decision.
 
-Vue SFCs are a meta-language: `<template>`, `<script>`, `<style>` blocks containing HTML, JS/TS, and CSS respectively. Supporting tree_path would require:
+### M7.1. Ruby ⏳
 
-1. Parse the SFC structure with `tree-sitter-vue`
-2. Extract `<script>` content
-3. Re-parse with JS/TS grammar
-4. Compose a cross-grammar tree_path: `script::fn::setup`
+**Grammar:** `tree-sitter-ruby` — mature, widely used.
 
-This is a language-in-language extraction pattern not supported by the current single-grammar-per-file architecture. The `tree-sitter-vue` crate (v0.0.3) is also low-maturity.
+**Kind mappings:**
 
-**Vue users can still use liyi** — `tree_path` stays empty, shift heuristic applies. No degradation of core functionality.
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `method` |
+| `class` | `class` |
+| `module` | `module` |
+| `singleton_method` | `singleton_method` |
 
-### Markdown
+**Design notes:**
+- Methods are `method` inside `class` body. Tree_path: `class::Order::fn::process`.
+- `module` nesting is natural: `module::Billing::class::Invoice::fn::total`.
+- Class methods (`def self.method_name`) parse as `singleton_method` — needs a `custom_name` callback similar to Go's receiver encoding to extract the method name.
+- Blocks (`do..end`, `{ }`) are not tracked as items — they are anonymous and not meaningful for structural identity.
 
-Heading-based tree_path (`heading::Installation::heading::Prerequisites`) is technically feasible and useful for tracking intent on documentation sections. But it's a conceptual extension:
+**Extensions:** `.rb`, `.rake`, `.gemspec`
 
-- The item vocabulary (`fn`, `struct`, etc.) doesn't apply.
-- Requires a Markdown-specific vocabulary: `heading`, `code_block`, `list_item`.
-- The value proposition is different — tracking doc section intent vs code item intent.
+**Acceptance criteria:**
+- Classes, methods, modules, singleton methods all resolve.
+- Module → class → method nesting roundtrips correctly.
 
-Worth a dedicated design note if demand emerges.
+### M7.2. Bash ⏳
+
+**Grammar:** `tree-sitter-bash` — stable, well maintained.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_definition` |
+
+**Design notes:**
+- Shell is structurally flat — only `function_definition` is tracked. Both declaration forms (`function foo {}` and `foo() {}`) are normalized to `function_definition` by tree-sitter-bash.
+- No container nesting — all functions are implicitly top-level.
+- No body traversal needed.
+- Simplest possible config: one entry in `kind_map`, no `custom_name`, no `body_fields`.
+
+**Extensions:** `.sh`, `.bash`
+
+**Acceptance criteria:**
+- Functions resolve. Both declaration forms produce the same tree_path.
+- Roundtrip passes.
+
+### M7.3. Dart ⏳
+
+**Grammar:** `tree-sitter-dart` — exists on crates.io; requires compatibility verification against tree-sitter 0.26.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_signature` (top-level) |
+| `class` | `class_definition` |
+| `method` | `method_signature` |
+| `mixin` | `mixin_declaration` |
+| `extension` | `extension_declaration` |
+| `enum` | `enum_declaration` |
+
+**Design notes:**
+- Extensions and mixins have names and body containers — they fit the `LanguageConfig` pattern naturally.
+- `extension Foo on Bar` is analogous to Rust's `impl Trait for Type` — name extraction uses the extension's own name, not the target type.
+- Grammar crate stability is a risk; if it doesn't track tree-sitter 0.26, a fork or pin may be needed.
+
+**Extensions:** `.dart`
+
+**Acceptance criteria:**
+- Classes, methods, functions, mixins, extensions, enums all resolve.
+- Roundtrip passes.
+
+### M7.4. Zig ⏳
+
+**Grammar:** `tree-sitter-zig` — actively maintained.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `fn_decl` |
+| `const` | `var_decl` (with `const` qualifier) |
+| `test` | `test_decl` |
+
+**Design notes:**
+- Zig's struct-as-namespace pattern (`const Foo = struct { ... }`) means a `const` holding a struct literal is both a const and a container. A `custom_name` callback detects "const that holds a struct literal" and emits `struct::Foo` rather than `const::Foo`.
+- Test declarations (`test "name" {}`) are named by string literal, not identifier — requires custom extraction to strip the quotes.
+- Moderate complexity from the struct-as-namespace pattern.
+
+**Extensions:** `.zig`
+
+**Acceptance criteria:**
+- Functions, consts, tests, struct-as-namespace all resolve.
+- `const Foo = struct { fn bar() void {} }` produces tree_path `struct::Foo::fn::bar`.
+
+---
+
+## M8. Data file support
+
+**Status:** ⏳ Design
+
+**Goal:** Extend tree-sitter structural identity to data/config files — TOML, JSON, and YAML. These files carry crucial metadata (dependency declarations, CI definitions, Kubernetes manifests, JSON Schemas) that are legitimate intent-spec targets. Sidecars are depgraph leaves and are excluded — this targets non-sidecar config-as-source.
+
+### M8.1. Data file tree_path paradigm
+
+Data files are fundamentally different from code languages. The tree_path concept maps to **structural keys** rather than named items:
+
+| Format | "Item" concept | Example tree_path |
+|--------|---------------|-------------------|
+| TOML | Table, key | `table::package::key::name` |
+| JSON | Object key | `key::specs::key::item` |
+| YAML | Mapping key | `key::jobs::key::build::key::steps` |
+
+The `LanguageConfig` abstraction assumes items have (kind, name) pairs where kind maps to an AST node type. Data files have a uniform node type (key-value pair) with identity carried entirely by the key path. Two design options:
+
+1. **Stretch the existing abstraction** — use `"key"` as the universal kind shorthand, rely on nested body traversal. This works for TOML tables and YAML/JSON mappings but breaks for arrays (index-based, not name-based).
+2. **Extend `LanguageConfig`** — add an `array_index_mode` field to handle positional children. More principled but a schema change to the internal config struct (not the sidecar schema).
+
+Option 2 is preferred. The `LanguageConfig` extension is internal only — no sidecar schema changes, no user-facing impact.
+
+### M8.2. TOML ⏳
+
+**Grammar:** `tree-sitter-toml` — stable, well maintained.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `table` | `table` |
+| `key` | `pair` (name extracted from key) |
+| `array_table` | `table_array_element` |
+
+**Target use cases:**
+- `Cargo.toml`: tracking `[dependencies]` entries, feature flag intent.
+- `pyproject.toml`: build system, tool configuration.
+- General config: any `.toml` file with structured settings.
+
+**Extensions:** `.toml`
+
+### M8.3. JSON ⏳
+
+**Grammar:** `tree-sitter-json` — one of the oldest tree-sitter grammars.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `key` | `pair` (name extracted from key string) |
+
+**Target use cases:**
+- `schema/liyi.schema.json`: the project's own JSON Schemas are source-of-truth for the spec format — they should have sidecars.
+- `package.json`: dependency and script intent.
+- `tsconfig.json`: compiler configuration choices.
+
+**Note on JSONC/JSON5:** JSONC files in practice are almost exclusively liyi sidecars (depgraph leaves, excluded) or VS Code settings (unlikely spec targets). JSON5 is rare. Neither justifies a grammar dependency. Deferring both.
+
+**Extensions:** `.json`
+
+### M8.4. YAML (without injection) ⏳
+
+**Grammar:** `tree-sitter-yaml` — exists, reasonably maintained.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `key` | `block_mapping_pair` (name from key) |
+
+**Target use cases:**
+- GitHub Actions workflows: tracking `jobs.build.steps[N]` by structural path.
+- Kubernetes manifests: `metadata.name`, container specs.
+- Docker Compose, Helm charts.
+
+**Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key::jobs::key::build::key::steps[N]::key::run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
+
+**Extensions:** `.yml`, `.yaml`
+
+---
+
+## M9. Language injection framework
+
+**Status:** ⏳ Design
+
+**Goal:** Support multi-language files where one grammar hosts embedded code in another language. This is an architectural extension, not a per-language config addition.
+
+### M9.1. Problem statement
+
+The current `LanguageConfig` architecture assumes one grammar per file. Several important file types violate this:
+
+| Host file | Embedded language | Example |
+|-----------|------------------|---------|
+| GitHub Actions YAML | Bash/Shell | `run:` blocks |
+| Vue SFC (`.vue`) | TypeScript/JavaScript, HTML, CSS | `<script>`, `<template>`, `<style>` blocks |
+| Jupyter notebooks | Python (in JSON cells) | Code cells |
+| HTML | JavaScript, CSS | `<script>`, `<style>` blocks |
+
+### M9.2. Required capabilities
+
+1. **Injection detection** — identifying which nodes contain embedded code and what language. This is host-language-specific: YAML `run:` blocks, Vue `<script lang="ts">` tags, etc.
+2. **Sub-parsing** — running a second parser on the injected content (extracted from the host node's text).
+3. **Span translation** — mapping inner parser spans back to outer file line numbers (offset by the host node's start position).
+4. **Composite tree_paths** — paths that cross language boundaries need a delimiter. Proposed format: `key::jobs::key::build::key::run::@bash::fn::setup_env` (using `@lang` to mark injection boundaries).
+
+### M9.3. Implementation sketch
+
+```rust
+struct InjectionRule {
+    /// Host node kind(s) that may contain injected code.
+    host_node_kinds: &'static [&'static str],
+    /// How to determine the injected language.
+    detect_language: fn(&Node, &str) -> Option<Language>,
+    /// How to extract the injected content from the host node.
+    extract_content: fn(&Node, &str) -> Option<(String, usize)>, // (content, start_line_offset)
+}
+```
+
+- Each host language provides a set of `InjectionRule`s alongside its `LanguageConfig`.
+- `resolve_tree_path` gains a new code path: when a segment starts with `@lang`, switch parser and config, apply the offset, continue resolving.
+- `compute_tree_path` detects when the target node is inside an injection zone and emits the `@lang` marker.
+
+### M9.4. Planned injection rules
+
+| Host | Grammar | Injection points | Injected language | Priority |
+|------|---------|-------------------|-------------------|----------|
+| YAML | `tree-sitter-yaml` | `block_mapping_pair` where key matches `run`, `script`, etc. | Bash | P1 (GitHub Actions) |
+| Vue | `tree-sitter-vue` | `<script>` element | JS/TS (from `lang` attr) | P2 |
+| Vue | `tree-sitter-vue` | `<style>` element | CSS | Deferred |
+| HTML | `tree-sitter-html` | `<script>`, `<style>` | JS, CSS | Deferred |
+
+**Vue note:** The `tree-sitter-vue` crate (v0.0.3) is low-maturity. The injection framework should be designed to support Vue but actual Vue injection rules may wait for grammar maturation. Vue users can already use liyi — `tree_path` stays empty, shift heuristic applies.
+
+### M9.5. Deferred languages — design notes
+
+These languages are tracked but not planned for the 0.1.x series.
+
+**Markdown.** Heading-based tree_path (`heading::Installation::heading::Prerequisites`) is technically feasible and useful for tracking intent on documentation sections. But it's a conceptual extension — the item vocabulary (`fn`, `struct`, etc.) doesn't apply, requiring a Markdown-specific vocabulary (`heading`, `code_block`, `list_item`). Worth a dedicated design note if demand emerges.
+
+**Scala.** Tree-sitter grammar (`tree-sitter-scala`) exists but is less actively maintained. Rich item vocabulary (`class`, `object`, `trait`, `def`, `val`, `var`, `type`) maps well to `LanguageConfig`, but companion objects and sealed hierarchies add complexity. Incremental coverage over Java and Kotlin (both already supported) is modest. Revisit based on user demand.
+
+**SQL.** Dialect fragmentation (PostgreSQL, MySQL, SQLite, etc.) makes a single grammar impractical. Useful for stored procedures but not a priority for the tree_path model. Deferred.
+
+**JSONC/JSON5.** JSONC files in practice are almost exclusively liyi sidecars (depgraph leaves, excluded by design) or VS Code settings. JSON5 is rare. Neither justifies a grammar dependency. Deferred.
 
 ---
 
@@ -683,11 +909,14 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 | ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
 | ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
 | 10 | M5.3 `--prompt` output | ⏳ Design | ~3h | Agent-consumable gaps |
-| 11 | M1.1 `LanguageConfig` refactor | ⏳ Todo | ~4h | All language support |
-| 12 | M1.2 Python | ⏳ Todo | ~2h | Python ecosystem |
-| 13 | M1.4 JavaScript | ⏳ Todo | ~2h | JS ecosystem |
-| 14 | M1.5 TypeScript | ⏳ Todo | ~1h | TS ecosystem |
-| 15 | M1.3 Go | ⏳ Todo | ~3h | Go ecosystem |
+| 11 | M7.1 Ruby | ⏳ Planned | ~2h | Ruby/Rails ecosystem |
+| 12 | M7.2 Bash | ⏳ Planned | ~1h | CI scripts, devops |
+| 13 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
+| 14 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
+| 15 | M7.3 Dart | ⏳ Planned | ~3h | Flutter ecosystem |
+| 16 | M7.4 Zig | ⏳ Planned | ~3h | Systems lang, growing |
+| 17 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
+| 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
 
 ---
 
