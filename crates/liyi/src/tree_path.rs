@@ -260,6 +260,12 @@ impl Language {
 
 /// Detect language from file extension. Returns `None` for unsupported
 /// languages (unknown extension or feature not enabled).
+///
+/// # Extension Collision
+///
+/// If two languages share an extension (unlikely with built-in languages),
+/// the first match in the following order is returned:
+/// Rust → Python → Go → JavaScript → TypeScript → TSX.
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
