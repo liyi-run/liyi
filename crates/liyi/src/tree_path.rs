@@ -88,10 +88,17 @@ impl LanguageConfig {
                 return Some(body);
             }
         }
-        // Fallback: look for declaration_list as direct child
+        // Fallback: search for body_fields or declaration_list as direct
+        // (unnamed) children. Needed for languages where the body is a
+        // positional child rather than a named field (e.g., Kotlin class_body,
+        // C++ field_declaration_list).
         let mut cursor = node.walk();
         node.children(&mut cursor)
-            .find(|c| c.kind() == "declaration_list")
+            .find(|c| {
+                self.body_fields.contains(&c.kind())
+                    || c.kind() == "declaration_list"
+                    || c.kind() == "field_declaration_list"
+            })
     }
 
     /// Check if the given file extension is associated with this language.
@@ -132,6 +139,199 @@ static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
     custom_name: None,
 };
+
+/// Extract the function name from a C/C++ `function_definition` node.
+///
+/// C/C++ functions store their name inside the `declarator` field chain:
+/// `function_definition` → (field `declarator`) `function_declarator`
+/// → (field `declarator`) `identifier` / `field_identifier`.
+/// Pointer declarators and other wrappers may appear in the chain;
+/// we unwrap them until we find a `function_declarator`.
+fn c_extract_declarator_name(node: &Node, source: &str) -> Option<String> {
+    let declarator = node.child_by_field_name("declarator")?;
+    let func_decl = unwrap_to_function_declarator(&declarator)?;
+    let name_node = func_decl.child_by_field_name("declarator")?;
+    Some(source[name_node.byte_range()].to_string())
+}
+
+/// Walk through pointer_declarator / parenthesized_declarator / attributed_declarator
+/// wrappers to find the inner `function_declarator`.
+fn unwrap_to_function_declarator<'a>(node: &Node<'a>) -> Option<Node<'a>> {
+    match node.kind() {
+        "function_declarator" => Some(*node),
+        "pointer_declarator" | "parenthesized_declarator" | "attributed_declarator" => {
+            let inner = node.child_by_field_name("declarator")?;
+            unwrap_to_function_declarator(&inner)
+        }
+        _ => None,
+    }
+}
+
+/// Custom name extraction for C nodes.
+///
+/// Handles `function_definition` (name in declarator chain) and
+/// `type_definition` (name in declarator field, which is a type_identifier).
+fn c_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        "function_definition" => c_extract_declarator_name(node, source),
+        "type_definition" => {
+            // typedef: the 'declarator' field holds the new type name
+            let declarator = node.child_by_field_name("declarator")?;
+            Some(source[declarator.byte_range()].to_string())
+        }
+        _ => None,
+    }
+}
+
+/// Custom name extraction for C++ nodes.
+///
+/// Extends `c_node_name` with C++-specific patterns:
+/// - `template_declaration`: transparent wrapper — extracts name from inner decl.
+/// - `namespace_definition`: name is in a `namespace_identifier` child (no "name" field).
+fn cpp_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        "function_definition" => c_extract_declarator_name(node, source),
+        "type_definition" | "alias_declaration" => {
+            let name_node = node.child_by_field_name("name")
+                .or_else(|| node.child_by_field_name("declarator"))?;
+            Some(source[name_node.byte_range()].to_string())
+        }
+        "template_declaration" => {
+            // template_declaration wraps an inner declaration — find it and
+            // extract the name from the inner node.
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                match child.kind() {
+                    "function_definition" => return c_extract_declarator_name(&child, source),
+                    "class_specifier" | "struct_specifier" | "enum_specifier"
+                    | "concept_definition" | "alias_declaration" => {
+                        let n = child.child_by_field_name("name")?;
+                        return Some(source[n.byte_range()].to_string());
+                    }
+                    // A template can also wrap another template_declaration (nested)
+                    "template_declaration" => return cpp_node_name(&child, source),
+                    _ => {}
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+/// Custom name extraction for Objective-C nodes.
+///
+/// ObjC node types like `class_interface`, `class_implementation`,
+/// `protocol_declaration`, `method_declaration`, and `method_definition`
+/// do not use standard `name` fields. Their names are extracted from
+/// specific child node patterns.
+fn objc_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        // C function definitions use the same declarator chain as C.
+        "function_definition" => c_extract_declarator_name(node, source),
+        "type_definition" => {
+            let declarator = node.child_by_field_name("declarator")?;
+            Some(source[declarator.byte_range()].to_string())
+        }
+        // @interface ClassName or @interface ClassName (Category)
+        "class_interface" | "class_implementation" => {
+            let mut cursor = node.walk();
+            node.children(&mut cursor)
+                .find(|c| c.kind() == "identifier" || c.kind() == "type_identifier")
+                .map(|c| source[c.byte_range()].to_string())
+        }
+        // @protocol ProtocolName
+        "protocol_declaration" => {
+            let mut cursor = node.walk();
+            node.children(&mut cursor)
+                .find(|c| c.kind() == "identifier" || c.kind() == "type_identifier")
+                .map(|c| source[c.byte_range()].to_string())
+        }
+        // - (ReturnType)methodName or - (ReturnType)methodName:(Type)arg
+        // + (ReturnType)classMethodName
+        "method_declaration" | "method_definition" => {
+            let mut cursor = node.walk();
+            // The selector is composed of keyword_declarator children or
+            // a single identifier (for zero-argument methods).
+            let mut parts: Vec<String> = Vec::new();
+            for child in node.children(&mut cursor) {
+                match child.kind() {
+                    "identifier" | "field_identifier" if parts.is_empty() => {
+                        // Single-part selector (no arguments)
+                        parts.push(source[child.byte_range()].to_string());
+                    }
+                    "keyword_declarator" => {
+                        // Each keyword_declarator has a keyword child
+                        let mut kw_cursor = child.walk();
+                        if let Some(kw) = child.children(&mut kw_cursor)
+                            .find(|c| c.kind() == "keyword_selector" || c.kind() == "identifier")
+                        {
+                            parts.push(format!("{}:", &source[kw.byte_range()]));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if parts.is_empty() {
+                None
+            } else {
+                Some(parts.join(""))
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Custom name extraction for Kotlin nodes.
+///
+/// Handles `property_declaration` where the name is in a child
+/// `variable_declaration` node, and `type_alias` where the name is
+/// in an `identifier` child before the `=` (the `type` field is the RHS).
+fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        "property_declaration" => {
+            let mut cursor = node.walk();
+            // Name is in the first variable_declaration or identifier child
+            for child in node.children(&mut cursor) {
+                if child.kind() == "variable_declaration" {
+                    let name = child.child_by_field_name("name")
+                        .or_else(|| {
+                            let mut c2 = child.walk();
+                            child.children(&mut c2).find(|c| c.kind() == "simple_identifier")
+                        })?;
+                    return Some(source[name.byte_range()].to_string());
+                }
+                if child.kind() == "simple_identifier" {
+                    return Some(source[child.byte_range()].to_string());
+                }
+            }
+            None
+        }
+        "type_alias" => {
+            let mut cursor = node.walk();
+            node.children(&mut cursor)
+                .find(|c| c.kind() == "type_identifier" || c.kind() == "simple_identifier")
+                .map(|c| source[c.byte_range()].to_string())
+        }
+        _ => None,
+    }
+}
+
+/// Custom name extraction for PHP `const_declaration` nodes.
+///
+/// PHP `const_declaration` stores names inside `const_element` children.
+fn php_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        "const_declaration" => {
+            let mut cursor = node.walk();
+            let elem = node.children(&mut cursor)
+                .find(|c| c.kind() == "const_element")?;
+            let name = elem.child_by_field_name("name")?;
+            Some(source[name.byte_range()].to_string())
+        }
+        _ => None,
+    }
+}
 
 /// Custom name extraction for Go nodes.
 ///
@@ -261,6 +461,160 @@ static TSX_CONFIG: LanguageConfig = LanguageConfig {
     custom_name: None,
 };
 
+/// C language configuration.
+static C_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_c::LANGUAGE.into(),
+    extensions: &["c", "h"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("struct", "struct_specifier"),
+        ("enum", "enum_specifier"),
+        ("typedef", "type_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: Some(c_node_name),
+};
+
+/// C++ language configuration.
+static CPP_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_cpp::LANGUAGE.into(),
+    extensions: &["cpp", "cc", "cxx", "hpp", "hh", "hxx", "h++", "c++"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("class", "class_specifier"),
+        ("struct", "struct_specifier"),
+        ("namespace", "namespace_definition"),
+        ("enum", "enum_specifier"),
+        ("template", "template_declaration"),
+        ("typedef", "type_definition"),
+        ("using", "alias_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body", "declaration_list"],
+    custom_name: Some(cpp_node_name),
+};
+
+/// Java language configuration.
+static JAVA_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_java::LANGUAGE.into(),
+    extensions: &["java"],
+    kind_map: &[
+        ("fn", "method_declaration"),
+        ("class", "class_declaration"),
+        ("interface", "interface_declaration"),
+        ("enum", "enum_declaration"),
+        ("constructor", "constructor_declaration"),
+        ("record", "record_declaration"),
+        ("annotation", "annotation_type_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+};
+
+/// C# language configuration.
+static CSHARP_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_c_sharp::LANGUAGE.into(),
+    extensions: &["cs"],
+    kind_map: &[
+        ("fn", "method_declaration"),
+        ("class", "class_declaration"),
+        ("interface", "interface_declaration"),
+        ("enum", "enum_declaration"),
+        ("struct", "struct_declaration"),
+        ("namespace", "namespace_declaration"),
+        ("constructor", "constructor_declaration"),
+        ("property", "property_declaration"),
+        ("record", "record_declaration"),
+        ("delegate", "delegate_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+};
+
+/// PHP language configuration (PHP-only grammar, no HTML interleaving).
+static PHP_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_php::LANGUAGE_PHP_ONLY.into(),
+    extensions: &["php"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("class", "class_declaration"),
+        ("method", "method_declaration"),
+        ("interface", "interface_declaration"),
+        ("enum", "enum_declaration"),
+        ("trait", "trait_declaration"),
+        ("namespace", "namespace_definition"),
+        ("const", "const_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: Some(php_node_name),
+};
+
+/// Objective-C language configuration.
+static OBJC_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_objc::LANGUAGE.into(),
+    extensions: &["m", "mm"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("class", "class_interface"),
+        ("impl", "class_implementation"),
+        ("protocol", "protocol_declaration"),
+        ("method", "method_definition"),
+        ("method_decl", "method_declaration"),
+        ("struct", "struct_specifier"),
+        ("enum", "enum_specifier"),
+        ("typedef", "type_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: Some(objc_node_name),
+};
+
+/// Kotlin language configuration.
+static KOTLIN_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_kotlin_ng::LANGUAGE.into(),
+    extensions: &["kt", "kts"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("object", "object_declaration"),
+        ("property", "property_declaration"),
+        ("typealias", "type_alias"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body", "class_body"],
+    custom_name: Some(kotlin_node_name),
+};
+
+/// Swift language configuration.
+static SWIFT_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_swift::LANGUAGE.into(),
+    extensions: &["swift"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("protocol", "protocol_declaration"),
+        ("enum", "enum_entry"),
+        ("property", "property_declaration"),
+        ("init", "init_declaration"),
+        ("typealias", "typealias_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+};
+
 /// Supported languages for tree_path resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
@@ -270,6 +624,14 @@ pub enum Language {
     JavaScript,
     TypeScript,
     Tsx,
+    C,
+    Cpp,
+    Java,
+    CSharp,
+    Php,
+    ObjectiveC,
+    Kotlin,
+    Swift,
 }
 
 impl Language {
@@ -282,6 +644,14 @@ impl Language {
             Language::JavaScript => &JAVASCRIPT_CONFIG,
             Language::TypeScript => &TYPESCRIPT_CONFIG,
             Language::Tsx => &TSX_CONFIG,
+            Language::C => &C_CONFIG,
+            Language::Cpp => &CPP_CONFIG,
+            Language::Java => &JAVA_CONFIG,
+            Language::CSharp => &CSHARP_CONFIG,
+            Language::Php => &PHP_CONFIG,
+            Language::ObjectiveC => &OBJC_CONFIG,
+            Language::Kotlin => &KOTLIN_CONFIG,
+            Language::Swift => &SWIFT_CONFIG,
         }
     }
 
@@ -296,9 +666,13 @@ impl Language {
 ///
 /// # Extension Collision
 ///
+/// `.h` files are ambiguous (C, C++, or Objective-C). We map them to C
+/// by default. Users can override via future configuration if needed.
+///
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
-/// Rust → Python → Go → JavaScript → TypeScript → TSX.
+/// Rust → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
+/// Java → C# → PHP → Objective-C → Kotlin → Swift.
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
@@ -323,6 +697,31 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     }
     if TSX_CONFIG.matches_extension(ext) {
         return Some(Language::Tsx);
+    }
+
+    if C_CONFIG.matches_extension(ext) {
+        return Some(Language::C);
+    }
+    if CPP_CONFIG.matches_extension(ext) {
+        return Some(Language::Cpp);
+    }
+    if JAVA_CONFIG.matches_extension(ext) {
+        return Some(Language::Java);
+    }
+    if CSHARP_CONFIG.matches_extension(ext) {
+        return Some(Language::CSharp);
+    }
+    if PHP_CONFIG.matches_extension(ext) {
+        return Some(Language::Php);
+    }
+    if OBJC_CONFIG.matches_extension(ext) {
+        return Some(Language::ObjectiveC);
+    }
+    if KOTLIN_CONFIG.matches_extension(ext) {
+        return Some(Language::Kotlin);
+    }
+    if SWIFT_CONFIG.matches_extension(ext) {
+        return Some(Language::Swift);
     }
 
     None
@@ -1479,6 +1878,686 @@ class Container extends React.Component<Props> {
             assert_eq!(
                 detect_language(Path::new("component.tsx")),
                 Some(Language::Tsx)
+            );
+        }
+    }
+
+    mod c_tests {
+        use super::*;
+
+        const SAMPLE_C: &str = r#"#include <stdio.h>
+
+struct Point {
+    int x;
+    int y;
+};
+
+enum Color { RED, GREEN, BLUE };
+
+typedef struct Point Point_t;
+
+void process(int x, int y) {
+    printf("hello");
+}
+
+static int helper(void) {
+    return 42;
+}
+"#;
+
+        #[test]
+        fn resolve_c_function() {
+            let span = resolve_tree_path(SAMPLE_C, "fn::process", Language::C);
+            assert!(span.is_some(), "should resolve fn::process");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_C.lines().collect();
+            assert!(
+                lines[start - 1].contains("void process"),
+                "span should point to process function, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_c_struct() {
+            let span = resolve_tree_path(SAMPLE_C, "struct::Point", Language::C);
+            assert!(span.is_some(), "should resolve struct::Point");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_C.lines().collect();
+            assert!(
+                lines[start - 1].contains("struct Point"),
+                "span should point to Point struct"
+            );
+        }
+
+        #[test]
+        fn resolve_c_enum() {
+            let span = resolve_tree_path(SAMPLE_C, "enum::Color", Language::C);
+            assert!(span.is_some(), "should resolve enum::Color");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_C.lines().collect();
+            assert!(
+                lines[start - 1].contains("enum Color"),
+                "span should point to Color enum"
+            );
+        }
+
+        #[test]
+        fn resolve_c_typedef() {
+            let span = resolve_tree_path(SAMPLE_C, "typedef::Point_t", Language::C);
+            assert!(span.is_some(), "should resolve typedef::Point_t");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_C.lines().collect();
+            assert!(
+                lines[start - 1].contains("typedef"),
+                "span should point to typedef"
+            );
+        }
+
+        #[test]
+        fn compute_c_function_path() {
+            let span = resolve_tree_path(SAMPLE_C, "fn::process", Language::C).unwrap();
+            let path = compute_tree_path(SAMPLE_C, span, Language::C);
+            assert_eq!(path, "fn::process");
+        }
+
+        #[test]
+        fn roundtrip_c() {
+            for tp in &["fn::process", "fn::helper", "struct::Point", "enum::Color"] {
+                let span = resolve_tree_path(SAMPLE_C, tp, Language::C).unwrap();
+                let path = compute_tree_path(SAMPLE_C, span, Language::C);
+                assert_eq!(&path, tp, "roundtrip failed for {tp}");
+            }
+        }
+
+        #[test]
+        fn detect_c_extensions() {
+            assert_eq!(detect_language(Path::new("main.c")), Some(Language::C));
+            assert_eq!(detect_language(Path::new("header.h")), Some(Language::C));
+        }
+    }
+
+    mod cpp_tests {
+        use super::*;
+
+        const SAMPLE_CPP: &str = r#"namespace math {
+
+class Calculator {
+public:
+    int add(int a, int b) {
+        return a + b;
+    }
+};
+
+struct Point {
+    int x, y;
+};
+
+enum class Color { Red, Green, Blue };
+
+}
+
+void standalone() {}
+"#;
+
+        #[test]
+        fn resolve_cpp_namespace() {
+            let span = resolve_tree_path(SAMPLE_CPP, "namespace::math", Language::Cpp);
+            assert!(span.is_some(), "should resolve namespace::math");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_CPP.lines().collect();
+            assert!(
+                lines[start - 1].contains("namespace math"),
+                "span should point to namespace math, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_cpp_class_in_namespace() {
+            let span = resolve_tree_path(
+                SAMPLE_CPP,
+                "namespace::math::class::Calculator",
+                Language::Cpp,
+            );
+            assert!(span.is_some(), "should resolve namespace::math::class::Calculator");
+        }
+
+        #[test]
+        fn resolve_cpp_method_in_class() {
+            let span = resolve_tree_path(
+                SAMPLE_CPP,
+                "namespace::math::class::Calculator::fn::add",
+                Language::Cpp,
+            );
+            assert!(span.is_some(), "should resolve nested method");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_CPP.lines().collect();
+            assert!(
+                lines[start - 1].contains("add"),
+                "span should point to add method"
+            );
+        }
+
+        #[test]
+        fn resolve_cpp_standalone() {
+            let span = resolve_tree_path(SAMPLE_CPP, "fn::standalone", Language::Cpp);
+            assert!(span.is_some(), "should resolve fn::standalone");
+        }
+
+        #[test]
+        fn resolve_cpp_enum() {
+            let span = resolve_tree_path(
+                SAMPLE_CPP,
+                "namespace::math::enum::Color",
+                Language::Cpp,
+            );
+            assert!(span.is_some(), "should resolve enum in namespace");
+        }
+
+        #[test]
+        fn roundtrip_cpp() {
+            let span = resolve_tree_path(SAMPLE_CPP, "fn::standalone", Language::Cpp).unwrap();
+            let path = compute_tree_path(SAMPLE_CPP, span, Language::Cpp);
+            assert_eq!(path, "fn::standalone");
+        }
+
+        #[test]
+        fn detect_cpp_extensions() {
+            assert_eq!(detect_language(Path::new("main.cpp")), Some(Language::Cpp));
+            assert_eq!(detect_language(Path::new("main.cc")), Some(Language::Cpp));
+            assert_eq!(detect_language(Path::new("header.hpp")), Some(Language::Cpp));
+        }
+    }
+
+    mod java_tests {
+        use super::*;
+
+        const SAMPLE_JAVA: &str = r#"package com.example;
+
+public class Calculator {
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    public Calculator() {
+        // constructor
+    }
+}
+
+interface Computable {
+    int compute(int x);
+}
+
+enum Direction {
+    NORTH, SOUTH, EAST, WEST
+}
+
+record Point(int x, int y) {}
+"#;
+
+        #[test]
+        fn resolve_java_class() {
+            let span = resolve_tree_path(SAMPLE_JAVA, "class::Calculator", Language::Java);
+            assert!(span.is_some(), "should resolve class::Calculator");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_JAVA.lines().collect();
+            assert!(
+                lines[start - 1].contains("class Calculator"),
+                "span should point to Calculator class"
+            );
+        }
+
+        #[test]
+        fn resolve_java_method() {
+            let span = resolve_tree_path(
+                SAMPLE_JAVA,
+                "class::Calculator::fn::add",
+                Language::Java,
+            );
+            assert!(span.is_some(), "should resolve class::Calculator::fn::add");
+        }
+
+        #[test]
+        fn resolve_java_constructor() {
+            let span = resolve_tree_path(
+                SAMPLE_JAVA,
+                "class::Calculator::constructor::Calculator",
+                Language::Java,
+            );
+            assert!(span.is_some(), "should resolve constructor");
+        }
+
+        #[test]
+        fn resolve_java_interface() {
+            let span = resolve_tree_path(SAMPLE_JAVA, "interface::Computable", Language::Java);
+            assert!(span.is_some(), "should resolve interface::Computable");
+        }
+
+        #[test]
+        fn resolve_java_enum() {
+            let span = resolve_tree_path(SAMPLE_JAVA, "enum::Direction", Language::Java);
+            assert!(span.is_some(), "should resolve enum::Direction");
+        }
+
+        #[test]
+        fn resolve_java_record() {
+            let span = resolve_tree_path(SAMPLE_JAVA, "record::Point", Language::Java);
+            assert!(span.is_some(), "should resolve record::Point");
+        }
+
+        #[test]
+        fn roundtrip_java() {
+            let span = resolve_tree_path(
+                SAMPLE_JAVA,
+                "class::Calculator::fn::add",
+                Language::Java,
+            )
+            .unwrap();
+            let path = compute_tree_path(SAMPLE_JAVA, span, Language::Java);
+            assert_eq!(path, "class::Calculator::fn::add");
+        }
+
+        #[test]
+        fn detect_java_extension() {
+            assert_eq!(
+                detect_language(Path::new("Main.java")),
+                Some(Language::Java)
+            );
+        }
+    }
+
+    mod csharp_tests {
+        use super::*;
+
+        const SAMPLE_CSHARP: &str = r#"namespace MyApp {
+
+class Calculator {
+    public int Add(int a, int b) {
+        return a + b;
+    }
+
+    public string Name { get; set; }
+
+    public Calculator() {}
+}
+
+interface IComputable {
+    int Compute(int x);
+}
+
+enum Direction {
+    North, South, East, West
+}
+
+struct Vector {
+    public int X;
+    public int Y;
+}
+
+record Person(string Name, int Age);
+
+}
+"#;
+
+        #[test]
+        fn resolve_csharp_class() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::class::Calculator",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve namespace::MyApp::class::Calculator");
+        }
+
+        #[test]
+        fn resolve_csharp_method() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::class::Calculator::fn::Add",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve method in class in namespace");
+        }
+
+        #[test]
+        fn resolve_csharp_property() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::class::Calculator::property::Name",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve property::Name");
+        }
+
+        #[test]
+        fn resolve_csharp_interface() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::interface::IComputable",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve interface::IComputable");
+        }
+
+        #[test]
+        fn resolve_csharp_struct() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::struct::Vector",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve struct::Vector");
+        }
+
+        #[test]
+        fn resolve_csharp_enum() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::enum::Direction",
+                Language::CSharp,
+            );
+            assert!(span.is_some(), "should resolve enum::Direction");
+        }
+
+        #[test]
+        fn roundtrip_csharp() {
+            let span = resolve_tree_path(
+                SAMPLE_CSHARP,
+                "namespace::MyApp::class::Calculator::fn::Add",
+                Language::CSharp,
+            )
+            .unwrap();
+            let path = compute_tree_path(SAMPLE_CSHARP, span, Language::CSharp);
+            assert_eq!(path, "namespace::MyApp::class::Calculator::fn::Add");
+        }
+
+        #[test]
+        fn detect_csharp_extension() {
+            assert_eq!(
+                detect_language(Path::new("Program.cs")),
+                Some(Language::CSharp)
+            );
+        }
+    }
+
+    mod php_tests {
+        use super::*;
+
+        const SAMPLE_PHP: &str = r#"<?php
+
+namespace App\Services;
+
+class UserService {
+    public function findUser(int $id): ?User {
+        return User::find($id);
+    }
+
+    public function deleteUser(int $id): bool {
+        return true;
+    }
+}
+
+interface Repository {
+    public function find(int $id);
+}
+
+trait Cacheable {
+    public function cache(): void {}
+}
+
+function helper(): string {
+    return "hi";
+}
+
+enum Status {
+    case Active;
+    case Inactive;
+}
+"#;
+
+        #[test]
+        fn resolve_php_class() {
+            let span = resolve_tree_path(SAMPLE_PHP, "class::UserService", Language::Php);
+            assert!(span.is_some(), "should resolve class::UserService");
+        }
+
+        #[test]
+        fn resolve_php_method() {
+            let span = resolve_tree_path(
+                SAMPLE_PHP,
+                "class::UserService::method::findUser",
+                Language::Php,
+            );
+            assert!(span.is_some(), "should resolve class::UserService::method::findUser");
+        }
+
+        #[test]
+        fn resolve_php_interface() {
+            let span = resolve_tree_path(SAMPLE_PHP, "interface::Repository", Language::Php);
+            assert!(span.is_some(), "should resolve interface::Repository");
+        }
+
+        #[test]
+        fn resolve_php_trait() {
+            let span = resolve_tree_path(SAMPLE_PHP, "trait::Cacheable", Language::Php);
+            assert!(span.is_some(), "should resolve trait::Cacheable");
+        }
+
+        #[test]
+        fn resolve_php_function() {
+            let span = resolve_tree_path(SAMPLE_PHP, "fn::helper", Language::Php);
+            assert!(span.is_some(), "should resolve fn::helper");
+        }
+
+        #[test]
+        fn resolve_php_enum() {
+            let span = resolve_tree_path(SAMPLE_PHP, "enum::Status", Language::Php);
+            assert!(span.is_some(), "should resolve enum::Status");
+        }
+
+        #[test]
+        fn roundtrip_php() {
+            let span = resolve_tree_path(SAMPLE_PHP, "fn::helper", Language::Php).unwrap();
+            let path = compute_tree_path(SAMPLE_PHP, span, Language::Php);
+            assert_eq!(path, "fn::helper");
+        }
+
+        #[test]
+        fn detect_php_extension() {
+            assert_eq!(
+                detect_language(Path::new("UserService.php")),
+                Some(Language::Php)
+            );
+        }
+    }
+
+    mod kotlin_tests {
+        use super::*;
+
+        const SAMPLE_KOTLIN: &str = r#"class Calculator {
+    fun add(a: Int, b: Int): Int {
+        return a + b
+    }
+}
+
+object Singleton {
+    fun instance(): Singleton = this
+}
+
+fun standalone(): Int {
+    return 42
+}
+
+typealias StringList = List<String>
+"#;
+
+        #[test]
+        fn resolve_kotlin_class() {
+            let span = resolve_tree_path(SAMPLE_KOTLIN, "class::Calculator", Language::Kotlin);
+            assert!(span.is_some(), "should resolve class::Calculator");
+        }
+
+        #[test]
+        fn resolve_kotlin_method() {
+            let span = resolve_tree_path(
+                SAMPLE_KOTLIN,
+                "class::Calculator::fn::add",
+                Language::Kotlin,
+            );
+            assert!(span.is_some(), "should resolve class::Calculator::fn::add");
+        }
+
+        #[test]
+        fn resolve_kotlin_object() {
+            let span = resolve_tree_path(SAMPLE_KOTLIN, "object::Singleton", Language::Kotlin);
+            assert!(span.is_some(), "should resolve object::Singleton");
+        }
+
+        #[test]
+        fn resolve_kotlin_function() {
+            let span = resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin);
+            assert!(span.is_some(), "should resolve fn::standalone");
+        }
+
+        #[test]
+        fn roundtrip_kotlin() {
+            let span =
+                resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin).unwrap();
+            let path = compute_tree_path(SAMPLE_KOTLIN, span, Language::Kotlin);
+            assert_eq!(path, "fn::standalone");
+        }
+
+        #[test]
+        fn detect_kotlin_extension() {
+            assert_eq!(
+                detect_language(Path::new("Main.kt")),
+                Some(Language::Kotlin)
+            );
+            assert_eq!(
+                detect_language(Path::new("build.gradle.kts")),
+                Some(Language::Kotlin)
+            );
+        }
+    }
+
+    mod swift_tests {
+        use super::*;
+
+        const SAMPLE_SWIFT: &str = r#"protocol Drawable {
+    func draw()
+}
+
+class Shape {
+    func area() -> Double {
+        return 0.0
+    }
+
+    init() {}
+}
+
+func standalone() -> Int {
+    return 42
+}
+
+typealias Callback = () -> Void
+"#;
+
+        #[test]
+        fn resolve_swift_protocol() {
+            let span = resolve_tree_path(SAMPLE_SWIFT, "protocol::Drawable", Language::Swift);
+            assert!(span.is_some(), "should resolve protocol::Drawable");
+        }
+
+        #[test]
+        fn resolve_swift_class() {
+            let span = resolve_tree_path(SAMPLE_SWIFT, "class::Shape", Language::Swift);
+            assert!(span.is_some(), "should resolve class::Shape");
+        }
+
+        #[test]
+        fn resolve_swift_method() {
+            let span = resolve_tree_path(
+                SAMPLE_SWIFT,
+                "class::Shape::fn::area",
+                Language::Swift,
+            );
+            assert!(span.is_some(), "should resolve class::Shape::fn::area");
+        }
+
+        #[test]
+        fn resolve_swift_function() {
+            let span = resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift);
+            assert!(span.is_some(), "should resolve fn::standalone");
+        }
+
+        #[test]
+        fn roundtrip_swift() {
+            let span =
+                resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift).unwrap();
+            let path = compute_tree_path(SAMPLE_SWIFT, span, Language::Swift);
+            assert_eq!(path, "fn::standalone");
+        }
+
+        #[test]
+        fn detect_swift_extension() {
+            assert_eq!(
+                detect_language(Path::new("ViewController.swift")),
+                Some(Language::Swift)
+            );
+        }
+    }
+
+    mod objc_tests {
+        use super::*;
+
+        const SAMPLE_OBJC: &str = r#"#import <Foundation/Foundation.h>
+
+struct CGPoint {
+    float x;
+    float y;
+};
+
+void helper(void) {
+    NSLog(@"hello");
+}
+"#;
+
+        #[test]
+        fn resolve_objc_function() {
+            let span = resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC);
+            assert!(span.is_some(), "should resolve fn::helper");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_OBJC.lines().collect();
+            assert!(
+                lines[start - 1].contains("void helper"),
+                "span should point to helper function"
+            );
+        }
+
+        #[test]
+        fn resolve_objc_struct() {
+            let span = resolve_tree_path(SAMPLE_OBJC, "struct::CGPoint", Language::ObjectiveC);
+            assert!(span.is_some(), "should resolve struct::CGPoint");
+        }
+
+        #[test]
+        fn roundtrip_objc() {
+            let span =
+                resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC).unwrap();
+            let path = compute_tree_path(SAMPLE_OBJC, span, Language::ObjectiveC);
+            assert_eq!(path, "fn::helper");
+        }
+
+        #[test]
+        fn detect_objc_extensions() {
+            assert_eq!(
+                detect_language(Path::new("AppDelegate.m")),
+                Some(Language::ObjectiveC)
+            );
+            assert_eq!(
+                detect_language(Path::new("mixed.mm")),
+                Some(Language::ObjectiveC)
             );
         }
     }

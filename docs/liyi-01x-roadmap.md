@@ -19,6 +19,7 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 | Milestone | Status | Notes |
 |-----------|--------|-------|
 | M1 Multi-language tree_path | ✅ Complete | All 5 languages built-in, no feature gates |
+| M2 Extended language support | ✅ Complete | C, C++, Java, C#, PHP, ObjC, Kotlin, Swift |
 | M3 Remaining MVP gaps | ✅ Complete | All items implemented |
 | M5.1 MissingRelated | ✅ Complete | Diagnostic implemented, auto-fix in `--fix` mode |
 | M5.2 `--fail-on-untracked` | ✅ Complete | Flag implemented with tests |
@@ -170,7 +171,245 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 
 ---
 
-## M2. Deferred languages — design notes
+## M2. Extended language support
+
+**Status:** ✅ Complete — 8 additional languages built-in, no feature gates.
+
+**Goal:** Extend tree-sitter structural identity to C, C++, Java, C#, PHP, Objective-C, Kotlin, and Swift. All grammars are compiled into the binary unconditionally, matching the M1 design decision. The binary-size cost remains modest (tree-sitter grammars are compact C code) and the universality benefit is significant — C/C++ codebases are where intent drift is most acute and structural anchors most valuable.
+
+### M2.1. C ✅
+
+**Grammar:** `tree-sitter-c` (0.24.1) — the oldest and most mature tree-sitter grammar.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_definition` |
+| `struct` | `struct_specifier` |
+| `enum` | `enum_specifier` |
+| `typedef` | `type_definition` |
+
+**Design notes:**
+- C function names live inside a `declarator` → `function_declarator` → `identifier` chain, not a simple `name` field. A `c_node_name` custom callback recursively unwraps `pointer_declarator`, `parenthesized_declarator`, and `attributed_declarator` wrappers to find the `function_declarator`, then extracts the identifier.
+- `type_definition` (typedef) names are in the `declarator` field.
+- `.h` files are ambiguous (could be C, C++, or ObjC). Mapped to C by default since C has the simplest grammar and produces valid tree_paths for the overlapping subset.
+
+**Extensions:** `.c`, `.h`
+
+**Acceptance criteria:**
+- Functions, structs, enums, typedefs all resolve.
+- Roundtrip (compute → resolve → same span) passes.
+
+### M2.2. C++ ✅
+
+**Grammar:** `tree-sitter-cpp` (0.23.4) — second-oldest tree-sitter grammar, extremely mature.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_definition` |
+| `class` | `class_specifier` |
+| `struct` | `struct_specifier` |
+| `namespace` | `namespace_definition` |
+| `enum` | `enum_specifier` |
+| `template` | `template_declaration` |
+| `typedef` | `type_definition` |
+| `using` | `alias_declaration` |
+
+**Design notes:**
+- Inherits C's declarator-chain name extraction pattern via a `cpp_node_name` callback.
+- `template_declaration` is a transparent wrapper. The callback unwraps it to find the inner declaration (`function_definition`, `class_specifier`, etc.) and extracts the name from there.
+- Namespaces use `declaration_list` as their body container; `find_body` finds this via the fallback child search.
+- Class methods are `function_definition` inside `field_declaration_list`; the extended `find_body` fallback handles this.
+- `enum class` (scoped enums) parse as `enum_specifier` just like plain enums.
+
+**Extensions:** `.cpp`, `.cc`, `.cxx`, `.hpp`, `.hh`, `.hxx`, `.h++`, `.c++`
+
+**Acceptance criteria:**
+- Namespaces, classes-in-namespaces, methods-in-classes, standalone functions, enums all resolve.
+- Template-wrapped declarations resolve correctly.
+- Roundtrip passes through namespace nesting.
+
+### M2.3. Java ✅
+
+**Grammar:** `tree-sitter-java` (0.23.5)
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `method_declaration` |
+| `class` | `class_declaration` |
+| `interface` | `interface_declaration` |
+| `enum` | `enum_declaration` |
+| `constructor` | `constructor_declaration` |
+| `record` | `record_declaration` |
+| `annotation` | `annotation_type_declaration` |
+
+**Design notes:**
+- All node types have a standard `name` field — no custom callback needed.
+- Methods are `method_declaration` inside `class_body`. Tree_path: `class::Calculator::fn::add`.
+- Records (Java 14+) and annotation types are included for completeness.
+
+**Extensions:** `.java`
+
+**Acceptance criteria:**
+- Classes, methods, constructors, interfaces, enums, records all resolve.
+- Roundtrip passes for methods nested in classes.
+
+### M2.4. C# ✅
+
+**Grammar:** `tree-sitter-c-sharp` (0.23.1)
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `method_declaration` |
+| `class` | `class_declaration` |
+| `interface` | `interface_declaration` |
+| `enum` | `enum_declaration` |
+| `struct` | `struct_declaration` |
+| `namespace` | `namespace_declaration` |
+| `constructor` | `constructor_declaration` |
+| `property` | `property_declaration` |
+| `record` | `record_declaration` |
+| `delegate` | `delegate_declaration` |
+
+**Design notes:**
+- All node types have a standard `name` field — no custom callback needed.
+- Namespaces use `body` field for descent, enabling `namespace::MyApp::class::Foo::fn::Bar` paths.
+- Properties are tracked as named items (important for C#'s property-centric design).
+- File-scoped namespace declarations (`namespace Foo;`) are not tracked as container items since they have no body to descend into.
+
+**Extensions:** `.cs`
+
+**Acceptance criteria:**
+- Namespaces, classes, methods, properties, interfaces, enums, structs all resolve.
+- Namespace → class → method nesting roundtrips correctly.
+
+### M2.5. PHP ✅
+
+**Grammar:** `tree-sitter-php` (0.24.2) — uses `LANGUAGE_PHP_ONLY` (pure PHP, no HTML interleaving).
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_definition` |
+| `class` | `class_declaration` |
+| `method` | `method_declaration` |
+| `interface` | `interface_declaration` |
+| `enum` | `enum_declaration` |
+| `trait` | `trait_declaration` |
+| `namespace` | `namespace_definition` |
+| `const` | `const_declaration` |
+
+**Design notes:**
+- PHP distinguishes `function_definition` (top-level) from `method_declaration` (inside classes). Both have a `name` field.
+- `const_declaration` stores its name inside a `const_element` child — a `php_node_name` custom callback handles this.
+- Traits are first-class items (important for Laravel/Symfony codebases).
+- PHP 8.1 enums are supported.
+
+**Extensions:** `.php`
+
+**Acceptance criteria:**
+- Classes, methods, functions, interfaces, traits, enums all resolve.
+- Roundtrip passes.
+
+### M2.6. Objective-C ✅
+
+**Grammar:** `tree-sitter-objc` (3.0.2)
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_definition` |
+| `class` | `class_interface` |
+| `impl` | `class_implementation` |
+| `protocol` | `protocol_declaration` |
+| `method` | `method_definition` |
+| `method_decl` | `method_declaration` |
+| `struct` | `struct_specifier` |
+| `enum` | `enum_specifier` |
+| `typedef` | `type_definition` |
+
+**Design notes:**
+- Most ObjC declaration node types lack standard `name` fields. An `objc_node_name` custom callback handles:
+  - `function_definition`: C-style declarator chain (shared with C callback).
+  - `class_interface` / `class_implementation`: name is a direct child `identifier` or `type_identifier`.
+  - `protocol_declaration`: same pattern.
+  - `method_declaration` / `method_definition`: ObjC selector names are composed from `keyword_declarator` children (e.g., `initWithFrame:style:`).
+- C-level structs and enums use the standard `name` field.
+- `class_interface` (`@interface`) and `class_implementation` (`@implementation`) are tracked as separate item types, mirroring ObjC's header/implementation split.
+
+**Extensions:** `.m`, `.mm`
+
+**Acceptance criteria:**
+- C functions, structs, and enums resolve (shared with C grammar patterns).
+- Roundtrip passes for C-level items.
+
+### M2.7. Kotlin ✅
+
+**Grammar:** `tree-sitter-kotlin-ng` (1.1.0) — the `-ng` fork, compatible with tree-sitter 0.26.x.
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_declaration` |
+| `class` | `class_declaration` |
+| `object` | `object_declaration` |
+| `property` | `property_declaration` |
+| `typealias` | `type_alias` |
+
+**Design notes:**
+- `class_body` is a positional child of `class_declaration` (not a named field). The `find_body` fallback was extended to search `body_fields` entries as child node kinds, not just field names.
+- `property_declaration` names live inside a `variable_declaration` or `simple_identifier` child — handled by `kotlin_node_name` callback.
+- `type_alias` names are in a `type_identifier` or `simple_identifier` child.
+- `object_declaration` (Kotlin objects / companion objects) has a standard `name` field.
+- The original `tree-sitter-kotlin` crate (0.3.x) requires tree-sitter <0.23 and is incompatible. The `-ng` fork from `tree-sitter-grammars` is the maintained successor.
+
+**Extensions:** `.kt`, `.kts`
+
+**Acceptance criteria:**
+- Classes, methods-in-classes, objects, functions all resolve.
+- Roundtrip passes.
+
+### M2.8. Swift ✅
+
+**Grammar:** `tree-sitter-swift` (0.7.1)
+
+**Kind mappings:**
+
+| Shorthand | Node kind |
+|---|---|
+| `fn` | `function_declaration` |
+| `class` | `class_declaration` |
+| `protocol` | `protocol_declaration` |
+| `enum` | `enum_entry` |
+| `property` | `property_declaration` |
+| `init` | `init_declaration` |
+| `typealias` | `typealias_declaration` |
+
+**Design notes:**
+- All node types have a standard `name` field — no custom callback needed.
+- `class_declaration` covers both `class` and `struct` keywords (both use `class_declaration` with a `declaration_kind` field distinguishing them).
+- Protocols map naturally to the `protocol` shorthand.
+- `init_declaration` is tracked separately from methods since Swift initializers are syntactically distinct.
+
+**Extensions:** `.swift`
+
+**Acceptance criteria:**
+- Protocols, classes, methods-in-classes, functions, init all resolve.
+- Roundtrip passes.
+
+---
+
+## M2.9. Deferred languages — design notes
 
 These languages are tracked but not planned for 0.1.x.
 
