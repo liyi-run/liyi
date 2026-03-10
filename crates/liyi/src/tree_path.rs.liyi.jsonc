@@ -19,8 +19,8 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        223,
-        256
+        253,
+        286
       ],
       "tree_path": "fn::detect_language",
       "source_hash": "sha256:1647b004bc523d06b5484b9d29412743ae6bfdf02f5d512970fd0a20a157a7cf",
@@ -32,10 +32,10 @@
       "intent": "Enumerate supported tree-sitter languages for tree_path operations. In 0.1, only Rust is supported; the enum is the extension point for adding more languages.",
       "source_span": [
         182,
-        194
+        189
       ],
       "tree_path": "enum::Language",
-      "source_hash": "sha256:21e32f4b83f6a26fe960a8f51a2fbc1a57882b926696e78d8a7adb3da6ecc762",
+      "source_hash": "sha256:cfad736b976eb0cd3212d06cb22896d43affbd78181dc5878a71553467e7ff29",
       "source_anchor": "pub enum Language {"
     },
     {
@@ -54,8 +54,8 @@
       "reviewed": false,
       "intent": "Parse a tree_path string into segments of (kind, name) pairs by splitting on '::' and grouping consecutive pairs. Return None if the number of parts is odd (malformed). Validate each kind against the known shorthand set.",
       "source_span": [
-        278,
-        294
+        309,
+        325
       ],
       "tree_path": "fn::parse_tree_path",
       "source_hash": "sha256:eb1bdb126bb090d769612797d5428edd3c20ba72ba04dad58071bbfa955240c2",
@@ -66,11 +66,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        301,
-        318
+        332,
+        349
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:8cd19d6e6704970f8cbead0b56b05a9196ca29b0439b37b31a819a958dc03dbe",
+      "source_hash": "sha256:ee955e130971b81a3a7565d81618a2edd7c44a50d82b91250b9089cbbabef519",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -78,8 +78,8 @@
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments.",
       "source_span": [
-        321,
-        350
+        352,
+        381
       ],
       "tree_path": "fn::resolve_segments",
       "source_hash": "sha256:1fcaea1f0eccde605bcd9de4094980378600d7a8d221aed55dc8fad1f60cf48b",
@@ -90,8 +90,8 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body or declaration_list. Try the 'body' field first (mod, fn), then fall back to looking for a declaration_list child (impl, trait). Delegate to resolve_segments for the recursive match.",
       "source_span": [
-        353,
-        361
+        384,
+        392
       ],
       "tree_path": "fn::resolve_in_body",
       "source_hash": "sha256:f1514f012bc8d300c425867e4a1cce1aaf72f1f58885eeaf24456114234473d6",
@@ -102,11 +102,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        368,
-        389
+        399,
+        424
       ],
       "tree_path": "fn::compute_tree_path",
-      "source_hash": "sha256:30ecd47287f846a39cdbd906075c6eae16d286eda5c3bc92d87cfbae67ec2e74",
+      "source_hash": "sha256:1b92c3bed64a4f98aa3afc677bf4e8cdd872bb0ec44f9fb362ad55f7c129b847",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
@@ -114,8 +114,8 @@
       "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        397,
-        443
+        432,
+        478
       ],
       "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:187c06169aae241150cb9bd88810da07aef5d967431ae25b50aab3ff111fc220",
@@ -126,8 +126,8 @@
       "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        461,
-        507
+        496,
+        542
       ],
       "tree_path": "fn::collect_path",
       "source_hash": "sha256:0086ee43dc7c085025e553af9914df58fab43d8e8b579486f21d5788d8d0d221",

@@ -181,45 +181,75 @@ static TSX_CONFIG: LanguageConfig = LanguageConfig {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     Rust,
-    #[cfg(feature = "lang-python")]
     Python,
-    #[cfg(feature = "lang-go")]
     Go,
-    #[cfg(feature = "lang-javascript")]
     JavaScript,
-    #[cfg(feature = "lang-typescript")]
     TypeScript,
-    #[cfg(feature = "lang-typescript")]
     Tsx,
 }
 
 impl Language {
-    /// Get the language configuration for this language.
-    fn config(&self) -> &'static LanguageConfig {
+    /// Check if this language is supported (its feature is enabled).
+    pub fn is_supported(&self) -> bool {
         match self {
-            Language::Rust => &RUST_CONFIG,
-            #[cfg(feature = "lang-python")]
-            Language::Python => &PYTHON_CONFIG,
-            #[cfg(feature = "lang-go")]
-            Language::Go => &GO_CONFIG,
-            #[cfg(feature = "lang-javascript")]
-            Language::JavaScript => &JAVASCRIPT_CONFIG,
-            #[cfg(feature = "lang-typescript")]
-            Language::TypeScript => &TYPESCRIPT_CONFIG,
-            #[cfg(feature = "lang-typescript")]
-            Language::Tsx => &TSX_CONFIG,
+            Language::Rust => true,
+            Language::Python => cfg!(feature = "lang-python"),
+            Language::Go => cfg!(feature = "lang-go"),
+            Language::JavaScript => cfg!(feature = "lang-javascript"),
+            Language::TypeScript => cfg!(feature = "lang-typescript"),
+            Language::Tsx => cfg!(feature = "lang-typescript"),
+        }
+    }
+
+    /// Get the language configuration for this language.
+    ///
+    /// Returns `None` if the language is not supported (feature not enabled).
+    fn config(&self) -> Option<&'static LanguageConfig> {
+        match self {
+            Language::Rust => Some(&RUST_CONFIG),
+            Language::Python => {
+                #[cfg(feature = "lang-python")]
+                return Some(&PYTHON_CONFIG);
+                #[cfg(not(feature = "lang-python"))]
+                return None;
+            }
+            Language::Go => {
+                #[cfg(feature = "lang-go")]
+                return Some(&GO_CONFIG);
+                #[cfg(not(feature = "lang-go"))]
+                return None;
+            }
+            Language::JavaScript => {
+                #[cfg(feature = "lang-javascript")]
+                return Some(&JAVASCRIPT_CONFIG);
+                #[cfg(not(feature = "lang-javascript"))]
+                return None;
+            }
+            Language::TypeScript => {
+                #[cfg(feature = "lang-typescript")]
+                return Some(&TYPESCRIPT_CONFIG);
+                #[cfg(not(feature = "lang-typescript"))]
+                return None;
+            }
+            Language::Tsx => {
+                #[cfg(feature = "lang-typescript")]
+                return Some(&TSX_CONFIG);
+                #[cfg(not(feature = "lang-typescript"))]
+                return None;
+            }
         }
     }
 
     /// Get the tree-sitter language grammar.
-    fn ts_language(&self) -> TSLanguage {
-        let config = self.config();
-        (config.ts_language)()
+    ///
+    /// Returns `None` if the language is not supported.
+    fn ts_language(&self) -> Option<TSLanguage> {
+        self.config().map(|cfg| (cfg.ts_language)())
     }
 }
 
 /// Detect language from file extension. Returns `None` for unsupported
-/// languages.
+/// languages (unknown extension or feature not enabled).
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
@@ -256,12 +286,13 @@ pub fn detect_language(path: &Path) -> Option<Language> {
 }
 
 /// Create a tree-sitter parser for the given language.
-fn make_parser(lang: Language) -> Parser {
+///
+/// Returns `None` if the language is not supported (feature not enabled).
+fn make_parser(lang: Language) -> Option<Parser> {
     let mut parser = Parser::new();
-    parser
-        .set_language(&lang.ts_language())
-        .expect("tree-sitter grammar should load");
-    parser
+    let ts_lang = lang.ts_language()?;
+    parser.set_language(&ts_lang).ok()?;
+    Some(parser)
 }
 
 /// A parsed tree_path segment: (kind_shorthand, name).
@@ -297,15 +328,15 @@ fn parse_tree_path(tree_path: &str) -> Option<Vec<PathSegment>> {
 /// inclusive).
 ///
 /// Returns `None` if the tree_path cannot be resolved (item renamed, deleted,
-/// or grammar unavailable).
+/// grammar unavailable, or language not supported).
 pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {
     if tree_path.is_empty() {
         return None;
     }
 
-    let config = lang.config();
+    let config = lang.config()?;
     let segments = parse_tree_path(tree_path)?;
-    let mut parser = make_parser(lang);
+    let mut parser = make_parser(lang)?;
     let tree = parser.parse(source, None)?;
     let root = tree.root_node();
 
@@ -366,8 +397,12 @@ fn resolve_in_body<'a>(
 /// (e.g., the span doesn't align with a named item, or the language is
 /// unsupported).
 pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {
-    let config = lang.config();
-    let mut parser = make_parser(lang);
+    let Some(config) = lang.config() else {
+        return String::new();
+    };
+    let Some(mut parser) = make_parser(lang) else {
+        return String::new();
+    };
     let tree = match parser.parse(source, None) {
         Some(t) => t,
         None => return String::new(),
