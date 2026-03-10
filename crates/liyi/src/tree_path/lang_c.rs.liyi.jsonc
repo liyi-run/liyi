@@ -42,13 +42,13 @@
     {
       "item": "CONFIG",
       "reviewed": false,
-      "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c/.h extensions, kind mappings for fn/struct/enum/typedef, and wire the custom c_node_name callback for name extraction.",
+      "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c extension only, kind mappings for fn/struct/enum/typedef, and wire the custom c_node_name callback for name extraction.",
       "source_span": [
         49,
         62
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:9d7828f146ec68282253daedc10b6f3e19b884b881703d558c83fc4618d0012d",
+      "source_hash": "sha256:a00043fab0a5a5d1ed26542c92376dc4c590426266602182f24fdd7cb20e7b84",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

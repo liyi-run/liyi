@@ -43,7 +43,7 @@ fn cpp_node_name(node: &Node, source: &str) -> Option<String> {
 /// C++ language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_cpp::LANGUAGE.into(),
-    extensions: &["cpp", "cc", "cxx", "hpp", "hh", "hxx", "h++", "c++"],
+    extensions: &["cpp", "cc", "cxx", "h", "hpp", "hh", "hxx", "h++", "c++"],
     kind_map: &[
         ("fn", "function_definition"),
         ("class", "class_specifier"),
@@ -152,6 +152,10 @@ void standalone() {}
         assert_eq!(detect_language(Path::new("main.cc")), Some(Language::Cpp));
         assert_eq!(
             detect_language(Path::new("header.hpp")),
+            Some(Language::Cpp)
+        );
+        assert_eq!(
+            detect_language(Path::new("header.h")),
             Some(Language::Cpp)
         );
     }

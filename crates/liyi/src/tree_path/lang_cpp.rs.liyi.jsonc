@@ -24,7 +24,7 @@
         61
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:2fe337bd8a4a25f0ad98cf3106f17746e3898a29e4c6b6edbb86ac4e80ece55c",
+      "source_hash": "sha256:8cac0782daa7534d6cc52d7382f1254bee24b0c3ad387d88792325a1460302bf",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

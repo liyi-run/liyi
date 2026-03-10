@@ -48,7 +48,7 @@ fn c_node_name(node: &Node, source: &str) -> Option<String> {
 /// C language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_c::LANGUAGE.into(),
-    extensions: &["c", "h"],
+    extensions: &["c"],
     kind_map: &[
         ("fn", "function_definition"),
         ("struct", "struct_specifier"),
@@ -154,6 +154,5 @@ static int helper(void) {
     #[test]
     fn detect_c_extensions() {
         assert_eq!(detect_language(Path::new("main.c")), Some(Language::C));
-        assert_eq!(detect_language(Path::new("header.h")), Some(Language::C));
     }
 }
