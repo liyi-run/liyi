@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_javascript.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the JavaScript language configuration for tree_path resolution: register tree-sitter-javascript grammar, .js/.mjs/.cjs/.jsx extensions, kind mappings for fn/class/method, using standard name field with no custom name extraction.",
+      "source_span": [
+        4,
+        16
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:5e92f722de7b8368b20bad4c0a46f1c208b2ae45049022f63f2424379f48f775",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

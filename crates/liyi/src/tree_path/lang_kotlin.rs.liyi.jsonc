@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_kotlin.rs",
+  "specs": [
+    {
+      "item": "kotlin_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for Kotlin AST nodes: for property_declaration, find the name inside a variable_declaration child or a simple_identifier child; for type_alias, find the type_identifier or simple_identifier child before the RHS. Return None for unrecognized kinds.",
+      "source_span": [
+        10,
+        39
+      ],
+      "tree_path": "fn::kotlin_node_name",
+      "source_hash": "sha256:572be5a3c85aef30324c0fa957348b46f397da76ef354d9d7e1e4d7c19f1b27a",
+      "source_anchor": "fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Kotlin language configuration for tree_path resolution: register tree-sitter-kotlin-ng grammar, .kt/.kts extensions, kind mappings for fn/class/object/property/typealias, and wire the custom kotlin_node_name callback.",
+      "source_span": [
+        42,
+        56
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:7bf842fab86334a9e6eb26c98ae34f1b341b8622bfbf2d12681a870ddb71e48a",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

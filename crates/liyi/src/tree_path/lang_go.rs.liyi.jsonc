@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_go.rs",
+  "specs": [
+    {
+      "item": "go_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for Go AST nodes: encode method receivers into the name as ReceiverType.Method or (*ReceiverType).Method for method_declaration; navigate into type_spec for type_declaration names; navigate into const_spec/var_spec for const_declaration/var_declaration names. Return None for unrecognized kinds.",
+      "source_span": [
+        12,
+        63
+      ],
+      "tree_path": "fn::go_node_name",
+      "source_hash": "sha256:5198217ac70bb06963c30ee0f9f0daa9972cdb47834ed82cf99b800f8b043620",
+      "source_anchor": "fn go_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Go language configuration for tree_path resolution: register tree-sitter-go grammar, .go extension, kind mappings for fn/method/type/const/var, and wire the custom go_node_name callback for receiver-encoded method names.",
+      "source_span": [
+        66,
+        80
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:da63d7b2578d2dfaef76a198b5ce9258f3f0fd5e50ae7a2f5b67ad3bbabc972c",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

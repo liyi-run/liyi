@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_cpp.rs",
+  "specs": [
+    {
+      "item": "cpp_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for C++ AST nodes extending the C extractor: handle function_definition via c_extract_declarator_name, type_definition/alias_declaration via name or declarator fields, and template_declaration by transparently extracting the name from the wrapped inner declaration (class, struct, enum, concept, alias, function, or nested template).",
+      "source_span": [
+        11,
+        41
+      ],
+      "tree_path": "fn::cpp_node_name",
+      "source_hash": "sha256:4f9ebbcef1c9124312eed3f03d46f02bc63f85b5d9fd2e6a3ac44d5e3b5f9c08",
+      "source_anchor": "fn cpp_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the C++ language configuration for tree_path resolution: register tree-sitter-cpp grammar, C++ file extensions (.cpp/.cc/.cxx/.hpp etc.), kind mappings for fn/class/struct/namespace/enum/template/typedef/using, and wire the custom cpp_node_name callback.",
+      "source_span": [
+        44,
+        61
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:2fe337bd8a4a25f0ad98cf3106f17746e3898a29e4c6b6edbb86ac4e80ece55c",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_php.rs",
+  "specs": [
+    {
+      "item": "php_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for PHP const_declaration nodes: navigate into the const_element child and read its name field. Return None for all other node kinds.",
+      "source_span": [
+        8,
+        20
+      ],
+      "tree_path": "fn::php_node_name",
+      "source_hash": "sha256:784f44b137289d73dfcdb013715d01c48c432887e427033284766ec905813368",
+      "source_anchor": "fn php_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the PHP language configuration for tree_path resolution: register tree-sitter-php PHP-only grammar (no HTML interleaving), .php extension, kind mappings for fn/class/method/interface/enum/trait/namespace/const, and wire the custom php_node_name callback.",
+      "source_span": [
+        23,
+        40
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:0a09a6bb9162b31e32d5ddad17114c705ffc366084ebeaffc15ca828ffa83393",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

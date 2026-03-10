@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_java.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Java language configuration for tree_path resolution: register tree-sitter-java grammar, .java extension, kind mappings for fn/class/interface/enum/constructor/record/annotation, using standard name field with no custom name extraction.",
+      "source_span": [
+        4,
+        20
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:1017a74a175aa52b8d3704e6ae8e28f5587bbacffbb265398ad2aa267b7127cf",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

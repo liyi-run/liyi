@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_python.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction.",
+      "source_span": [
+        4,
+        12
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:aa974317e3de74f3d49a3f1fca69ccbacf47a05942d416fe1be099b1889d0668",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

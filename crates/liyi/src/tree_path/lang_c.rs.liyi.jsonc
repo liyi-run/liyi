@@ -1,0 +1,55 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_c.rs",
+  "specs": [
+    {
+      "item": "c_extract_declarator_name",
+      "reviewed": false,
+      "intent": "Extract the function name from a C/C++ function_definition node by walking the declarator field chain (function_definition → function_declarator → declarator identifier), unwrapping pointer/parenthesized/attributed wrappers as needed.",
+      "source_span": [
+        12,
+        17
+      ],
+      "tree_path": "fn::c_extract_declarator_name",
+      "source_hash": "sha256:b770215018f35c818e0fe450fcee058c8407d827f8fb2bfc2026bfd925b981e4",
+      "source_anchor": "pub(super) fn c_extract_declarator_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "unwrap_to_function_declarator",
+      "reviewed": false,
+      "intent": "Recursively unwrap pointer_declarator, parenthesized_declarator, and attributed_declarator wrapper nodes to locate the inner function_declarator node. Must return None if no function_declarator is found in the chain.",
+      "source_span": [
+        21,
+        30
+      ],
+      "tree_path": "fn::unwrap_to_function_declarator",
+      "source_hash": "sha256:4e203fab2d264c4f02df280f88a191ae9344828e17bb91dd98c357c327baf7a0",
+      "source_anchor": "fn unwrap_to_function_declarator<'a>(node: &Node<'a>) -> Option<Node<'a>> {"
+    },
+    {
+      "item": "c_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for C AST nodes: dispatch to c_extract_declarator_name for function_definition, and read the declarator field directly for type_definition (typedef). Return None for all other node kinds.",
+      "source_span": [
+        36,
+        46
+      ],
+      "tree_path": "fn::c_node_name",
+      "source_hash": "sha256:6c373de50a8b2dee1ca251498a38f9e0397d1061554089e7bc2425434e0fac67",
+      "source_anchor": "fn c_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c/.h extensions, kind mappings for fn/struct/enum/typedef, and wire the custom c_node_name callback for name extraction.",
+      "source_span": [
+        49,
+        62
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:9d7828f146ec68282253daedc10b6f3e19b884b881703d558c83fc4618d0012d",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

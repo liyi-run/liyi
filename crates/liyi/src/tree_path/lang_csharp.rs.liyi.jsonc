@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_csharp.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the C# language configuration for tree_path resolution: register tree-sitter-c-sharp grammar, .cs extension, kind mappings for fn/class/interface/enum/struct/namespace/constructor/property/record/delegate, using standard name field with no custom name extraction.",
+      "source_span": [
+        4,
+        23
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:51d280af9946356cc55cd9d35843d74bbf603996767a4004ee4923946cec1624",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

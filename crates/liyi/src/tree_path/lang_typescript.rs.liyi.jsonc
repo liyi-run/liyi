@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_typescript.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the TypeScript language configuration for tree_path resolution: register tree-sitter-typescript grammar (LANGUAGE_TYPESCRIPT), .ts/.mts/.cts extensions, kind mappings for fn/class/method/interface/type/enum, using standard name field with no custom name extraction.",
+      "source_span": [
+        4,
+        19
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:7c920dd5e1c5bb41bc5de6c4e9e06449f370c31799a4c09879136fe11fc85982",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    },
+    {
+      "item": "TSX_CONFIG",
+      "reviewed": false,
+      "intent": "Define the TSX language configuration for tree_path resolution: register tree-sitter-typescript TSX grammar (LANGUAGE_TSX), .tsx extension, same kind mappings as TypeScript (fn/class/method/interface/type/enum), using standard name field with no custom name extraction.",
+      "source_span": [
+        22,
+        37
+      ],
+      "tree_path": "static::TSX_CONFIG",
+      "source_hash": "sha256:d3f258d9e47df10f71f0f44bcf8ba18093ff75390224c03d5a2c487bf65eaf39",
+      "source_anchor": "pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

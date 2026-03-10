@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_rust.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Rust language configuration for tree_path resolution: register tree-sitter-rust grammar, .rs extension, kind mappings for fn/struct/enum/impl/trait/mod/const/static/type/macro, with impl_item using the type field for name extraction via name_overrides and no custom name callback.",
+      "source_span": [
+        4,
+        23
+      ],
+      "tree_path": "static::CONFIG",
+      "source_hash": "sha256:5f7fa704e1952495b5a28b78087f7a26cf4abafb32fa131304fc8b37d0a03786",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}
