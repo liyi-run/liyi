@@ -466,7 +466,7 @@ The path identifies the item by node kind and name, not by position. The tool co
 
 The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi reanchor` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
 
-**Language support.** Tree-sitter support is grammar-dependent. In 0.1, Rust is the primary supported language (via `tree-sitter-rust`). For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
+**Language support.** Tree-sitter support is grammar-dependent. Rust, Python, Go, JavaScript, and TypeScript are built-in. For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
 
 **Multi-language architecture (`LanguageConfig`).** The `tree_path` implementation is designed to be language-extensible via a data-driven configuration per language. Each supported language provides:
 
@@ -481,14 +481,14 @@ The agent MAY set `tree_path` to `""` explicitly to signal "I considered structu
 
 The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum`, `const`, `static`, `type`, `macro`, `interface`, `method`) is shared across languages — `fn` always means "function-like item" regardless of whether the underlying node kind is `function_item` (Rust), `function_definition` (Python/Go), or `function_declaration` (JS/TS). The `tree_path` format remains the same: `fn::add_money`, `class::Order::fn::process`.
 
-Each language is gated behind a Cargo feature (`lang-python`, `lang-go`, `lang-javascript`, `lang-typescript`) so users only pay binary-size cost for languages they need. A `lang-all` convenience feature includes everything.
+All languages are built-in — the binary ships with every supported tree-sitter grammar. The binary-size cost is modest relative to the universality benefit; Python, Go, JavaScript, and TypeScript codebases vastly outnumber Rust codebases, and requiring users to opt in per language would hinder adoption of a tool whose value proposition is universality.
 
-**Planned languages (0.1.x):**
+**Built-in languages:**
 
 | Language | Grammar crate | Notes |
 |---|---|---|
 | Python | `tree-sitter-python` | Flat AST; methods are `function_definition` inside `class_definition` body. No `impl`-block equivalent. |
-| Go | `tree-sitter-go` | `type_declaration` → `type_spec` indirection for structs/interfaces. Methods have receivers and live at top level — tree_path encodes as `method::(*MyType).DoThing` or `fn::DoThing`. |
+| Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method::(*MyType).DoThing` (pointer) or `method::MyType.DoThing` (value). |
 | JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
 
@@ -1349,7 +1349,7 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 | Agent (next session) | `suggested_intent` for items with `verdict: semantic` | Read triage, propose intent updates in sidecar |
 | Human (terminal) | Formatted summary + triage table | `liyi triage --summary`; `--json` for raw |
 
-**Why the LLM is not in the binary.** Building LLM calls into `liyi` would require API key management, provider abstraction (OpenAI, Anthropic, Bedrock, Vertex, local models...), HTTP client + TLS, rate limit handling, token budgeting, and retry logic. It would bloat a ~3000-line binary with complexity that the agentic framework already solved. The binary stays deterministic, offline, and small. The reasoning lives where the model access already is.
+**Why the LLM is not in the binary.** Building LLM calls into `liyi` would require API key management, provider abstraction (OpenAI, Anthropic, Bedrock, Vertex, local models...), HTTP client + TLS, rate limit handling, token budgeting, and retry logic. It would bloat the binary with complexity that the agentic framework already solved. The binary stays deterministic and offline. The reasoning lives where the model access already is.
 
 **Triage workflow:**
 
@@ -1897,7 +1897,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - **Persistent by design.** Intent survives context windows, agent sessions, and team turnover. It's a file in the repo, not a message in a thread.
 - **Each level stands alone.** You can adopt the instruction without the linter, or the linter without adversarial tests.
 - **Nothing to learn.** JSONC, Markdown, SHA-256. No DSL, no specification language, no framework.
-- **Lightweight.** The linter is ~3000 lines of Rust across two crates with 7 direct runtime dependencies (including tree-sitter for structural span recovery). Small enough to audit, understand, and port to another language if needed.
+- **Lightweight.** The linter is two Rust crates (~6000 lines including tests) with tree-sitter grammars for Rust, Python, Go, JavaScript, and TypeScript built in. Single binary, no runtime dependencies.
 - **No lock-in.** `.liyi.jsonc` files are plain JSONC. `@liyi:module` markers are comments. Delete them and nothing breaks.
 - **Any programming language.** The linter doesn't parse source code. It reads line ranges from `source_span`, hashes them, compares. `.liyi.jsonc` is JSONC. `@liyi:module` markers use whatever comment syntax the host format already provides. Works with any language, any framework, any build system, any design pattern.
 - **Hardware RTL too.** The convention applies at the RTL level (Verilog, SystemVerilog, VHDL, Chisel) with no design changes — sidecars co-locate with `.v`/`.vhd`/`.scala` files, `source_span` and `source_hash` work on any text, and tree-sitter grammars exist for Verilog and VHDL. In hardware domains where requirements traceability is a compliance obligation (DO-254, ISO 26262, IEC 61508), 立意 functions as a lightweight shim between a requirements management system and RTL source: a `liyi import-reqif` command (post-MVP) can consume ReqIF — the open OMG standard (ReqIF 1.2, `formal/2016-07-01`) that DOORS, Polarion, and other tools export — and emit `@liyi:requirement` blocks, connecting managed requirements to RTL implementations with hash-based staleness detection. The tool doesn't replace DOORS; it fills the last mile that DOORS doesn't cover.

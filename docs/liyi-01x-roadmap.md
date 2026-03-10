@@ -1,16 +1,16 @@
 # 立意 (Lìyì) — 0.1.x Roadmap
 
-2026-03-06 (updated 2026-03-09)
+2026-03-06 (updated 2026-03-10)
 
 ---
 
 ## Overview
 
-This document covers post-MVP work that ships as 0.1.x patch releases. Everything here is additive — no schema changes, no CLI breaking changes, no behavioral regressions. Users who never enable a Cargo feature or run a new subcommand see zero impact.
+This document covers post-MVP work that ships as 0.1.x patch releases. Everything here is additive — no schema changes, no CLI breaking changes, no behavioral regressions.
 
 The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This document picks up where it leaves off.
 
-**Design authority:** `docs/liyi-design.md` v8.7 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
+**Design authority:** `docs/liyi-design.md` v8.8 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
 
 ---
 
@@ -18,6 +18,7 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 
 | Milestone | Status | Notes |
 |-----------|--------|-------|
+| M1 Multi-language tree_path | ✅ Complete | All 5 languages built-in, no feature gates |
 | M3 Remaining MVP gaps | ✅ Complete | All items implemented |
 | M5.1 MissingRelated | ✅ Complete | Diagnostic implemented, auto-fix in `--fix` mode |
 | M5.2 `--fail-on-untracked` | ✅ Complete | Flag implemented with tests |
@@ -34,20 +35,18 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 
 ## M1. Multi-language `tree_path` support
 
-**Status:** Not started — deferred to post-0.1.x or community contribution.
+**Status:** ✅ Complete — all languages built-in, no feature gates.
 
-**Goal:** Extend tree-sitter-based structural identity from Rust-only to Python, Go, JavaScript, and TypeScript.
+**Goal:** Extend tree-sitter-based structural identity from Rust-only to Python, Go, JavaScript, and TypeScript. All grammars are compiled into the binary unconditionally — no Cargo features, no opt-in. The binary-size cost is modest relative to the universality benefit; Python, Go, JavaScript, and TypeScript codebases vastly outnumber Rust codebases, and requiring users to opt in per language would hinder adoption of a tool whose value proposition is universality.
 
-**Prerequisite:** Refactor `tree_path.rs` from hardcoded Rust-specific `KIND_MAP` + `node_name` to a data-driven `LanguageConfig` abstraction. This is the enabling refactor — each subsequent language is additive data, not new code paths.
+### M1.1. `LanguageConfig` refactor ✅
 
-### M1.1. `LanguageConfig` refactor (~half day)
-
-Extract the four language-specific touch points into a configuration struct:
+Extracted language-specific touch points into a data-driven `LanguageConfig` struct:
 
 | Current code | Becomes |
 |---|---|
 | `KIND_MAP` (hardcoded Rust node kinds) | `LanguageConfig::kind_map` |
-| `Language` enum (only `Rust`) | Extended with variants per feature |
+| `Language` enum (only `Rust`) | Extended with variants per language |
 | `detect_language()` (only `.rs`) | Dispatch table from extensions |
 | `make_parser()` (only `tree_sitter_rust`) | `LanguageConfig::ts_language` |
 | `node_name()` (`impl_item` special case) | `LanguageConfig::name_overrides` |
@@ -56,20 +55,23 @@ The `LanguageConfig` struct (from design doc v8.6):
 
 ```rust
 struct LanguageConfig {
-    ts_language: tree_sitter::Language,
+    ts_language: fn() -> tree_sitter::Language,
     extensions: &'static [&'static str],
     kind_map: &'static [(&'static str, &'static str)],
     name_field: &'static str,
     name_overrides: &'static [(&'static str, &'static str)],
     body_fields: &'static [&'static str],
+    custom_name: Option<fn(&Node, &str) -> Option<String>>,
 }
 ```
 
+The `custom_name` callback handles languages with non-trivial name extraction (e.g., Go method receiver encoding, Go `type_declaration` → `type_spec` indirection).
+
 **Acceptance criteria:**
 - All existing tests pass with Rust handled via `LanguageConfig` instead of hardcoded paths.
-- Adding a new language requires only a new `LanguageConfig` constant and a Cargo feature — no changes to resolve/compute logic.
+- Adding a new language requires only a new `LanguageConfig` constant — no changes to resolve/compute logic.
 
-### M1.2. Python (`lang-python` feature)
+### M1.2. Python ✅
 
 **Grammar:** `tree-sitter-python` (0.25.0)
 
@@ -93,7 +95,7 @@ struct LanguageConfig {
 - `compute_tree_path` produces correct path for top-level functions, class methods, nested classes.
 - Roundtrip (compute → resolve → same span) passes for representative Python code.
 
-### M1.3. Go (`lang-go` feature)
+### M1.3. Go ✅
 
 **Grammar:** `tree-sitter-go` (0.25.0)
 
@@ -103,30 +105,22 @@ struct LanguageConfig {
 |---|---|
 | `fn` | `function_declaration` |
 | `method` | `method_declaration` |
-| `struct` | `type_declaration` → `type_spec` with `struct_type` |
-| `interface` | `type_declaration` → `type_spec` with `interface_type` |
-| `const` | `const_declaration` |
-| `var` | `var_declaration` |
+| `type` | `type_declaration` (name extracted from inner `type_spec`) |
+| `const` | `const_declaration` (name extracted from inner `const_spec`) |
+| `var` | `var_declaration` (name extracted from inner `var_spec`) |
 
 **Design notes:**
-- Go methods have receivers and live at top level, not nested inside a struct body. Tree_path encoding: `method::(*MyType).DoThing` or `method::MyType.DoThing`. The method name includes the receiver type for disambiguation.
-- `type_declaration` wraps `type_spec` which has the actual name. Name extraction needs to reach into `type_spec` → `name` field.
+- Go methods encode the receiver type in tree_path: `method::(*MyType).DoThing` (pointer receiver) or `method::MyType.DoThing` (value receiver). This disambiguates methods with the same name on different types.
+- `type_declaration` wraps `type_spec` which has the actual name. A `custom_name` callback navigates the indirection. A single `type` shorthand covers structs, interfaces, and type aliases — Go type names are unique per package, so no disambiguation is needed.
 - No nesting equivalent to Rust's `impl` or Python's class body — all functions/methods are top-level.
 
 **Extensions:** `.go`
 
-**Open design question:** Receiver encoding in tree_path. Options:
-1. `method::MyType.DoThing` — simple, matches Go syntax
-2. `method::(*MyType).DoThing` — distinguishes pointer/value receivers
-3. `struct::MyType::method::DoThing` — uses nested path syntax despite flat AST
-
-Option 1 is recommended — simple and readable, with pointer receiver indicated by `*` prefix when present.
-
 **Acceptance criteria:**
-- Functions, methods (pointer + value receiver), struct types, interface types resolve correctly.
+- Functions, methods (pointer + value receiver), type declarations (struct + interface), const, var resolve correctly.
 - Roundtrip passes for representative Go code.
 
-### M1.4. JavaScript (`lang-javascript` feature)
+### M1.4. JavaScript ✅
 
 **Grammar:** `tree-sitter-javascript` (0.25.0)
 
@@ -151,7 +145,7 @@ Option 1 is recommended — simple and readable, with pointer receiver indicated
 - Arrow functions in const declarations map to `fn::name`.
 - Export-wrapped declarations resolve correctly.
 
-### M1.5. TypeScript (`lang-typescript` feature)
+### M1.5. TypeScript ✅
 
 **Grammar:** `tree-sitter-typescript` (0.23.2) — ships two grammars: `typescript` and `tsx`.
 

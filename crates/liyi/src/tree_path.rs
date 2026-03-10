@@ -9,6 +9,7 @@
 //! locate items by structural identity, making span recovery deterministic
 //! across formatting changes, import additions, and line reflows.
 
+use std::borrow::Cow;
 use std::path::Path;
 
 use tree_sitter::{Language as TSLanguage, Node, Parser};
@@ -31,6 +32,10 @@ pub struct LanguageConfig {
     name_overrides: &'static [(&'static str, &'static str)],
     /// Field names to traverse to find a node's body/declaration_list.
     body_fields: &'static [&'static str],
+    /// Custom name extraction for node kinds that need special handling
+    /// (e.g., Go methods with receiver types, Go type_declaration wrapping type_spec).
+    /// Returns `Some(name)` for handled kinds, `None` to fall through to default.
+    custom_name: Option<fn(&Node, &str) -> Option<String>>,
 }
 
 impl LanguageConfig {
@@ -51,7 +56,17 @@ impl LanguageConfig {
     }
 
     /// Extract the name of a named AST node.
-    fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<&'a str> {
+    ///
+    /// Returns a `Cow<str>` — borrowed from `source` in the common case,
+    /// owned when the name is constructed (e.g., Go method receiver encoding).
+    fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<Cow<'a, str>> {
+        // Check custom_name callback first (e.g., Go method receivers)
+        if let Some(custom) = self.custom_name {
+            if let Some(name) = custom(node, source) {
+                return Some(Cow::Owned(name));
+            }
+        }
+
         let kind = node.kind();
 
         // Check for name field override (e.g., impl_item uses "type" field)
@@ -63,7 +78,7 @@ impl LanguageConfig {
             .unwrap_or(self.name_field);
 
         let name_node = node.child_by_field_name(field_name)?;
-        Some(&source[name_node.byte_range()])
+        Some(Cow::Borrowed(&source[name_node.byte_range()]))
     }
 
     /// Find a body/declaration_list child for descending into containers.
@@ -104,10 +119,10 @@ static RUST_CONFIG: LanguageConfig = LanguageConfig {
     name_field: "name",
     name_overrides: &[("impl_item", "type")],
     body_fields: &["body"],
+    custom_name: None,
 };
 
-/// Python language configuration (requires `lang-python` feature).
-#[cfg(feature = "lang-python")]
+/// Python language configuration.
 static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_python::LANGUAGE.into(),
     extensions: &["py", "pyi"],
@@ -115,29 +130,87 @@ static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
+    custom_name: None,
 };
 
-/// Go language configuration (requires `lang-go` feature).
+/// Custom name extraction for Go nodes.
 ///
-/// Note: Go methods are resolved as `method::MethodName` without receiver
-/// type disambiguation. This means two types with the same method name
-/// will have colliding tree_paths. This is a known limitation; callers
-/// should verify the enclosing type context if ambiguity is possible.
-#[cfg(feature = "lang-go")]
+/// Handles three Go-specific patterns:
+/// - `method_declaration`: encodes receiver type into the name, producing
+///   `ReceiverType.MethodName` or `(*ReceiverType).MethodName`.
+/// - `type_declaration`: navigates to the inner `type_spec` for the name.
+/// - `const_declaration` / `var_declaration`: navigates to the inner spec.
+fn go_node_name(node: &Node, source: &str) -> Option<String> {
+    match node.kind() {
+        "method_declaration" => {
+            let method_name_node = node.child_by_field_name("name")?;
+            let method_name = &source[method_name_node.byte_range()];
+
+            let receiver = node.child_by_field_name("receiver")?;
+            let mut cursor = receiver.walk();
+            let param = receiver
+                .children(&mut cursor)
+                .find(|c| c.kind() == "parameter_declaration")?;
+
+            let type_node = param.child_by_field_name("type")?;
+            let receiver_type = if type_node.kind() == "pointer_type" {
+                let mut cursor2 = type_node.walk();
+                let inner = type_node
+                    .children(&mut cursor2)
+                    .find(|c| c.kind() == "type_identifier")?;
+                format!("(*{})", &source[inner.byte_range()])
+            } else {
+                source[type_node.byte_range()].to_string()
+            };
+
+            Some(format!("{receiver_type}.{method_name}"))
+        }
+        "type_declaration" => {
+            let mut cursor = node.walk();
+            let type_spec = node
+                .children(&mut cursor)
+                .find(|c| c.kind() == "type_spec")?;
+            let name_node = type_spec.child_by_field_name("name")?;
+            Some(source[name_node.byte_range()].to_string())
+        }
+        "const_declaration" => {
+            let mut cursor = node.walk();
+            let spec = node
+                .children(&mut cursor)
+                .find(|c| c.kind() == "const_spec")?;
+            let name_node = spec.child_by_field_name("name")?;
+            Some(source[name_node.byte_range()].to_string())
+        }
+        "var_declaration" => {
+            let mut cursor = node.walk();
+            let spec = node
+                .children(&mut cursor)
+                .find(|c| c.kind() == "var_spec")?;
+            let name_node = spec.child_by_field_name("name")?;
+            Some(source[name_node.byte_range()].to_string())
+        }
+        _ => None,
+    }
+}
+
+/// Go language configuration.
 static GO_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_go::LANGUAGE.into(),
     extensions: &["go"],
     kind_map: &[
         ("fn", "function_declaration"),
         ("method", "method_declaration"),
+        ("type", "type_declaration"),
+        ("const", "const_declaration"),
+        ("var", "var_declaration"),
     ],
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
+    custom_name: Some(go_node_name),
 };
 
-/// JavaScript language configuration (requires `lang-javascript` feature).
-#[cfg(feature = "lang-javascript")]
+/// JavaScript language configuration.
 static JAVASCRIPT_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_javascript::LANGUAGE.into(),
     extensions: &["js", "mjs", "cjs", "jsx"],
@@ -149,10 +222,10 @@ static JAVASCRIPT_CONFIG: LanguageConfig = LanguageConfig {
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
+    custom_name: None,
 };
 
-/// TypeScript language configuration (requires `lang-typescript` feature).
-#[cfg(feature = "lang-typescript")]
+/// TypeScript language configuration.
 static TYPESCRIPT_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
     extensions: &["ts", "mts", "cts"],
@@ -167,10 +240,10 @@ static TYPESCRIPT_CONFIG: LanguageConfig = LanguageConfig {
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
+    custom_name: None,
 };
 
-/// TSX language configuration (requires `lang-typescript` feature).
-#[cfg(feature = "lang-typescript")]
+/// TSX language configuration.
 static TSX_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_typescript::LANGUAGE_TSX.into(),
     extensions: &["tsx"],
@@ -185,6 +258,7 @@ static TSX_CONFIG: LanguageConfig = LanguageConfig {
     name_field: "name",
     name_overrides: &[],
     body_fields: &["body"],
+    custom_name: None,
 };
 
 /// Supported languages for tree_path resolution.
@@ -199,67 +273,26 @@ pub enum Language {
 }
 
 impl Language {
-    /// Check if this language is supported (its feature is enabled).
-    pub fn is_supported(&self) -> bool {
-        match self {
-            Language::Rust => true,
-            Language::Python => cfg!(feature = "lang-python"),
-            Language::Go => cfg!(feature = "lang-go"),
-            Language::JavaScript => cfg!(feature = "lang-javascript"),
-            Language::TypeScript => cfg!(feature = "lang-typescript"),
-            Language::Tsx => cfg!(feature = "lang-typescript"),
-        }
-    }
-
     /// Get the language configuration for this language.
-    ///
-    /// Returns `None` if the language is not supported (feature not enabled).
-    fn config(&self) -> Option<&'static LanguageConfig> {
+    fn config(&self) -> &'static LanguageConfig {
         match self {
-            Language::Rust => Some(&RUST_CONFIG),
-            Language::Python => {
-                #[cfg(feature = "lang-python")]
-                return Some(&PYTHON_CONFIG);
-                #[cfg(not(feature = "lang-python"))]
-                return None;
-            }
-            Language::Go => {
-                #[cfg(feature = "lang-go")]
-                return Some(&GO_CONFIG);
-                #[cfg(not(feature = "lang-go"))]
-                return None;
-            }
-            Language::JavaScript => {
-                #[cfg(feature = "lang-javascript")]
-                return Some(&JAVASCRIPT_CONFIG);
-                #[cfg(not(feature = "lang-javascript"))]
-                return None;
-            }
-            Language::TypeScript => {
-                #[cfg(feature = "lang-typescript")]
-                return Some(&TYPESCRIPT_CONFIG);
-                #[cfg(not(feature = "lang-typescript"))]
-                return None;
-            }
-            Language::Tsx => {
-                #[cfg(feature = "lang-typescript")]
-                return Some(&TSX_CONFIG);
-                #[cfg(not(feature = "lang-typescript"))]
-                return None;
-            }
+            Language::Rust => &RUST_CONFIG,
+            Language::Python => &PYTHON_CONFIG,
+            Language::Go => &GO_CONFIG,
+            Language::JavaScript => &JAVASCRIPT_CONFIG,
+            Language::TypeScript => &TYPESCRIPT_CONFIG,
+            Language::Tsx => &TSX_CONFIG,
         }
     }
 
     /// Get the tree-sitter language grammar.
-    ///
-    /// Returns `None` if the language is not supported.
-    fn ts_language(&self) -> Option<TSLanguage> {
-        self.config().map(|cfg| (cfg.ts_language)())
+    fn ts_language(&self) -> TSLanguage {
+        (self.config().ts_language)()
     }
 }
 
 /// Detect language from file extension. Returns `None` for unsupported
-/// languages (unknown extension or feature not enabled).
+/// languages (unknown extension).
 ///
 /// # Extension Collision
 ///
@@ -273,42 +306,35 @@ pub fn detect_language(path: &Path) -> Option<Language> {
         return Some(Language::Rust);
     }
 
-    #[cfg(feature = "lang-python")]
     if PYTHON_CONFIG.matches_extension(ext) {
         return Some(Language::Python);
     }
 
-    #[cfg(feature = "lang-go")]
     if GO_CONFIG.matches_extension(ext) {
         return Some(Language::Go);
     }
 
-    #[cfg(feature = "lang-javascript")]
     if JAVASCRIPT_CONFIG.matches_extension(ext) {
         return Some(Language::JavaScript);
     }
 
-    #[cfg(feature = "lang-typescript")]
-    {
-        if TYPESCRIPT_CONFIG.matches_extension(ext) {
-            return Some(Language::TypeScript);
-        }
-        if TSX_CONFIG.matches_extension(ext) {
-            return Some(Language::Tsx);
-        }
+    if TYPESCRIPT_CONFIG.matches_extension(ext) {
+        return Some(Language::TypeScript);
+    }
+    if TSX_CONFIG.matches_extension(ext) {
+        return Some(Language::Tsx);
     }
 
     None
 }
 
 /// Create a tree-sitter parser for the given language.
-///
-/// Returns `None` if the language is not supported (feature not enabled).
-fn make_parser(lang: Language) -> Option<Parser> {
+fn make_parser(lang: Language) -> Parser {
     let mut parser = Parser::new();
-    let ts_lang = lang.ts_language()?;
-    parser.set_language(&ts_lang).ok()?;
-    Some(parser)
+    parser
+        .set_language(&lang.ts_language())
+        .expect("tree-sitter grammar should load");
+    parser
 }
 
 /// A parsed tree_path segment: (kind_shorthand, name).
@@ -350,9 +376,9 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
         return None;
     }
 
-    let config = lang.config()?;
+    let config = lang.config();
     let segments = parse_tree_path(tree_path)?;
-    let mut parser = make_parser(lang)?;
+    let mut parser = make_parser(lang);
     let tree = parser.parse(source, None)?;
     let root = tree.root_node();
 
@@ -384,9 +410,9 @@ fn resolve_segments<'a>(
             continue;
         }
         if let Some(name) = config.node_name(&child, source) {
-            if name == seg.name && segments.len() == 1 {
+            if *name == seg.name && segments.len() == 1 {
                 return Some(child);
-            } else if name == seg.name {
+            } else if *name == seg.name {
                 // Descend — look inside this node's body
                 return resolve_in_body(config, &child, &segments[1..], source);
             }
@@ -413,12 +439,8 @@ fn resolve_in_body<'a>(
 /// (e.g., the span doesn't align with a named item, or the language is
 /// unsupported).
 pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {
-    let Some(config) = lang.config() else {
-        return String::new();
-    };
-    let Some(mut parser) = make_parser(lang) else {
-        return String::new();
-    };
+    let config = lang.config();
+    let mut parser = make_parser(lang);
     let tree = match parser.parse(source, None) {
         Some(t) => t,
         None => return String::new(),
@@ -782,11 +804,7 @@ fn standalone() -> i32 {
             detect_language(Path::new("src/main.rs")),
             Some(Language::Rust)
         );
-        // Python detection depends on the lang-python feature
-        #[cfg(feature = "lang-python")]
         assert_eq!(detect_language(Path::new("foo.py")), Some(Language::Python));
-        #[cfg(not(feature = "lang-python"))]
-        assert_eq!(detect_language(Path::new("foo.py")), None);
     }
 
     #[test]
@@ -827,7 +845,6 @@ fn standalone() -> i32 { 42 }
         }
     }
 
-    #[cfg(feature = "lang-python")]
     mod python_tests {
         use super::*;
 
@@ -941,7 +958,6 @@ def calculate_total(items):
         }
     }
 
-    #[cfg(feature = "lang-go")]
     mod go_tests {
         use super::*;
 
@@ -953,6 +969,17 @@ import "fmt"
 type Calculator struct {
     value int
 }
+
+// Reader is an interface
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+// MaxRetries is a constant
+const MaxRetries = 3
+
+// DefaultTimeout is a var
+var DefaultTimeout = 30
 
 // Add adds a number to the calculator's value
 func (c *Calculator) Add(n int) {
@@ -984,9 +1011,10 @@ func Add(a, b int) int {
         }
 
         #[test]
-        fn resolve_go_method() {
-            let span = resolve_tree_path(SAMPLE_GO, "method::Add", Language::Go);
-            assert!(span.is_some(), "should resolve method::Add");
+        fn resolve_go_pointer_method() {
+            let span =
+                resolve_tree_path(SAMPLE_GO, "method::(*Calculator).Add", Language::Go);
+            assert!(span.is_some(), "should resolve method::(*Calculator).Add");
             let [start, _end] = span.unwrap();
             let lines: Vec<&str> = SAMPLE_GO.lines().collect();
             assert!(
@@ -997,9 +1025,74 @@ func Add(a, b int) int {
         }
 
         #[test]
+        fn resolve_go_value_method() {
+            let span =
+                resolve_tree_path(SAMPLE_GO, "method::Calculator.Value", Language::Go);
+            assert!(span.is_some(), "should resolve method::Calculator.Value");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("func (c Calculator) Value"),
+                "span should point to Value method, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_go_type_struct() {
+            let span = resolve_tree_path(SAMPLE_GO, "type::Calculator", Language::Go);
+            assert!(span.is_some(), "should resolve type::Calculator");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("type Calculator struct"),
+                "span should point to Calculator struct, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_go_type_interface() {
+            let span = resolve_tree_path(SAMPLE_GO, "type::Reader", Language::Go);
+            assert!(span.is_some(), "should resolve type::Reader");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("type Reader interface"),
+                "span should point to Reader interface, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_go_const() {
+            let span = resolve_tree_path(SAMPLE_GO, "const::MaxRetries", Language::Go);
+            assert!(span.is_some(), "should resolve const::MaxRetries");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("const MaxRetries"),
+                "span should point to MaxRetries const, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
+        fn resolve_go_var() {
+            let span = resolve_tree_path(SAMPLE_GO, "var::DefaultTimeout", Language::Go);
+            assert!(span.is_some(), "should resolve var::DefaultTimeout");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            assert!(
+                lines[start - 1].contains("var DefaultTimeout"),
+                "span should point to DefaultTimeout var, got: {}",
+                lines[start - 1]
+            );
+        }
+
+        #[test]
         fn compute_go_function_path() {
             let lines: Vec<&str> = SAMPLE_GO.lines().collect();
-            // Find the standalone Add function (last one in file)
             let start = lines
                 .iter()
                 .enumerate()
@@ -1015,14 +1108,13 @@ func Add(a, b int) int {
         }
 
         #[test]
-        fn compute_go_method_path() {
+        fn compute_go_pointer_method_path() {
             let lines: Vec<&str> = SAMPLE_GO.lines().collect();
             let start = lines
                 .iter()
                 .position(|l| l.contains("func (c *Calculator) Add"))
                 .unwrap()
                 + 1;
-            // Find end of method (next closing brace at start of line or end of file)
             let end = lines
                 .iter()
                 .enumerate()
@@ -1032,12 +1124,51 @@ func Add(a, b int) int {
                 .unwrap_or(lines.len());
 
             let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
-            assert_eq!(path, "method::Add");
+            assert_eq!(path, "method::(*Calculator).Add");
+        }
+
+        #[test]
+        fn compute_go_value_method_path() {
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            let start = lines
+                .iter()
+                .position(|l| l.contains("func (c Calculator) Value"))
+                .unwrap()
+                + 1;
+            let end = lines
+                .iter()
+                .enumerate()
+                .skip(start)
+                .find(|(_, l)| l.starts_with('}'))
+                .map(|(i, _)| i + 1)
+                .unwrap_or(lines.len());
+
+            let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
+            assert_eq!(path, "method::Calculator.Value");
+        }
+
+        #[test]
+        fn compute_go_type_path() {
+            let lines: Vec<&str> = SAMPLE_GO.lines().collect();
+            let start = lines
+                .iter()
+                .position(|l| l.contains("type Calculator struct"))
+                .unwrap()
+                + 1;
+            let end = lines
+                .iter()
+                .enumerate()
+                .skip(start)
+                .find(|(_, l)| l.starts_with('}'))
+                .map(|(i, _)| i + 1)
+                .unwrap_or(lines.len());
+
+            let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
+            assert_eq!(path, "type::Calculator");
         }
 
         #[test]
         fn roundtrip_go() {
-            // Compute path for fn::Add, then resolve it
             let resolved_span = resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go).unwrap();
 
             let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
@@ -1046,9 +1177,20 @@ func Add(a, b int) int {
             let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
             assert_eq!(re_resolved, resolved_span);
         }
+
+        #[test]
+        fn roundtrip_go_method() {
+            let resolved_span =
+                resolve_tree_path(SAMPLE_GO, "method::(*Calculator).Add", Language::Go).unwrap();
+
+            let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
+            assert_eq!(computed_path, "method::(*Calculator).Add");
+
+            let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
+            assert_eq!(re_resolved, resolved_span);
+        }
     }
 
-    #[cfg(feature = "lang-javascript")]
     mod javascript_tests {
         use super::*;
 
@@ -1152,7 +1294,6 @@ const utils = {
         }
     }
 
-    #[cfg(feature = "lang-typescript")]
     mod typescript_tests {
         use super::*;
 
@@ -1271,7 +1412,6 @@ function createUser(name: string): User {
         }
     }
 
-    #[cfg(feature = "lang-typescript")]
     mod tsx_tests {
         use super::*;
 
