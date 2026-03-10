@@ -20,17 +20,17 @@ use tree_sitter::{Language as TSLanguage, Node, Parser};
 /// shorthands.
 pub struct LanguageConfig {
     /// Function to get the tree-sitter language grammar (lazy initialization).
-    pub ts_language: fn() -> TSLanguage,
+    ts_language: fn() -> TSLanguage,
     /// File extensions associated with this language.
-    pub extensions: &'static [&'static str],
+    extensions: &'static [&'static str],
     /// Map from tree_path kind shorthand to tree-sitter node kind.
-    pub kind_map: &'static [(&'static str, &'static str)],
+    kind_map: &'static [(&'static str, &'static str)],
     /// Field name to extract the node's name (usually "name").
-    pub name_field: &'static str,
+    name_field: &'static str,
     /// Overrides for special cases: (node_kind, field_name) pairs.
-    pub name_overrides: &'static [(&'static str, &'static str)],
+    name_overrides: &'static [(&'static str, &'static str)],
     /// Field names to traverse to find a node's body/declaration_list.
-    pub body_fields: &'static [&'static str],
+    body_fields: &'static [&'static str],
 }
 
 impl LanguageConfig {
@@ -77,6 +77,11 @@ impl LanguageConfig {
         let mut cursor = node.walk();
         node.children(&mut cursor)
             .find(|c| c.kind() == "declaration_list")
+    }
+
+    /// Check if the given file extension is associated with this language.
+    pub fn matches_extension(&self, ext: &str) -> bool {
+        self.extensions.contains(&ext)
     }
 }
 
@@ -253,31 +258,31 @@ impl Language {
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
-    if RUST_CONFIG.extensions.contains(&ext) {
+    if RUST_CONFIG.matches_extension(ext) {
         return Some(Language::Rust);
     }
 
     #[cfg(feature = "lang-python")]
-    if PYTHON_CONFIG.extensions.contains(&ext) {
+    if PYTHON_CONFIG.matches_extension(ext) {
         return Some(Language::Python);
     }
 
     #[cfg(feature = "lang-go")]
-    if GO_CONFIG.extensions.contains(&ext) {
+    if GO_CONFIG.matches_extension(ext) {
         return Some(Language::Go);
     }
 
     #[cfg(feature = "lang-javascript")]
-    if JAVASCRIPT_CONFIG.extensions.contains(&ext) {
+    if JAVASCRIPT_CONFIG.matches_extension(ext) {
         return Some(Language::JavaScript);
     }
 
     #[cfg(feature = "lang-typescript")]
     {
-        if TYPESCRIPT_CONFIG.extensions.contains(&ext) {
+        if TYPESCRIPT_CONFIG.matches_extension(ext) {
             return Some(Language::TypeScript);
         }
-        if TSX_CONFIG.extensions.contains(&ext) {
+        if TSX_CONFIG.matches_extension(ext) {
             return Some(Language::Tsx);
         }
     }
