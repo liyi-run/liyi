@@ -14,11 +14,12 @@ fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {
             // Name is in the first variable_declaration or identifier child
             for child in node.children(&mut cursor) {
                 if child.kind() == "variable_declaration" {
-                    let name = child.child_by_field_name("name")
-                        .or_else(|| {
-                            let mut c2 = child.walk();
-                            child.children(&mut c2).find(|c| c.kind() == "simple_identifier")
-                        })?;
+                    let name = child.child_by_field_name("name").or_else(|| {
+                        let mut c2 = child.walk();
+                        child
+                            .children(&mut c2)
+                            .find(|c| c.kind() == "simple_identifier")
+                    })?;
                     return Some(source[name.byte_range()].to_string());
                 }
                 if child.kind() == "simple_identifier" {
@@ -106,8 +107,7 @@ typealias StringList = List<String>
 
     #[test]
     fn roundtrip_kotlin() {
-        let span =
-            resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin).unwrap();
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin).unwrap();
         let path = compute_tree_path(SAMPLE_KOTLIN, span, Language::Kotlin);
         assert_eq!(path, "fn::standalone");
     }

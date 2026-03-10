@@ -12,7 +12,8 @@ fn cpp_node_name(node: &Node, source: &str) -> Option<String> {
     match node.kind() {
         "function_definition" => c_extract_declarator_name(node, source),
         "type_definition" | "alias_declaration" => {
-            let name_node = node.child_by_field_name("name")
+            let name_node = node
+                .child_by_field_name("name")
                 .or_else(|| node.child_by_field_name("declarator"))?;
             Some(source[name_node.byte_range()].to_string())
         }
@@ -104,7 +105,10 @@ void standalone() {}
             "namespace::math::class::Calculator",
             Language::Cpp,
         );
-        assert!(span.is_some(), "should resolve namespace::math::class::Calculator");
+        assert!(
+            span.is_some(),
+            "should resolve namespace::math::class::Calculator"
+        );
     }
 
     #[test]
@@ -131,11 +135,7 @@ void standalone() {}
 
     #[test]
     fn resolve_cpp_enum() {
-        let span = resolve_tree_path(
-            SAMPLE_CPP,
-            "namespace::math::enum::Color",
-            Language::Cpp,
-        );
+        let span = resolve_tree_path(SAMPLE_CPP, "namespace::math::enum::Color", Language::Cpp);
         assert!(span.is_some(), "should resolve enum in namespace");
     }
 
@@ -150,6 +150,9 @@ void standalone() {}
     fn detect_cpp_extensions() {
         assert_eq!(detect_language(Path::new("main.cpp")), Some(Language::Cpp));
         assert_eq!(detect_language(Path::new("main.cc")), Some(Language::Cpp));
-        assert_eq!(detect_language(Path::new("header.hpp")), Some(Language::Cpp));
+        assert_eq!(
+            detect_language(Path::new("header.hpp")),
+            Some(Language::Cpp)
+        );
     }
 }

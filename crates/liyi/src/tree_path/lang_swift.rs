@@ -57,11 +57,7 @@ typealias Callback = () -> Void
 
     #[test]
     fn resolve_swift_method() {
-        let span = resolve_tree_path(
-            SAMPLE_SWIFT,
-            "class::Shape::fn::area",
-            Language::Swift,
-        );
+        let span = resolve_tree_path(SAMPLE_SWIFT, "class::Shape::fn::area", Language::Swift);
         assert!(span.is_some(), "should resolve class::Shape::fn::area");
     }
 
@@ -73,8 +69,7 @@ typealias Callback = () -> Void
 
     #[test]
     fn roundtrip_swift() {
-        let span =
-            resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift).unwrap();
+        let span = resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift).unwrap();
         let path = compute_tree_path(SAMPLE_SWIFT, span, Language::Swift);
         assert_eq!(path, "fn::standalone");
     }

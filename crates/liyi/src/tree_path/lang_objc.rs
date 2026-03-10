@@ -47,7 +47,8 @@ fn objc_node_name(node: &Node, source: &str) -> Option<String> {
                     "keyword_declarator" => {
                         // Each keyword_declarator has a keyword child
                         let mut kw_cursor = child.walk();
-                        if let Some(kw) = child.children(&mut kw_cursor)
+                        if let Some(kw) = child
+                            .children(&mut kw_cursor)
                             .find(|c| c.kind() == "keyword_selector" || c.kind() == "identifier")
                         {
                             parts.push(format!("{}:", &source[kw.byte_range()]));
@@ -124,8 +125,7 @@ void helper(void) {
 
     #[test]
     fn roundtrip_objc() {
-        let span =
-            resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC).unwrap();
+        let span = resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC).unwrap();
         let path = compute_tree_path(SAMPLE_OBJC, span, Language::ObjectiveC);
         assert_eq!(path, "fn::helper");
     }

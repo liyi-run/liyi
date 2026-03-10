@@ -54,8 +54,7 @@ def calculate_total(items):
 
     #[test]
     fn resolve_python_class_method() {
-        let span =
-            resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::process", Language::Python);
+        let span = resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::process", Language::Python);
         assert!(span.is_some(), "should resolve class::Order::fn::process");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();

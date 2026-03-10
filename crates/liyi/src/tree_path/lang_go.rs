@@ -134,8 +134,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_pointer_method() {
-        let span =
-            resolve_tree_path(SAMPLE_GO, "method::(*Calculator).Add", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "method::(*Calculator).Add", Language::Go);
         assert!(span.is_some(), "should resolve method::(*Calculator).Add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -148,8 +147,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_value_method() {
-        let span =
-            resolve_tree_path(SAMPLE_GO, "method::Calculator.Value", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "method::Calculator.Value", Language::Go);
         assert!(span.is_some(), "should resolve method::Calculator.Value");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();

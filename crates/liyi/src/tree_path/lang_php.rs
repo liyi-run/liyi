@@ -9,7 +9,8 @@ fn php_node_name(node: &Node, source: &str) -> Option<String> {
     match node.kind() {
         "const_declaration" => {
             let mut cursor = node.walk();
-            let elem = node.children(&mut cursor)
+            let elem = node
+                .children(&mut cursor)
                 .find(|c| c.kind() == "const_element")?;
             let name = elem.child_by_field_name("name")?;
             Some(source[name.byte_range()].to_string())
@@ -88,7 +89,10 @@ enum Status {
             "class::UserService::method::findUser",
             Language::Php,
         );
-        assert!(span.is_some(), "should resolve class::UserService::method::findUser");
+        assert!(
+            span.is_some(),
+            "should resolve class::UserService::method::findUser"
+        );
     }
 
     #[test]

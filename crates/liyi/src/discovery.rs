@@ -256,7 +256,7 @@ mod tests {
         fs::write(sub.join("inner.rs"), "").unwrap();
         fs::write(sub.join("inner.rs.liyi.jsonc"), "{}").unwrap();
 
-        let scoped = discover(root, &[sub.clone()]);
+        let scoped = discover(root, std::slice::from_ref(&sub));
         assert_eq!(scoped.sidecars.len(), 1);
         assert_eq!(scoped.sidecars[0].repo_relative_source, "sub/inner.rs");
 

@@ -61,11 +61,7 @@ record Point(int x, int y) {}
 
     #[test]
     fn resolve_java_method() {
-        let span = resolve_tree_path(
-            SAMPLE_JAVA,
-            "class::Calculator::fn::add",
-            Language::Java,
-        );
+        let span = resolve_tree_path(SAMPLE_JAVA, "class::Calculator::fn::add", Language::Java);
         assert!(span.is_some(), "should resolve class::Calculator::fn::add");
     }
 
@@ -99,12 +95,8 @@ record Point(int x, int y) {}
 
     #[test]
     fn roundtrip_java() {
-        let span = resolve_tree_path(
-            SAMPLE_JAVA,
-            "class::Calculator::fn::add",
-            Language::Java,
-        )
-        .unwrap();
+        let span =
+            resolve_tree_path(SAMPLE_JAVA, "class::Calculator::fn::add", Language::Java).unwrap();
         let path = compute_tree_path(SAMPLE_JAVA, span, Language::Java);
         assert_eq!(path, "class::Calculator::fn::add");
     }

@@ -75,10 +75,10 @@ impl LanguageConfig {
     /// owned when the name is constructed (e.g., Go method receiver encoding).
     fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<Cow<'a, str>> {
         // Check custom_name callback first (e.g., Go method receivers)
-        if let Some(custom) = self.custom_name {
-            if let Some(name) = custom(node, source) {
-                return Some(Cow::Owned(name));
-            }
+        if let Some(custom) = self.custom_name
+            && let Some(name) = custom(node, source)
+        {
+            return Some(Cow::Owned(name));
         }
 
         let kind = node.kind();
@@ -107,12 +107,11 @@ impl LanguageConfig {
         // positional child rather than a named field (e.g., Kotlin class_body,
         // C++ field_declaration_list).
         let mut cursor = node.walk();
-        node.children(&mut cursor)
-            .find(|c| {
-                self.body_fields.contains(&c.kind())
-                    || c.kind() == "declaration_list"
-                    || c.kind() == "field_declaration_list"
-            })
+        node.children(&mut cursor).find(|c| {
+            self.body_fields.contains(&c.kind())
+                || c.kind() == "declaration_list"
+                || c.kind() == "field_declaration_list"
+        })
     }
 
     /// Check if the given file extension is associated with this language.

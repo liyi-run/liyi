@@ -64,7 +64,10 @@ record Person(string Name, int Age);
             "namespace::MyApp::class::Calculator",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve namespace::MyApp::class::Calculator");
+        assert!(
+            span.is_some(),
+            "should resolve namespace::MyApp::class::Calculator"
+        );
     }
 
     #[test]
@@ -74,7 +77,10 @@ record Person(string Name, int Age);
             "namespace::MyApp::class::Calculator::fn::Add",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve method in class in namespace");
+        assert!(
+            span.is_some(),
+            "should resolve method in class in namespace"
+        );
     }
 
     #[test]
