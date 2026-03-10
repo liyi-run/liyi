@@ -620,7 +620,7 @@ The current `LanguageConfig` architecture assumes one grammar per file. Several 
 1. **Injection detection** — identifying which nodes contain embedded code and what language. This is host-language-specific: YAML `run:` blocks, Vue `<script lang="ts">` tags, etc.
 2. **Sub-parsing** — running a second parser on the injected content (extracted from the host node's text).
 3. **Span translation** — mapping inner parser spans back to outer file line numbers (offset by the host node's start position).
-4. **Composite tree_paths** — paths that cross language boundaries need a delimiter. Proposed format: `key::jobs::key::build::key::run::@bash::fn::setup_env` (using `@lang` to mark injection boundaries).
+4. **Composite tree_paths** — paths that cross language boundaries need a delimiter. Proposed format: `key::jobs::key::build::key::run//bash::fn::setup_env` (using `//lang` to mark injection boundaries). The `//` delimiter was chosen over alternatives (`>lang`, `>>lang`, `@lang`, `::(lang)::`) because it is the only option that requires **zero shell escaping** — `>` and `>>` are redirect operators, `@` and `()` expand in some shells. `//` has no special meaning in any shell, so composite tree_paths can be passed to CLI flags without quoting: `liyi check --item key::run//bash::fn::setup`. In the `::` split, `//lang` appears within a segment (e.g., `run//bash`), preserving the even-pairs invariant. The double slash visually connotes path descent (cf. URL schemes), which maps naturally to "descend into embedded language."
 
 ### M9.3. Implementation sketch
 
@@ -636,8 +636,8 @@ struct InjectionRule {
 ```
 
 - Each host language provides a set of `InjectionRule`s alongside its `LanguageConfig`.
-- `resolve_tree_path` gains a new code path: when a segment starts with `@lang`, switch parser and config, apply the offset, continue resolving.
-- `compute_tree_path` detects when the target node is inside an injection zone and emits the `@lang` marker.
+- `resolve_tree_path` gains a new code path: when a segment contains `//lang` (e.g., `run//bash`), split the segment at `//`, resolve the host part (`run`) in the current config, then switch parser and config to the injected language (`bash`), apply the line offset, and continue resolving subsequent segments.
+- `compute_tree_path` detects when the target node is inside an injection zone and emits the `//lang` marker in the appropriate segment.
 
 ### M9.4. Planned injection rules
 
