@@ -118,6 +118,11 @@ static PYTHON_CONFIG: LanguageConfig = LanguageConfig {
 };
 
 /// Go language configuration (requires `lang-go` feature).
+///
+/// Note: Go methods are resolved as `method::MethodName` without receiver
+/// type disambiguation. This means two types with the same method name
+/// will have colliding tree_paths. This is a known limitation; callers
+/// should verify the enclosing type context if ambiguity is possible.
 #[cfg(feature = "lang-go")]
 static GO_CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_go::LANGUAGE.into(),
@@ -1257,6 +1262,78 @@ function createUser(name: string): User {
             let re_resolved =
                 resolve_tree_path(SAMPLE_TS, &computed_path, Language::TypeScript).unwrap();
             assert_eq!(re_resolved, resolved_span);
+        }
+    }
+
+    #[cfg(feature = "lang-typescript")]
+    mod tsx_tests {
+        use super::*;
+
+        const SAMPLE_TSX: &str = r#"// A React component
+
+interface Props {
+    title: string;
+    count: number;
+}
+
+function Counter({ title, count }: Props) {
+    return (
+        <div>
+            <h1>{title}</h1>
+            <p>Count: {count}</p>
+        </div>
+    );
+}
+
+class Container extends React.Component<Props> {
+    render() {
+        return <div>{this.props.title}</div>;
+    }
+}
+"#;
+
+        #[test]
+        fn resolve_tsx_function() {
+            let span = resolve_tree_path(SAMPLE_TSX, "fn::Counter", Language::Tsx);
+            assert!(span.is_some(), "should resolve fn::Counter in TSX");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
+            assert!(
+                lines[start - 1].contains("function Counter"),
+                "span should point to Counter function"
+            );
+        }
+
+        #[test]
+        fn resolve_tsx_class() {
+            let span = resolve_tree_path(SAMPLE_TSX, "class::Container", Language::Tsx);
+            assert!(span.is_some(), "should resolve class::Container in TSX");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
+            assert!(
+                lines[start - 1].contains("class Container"),
+                "span should point to Container class"
+            );
+        }
+
+        #[test]
+        fn resolve_tsx_interface() {
+            let span = resolve_tree_path(SAMPLE_TSX, "interface::Props", Language::Tsx);
+            assert!(span.is_some(), "should resolve interface::Props in TSX");
+            let [start, _end] = span.unwrap();
+            let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
+            assert!(
+                lines[start - 1].contains("interface Props"),
+                "span should point to Props interface"
+            );
+        }
+
+        #[test]
+        fn detect_tsx_extension() {
+            assert_eq!(
+                detect_language(Path::new("component.tsx")),
+                Some(Language::Tsx)
+            );
         }
     }
 }
