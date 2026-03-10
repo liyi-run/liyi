@@ -4,35 +4,36 @@
   "source": "crates/liyi/src/tree_path.rs",
   "specs": [
     {
-      "item": "KIND_MAP",
+      "item": "LanguageConfig",
       "reviewed": false,
-      "intent": "Define the bijective mapping between tree_path shorthand strings (fn, struct, enum, impl, trait, mod, const, static, type, macro) and tree-sitter-rust node kind strings (function_item, struct_item, etc.). This is the single source of truth for kind translation.",
+      "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, and an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding).",
       "source_span": [
-        17,
-        28
+        22,
+        39
       ],
-      "source_hash": "sha256:fa948a9c1c198b1bf3ed0655165aad53a4d1a0ad2d48a134a5f58a43b5554a82",
-      "source_anchor": "///"
+      "tree_path": "struct::LanguageConfig",
+      "source_hash": "sha256:cc0ae5ada967354b9d5e9863be2c72136c5dd85832b29ee5e44e118d1c99f5da",
+      "source_anchor": "pub struct LanguageConfig {"
     },
     {
       "item": "detect_language",
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        269,
-        302
+        302,
+        329
       ],
       "tree_path": "fn::detect_language",
-      "source_hash": "sha256:04d339ef243d8c1844e3e5703062deeac0955f70a92632afd865a1bc186f5fdd",
+      "source_hash": "sha256:e36b1be80d8077b3102823129cb1729359c050a04ee083294eeba09f444de7cc",
       "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {"
     },
     {
       "item": "Language",
       "reviewed": false,
-      "intent": "Enumerate supported tree-sitter languages for tree_path operations. In 0.1, only Rust is supported; the enum is the extension point for adding more languages.",
+      "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Rust, Python, Go, JavaScript, TypeScript, and TSX. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
-        192,
-        199
+        266,
+        273
       ],
       "tree_path": "enum::Language",
       "source_hash": "sha256:cfad736b976eb0cd3212d06cb22896d43affbd78181dc5878a71553467e7ff29",
@@ -41,22 +42,34 @@
     {
       "item": "node_name",
       "reviewed": false,
-      "intent": "Extract the user-visible name of an AST node. For impl_item, return the type field text (e.g., 'Money' from 'impl Money'). For all other item kinds, return the name field. Return None if the node has no name/type field.",
+      "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
-        83,
-        85
+        62,
+        82
       ],
-      "tree_path": "impl::LanguageConfig::fn::matches_extension",
-      "source_hash": "sha256:7544b1ad4acbd6144486ed88419b6a9069425b448d9b96c032d5b3f9909403e3",
-      "source_anchor": "    pub fn matches_extension(&self, ext: &str) -> bool {"
+      "tree_path": "impl::LanguageConfig::fn::node_name",
+      "source_hash": "sha256:1f187fdb6eab1bd532149c8007d31dae3cd2c210edc153484dfd46210e287f5f",
+      "source_anchor": "    fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<Cow<'a, str>> {"
+    },
+    {
+      "item": "go_node_name",
+      "reviewed": false,
+      "intent": "Handle Go-specific name extraction for four node kinds: method_declaration encodes receiver type into the name as ReceiverType.Method or (*ReceiverType).Method for pointer receivers; type_declaration navigates to the inner type_spec for the name; const_declaration and var_declaration similarly navigate to their inner spec nodes. Returns None for unrecognized node kinds to fall through to default name extraction.",
+      "source_span": [
+        143,
+        194
+      ],
+      "tree_path": "fn::go_node_name",
+      "source_hash": "sha256:5198217ac70bb06963c30ee0f9f0daa9972cdb47834ed82cf99b800f8b043620",
+      "source_anchor": "fn go_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
       "item": "parse_tree_path",
       "reviewed": false,
       "intent": "Parse a tree_path string into segments of (kind, name) pairs by splitting on '::' and grouping consecutive pairs. Return None if the number of parts is odd (malformed). Validate each kind against the known shorthand set.",
       "source_span": [
-        325,
-        341
+        351,
+        367
       ],
       "tree_path": "fn::parse_tree_path",
       "source_hash": "sha256:eb1bdb126bb090d769612797d5428edd3c20ba72ba04dad58071bbfa955240c2",
@@ -67,11 +80,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        348,
-        365
+        374,
+        391
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:ee955e130971b81a3a7565d81618a2edd7c44a50d82b91250b9089cbbabef519",
+      "source_hash": "sha256:8cd19d6e6704970f8cbead0b56b05a9196ca29b0439b37b31a819a958dc03dbe",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -79,11 +92,11 @@
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments.",
       "source_span": [
-        368,
-        397
+        394,
+        423
       ],
       "tree_path": "fn::resolve_segments",
-      "source_hash": "sha256:1fcaea1f0eccde605bcd9de4094980378600d7a8d221aed55dc8fad1f60cf48b",
+      "source_hash": "sha256:15731dca9653e45052c706fbc2f193fcfe96ca98afe00bbf259f23f86288c414",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
@@ -91,8 +104,8 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body or declaration_list. Try the 'body' field first (mod, fn), then fall back to looking for a declaration_list child (impl, trait). Delegate to resolve_segments for the recursive match.",
       "source_span": [
-        400,
-        408
+        426,
+        434
       ],
       "tree_path": "fn::resolve_in_body",
       "source_hash": "sha256:f1514f012bc8d300c425867e4a1cce1aaf72f1f58885eeaf24456114234473d6",
@@ -103,11 +116,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        415,
-        440
+        441,
+        462
       ],
       "tree_path": "fn::compute_tree_path",
-      "source_hash": "sha256:1b92c3bed64a4f98aa3afc677bf4e8cdd872bb0ec44f9fb362ad55f7c129b847",
+      "source_hash": "sha256:30ecd47287f846a39cdbd906075c6eae16d286eda5c3bc92d87cfbae67ec2e74",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
@@ -115,8 +128,8 @@
       "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        448,
-        494
+        470,
+        516
       ],
       "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:187c06169aae241150cb9bd88810da07aef5d967431ae25b50aab3ff111fc220",
@@ -127,8 +140,8 @@
       "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        512,
-        558
+        534,
+        580
       ],
       "tree_path": "fn::collect_path",
       "source_hash": "sha256:0086ee43dc7c085025e553af9914df58fab43d8e8b579486f21d5788d8d0d221",
