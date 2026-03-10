@@ -154,9 +154,6 @@ void standalone() {}
             detect_language(Path::new("header.hpp")),
             Some(Language::Cpp)
         );
-        assert_eq!(
-            detect_language(Path::new("header.h")),
-            Some(Language::Cpp)
-        );
+        assert_eq!(detect_language(Path::new("header.h")), Some(Language::Cpp));
     }
 }
