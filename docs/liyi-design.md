@@ -968,7 +968,7 @@ The source-level path (`@liyi:intent`) and the sidecar path (`"reviewed": true`)
 - **Merge conflicts become trivial.** If humans never touch the sidecar, it's fully regenerable — `liyi check --fix` after merge, zero human intervention. Same model as `Cargo.lock` or `pnpm-lock.yaml`.
 - **Review is visible where it matters.** A `@liyi:intent` block above a function is visible in the normal code review flow — no need to open a separate `.liyi.jsonc` diff tab.
 
-The sidecar retains: `"item"`, `"reviewed"` (optional, defaults to `false`), `"intent"` (the agent's *inferred* intent or `"=doc"`), `"source_span"`, `"source_hash"`, `"source_anchor"`, `"confidence"`, and `"related"`. The agent writes `"item"`, `"intent"`, `"source_span"`, `"confidence"`, and `"related"`. The tool fills in `"source_hash"` and `"source_anchor"`. The human (or CLI/IDE) sets `"reviewed": true`.
+The sidecar retains: `"item"`, `"reviewed"` (optional, defaults to `false`), `"intent"` (the agent's *inferred* intent or `"=doc"`), `"source_span"`, `"source_hash"`, `"source_anchor"`, `"confidence"`, and `"related"`. The agent writes `"item"`, `"intent"`, `"source_span"`, `"confidence"`, and `"related"` (keys only, with `null` values). The tool fills in `"source_hash"`, `"source_anchor"`, and `"related"` hash values. The human (or CLI/IDE) sets `"reviewed": true`.
 
 ### Divergence between source and sidecar intent
 
@@ -1487,12 +1487,13 @@ The agent instruction (rule 10) permits both paths. Teams can mandate triage for
 
 - Fills in missing `source_hash` and `source_anchor` for specs that have `source_span` but no hash (fresh agent-written sidecars).
 - Auto-corrects SHIFTED spans (updates `source_span`, recomputes hash and anchor).
+- Fills in `null` hash values in `"related"` edges — when an agent writes `"related": {"<name>": null}`, `--fix` resolves the requirement name and writes the requirement's current `source_hash`. This is a mechanical operation: the human/agent chose which requirements to relate (the keys); the tool snapshots the current hash (the values).
 - Attempts tree-path re-resolution **before** validating span boundaries — if `tree_path` is set and the current `source_span` is past EOF or otherwise invalid, the tool resolves via tree-sitter first and replaces the span. This handles file truncation (e.g., `cargo fmt` removing lines) gracefully.
 
 `--fix --dry-run` shows what `--fix` would change without writing any files. Each correction is printed as a diff-like line (`item: [old_span] → [new_span], hash updated`). This lets users preview mechanical corrections before committing them.
 
 <!-- @liyi:requirement fix-never-modifies-human-fields -->
-`--fix` never modifies `"intent"`, `"reviewed"`, `"related"`, or any human-authored field. It only writes tool-managed fields. This is the same contract as `eslint --fix` or `cargo clippy --fix` — mechanical corrections, no semantic changes.
+`--fix` never modifies `"intent"`, `"reviewed"`, or any human-authored field. It only writes tool-managed fields. For `"related"` edges, the *keys* (requirement names) are human/agent-authored and are never added, removed, or renamed by `--fix`; the *values* (requirement hashes) are tool-managed and are filled in or updated by `--fix`, the same as `source_hash` and `source_anchor`. This is the same contract as `eslint --fix` or `cargo clippy --fix` — mechanical corrections, no semantic changes.
 <!-- @liyi:end-requirement fix-never-modifies-human-fields -->
 
 <!-- @liyi:requirement fix-semantic-drift-protection -->
