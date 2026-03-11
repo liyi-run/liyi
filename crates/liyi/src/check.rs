@@ -284,6 +284,7 @@ pub fn run_check(
 
 // @liyi:related reviewed-semantics
 // @liyi:related fix-semantic-drift-protection
+// @liyi:related fix-never-modifies-human-fields
 fn check_sidecar(
     entry: &SidecarEntry,
     diagnostics: &mut Vec<Diagnostic>,
