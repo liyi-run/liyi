@@ -24,8 +24,8 @@
         62
       ],
       "tree_path": "fn::git_log_revisions",
-      "source_hash": "sha256:aeb26d479627e11f0a2c19b31331176abb0adada884ab6e1df54187504313c2e",
-      "source_anchor": "pub fn git_log_revisions("
+      "source_hash": "sha256:90be59b8a7318b26097dd35fadaeaf51e4e5d7f87c5fe74c0cabdba3fef330c1",
+      "source_anchor": "pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {"
     }
   ]
 }

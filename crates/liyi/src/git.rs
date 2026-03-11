@@ -32,11 +32,7 @@ pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> O
 ///
 /// Returns at most `limit` entries. Uses `git log --follow` to track renames.
 /// Returns an empty vec if git is unavailable or the file has no history.
-pub fn git_log_revisions(
-    repo_root: &Path,
-    repo_relative_path: &str,
-    limit: usize,
-) -> Vec<String> {
+pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {
     let output = Command::new("git")
         .args([
             "log",
