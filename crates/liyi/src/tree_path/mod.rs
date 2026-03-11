@@ -24,6 +24,7 @@ mod lang_ruby;
 mod lang_rust;
 mod lang_swift;
 mod lang_typescript;
+mod lang_zig;
 
 use std::borrow::Cow;
 use std::path::Path;
@@ -141,6 +142,7 @@ pub enum Language {
     ObjectiveC,
     Kotlin,
     Swift,
+    Zig,
 }
 
 impl Language {
@@ -163,6 +165,7 @@ impl Language {
             Language::ObjectiveC => &lang_objc::CONFIG,
             Language::Kotlin => &lang_kotlin::CONFIG,
             Language::Swift => &lang_swift::CONFIG,
+            Language::Zig => &lang_zig::CONFIG,
         }
     }
 
@@ -183,7 +186,7 @@ impl Language {
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
 /// Bash → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
-/// Java → C# → PHP → Objective-C → Kotlin → Swift.
+/// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig.
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
@@ -241,6 +244,9 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     }
     if lang_swift::CONFIG.matches_extension(ext) {
         return Some(Language::Swift);
+    }
+    if lang_zig::CONFIG.matches_extension(ext) {
+        return Some(Language::Zig);
     }
 
     None
