@@ -5,26 +5,26 @@
   "specs": [
     {
       "item": "RequirementRecord",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Hold the file path, line number, sidecar hash, and freshly computed source hash of a discovered @liyi:requirement. The computed_hash enables cascading staleness detection in a single check pass without needing --fix first.",
       "source_span": [
         21,
         28
       ],
       "tree_path": "struct::RequirementRecord",
-      "source_hash": "sha256:99358f1f35d2d934fe4eb3ff03b86b199b07d489afd88e54912af1635e5e980f",
+      "source_hash": "sha256:f0a1ae60b7bca0bf60e93554fcf6aeb9466f9043ef151378d9f3a66955e8bde7",
       "source_anchor": "struct RequirementRecord {"
     },
     {
       "item": "run_check",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide, enriches them with hashes from existing sidecars, and computes fresh hashes from current source spans so that downstream related-edge staleness is detected in a single run without requiring --fix first; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity using computed_hash, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place and their diagnostics are marked fixed. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         40,
         299
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:c9bea445c1920dd52f9232c286d00ae7d591b5dd4d4f26a8bd4858086f275da0",
+      "source_hash": "sha256:3cd5067e550412235572ab653b0e91601757d8ba2589183c16dfa1f6decef409",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": "sha256:925289a107cb255f3c48f0b5395395038278f56f7006dab3522e511cc8d7699f",
@@ -34,14 +34,14 @@
     },
     {
       "item": "check_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (semantic drift, structural errors). When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         311,
         1113
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:43a31568acf209bbb269fa9f303544f6c34deacc540cd56491deb15cfaad319f",
+      "source_hash": "sha256:1643697e4c27c9f01371bfbdc7465cb6ebfebc8b4020257220bfb81fd51350ba",
       "source_anchor": "fn check_sidecar(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:8748cbe52efb4e6633262ea5db42e9f33fdd83ab3cc5a7576c27689d58ee9ef8",
