@@ -33,6 +33,7 @@ tree-sitter-swift = "0.7.1"
 tree-sitter-bash = "0.25.1"
 tree-sitter-ruby = "0.23.1"
 tree-sitter-zig = "1.1.2"
+nom = "8"
 
 [dev-dependencies]
 proptest = "1"
