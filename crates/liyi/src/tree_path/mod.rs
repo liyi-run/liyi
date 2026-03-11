@@ -9,6 +9,7 @@
 //! locate items by structural identity, making span recovery deterministic
 //! across formatting changes, import additions, and line reflows.
 
+mod lang_bash;
 mod lang_c;
 mod lang_cpp;
 mod lang_csharp;
@@ -123,6 +124,7 @@ impl LanguageConfig {
 /// Supported languages for tree_path resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
+    Bash,
     Rust,
     Python,
     Go,
@@ -143,6 +145,7 @@ impl Language {
     /// Get the language configuration for this language.
     fn config(&self) -> &'static LanguageConfig {
         match self {
+            Language::Bash => &lang_bash::CONFIG,
             Language::Rust => &lang_rust::CONFIG,
             Language::Python => &lang_python::CONFIG,
             Language::Go => &lang_go::CONFIG,
@@ -176,10 +179,14 @@ impl Language {
 ///
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
-/// Rust → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
+/// Bash → Rust → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
 /// Java → C# → PHP → Objective-C → Kotlin → Swift.
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
+
+    if lang_bash::CONFIG.matches_extension(ext) {
+        return Some(Language::Bash);
+    }
 
     if lang_rust::CONFIG.matches_extension(ext) {
         return Some(Language::Rust);
