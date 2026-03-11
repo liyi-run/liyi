@@ -42,15 +42,22 @@ impl TreePath {
 
     /// Serialize a tree_path to string.
     pub fn serialize(&self) -> String {
-        self.segments
-            .iter()
-            .map(|s| match s {
-                Segment::Kind(k) => k.clone(),
-                Segment::Name(n) => serialize_name(n),
-                Segment::Injection(lang) => format!("//{lang}"),
-            })
-            .collect::<Vec<_>>()
-            .join("::")
+        let mut out = String::new();
+        for (i, seg) in self.segments.iter().enumerate() {
+            // Injection markers attach to the preceding segment without ::
+            if i > 0 && !matches!(seg, Segment::Injection(_)) {
+                out.push_str("::");
+            }
+            match seg {
+                Segment::Kind(k) => out.push_str(k),
+                Segment::Name(n) => out.push_str(&serialize_name(n)),
+                Segment::Injection(lang) => {
+                    out.push_str("//");
+                    out.push_str(lang);
+                }
+            }
+        }
+        out
     }
 }
 
@@ -91,7 +98,13 @@ fn is_simple_identifier(s: &str) -> bool {
 /// Parse a complete tree_path.
 fn parse_tree_path(input: &str) -> IResult<&str, TreePath> {
     let (input, first) = parse_segment(input)?;
-    let (input, rest) = many0(preceded(tag("::"), parse_segment)).parse(input)?;
+    let (input, rest) = many0(alt((
+        // Injection marker directly after a segment (no :: separator): run//bash
+        parse_injection_marker,
+        // Standard :: separated segment
+        preceded(tag("::"), parse_segment),
+    )))
+    .parse(input)?;
     let mut segments = vec![first];
     segments.extend(rest);
     Ok((input, TreePath { segments }))
@@ -255,7 +268,23 @@ mod tests {
 
     #[test]
     fn parse_injection_marker() {
-        // Injection as standalone segment (M9 syntax)
+        // Injection appended to preceding segment (canonical M9 syntax)
+        let path = TreePath::parse("key::run//bash::fn::setup").unwrap();
+        assert_eq!(
+            path.segments,
+            vec![
+                Segment::Name("key".to_string()),
+                Segment::Name("run".to_string()),
+                Segment::Injection("bash".to_string()),
+                Segment::Kind("fn".to_string()),
+                Segment::Name("setup".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_injection_marker_standalone() {
+        // Injection as standalone :: separated segment (also accepted)
         let path = TreePath::parse("key::run:://bash::fn::setup").unwrap();
         assert_eq!(
             path.segments,
@@ -352,5 +381,19 @@ mod tests {
         let original = "test::\"with \\\"quote\\\"\"";
         let path = TreePath::parse(original).unwrap();
         assert_eq!(path.serialize(), original);
+    }
+
+    #[test]
+    fn roundtrip_injection_canonical() {
+        let original = "key::run//bash::fn::setup";
+        let path = TreePath::parse(original).unwrap();
+        assert_eq!(path.serialize(), original);
+    }
+
+    #[test]
+    fn standalone_injection_serializes_canonical() {
+        // Standalone form (with ::) normalizes to canonical (without ::)
+        let path = TreePath::parse("key::run:://bash::fn::setup").unwrap();
+        assert_eq!(path.serialize(), "key::run//bash::fn::setup");
     }
 }

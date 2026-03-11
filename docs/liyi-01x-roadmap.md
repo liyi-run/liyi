@@ -1020,12 +1020,13 @@ escaped_char := '\\' ( '"' | '\\' | 'n' | ':' )
 When M9 (injection framework) is implemented, the grammar will extend to:
 
 ```ebnf
-segment      := kind | name | injection_marker
+tree_path    := segment (":" segment)*
+segment      := (kind | name) injection_marker? | injection_marker
 injection_marker := "//" language
 language     := identifier
 ```
 
-The injection marker `//lang` appears as a standalone segment or appended to a name segment (`run//bash`). The latter preserves the even-pair invariant for shell-safe paths.
+The injection marker `//lang` attaches to the preceding name segment (`run//bash`), preserving the even-pair invariant for shell-safe paths. The standalone form (`:://lang`) is also accepted for parsing but the canonical serialization always uses the appended form.
 
 ### A.4 Implementation plan
 
