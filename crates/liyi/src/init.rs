@@ -13,7 +13,8 @@ When writing or modifying code:\n\
 1. For each non-trivial item, infer what it SHOULD do. Write intent to `<source>.liyi.jsonc`. \
 Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` \
 — the tool fills them in. Use `\"intent\": \"=doc\"` only when the docstring contains \
-behavioral requirements. For trivial items, annotate with `\x40liyi:trivial`.\n\
+behavioral requirements. For trivial items, annotate with `\x40liyi:trivial` \
+or use `\"intent\": \"=trivial\"` in the sidecar.\n\
 2. When module-level invariants are apparent, write an `\x40liyi:module` block.\n\
 3. If a source item has `\x40liyi:related <name>`, record `\"related\": {\"<name>\": null}` in the sidecar.\n\
 4. For each `\x40liyi:requirement <name>` block, ensure it has a sidecar entry.\n\

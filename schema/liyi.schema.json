@@ -54,7 +54,7 @@
         },
         "intent": {
           "type": "string",
-          "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent."
+          "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent, or '=trivial' meaning the item is trivial and needs no intent spec."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
         "tree_path": {

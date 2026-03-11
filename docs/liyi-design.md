@@ -907,10 +907,41 @@ This gives agents a DRY option: well-documented code gets `"intent": "=doc"` ins
 | Who | Form | Meaning |
 |---|---|---|
 | Agent | `"intent": "=doc"` in sidecar | "The docstring captures it" |
+| Agent | `"intent": "=trivial"` in sidecar | “This item is trivial — no behavioral spec warranted” |
 | Agent | `"intent": "<prose>"` in sidecar | "Here’s what I infer it should do" |
 | Human | `@liyi:intent=doc` in source | "I confirm the docstring is my intent" |
 | Human | `@liyi:intent <prose>` in source | "Here’s what I say it should do" |
 | Human | `"reviewed": true` in sidecar | "The agent’s inference is correct" |
+
+### `"=trivial"` in the sidecar — the triviality sentinel
+
+The `@liyi:trivial` source annotation tells agents and the linter to skip an item entirely. But it requires modifying source, and produces no sidecar entry — the item becomes invisible to coverage tracking and audit trails. The `"=trivial"` sentinel fills this gap by expressing triviality in the sidecar:
+
+```jsonc
+{
+  "item": "get_name",
+  "intent": "=trivial",
+  "source_span": [12, 14],
+  "tree_path": "impl::User::fn::get_name"
+}
+```
+
+Meaning: “I evaluated this item and it’s self-evident — a spec would add no value.”
+
+**When to use which:**
+
+| Mechanism | Where | Creates sidecar entry? | Tracked in intent graph? | Use when |
+|---|---|---|---|---|
+| `@liyi:trivial` in source | Source annotation | No | No — invisible to linter | You own the source and want zero sidecar footprint |
+| `"intent": "=trivial"` in sidecar | Sidecar | Yes | Yes — shows in coverage, info-level diagnostic | You want an audit trail, or can’t/shouldn’t modify source |
+
+The second case matters for the scaffold workflow (see *Tree-sitter item discovery in scaffold* below): `liyi init` pre-populates every discovered item, the agent judges triviality and writes `"=trivial"` instead of deleting the entry. The full inventory is preserved — reviewers can see what was evaluated and judged trivial, not just what was specced.
+
+**Linter behavior.** `liyi check` treats `"intent": "=trivial"` like `@liyi:trivial` in source — emits an info-level `Trivial` diagnostic, does not flag as stale, does not count the item as unreviewed. The adversarial testing agent skips items with `"=trivial"` (same as `@liyi:trivial`).
+
+**Review interaction.** `liyi approve` displays `=trivial` items with a “trivial” tag. A reviewer who disagrees can override — clearing `"=trivial"` and either writing explicit intent or adding `@liyi:nontrivial` in source to prevent the agent from re-classifying.
+
+**No source-annotation counterpart.** Unlike `=doc`, there is no `@liyi:intent =trivial` source marker. If you’re in the source, use `@liyi:trivial` directly — it’s shorter and the intent is the same. `"=trivial"` is specifically for sidecar-only workflows (scaffold, batch init, third-party code).
 
 ### Why two review paths
 
@@ -1066,11 +1097,11 @@ In 0.1, the linter checks the *quality* of existing specs, not the *coverage* of
 - **Review status**: report specs where the item has neither a `@liyi:intent` annotation in source nor `"reviewed": true` in the sidecar — the item is unreviewed. Optionally fail CI via `--fail-on-unreviewed`.
 - **Exclusion**: respect `@liyi:ignore`, `@liyi:trivial` annotations and `.liyiignore` patterns.
 
-What it does *not* do in 0.1: detect items that have no spec and no annotation. That requires identifying item definitions in source — either via regex heuristics or tree-sitter. The agent handles coverage during inference; the linter enforces quality of what the agent wrote. Item detection can be added when demand justifies it or when another feature (e.g., a coverage report) needs it anyway.
+What it does *not* do in 0.1: detect items that have no spec and no annotation at *check time*. The linter enforces quality of what the agent wrote, not completeness of what exists. However, `liyi init` now uses tree-sitter to discover all items in supported languages and pre-populate sidecar entries (see *Tree-sitter item discovery in scaffold*). This shifts the coverage problem from check-time detection to init-time discovery: if `liyi init` ran on a file, every item has a spec entry; the agent fills in intent or marks items `"=trivial"`. A future `liyi check --coverage` mode could compare the set of tree-sitter-discovered items against existing sidecar entries to report missing specs — the infrastructure exists, only the check-time wiring is deferred.
 
 This limitation applies to *item coverage* — detecting unlabeled code definitions that lack specs. A narrower and mechanically solvable gap exists: *annotation coverage* — ensuring that every explicit `@liyi:requirement` and `@liyi:related` marker in source has a corresponding entry in the co-located sidecar. See *Annotation coverage* below.
 
-**Caveat: green linter ≠ full coverage.** A passing `liyi check` means every *existing* spec is current and not stale. It does not mean every item in the codebase has a spec. Files the agent never touched will have no `.liyi.jsonc` at all, and the linter won't complain. Teams should be aware that `liyi check` guards quality, not completeness — the agent's coverage during inference is the first line of defense. Imperfect coverage is strictly better than no coverage; the convention makes intent *possible* to persist, not *guaranteed* to be persisted.
+**Caveat: green linter ≠ full coverage.** A passing `liyi check` means every *existing* spec is current and not stale. It does not mean every item in the codebase has a spec. Files the agent never touched will have no `.liyi.jsonc` at all, and the linter won't complain. The `liyi init` scaffold with tree-sitter item discovery mitigates this — it ensures comprehensive initial coverage — but teams should be aware that `liyi check` guards quality, not completeness.
 
 ### Annotation coverage: deterministic enforcement of source markers
 
@@ -1531,7 +1562,7 @@ The full AGENTS.md section is ~300 lines: 10 behavioral rules (the part a human 
 ## 立意 (Intent Specs)
 
 When writing or modifying code:
-1. For each non-trivial item (function, struct, macro invocation, decorated endpoint, etc.), infer what it SHOULD do (not what it does). Write intent to a sidecar file named `<source_filename>.liyi.jsonc` (e.g., `money.rs` → `money.rs.liyi.jsonc`). Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` — the tool fills them in. Do not write `"reviewed"` — that is set by the human via CLI or IDE. Use `"intent": "=doc"` only when the docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary — a docstring that says "Returns the sum" is not adequate; one that says "Must reject mismatched currencies with an error" is. For trivial items (simple getters, one-line wrappers), annotate with `@liyi:trivial` instead of writing a spec.
+1. For each non-trivial item (function, struct, macro invocation, decorated endpoint, etc.), infer what it SHOULD do (not what it does). Write intent to a sidecar file named `<source_filename>.liyi.jsonc` (e.g., `money.rs` → `money.rs.liyi.jsonc`). Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` — the tool fills them in. Do not write `"reviewed"` — that is set by the human via CLI or IDE. Use `"intent": "=doc"` only when the docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary — a docstring that says "Returns the sum" is not adequate; one that says "Must reject mismatched currencies with an error" is. For trivial items (simple getters, one-line wrappers), annotate with `@liyi:trivial` instead of writing a spec. Alternatively, when working sidecar-first, use `"intent": "=trivial"` to mark items as trivial without requiring a source annotation.
 2. When module-level invariants are apparent, write an `@liyi:module` block — in the directory's existing module doc (`README.md`, `doc.go`, `mod.rs` doc comment, etc.) or in a dedicated `LIYI.md`. Use the doc markup language's comment syntax for the marker.
 3. If a source item has a `@liyi:related <name>` annotation, record the dependency in `.liyi.jsonc` as `"related": {"<name>": null}`. The tool fills in the requirement's current hash.
 4. For each `@liyi:requirement <name>` block encountered, ensure it has a corresponding entry in the co-located `.liyi.jsonc` with `"requirement"` and `"source_span"`. (The tool fills in `"source_hash"`.)
@@ -1702,10 +1733,121 @@ Appends the 立意 agent instruction section (~300 lines: 10 rules + two JSON sc
 **File initialization:**
 
 ```bash
-liyi init src/money.rs   # create money.rs.liyi.jsonc with empty specs array
+liyi init src/money.rs   # discover items, create pre-populated money.rs.liyi.jsonc
 ```
 
-Creates a skeleton `.liyi.jsonc` sidecar with `version`, `source`, and an empty `specs` array. The agent (or human) populates specs afterwards.
+When a tree-sitter grammar is available for the source language (14 languages supported — see *Structural identity via `tree_path`*), `liyi init` parses the file, walks the AST for item nodes, and emits a sidecar with pre-populated spec entries. Each entry has `item`, `source_span`, `tree_path`, and `"intent": ""` — the agent fills in `"intent"` (or writes `"=trivial"` / `"=doc"`), and optionally deletes items it deems unnecessary. This turns the agent’s job from “create everything from scratch + understand the JSON schema” to “annotate a pre-built inventory.”
+
+For unsupported languages (no tree-sitter grammar), `liyi init` falls back to the original behavior — a skeleton sidecar with `version`, `source`, and an empty `specs` array.
+
+#### Tree-sitter item discovery in scaffold
+
+The scaffold uses two deterministic AST signals to help the agent prioritize which items need intent specs:
+
+**1. Doc comment attachment.** Items with doc comments attached are almost certainly non-trivial — someone wrote prose about them. The scaffold detects this per-language:
+- Rust: `///` / `//!` doc comments as sibling `line_comment` nodes immediately preceding the item.
+- Python: docstrings as `expression_statement > string` children of the function/class body.
+- Go: `//` comments immediately preceding the function/type declaration.
+- Other languages: similar language-specific patterns via tree-sitter node adjacency.
+
+Items with doc comments get `"_has_doc": true` in their `_hints`, signaling the agent that `"intent": "=doc"` may be appropriate if the docstring contains behavioral requirements.
+
+**2. Item size (body line count).** Available directly from `source_span`: `end - start + 1`. Small items (≤ 3–5 lines of body, depending on language idiom) are likely trivial — simple getters, one-line wrappers, delegating constructors. The scaffold emits `"_body_lines": N` in hints. Items below a threshold get `"_likely_trivial": true`.
+
+**Combined heuristic:**
+
+| Has doc comment? | Body size | Scaffold hint |
+|---|---|---|
+| Yes | Any | `"_has_doc": true` — likely non-trivial |
+| No | > threshold | No triviality hint — needs intent |
+| No | ≤ threshold | `"_likely_trivial": true` — agent should consider `"=trivial"` |
+
+This is an **exhaustive inclusion** strategy: every item discovered by tree-sitter gets a spec entry. The agent annotates (fills intent, marks trivial, or uses `=doc`) rather than discovers. Over-generation with agent pruning is strictly better than under-generation with agent creation — a missing item is a silent coverage gap; an extra `"=trivial"` entry is an audit trail.
+
+**Example** scaffold output:
+
+```jsonc
+// liyi v0.1 spec file — scaffolded by liyi init (tree-sitter)
+// Items below were discovered automatically. Fill in "intent" for each
+// non-trivial item, or set "intent": "=trivial" for self-evident items.
+{
+  "version": "0.1",
+  "source": "src/billing/money.rs",
+  "specs": [
+    {
+      "item": "Money",
+      "intent": "",
+      "source_span": [4, 7],
+      "tree_path": "struct::Money",
+      "_hints": { "_has_doc": true, "_body_lines": 4 }
+    },
+    {
+      "item": "Money",
+      "intent": "",
+      "source_span": [9, 50],
+      "tree_path": "impl::Money"
+    },
+    {
+      "item": "Money::new",
+      "intent": "",
+      "source_span": [11, 15],
+      "tree_path": "impl::Money::fn::new",
+      "_hints": { "_has_doc": true, "_body_lines": 5 }
+    },
+    {
+      "item": "Money::name",
+      "intent": "",
+      "source_span": [17, 19],
+      "tree_path": "impl::Money::fn::name",
+      "_hints": { "_body_lines": 3, "_likely_trivial": true }
+    },
+    {
+      "item": "add_money",
+      "intent": "",
+      "source_span": [52, 75],
+      "tree_path": "fn::add_money",
+      "_hints": { "_body_lines": 24 }
+    }
+  ]
+}
+```
+
+After the agent processes this scaffold, the sidecar might look like:
+
+```jsonc
+{
+  "version": "0.1",
+  "source": "src/billing/money.rs",
+  "specs": [
+    {
+      "item": "Money",
+      "intent": "=doc",
+      "source_span": [4, 7],
+      "tree_path": "struct::Money"
+    },
+    {
+      "item": "Money::new",
+      "intent": "Construct a Money value. Currency must be a valid ISO 4217 code. Amount is in minor units (cents).",
+      "source_span": [11, 15],
+      "tree_path": "impl::Money::fn::new"
+    },
+    {
+      "item": "Money::name",
+      "intent": "=trivial",
+      "source_span": [17, 19],
+      "tree_path": "impl::Money::fn::name"
+    },
+    {
+      "item": "add_money",
+      "intent": "Add two monetary amounts. Must reject mismatched currencies with an error. Must be commutative. Must not overflow silently.",
+      "source_span": [52, 75],
+      "tree_path": "fn::add_money"
+    }
+  ]
+}
+```
+
+Note: the agent removed the `impl::Money` container entry (containers are often not worth speccing independently), used `=doc` for the well-documented struct, `=trivial` for the getter, and wrote explicit intent for the rest. The `_hints` fields are gone — `liyi reanchor` strips them.
 
 #### `_hints` — cold-start inference aids
 
@@ -1732,9 +1874,10 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
 
 **Per-item, not per-file.** Each spec entry gets its own `_hints` based on that item's span. A function with 47 commits and 3 bug fixes gets different hints than the simple getter next to it.
 
-**Example** skeleton sidecar after `liyi init src/billing/money.rs --hints`:
+**Example** scaffold with `--hints`:
 
 ```jsonc
+// liyi init src/billing/money.rs --hints
 {
   "version": "0.1",
   "source": "src/billing/money.rs",
@@ -1743,11 +1886,13 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
       "item": "add_money",
       "intent": "",
       "source_span": [15, 42],
+      "tree_path": "fn::add_money",
       "_hints": {
+        "_body_lines": 28,
+        "_has_doc": false,
         "commits": 12,
         "fix_commits": 3,
         "has_tests": true,
-        "doc_lines": 0,
         "last_modified_days": 45
       }
     },
@@ -1755,10 +1900,25 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
       "item": "Money::new",
       "intent": "",
       "source_span": [5, 13],
+      "tree_path": "impl::Money::fn::new",
       "_hints": {
+        "_body_lines": 9,
+        "_has_doc": true,
         "commits": 1,
         "has_tests": false,
-        "doc_lines": 4,
+        "last_modified_days": 380
+      }
+    },
+    {
+      "item": "Money::name",
+      "intent": "",
+      "source_span": [14, 16],
+      "tree_path": "impl::Money::fn::name",
+      "_hints": {
+        "_body_lines": 3,
+        "_likely_trivial": true,
+        "commits": 1,
+        "has_tests": false,
         "last_modified_days": 380
       }
     }
@@ -1766,7 +1926,9 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
 }
 ```
 
-**Graceful degradation.** When not in a git repository, `liyi init --hints` omits VCS-derived signals and emits only filesystem signals (file age, docstring line count, test file presence). When `--hints` is not given, `liyi init` behaves as before — skeleton sidecar with empty specs.
+Tree-sitter signals (`_body_lines`, `_has_doc`, `_likely_trivial`) are always present when the language is supported. VCS signals (`commits`, `fix_commits`, etc.) require `--hints` and a git repository. Without `--hints`, the scaffold still discovers items and populates spans/tree_paths — only VCS signals are omitted.
+
+**Graceful degradation.** When not in a git repository, `--hints` omits VCS-derived signals but retains tree-sitter signals. For unsupported languages (no grammar), `liyi init` produces an empty `"specs": []` array — the agent creates entries from scratch, as before.
 
 ### Challenge: on-demand semantic verification (post-MVP)
 
@@ -2356,7 +2518,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
         },
         "intent": {
           "type": "string",
-          "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent."
+          "description": "Natural-language description of what the item SHOULD do, or the sentinel value '=doc' meaning the source docstring captures intent, or '=trivial' meaning the item is trivial and needs no intent spec."
         },
         "source_span": { "$ref": "#/$defs/sourceSpan" },
         "tree_path": {

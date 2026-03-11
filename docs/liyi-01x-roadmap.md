@@ -895,6 +895,63 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 ---
 
+## M10. Smart scaffold and `=trivial` sentinel
+
+**Status:** ⏳ Planned
+
+Enhance `liyi init` to leverage tree-sitter item discovery and add the `"intent": "=trivial"` sidecar sentinel.
+
+### M10.1. Tree-sitter item discovery in `liyi init` ⏳
+
+Extend `liyi init <source-file>` to use tree-sitter to enumerate items (functions, structs, classes, methods, etc.) and pre-populate the sidecar `specs` array with stub entries. Currently `liyi init` creates an empty `"specs": []` skeleton — this milestone fills it with discovered items so agents can focus on inferring intent rather than discovering structure.
+
+**Acceptance criteria:**
+- `liyi init foo.rs` produces a sidecar with one entry per top-level item (functions, structs, impls, trait decls) with `item`, `source_span`, and `tree_path` populated; `intent` left as `""` (empty — to be filled by agent).
+- Works for all 14 currently supported languages (Rust, Python, Go, JS, TS, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift).
+- `--no-discover` flag to opt out and get the old empty-skeleton behavior.
+- Items inside `impl` blocks produce nested `tree_path` (e.g., `impl::Money::fn::new`).
+
+### M10.2. Doc comment detection heuristic ⏳
+
+When discovering items, detect whether a doc comment is attached (language-specific: `///` / `/** */` for Rust, `"""..."""` for Python, `//` / `/** */` for JS/TS, etc.). Items with doc comments get `"intent": "=doc"` as a suggested starting point in `_hints`.
+
+**Acceptance criteria:**
+- For each language, doc comments immediately preceding an item are detected.
+- Discovered items with doc comments have `_hints.has_doc_comment: true` in the scaffold.
+- Items without doc comments have `_hints.has_doc_comment: false` or the key is absent.
+
+### M10.3. Item size heuristic ⏳
+
+Compute line count for each discovered item's span. Small items (≤5 lines) are suggested as trivial candidates in `_hints`.
+
+**Acceptance criteria:**
+- `_hints.line_count` is populated for each discovered item.
+- `_hints.suggested_trivial: true` is set for items ≤5 lines and no doc comment.
+- The threshold is configurable via `--trivial-threshold <N>` (default: 5).
+
+### M10.4. `"intent": "=trivial"` sentinel support ⏳
+
+Support `"intent": "=trivial"` as a sidecar-only triviality marker, parallel to the existing `@liyi:trivial` source annotation.
+
+**Acceptance criteria:**
+- `liyi check` treats `"intent": "=trivial"` the same as `@liyi:trivial` — the item is skipped in coverage reports and test generation.
+- `liyi check --fail-on-untracked` does not flag items with `"intent": "=trivial"`.
+- `liyi approve` can transition `"intent": "=trivial"` to `"reviewed": true` (human confirms triviality).
+- When both `@liyi:trivial` in source and `"intent": "=trivial"` in sidecar are present, no diagnostic is emitted.
+- When `@liyi:nontrivial` is in source but `"intent": "=trivial"` in sidecar, a `ConflictingTriviality` diagnostic is emitted.
+- Schema (`liyi.schema.json`) `intent` field description updated to document `=trivial`.
+
+### M10.5. Combined scaffold example ⏳
+
+End-to-end golden test demonstrating the full scaffold workflow:
+
+**Acceptance criteria:**
+- Golden fixture with a multi-item source file producing a pre-populated sidecar.
+- Fixture verifies `tree_path`, `source_span`, `_hints` (doc comment, line count, suggested_trivial).
+- Existing `liyi init` tests still pass (backward compatibility).
+
+---
+
 ## Priority order (updated)
 
 | Priority | Item | Status | Effort | Unlocks |
@@ -909,13 +966,18 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 | ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
 | ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
 | 10 | M5.3 `--prompt` output | ⏳ Design | ~3h | Agent-consumable gaps |
-| 11 | M7.1 Ruby | ⏳ Planned | ~2h | Ruby/Rails ecosystem |
-| 12 | M7.2 Bash | ⏳ Planned | ~1h | CI scripts, devops |
-| 13 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
-| 14 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
-| 15 | M7.3 Dart | ⏳ Planned | ~3h | Flutter ecosystem |
-| 16 | M7.4 Zig | ⏳ Planned | ~3h | Systems lang, growing |
-| 17 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
+| 11 | M10.4 `=trivial` sentinel | ⏳ Planned | ~2h | Sidecar-only triviality |
+| 12 | M10.1 Tree-sitter item discovery | ⏳ Planned | ~4h | Smart scaffold |
+| 13 | M10.2 Doc comment heuristic | ⏳ Planned | ~2h | `=doc` suggestions |
+| 14 | M10.3 Item size heuristic | ⏳ Planned | ~1h | Trivial suggestions |
+| 15 | M10.5 Combined scaffold test | ⏳ Planned | ~1h | Regression guard |
+| 16 | M7.1 Ruby | ⏳ Planned | ~2h | Ruby/Rails ecosystem |
+| 17 | M7.2 Bash | ⏳ Planned | ~1h | CI scripts, devops |
+| 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
+| 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
+| 20 | M7.3 Dart | ⏳ Planned | ~3h | Flutter ecosystem |
+| 21 | M7.4 Zig | ⏳ Planned | ~3h | Systems lang, growing |
+| 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
 | 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
 
 ---
