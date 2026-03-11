@@ -108,8 +108,8 @@
         1177,
         1183
       ],
-      "source_hash": "sha256:6ed25f14e08ea936e927150a3d0cc82f881011edcd1360b5401e7a03658f53f9",
-      "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
+      "source_hash": "sha256:4e595568405c480e562e7dd9e67ddd79b4f45d9dee0618aeb4840ba3c84545f9",
+      "source_anchor": "`--level` controls *display*, not exit code. A `--level=error` run with stale items still exits 1 if `--fail-on-stale` is set — the diagnostics are computed regardless, just not printed. This lets agents suppress noisy informational output (75 \"not reviewed\" lines) while still surfacing the 2 actionable items, without losing CI enforcement."
     },
     {
       "requirement": "marker-normalization",
@@ -117,8 +117,8 @@
         1210,
         1212
       ],
-      "source_hash": "sha256:b4e1f5b698b77c4c661d15cbd070e30839ecfd2f42fb77286e0a7408e294bd1c",
-      "source_anchor": "<!-- @liyi:requirement marker-normalization -->"
+      "source_hash": "sha256:17eaaa64b91ff9ce9a007afb7fef30bf47c8019dc559afd30fc36a7b996a731a",
+      "source_anchor": "- `＠立意:需求(認証チェック)`"
     },
     {
       "requirement": "quine-escape-in-source",
@@ -126,8 +126,8 @@
         1224,
         1226
       ],
-      "source_hash": "sha256:326dee10b54b25cc8f874d8577bb3218efa21313f1329e70dadcc83d03978e38",
-      "source_anchor": "<!-- @liyi:requirement quine-escape-in-source -->"
+      "source_hash": "sha256:8ade4829879b8557f35e5c8500a237bdc2fcdc0a7d6a0d8df71abac98771a19a",
+      "source_anchor": "**Two mechanisms, two domains.**"
     },
     {
       "requirement": "markdown-fenced-block-skip",
@@ -135,8 +135,8 @@
         1230,
         1236
       ],
-      "source_hash": "sha256:18e3c5d63b28b021f3ef45158fddfc73fbb2bdfd6433b63748d70df9736ba2e1",
-      "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
+      "source_hash": "sha256:c160c9dffef68cb7d637048fe12a7cdfd0d879d46af0639cd0ec7dac54d12c7e",
+      "source_anchor": "In **documentation and prose** — Markdown files, design docs, READMEs, contributing guides — character escapes are unacceptable. A design document that writes `\\x40liyi:module` instead of `@liyi:module` is unreadable. The scanner instead uses **natural-language context** to distinguish real markers from mentions:"
     },
     {
       "requirement": "fix-never-modifies-human-fields",
@@ -144,8 +144,8 @@
         1442,
         1444
       ],
-      "source_hash": "sha256:2c59f122385a46454e274ecfe0a77e78b47b846ca4f932c151ab3baa3c4c9250",
-      "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
+      "source_hash": "sha256:e58c609ab5eb75d99805ed96dad5210be41c13c0fa82e5cb0fff98c95f666a12",
+      "source_anchor": "`--fix --dry-run` shows what `--fix` would change without writing any files. Each correction is printed as a diff-like line (`item: [old_span] → [new_span], hash updated`). This lets users preview mechanical corrections before committing them."
     },
     {
       "requirement": "fix-semantic-drift-protection",
@@ -153,8 +153,8 @@
         1446,
         1448
       ],
-      "source_hash": "sha256:320f7c2667bf1a8163a2ec95adb0bdfeac648780042af08a2eab4ff27d0b74a2",
-      "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
+      "source_hash": "sha256:33aa39d376465cc5edac91cee87cb445464c8a749aa1b3079d931608e3677b51",
+      "source_anchor": "<!-- /requirement -->"
     }
   ]
 }

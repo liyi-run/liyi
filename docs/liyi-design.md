@@ -1,6 +1,6 @@
-# 立意 (Lìyì) — Design v8.9
+# 立意 (Lìyì) — Design v8.10
 
-Establish intent before execution · 2026-03-10
+Establish intent before execution · 2026-03-11
 
 ---
 
@@ -1129,6 +1129,8 @@ Three output modes share the same detection engine:
 
 The `--prompt` flag is a *formatter*, not a different check. All modes exit nonzero when gaps exist. The flags (`--fail-on-stale`, `--fail-on-untracked`, etc.) control which conditions are failures in all modes.
 
+**Generalization target (v8.10).** The initial `--prompt` scope covers coverage gaps only (Untracked, MissingRelatedEdge). The cognitive load inversion principle (see *The cognitive load inversion: tool-guided agents*) argues for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. This makes `--prompt` the universal agent interface: every problem `liyi check` can detect comes with a machine-readable instruction for how to fix it. The detailed design for non-coverage diagnostics in `--prompt` is deferred to a future revision of `docs/prompt-mode-design.md`.
+
 **Paired AGENTS.md directive.** The coverage checks are deterministic; the resolution is the agent's responsibility. An additional AGENTS.md rule closes the loop:
 
 > 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
@@ -1550,6 +1552,64 @@ When writing or modifying code:
 - **Spec is the referee.** If the spec says one thing and the code does another, the test exposes the gap. The human decides who's right.
 - **Model diversity.** Different model for tests than for code, when possible.
 - **Never modify source code logic** during the protocol. Only create/update `.liyi.jsonc` files, `@liyi:module` blocks (in docs or doc comments), test files, and annotation comments (`@liyi:trivial`, `@liyi:ignore`, `@liyi:requirement`, `@liyi:related`). Annotation comments are metadata, not logic — adding them does not change program behavior.
+
+### The cognitive load inversion: tool-guided agents
+
+The 11 behavioral rules assume the agent internalizes a complex protocol and executes it reliably. Frontier models (Claude Opus, GPT-4.5) do this well. Budget models (Kimi K2.5, Gemini Flash, GPT-4o-mini) routinely forget steps — dropping AIGC trailers, skipping sidecar updates, ignoring `.liyiignore`. This is not a hypothetical concern; it is empirically observed in production use.
+
+The conventional response is "write better instructions." This is necessary but insufficient. The deeper architectural response is to **move protocol knowledge from the agent's context window into the tool's output**, so that the agent's job shifts from "internalize and follow rules" to "run command, parse output, execute instructions."
+
+This is the **`--prompt` pattern**: the tool assembles a self-contained, actionable instruction set that the agent consumes and executes. The agent doesn't need to have memorized the protocol — the tool tells it exactly what to do, and the tool validates the result.
+
+**The inversion.** The traditional flow: agent follows rules → tool validates. The inverted flow: tool tells agent what to do → agent executes → tool validates. The rules describe the *why*; the `--prompt` output provides the *what*. Budget models only need the *what*.
+
+Two instances of this pattern exist in the current design:
+
+| Command | What the tool does for the agent |
+|---|---|
+| `liyi check --prompt` | Emits structured JSON with per-gap resolution instructions — the agent doesn't need to parse human-readable diagnostics or remember the fix recipe |
+| `liyi triage --prompt` | Assembles a complete LLM prompt from stale items — context, schema, instructions, output format, all self-contained |
+
+Both follow the same principle: the tool knows the protocol; the agent just needs to know which command to run.
+
+**Generalization target.** The `--prompt` pattern should extend beyond coverage gaps and triage. Every diagnostic `liyi check` can emit should have a `--prompt` counterpart with per-item resolution instructions: stale items ("re-read lines X–Y, update intent"), shifted spans ("span was auto-corrected, verify"), unreviewed specs ("run `liyi approve`"). This makes the 11 behavioral rules largely redundant for budget models — the rules become documentation for humans and frontier models, while `--prompt` output is the operational contract.
+
+**Tiered instruction design.** The AGENTS.md instruction should be reorganized into tiers that degrade gracefully across model capability:
+
+| Tier | Content | Who reads it |
+|---|---|---|
+| **MUST** (5 lines) | Run `liyi check` before commit. Add `AI-assisted-by` trailer. Don't commit with exit ≠ 0. Use `--prompt` for machine-readable fix instructions. | All models |
+| **SHOULD** (10 lines) | Infer intent for non-trivial items. Maintain sidecars. Use `=doc` appropriately. Handle staleness. | Frontier models, strong mid-tier |
+| **REFERENCE** | JSON schemas, triage protocol, edge cases, decision trees. | Frontier models, humans |
+
+A budget model that only follows the MUST tier still produces commits that pass CI — because `liyi check` catches gaps and `--prompt` tells the model how to fix them. The feedback loop is: run → fail → read `--prompt` → fix → run → pass. No internalized knowledge of the sidecar schema required.
+
+**CLI cheatsheet.** A compact command reference further reduces the cognitive burden:
+
+```
+## Quick Reference
+
+### Before committing
+liyi check                    # Must pass (exit 0) before commit
+liyi check --fix              # Auto-correct shifted spans
+liyi check --prompt           # Get agent-consumable fix instructions (JSON)
+
+### When writing new code
+liyi init src/foo.rs          # Scaffold skeleton sidecar
+# Then fill in "intent" for each item in src/foo.rs.liyi.jsonc
+
+### When liyi check reports stale items
+# Few items, you just made the change → update sidecar directly
+# Many items or CI → liyi triage --prompt | llm > .liyi/triage.json
+#                     liyi triage --apply .liyi/triage.json
+
+### When liyi check reports coverage gaps
+liyi check --prompt           # Each gap includes an "instruction" field
+```
+
+This cheatsheet belongs in AGENTS.md (for agents) and in the README or a man page (for humans). A frontier model reads the full rules *and* uses the cheatsheet commands for efficiency. A budget model skips the rules and follows the cheatsheet. Both produce valid output because the tool validates.
+
+**Implications for the project.** The cognitive load inversion reframes 立意's value proposition. The project is not betting that agents reliably follow instructions — it is betting that *making intent explicit and machine-checkable* is more robust than *hoping agents infer intent from context*. A budget model that ignores AGENTS.md and produces a bad commit gets caught at CI. A budget model operating on a codebase without 立意 produces a bad commit that ships. Unreliable agents make the linter *more* valuable, not less.
 
 ---
 
@@ -2097,6 +2157,24 @@ Copyleft (GPL, AGPL, MPL) would protect the **linter binary** from being embedde
 **This is a deliberate trade.** The designer accepts that Augment (or anyone) can reimplement the convention, absorb it into a proprietary product, and monetize it without contributing back. By the project's own success criteria — "the practice of persisting AI-inferred intent gains traction, whether through this project's tooling or through the idea spreading independently" — that scenario is a form of success. The convention spreading inside a walled garden is less good than the convention spreading openly, but better than the convention not spreading at all.
 
 The risk that absorption *prevents* the open convention from thriving — by pulling potential adopters into a proprietary implementation — is real but mitigated by the same dynamics that keep `.editorconfig` alive despite every IDE having its own formatting settings: the open tool is simpler, works everywhere, and has no vendor lock-in. The bet is that simplicity and universality outweigh product polish.
+
+### 6. Agent reliability spectrum (added 2026-03-11)
+
+The project's value proposition relies on agents following the AGENTS.md instruction. Empirical evidence shows a wide reliability spectrum: frontier models (Claude Opus 4.6) follow the full 11-rule protocol with high fidelity; budget models (Kimi K2.5, Gemini Flash) routinely forget AIGC trailers, skip sidecar updates, and ignore edge-case rules. This is not a positioning gap or a tooling gap — it is a fundamental characteristic of the current model landscape.
+
+**This observation validates the project rather than undermining it.** If every model perfectly followed instructions, you wouldn't need a linter, a CI gate, or a triage workflow — you'd just trust the output. The entire tooling layer (schema validation, staleness detection, coverage gap enforcement) exists precisely because agent output cannot be blindly trusted. `liyi check` catches what the agent forgets. Unreliable agents make the linter *more* valuable, not less.
+
+**However, the observation does reveal that the AGENTS.md instruction is poorly optimized for weaker models.** Specific problems:
+
+1. **Density.** Rule 1 alone is a ~120-word paragraph containing ~7 sub-instructions. Budget models parse this as a wall of text and latch onto whichever clause they processed last.
+2. **Indirection.** The first actionable instruction is "go read another file" (the contributing guide), which itself says "go read the AIGC policy." Multi-hop retrieval fails silently on weaker models.
+3. **Inlined schemas.** ~100 lines of JSON Schema in the middle of the instruction flow wastes context window and confuses models about whether it's an instruction or an example.
+4. **Decision trees.** Rule 10 presents a nuanced choice (direct re-inference vs. triage) with criteria that require sophisticated judgment. Budget models need a default path, not a decision matrix.
+5. **No minimum viable compliance tier.** All 11 rules read as equally mandatory. There is no separation between "you MUST do these 3 things or CI rejects your commit" and "you SHOULD do these 8 things for best results."
+
+**The architectural response** is the cognitive load inversion described in *The cognitive load inversion: tool-guided agents*: move protocol knowledge from the agent's context window into the tool's `--prompt` output, and restructure AGENTS.md into tiers (MUST / SHOULD / REFERENCE) that degrade gracefully across model capability. A budget model that only follows the MUST tier — run `liyi check`, add AIGC trailer, use `--prompt` for fix instructions — still produces commits that pass CI.
+
+**Action:** Restructure AGENTS.md into tiered form and extend `--prompt` to cover all diagnostics (not just coverage gaps). This is a convention change that affects the agent skill template — downstream repositories that adopted the current AGENTS.md will need to update. Ship the restructured instruction alongside the `--prompt` generalization.
 
 ---
 
