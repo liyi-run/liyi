@@ -4,15 +4,27 @@
   "source": "crates/liyi-cli/src/main.rs",
   "specs": [
     {
+      "item": "reset_sigpipe",
+      "reviewed": false,
+      "intent": "Reset SIGPIPE to SIG_DFL so that piping output into programs like `head` causes silent termination instead of a panic.",
+      "source_span": [
+        15,
+        19
+      ],
+      "tree_path": "fn::reset_sigpipe",
+      "source_hash": "sha256:89a4cd466ea8ee96e08078ee8f1906ff07e7ff0d15661b640359e5962e83ca79",
+      "source_anchor": "fn reset_sigpipe() {"
+    },
+    {
       "item": "main",
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        18,
-        233
+        26,
+        242
       ],
       "tree_path": "fn::main",
-      "source_hash": "sha256:961780c347571017ffaead09b053f407de95d2378ba77c08342ab4739d83815c",
+      "source_hash": "sha256:a11828b49d8e7c5b144423442c9bab41b1d84aff99c551e159e0c03558f70b06",
       "source_anchor": "fn main() {"
     },
     {
@@ -20,8 +32,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        239,
-        241
+        248,
+        250
       ],
       "tree_path": "fn::is_tty",
       "source_hash": "sha256:36dcd447c8fa9e666c6682395c3148c216b7c07dce8cc88f3d76f90714207ccd",

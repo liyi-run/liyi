@@ -10,12 +10,21 @@ mod tui_approve;
 use cli::{Cli, Commands};
 use liyi::diagnostics::CheckFlags;
 
+/// Reset SIGPIPE to default behavior so piping into `head` etc. terminates
+/// silently instead of panicking.
+fn reset_sigpipe() {
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+}
+
 /// CLI entrypoint. Dispatches to sub-commands; implementations of some are
 /// delegated but some are not. Must exit process explicitly with return code
 /// for spec compliance.
 ///
 /// <!-- @liyi:intent=doc -->
 fn main() {
+    reset_sigpipe();
     let cli = Cli::parse();
 
     match cli.command {
