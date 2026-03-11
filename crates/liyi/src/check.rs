@@ -7,7 +7,7 @@ use crate::diagnostics::{
 };
 use crate::discovery::{SidecarEntry, discover};
 use crate::hashing::{SpanError, hash_span};
-use crate::markers::{SourceMarker, scan_markers};
+use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
@@ -416,6 +416,7 @@ fn check_sidecar(
     };
 
     let source_markers = scan_markers(&source_content);
+    let marker_span_map = requirement_spans(&source_markers);
     let mut modified = false;
 
     // 5. Check each spec
@@ -837,6 +838,18 @@ fn check_sidecar(
             }
             Spec::Requirement(req) => {
                 let label = req.requirement.clone();
+
+                // Try marker-based span recovery first: if the file has
+                // @liyi:end-requirement markers, use those for span.
+                if let Some(&marker_span) = marker_span_map.get(&req.requirement)
+                    && marker_span != req.source_span
+                {
+                    req.source_span = marker_span;
+                    if fix {
+                        modified = true;
+                    }
+                }
+
                 match hash_span(&source_content, req.source_span) {
                     Ok((computed_hash, computed_anchor)) => {
                         let is_current = req.source_hash.as_ref() == Some(&computed_hash);

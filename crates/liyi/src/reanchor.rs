@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::hashing::hash_span;
+use crate::markers::{requirement_spans, scan_markers};
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
@@ -80,6 +81,15 @@ pub fn run_reanchor(
 
     let lang = detect_language(Path::new(source_path));
 
+    // For files without tree-sitter support, build a span map from
+    // @liyi:requirement / @liyi:end-requirement marker pairs.
+    let marker_spans = if lang.is_none() {
+        let markers = scan_markers(&source_content);
+        requirement_spans(&markers)
+    } else {
+        std::collections::HashMap::new()
+    };
+
     for spec in &mut sidecar.specs {
         match spec {
             Spec::Item(item) => {
@@ -118,10 +128,12 @@ pub fn run_reanchor(
                     continue; // targeted mode only touches items
                 }
 
-                // Tree-sitter span recovery for requirements
+                // Span recovery: prefer tree-sitter, then marker pairing.
                 if let (false, Some(l)) = (req.tree_path.is_empty(), lang)
                     && let Some(new_span) = resolve_tree_path(&source_content, &req.tree_path, l)
                 {
+                    req.source_span = new_span;
+                } else if let Some(&new_span) = marker_spans.get(&req.requirement) {
                     req.source_span = new_span;
                 }
 
