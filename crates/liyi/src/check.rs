@@ -21,7 +21,10 @@ use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 struct RequirementRecord {
     file: PathBuf,
     line: usize,
+    /// Hash stored in the sidecar (may be stale).
     hash: Option<String>,
+    /// Hash freshly computed from the current source span.
+    computed_hash: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -99,10 +102,30 @@ pub fn run_check(
                         RequirementRecord {
                             file: file_path.clone(),
                             line: *line,
-                            hash: None, // filled from sidecar below
+                            hash: None,          // filled from sidecar below
+                            computed_hash: None, // filled from source below
                         },
                     );
                 }
+            }
+        }
+    }
+
+    // Compute fresh hashes for requirement blocks from source markers so
+    // that downstream related-edge checks can detect cascading staleness
+    // in a single `liyi check` run, without needing `--fix` first.
+    for file_path in &disc.all_files {
+        let content = match read_cached(&mut source_cache, file_path) {
+            Some(c) => c,
+            None => continue,
+        };
+        let markers = scan_markers(&content);
+        let spans = requirement_spans(&markers);
+        for (name, span) in &spans {
+            if let Some(rec) = requirements.get_mut(name)
+                && let Ok((h, _)) = hash_span(&content, *span)
+            {
+                rec.computed_hash = Some(h);
             }
         }
     }
@@ -838,10 +861,17 @@ fn check_sidecar(
                                 });
                             }
                             Some(rec) => {
-                                // If both the sidecar and the requirement record
-                                // have hashes, compare them.
+                                // Compare the item's stored related hash
+                                // against the requirement's *current* source
+                                // hash (computed_hash).  This surfaces
+                                // cascading staleness in one pass — even
+                                // before `--fix` updates the requirement's
+                                // sidecar hash.  Fall back to the sidecar
+                                // hash when computed_hash is unavailable.
+                                let current_req_hash =
+                                    rec.computed_hash.as_ref().or(rec.hash.as_ref());
                                 if let (Some(sh), Some(rh)) =
-                                    (stored_hash.as_ref(), rec.hash.as_ref())
+                                    (stored_hash.as_ref(), current_req_hash)
                                     && sh != rh
                                 {
                                     diagnostics.push(Diagnostic {
