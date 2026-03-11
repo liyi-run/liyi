@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// Source-file marker scanner with full-width normalization and multilingual aliases.
 ///
 /// A discovered marker in a source file.
@@ -7,6 +9,10 @@ pub enum SourceMarker {
         line: usize,
     },
     Requirement {
+        name: String,
+        line: usize,
+    },
+    EndRequirement {
         name: String,
         line: usize,
     },
@@ -69,6 +75,7 @@ const CANON_TRIVIAL: &str = "\x40liyi:trivial";
 const CANON_NONTRIVIAL: &str = "\x40liyi:nontrivial";
 const CANON_MODULE: &str = "\x40liyi:module";
 const CANON_REQUIREMENT: &str = "\x40liyi:requirement";
+const CANON_END_REQUIREMENT: &str = "\x40liyi:end-requirement";
 const CANON_RELATED: &str = "\x40liyi:related";
 const CANON_INTENT: &str = "\x40liyi:intent";
 
@@ -100,6 +107,13 @@ const ALIAS_TABLE: &[(&str, &str)] = &[
     ("\x40liyi:módulo", CANON_MODULE),
     ("\x40立意:モジュール", CANON_MODULE),
     ("\x40립의:모듈", CANON_MODULE),
+    // end-requirement (must precede requirement — longer aliases match first)
+    (CANON_END_REQUIREMENT, CANON_END_REQUIREMENT),
+    ("\x40立意:需求结束", CANON_END_REQUIREMENT),
+    ("\x40liyi:fin-requisito", CANON_END_REQUIREMENT),
+    ("\x40立意:要件終", CANON_END_REQUIREMENT),
+    ("\x40liyi:fin-exigence", CANON_END_REQUIREMENT),
+    ("\x40립의:요건끝", CANON_END_REQUIREMENT),
     // requirement
     (CANON_REQUIREMENT, CANON_REQUIREMENT),
     ("\x40立意:需求", CANON_REQUIREMENT),
@@ -284,6 +298,14 @@ pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
                     });
                 }
             }
+            CANON_END_REQUIREMENT => {
+                if let Some(name) = extract_name(rest) {
+                    markers.push(SourceMarker::EndRequirement {
+                        name,
+                        line: line_num,
+                    });
+                }
+            }
             CANON_RELATED => {
                 if let Some(name) = extract_name(rest) {
                     markers.push(SourceMarker::Related {
@@ -318,6 +340,32 @@ pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
     }
 
     markers
+}
+
+/// Build a map from requirement name to `[start_line, end_line]` spans
+/// by pairing `Requirement` and `EndRequirement` markers from a scan result.
+///
+/// Only requirements that have a matching `EndRequirement` with the same
+/// name are included.  Unpaired markers are silently skipped (the linter
+/// can diagnose those separately).
+pub fn requirement_spans(markers: &[SourceMarker]) -> HashMap<String, [usize; 2]> {
+    let mut opens: HashMap<String, usize> = HashMap::new();
+    let mut spans: HashMap<String, [usize; 2]> = HashMap::new();
+
+    for m in markers {
+        match m {
+            SourceMarker::Requirement { name, line } => {
+                opens.insert(name.clone(), *line);
+            }
+            SourceMarker::EndRequirement { name, line } => {
+                if let Some(start) = opens.remove(name) {
+                    spans.insert(name.clone(), [start, *line]);
+                }
+            }
+            _ => {}
+        }
+    }
+    spans
 }
 
 #[cfg(test)]
@@ -369,6 +417,50 @@ mod tests {
         let m = scan_markers("// \x40liyi:requirement currency-match\n");
         assert!(
             matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "currency-match")
+        );
+    }
+
+    #[test]
+    fn scan_end_requirement_paren() {
+        let m = scan_markers("<!-- \x40liyi:end-requirement(exit-codes) -->\n");
+        assert_eq!(m.len(), 1);
+        assert!(
+            matches!(&m[0], SourceMarker::EndRequirement { name, line: 1 } if name == "exit-codes")
+        );
+    }
+
+    #[test]
+    fn scan_end_requirement_space() {
+        let m = scan_markers("<!-- \x40liyi:end-requirement exit-codes -->\n");
+        assert_eq!(m.len(), 1);
+        assert!(
+            matches!(&m[0], SourceMarker::EndRequirement { name, line: 1 } if name == "exit-codes")
+        );
+    }
+
+    #[test]
+    fn scan_end_requirement_chinese_alias() {
+        let m = scan_markers("<!-- \x40\u{7acb}\u{610f}:\u{9700}\u{6c42}\u{7ed3}\u{675f} exit-codes -->\n");
+        assert_eq!(m.len(), 1);
+        assert!(
+            matches!(&m[0], SourceMarker::EndRequirement { name, line: 1 } if name == "exit-codes")
+        );
+    }
+
+    #[test]
+    fn scan_requirement_and_end_requirement_pair() {
+        let input = "\
+<!-- \x40liyi:requirement(exit-codes) -->\n\
+Exit codes: 0 = clean, 1 = failures.\n\
+<!-- \x40liyi:end-requirement(exit-codes) -->\n\
+";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 2);
+        assert!(
+            matches!(&m[0], SourceMarker::Requirement { name, line: 1 } if name == "exit-codes")
+        );
+        assert!(
+            matches!(&m[1], SourceMarker::EndRequirement { name, line: 3 } if name == "exit-codes")
         );
     }
 
