@@ -1,0 +1,23 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_ruby.rs",
+  "specs": [
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Ruby language configuration for tree_path resolution: register tree-sitter-ruby grammar v0.23.1, .rb/.rake/.gemspec extensions, kind mappings for fn (method), class (class), module (module), and singleton_method with custom name extraction for receiver encoding.",
+      "source_span": [4, 12],
+      "tree_path": "static::CONFIG",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    },
+    {
+      "item": "ruby_node_name",
+      "reviewed": false,
+      "intent": "Custom name extraction for Ruby singleton methods (def self.foo). Encodes the receiver type into the name as ReceiverType.method_name or self.method_name, enabling disambiguation of class methods.",
+      "source_span": [14, 28],
+      "tree_path": "fn::ruby_node_name",
+      "source_anchor": "fn ruby_node_name(node: &Node, source: &str) -> Option<String> {"
+    }
+  ]
+}

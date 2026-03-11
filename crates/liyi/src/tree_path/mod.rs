@@ -20,6 +20,7 @@ mod lang_kotlin;
 mod lang_objc;
 mod lang_php;
 mod lang_python;
+mod lang_ruby;
 mod lang_rust;
 mod lang_swift;
 mod lang_typescript;
@@ -126,6 +127,7 @@ impl LanguageConfig {
 pub enum Language {
     Bash,
     Rust,
+    Ruby,
     Python,
     Go,
     JavaScript,
@@ -147,6 +149,7 @@ impl Language {
         match self {
             Language::Bash => &lang_bash::CONFIG,
             Language::Rust => &lang_rust::CONFIG,
+            Language::Ruby => &lang_ruby::CONFIG,
             Language::Python => &lang_python::CONFIG,
             Language::Go => &lang_go::CONFIG,
             Language::JavaScript => &lang_javascript::CONFIG,
@@ -179,7 +182,7 @@ impl Language {
 ///
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
-/// Bash → Rust → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
+/// Bash → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
 /// Java → C# → PHP → Objective-C → Kotlin → Swift.
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
@@ -190,6 +193,10 @@ pub fn detect_language(path: &Path) -> Option<Language> {
 
     if lang_rust::CONFIG.matches_extension(ext) {
         return Some(Language::Rust);
+    }
+
+    if lang_ruby::CONFIG.matches_extension(ext) {
+        return Some(Language::Ruby);
     }
 
     if lang_python::CONFIG.matches_extension(ext) {
