@@ -447,7 +447,8 @@ fn check_sidecar(
                                 item.source_anchor = Some(computed_anchor.clone());
                                 let lang = detect_language(&entry.source_path);
                                 if let Some(l) = lang {
-                                    item.tree_path = compute_tree_path(&source_content, item.source_span, l);
+                                    item.tree_path =
+                                        compute_tree_path(&source_content, item.source_span, l);
                                 }
                                 modified = true;
                             }
@@ -504,7 +505,8 @@ fn check_sidecar(
                                             item.source_anchor = Some(a);
                                         }
                                         if let Some(l) = lang {
-                                            item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                            item.tree_path =
+                                                compute_tree_path(&source_content, new_span, l);
                                         }
                                         modified = true;
                                     }
@@ -534,7 +536,8 @@ fn check_sidecar(
                                         // leaves the spec stale so the next
                                         // `liyi check` flags it.
                                         if let Some(l) = lang {
-                                            item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                            item.tree_path =
+                                                compute_tree_path(&source_content, new_span, l);
                                         }
                                         modified = true;
                                     }
@@ -571,7 +574,8 @@ fn check_sidecar(
                                             }
                                             let lang = detect_language(&entry.source_path);
                                             if let Some(l) = lang {
-                                                item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                                item.tree_path =
+                                                    compute_tree_path(&source_content, new_span, l);
                                             }
                                             modified = true;
                                         }
@@ -654,7 +658,8 @@ fn check_sidecar(
                                         item.source_anchor = Some(a);
                                     }
                                     if let Some(l) = lang {
-                                        item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        item.tree_path =
+                                            compute_tree_path(&source_content, new_span, l);
                                     }
                                     modified = true;
                                 }
@@ -678,7 +683,8 @@ fn check_sidecar(
                                 if fix {
                                     item.source_span = new_span;
                                     if let Some(l) = lang {
-                                        item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        item.tree_path =
+                                            compute_tree_path(&source_content, new_span, l);
                                     }
                                     modified = true;
                                 }
@@ -937,7 +943,8 @@ fn check_sidecar(
                                         req.source_anchor = Some(a);
                                     }
                                     if let Some(l) = lang {
-                                        req.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        req.tree_path =
+                                            compute_tree_path(&source_content, new_span, l);
                                     }
                                     modified = true;
                                 }
@@ -959,7 +966,8 @@ fn check_sidecar(
                                 if fix {
                                     req.source_span = new_span;
                                     if let Some(l) = lang {
-                                        req.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        req.tree_path =
+                                            compute_tree_path(&source_content, new_span, l);
                                     }
                                     modified = true;
                                 }

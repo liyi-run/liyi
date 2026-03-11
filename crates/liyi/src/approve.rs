@@ -2,8 +2,8 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::hashing::hash_span;
 use crate::discovery::resolve_sidecar_targets;
+use crate::hashing::hash_span;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
 /// Result of an approve operation on a single sidecar.
