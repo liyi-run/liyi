@@ -3,7 +3,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::discovery::{find_repo_root, resolve_sidecar_targets};
-use crate::git::git_show;
+use crate::git::{git_log_revisions, git_show};
 use crate::hashing::hash_span;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
@@ -73,8 +73,11 @@ pub struct ApprovalCandidate {
     pub prev_intent: Option<String>,
 }
 
-/// Look up the previously approved intent for an item by querying Git
-/// for the last committed version of the sidecar file.
+/// Look up the previously approved intent for an item by walking Git
+/// history to find the most recent commit where the item was reviewed.
+///
+/// Walks up to 20 commits that touched the sidecar file (via `git log`),
+/// checking each for a version where the item had `reviewed: true`.
 fn lookup_prev_intent(
     repo_root: Option<&Path>,
     sidecar_path: &Path,
@@ -84,18 +87,27 @@ fn lookup_prev_intent(
     let root = repo_root?;
     let rel = sidecar_path.strip_prefix(root).ok()?;
     let rel_str = rel.to_str()?;
-    let old_content = git_show(root, rel_str, "HEAD")?;
-    let old_sidecar = parse_sidecar(&old_content).ok()?;
-    for spec in &old_sidecar.specs {
-        if let Spec::Item(old_item) = spec {
-            // Match by tree_path first (more reliable), fall back to item name.
-            let matched = if !tree_path.is_empty() && !old_item.tree_path.is_empty() {
-                old_item.tree_path == tree_path
-            } else {
-                old_item.item == item_name
-            };
-            if matched && old_item.reviewed {
-                return Some(old_item.intent.clone());
+    let revisions = git_log_revisions(root, rel_str, 20);
+
+    for rev in &revisions {
+        let content = match git_show(root, rel_str, rev) {
+            Some(c) => c,
+            None => continue,
+        };
+        let sidecar = match parse_sidecar(&content) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        for spec in &sidecar.specs {
+            if let Spec::Item(old_item) = spec {
+                let matched = if !tree_path.is_empty() && !old_item.tree_path.is_empty() {
+                    old_item.tree_path == tree_path
+                } else {
+                    old_item.item == item_name
+                };
+                if matched && old_item.reviewed {
+                    return Some(old_item.intent.clone());
+                }
             }
         }
     }

@@ -14,6 +14,18 @@
       "tree_path": "fn::git_show",
       "source_hash": "sha256:035e396f612a614509cd8a27725dba7f49da18395c82cc44e54c4e5f473fbf98",
       "source_anchor": "pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {"
+    },
+    {
+      "item": "git_log_revisions",
+      "reviewed": false,
+      "intent": "Return commit hashes that touched a file, most recent first, by shelling out to `git log --follow --format=%H -<limit> -- <path>`. Runs in repo_root, captures stdout, suppresses stderr. Returns at most `limit` entries. Uses --follow to track renames. Returns empty vec if git is unavailable or the file has no history.",
+      "source_span": [
+        35,
+        62
+      ],
+      "tree_path": "fn::git_log_revisions",
+      "source_hash": "sha256:aeb26d479627e11f0a2c19b31331176abb0adada884ab6e1df54187504313c2e",
+      "source_anchor": "pub fn git_log_revisions("
     }
   ]
 }

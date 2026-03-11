@@ -28,6 +28,39 @@ pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> O
     }
 }
 
+/// Return commit hashes that touched `repo_relative_path`, most recent first.
+///
+/// Returns at most `limit` entries. Uses `git log --follow` to track renames.
+/// Returns an empty vec if git is unavailable or the file has no history.
+pub fn git_log_revisions(
+    repo_root: &Path,
+    repo_relative_path: &str,
+    limit: usize,
+) -> Vec<String> {
+    let output = Command::new("git")
+        .args([
+            "log",
+            "--follow",
+            "--format=%H",
+            &format!("-{limit}"),
+            "--",
+            repo_relative_path,
+        ])
+        .current_dir(repo_root)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .output();
+
+    match output {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(|l| l.to_string())
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
