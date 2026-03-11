@@ -9,10 +9,10 @@
       "intent": "Constant containing the agent instruction block that liyi init appends to AGENTS.md. Must enumerate the six canonical agent rules for sidecar spec management.",
       "source_span": [
         8,
-        21
+        22
       ],
       "tree_path": "const::AGENTS_MD_BLOCK",
-      "source_hash": "sha256:f21ff4a8200643bc6b555c54886e01fc38d15aacd66862264352dbd42d176748",
+      "source_hash": "sha256:923b4c2bbfddf3e664f660556e189605719de2096a227a78fb87943fcf7e5d2c",
       "source_anchor": "const AGENTS_MD_BLOCK: &str = \"\\n\\",
       "related": {
         "quine-escape": null
@@ -23,8 +23,8 @@
       "reviewed": false,
       "intent": "Generate a valid v0.1 skeleton .liyi.jsonc sidecar string with an empty specs array, using the given repo-relative source path.",
       "source_span": [
-        24,
-        34
+        25,
+        35
       ],
       "tree_path": "fn::skeleton_sidecar",
       "source_hash": "sha256:87868ce0d94d5c7a2882aa88cb35188b6433f7b4018dc0038803f90c38968749",
@@ -35,8 +35,8 @@
       "reviewed": false,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
       "source_span": [
-        38,
-        43
+        39,
+        44
       ],
       "tree_path": "enum::InitError",
       "source_hash": "sha256:96d1108fe3d9dc1dcd640eb6ce16270d2656b106073ea4f06e2aee06f858e51b",
@@ -47,8 +47,8 @@
       "reviewed": false,
       "intent": "If AGENTS.md does not exist, create it with a heading and the agent block. If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
       "source_span": [
-        69,
-        88
+        70,
+        89
       ],
       "tree_path": "fn::init_agents_md",
       "source_hash": "sha256:6ce5efe1370ea6c3e1d5ad786c83c2bdc85eddc041577949af01a58bdec86f68",
@@ -59,8 +59,8 @@
       "reviewed": false,
       "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
-        96,
-        120
+        97,
+        121
       ],
       "tree_path": "fn::init_sidecar",
       "source_hash": "sha256:c48941b60c40308ca5c1913be1b0561aafd83ef93a56eeb19a7088bfd0db405a",

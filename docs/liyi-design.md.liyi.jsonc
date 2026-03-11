@@ -99,8 +99,8 @@
         1054,
         1056
       ],
-      "source_hash": "sha256:3f0928a2639b4fd062a2af53f159183665817cc3f7ed7a2c45774a622f8873e9",
-      "source_anchor": "<!-- @liyi:requirement requirement-discovery-global -->"
+      "source_hash": "sha256:c6a5b25878f52c9f835e31aa11a060af59e390e64f0730d153004a7993548c6f",
+      "source_anchor": "```gitignore"
     },
     {
       "requirement": "liyi-check-exit-code",
@@ -108,8 +108,8 @@
         1177,
         1183
       ],
-      "source_hash": "sha256:4e595568405c480e562e7dd9e67ddd79b4f45d9dee0618aeb4840ba3c84545f9",
-      "source_anchor": "`--level` controls *display*, not exit code. A `--level=error` run with stale items still exits 1 if `--fail-on-stale` is set — the diagnostics are computed regardless, just not printed. This lets agents suppress noisy informational output (75 \"not reviewed\" lines) while still surfacing the 2 actionable items, without losing CI enforcement."
+      "source_hash": "sha256:3c5e25f88155fb2751b7ff2b520cc60e1b6f0172c854077b54dab753e169f682",
+      "source_anchor": "**Summary-first output.** The summary line is printed before the per-item diagnostics, so that in large projects the user sees the aggregate picture immediately — without scrolling past hundreds of lines. (When the output is short enough, this also serves as a final line for quick scanning.)"
     },
     {
       "requirement": "marker-normalization",
@@ -117,8 +117,8 @@
         1210,
         1212
       ],
-      "source_hash": "sha256:17eaaa64b91ff9ce9a007afb7fef30bf47c8019dc559afd30fc36a7b996a731a",
-      "source_anchor": "- `＠立意:需求(認証チェック)`"
+      "source_hash": "sha256:5b12f3063785e56636d702bebcbd8f759ad512c72fa4af056edc5548fb13b116",
+      "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
     },
     {
       "requirement": "quine-escape-in-source",
@@ -126,8 +126,8 @@
         1224,
         1226
       ],
-      "source_hash": "sha256:8ade4829879b8557f35e5c8500a237bdc2fcdc0a7d6a0d8df71abac98771a19a",
-      "source_anchor": "**Two mechanisms, two domains.**"
+      "source_hash": "sha256:f59014cebee07606dbb103f06b6b6336409222fce1f6bb6191e800e38c40cd61",
+      "source_anchor": "### Marker normalization (half-width / full-width equivalence)"
     },
     {
       "requirement": "markdown-fenced-block-skip",
@@ -135,8 +135,8 @@
         1230,
         1236
       ],
-      "source_hash": "sha256:c160c9dffef68cb7d637048fe12a7cdfd0d879d46af0639cd0ec7dac54d12c7e",
-      "source_anchor": "In **documentation and prose** — Markdown files, design docs, READMEs, contributing guides — character escapes are unacceptable. A design document that writes `\\x40liyi:module` instead of `@liyi:module` is unreadable. The scanner instead uses **natural-language context** to distinguish real markers from mentions:"
+      "source_hash": "sha256:95608b3b77f9c441d2c9dfe396edfbd9ffe25ea5a5ff4ed2943356c5a30e382d",
+      "source_anchor": "| Half-width | Full-width | Role |"
     },
     {
       "requirement": "fix-never-modifies-human-fields",
@@ -144,8 +144,8 @@
         1442,
         1444
       ],
-      "source_hash": "sha256:e58c609ab5eb75d99805ed96dad5210be41c13c0fa82e5cb0fff98c95f666a12",
-      "source_anchor": "`--fix --dry-run` shows what `--fix` would change without writing any files. Each correction is printed as a diff-like line (`item: [old_span] → [new_span], hash updated`). This lets users preview mechanical corrections before committing them."
+      "source_hash": "sha256:607df81587523fe5a12ddb1b5d4ef92aaed48c07811581d4c9fe40a8d6fe0b6a",
+      "source_anchor": "```"
     },
     {
       "requirement": "fix-semantic-drift-protection",
@@ -153,8 +153,8 @@
         1446,
         1448
       ],
-      "source_hash": "sha256:33aa39d376465cc5edac91cee87cb445464c8a749aa1b3079d931608e3677b51",
-      "source_anchor": "<!-- /requirement -->"
+      "source_hash": "sha256:f40c009e185cefee8531edae568cab5de68a64203695d03e8575b16623e4910a",
+      "source_anchor": "**Direct re-inference: the fast path.** Triage adds value when many items are stale and a human needs to prioritize — a refactor that touches 30 functions, a CI pipeline processing a large PR. But during interactive editing — an agent making focused changes to 2-3 functions in a single session — triage is overhead. The agent already knows what it changed and why."
     }
   ]
 }

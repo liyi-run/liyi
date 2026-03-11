@@ -27,11 +27,11 @@
       "source_hash": "sha256:28a7f0bffb54f043c3497210bc11cb4d040ca85aefef4c8f8453ce2c4afd94b8",
       "source_anchor": "pub fn run_reanchor(",
       "related": {
-        "liyi-sidecar-naming-convention": null,
         "tree-path-reanchor-behavior": null,
         "tool-managed-fields": null,
-        "fix-never-modifies-human-fields": null,
-        "tree-path-empty-fallback": null
+        "tree-path-empty-fallback": null,
+        "liyi-sidecar-naming-convention": null,
+        "fix-never-modifies-human-fields": null
       }
     }
   ]

@@ -27,8 +27,8 @@
       "source_hash": "sha256:13ca74d5432770cc302492fcc1b8c60cee849726441dc80547cf0d20917209f6",
       "source_anchor": "pub fn run_check(",
       "related": {
-        "requirement-name-uniqueness": null,
         "requirement-discovery-global": null,
+        "requirement-name-uniqueness": null,
         "cycle-detection": null
       }
     },
@@ -44,8 +44,8 @@
       "source_hash": "sha256:6e82d215922ba7812b9fd20e105f32469e581ac5d863e9e007c8c57dbd7c8484",
       "source_anchor": "fn check_sidecar(",
       "related": {
-        "fix-semantic-drift-protection": null,
-        "reviewed-semantics": null
+        "reviewed-semantics": null,
+        "fix-semantic-drift-protection": null
       }
     },
     {
