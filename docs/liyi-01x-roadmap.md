@@ -987,5 +987,6 @@ End-to-end golden test demonstrating the full scaffold workflow:
 This document contains content from the following AI agents:
 
 * Claude Opus 4.6
+* Kimi K2.5
 
-The document is authored by Claude Opus 4.6 with the human designer's input.
+The document is originally authored by Claude Opus 4.6 with the human designer's input, and later updated by the mentioned agents.
