@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction.",
       "source_span": [
         4,

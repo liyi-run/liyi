@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the C# language configuration for tree_path resolution: register tree-sitter-c-sharp grammar, .cs extension, kind mappings for fn/class/interface/enum/struct/namespace/constructor/property/record/delegate, using standard name field with no custom name extraction.",
       "source_span": [
         4,

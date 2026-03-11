@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "validate_version",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Accept version '0.1' and reject all other version strings with a descriptive error message.",
       "source_span": [
         7,
@@ -20,7 +20,7 @@
     },
     {
       "item": "migrate",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Migrate a sidecar file to the current schema version. In v0.1 this is a no-op that only validates the version, providing a scaffold for future migration logic.",
       "source_span": [
         21,

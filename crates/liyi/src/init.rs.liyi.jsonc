@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "AGENTS_MD_BLOCK",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Constant containing the agent instruction block that liyi init appends to AGENTS.md. Must enumerate the six canonical agent rules for sidecar spec management.",
       "source_span": [
         8,
@@ -20,7 +20,7 @@
     },
     {
       "item": "skeleton_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Generate a valid v0.1 skeleton .liyi.jsonc sidecar string with an empty specs array, using the given repo-relative source path.",
       "source_span": [
         25,
@@ -32,7 +32,7 @@
     },
     {
       "item": "InitError",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
       "source_span": [
         39,
@@ -44,7 +44,7 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "If AGENTS.md does not exist, create it with a heading and the agent block. If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
       "source_span": [
         70,
@@ -56,7 +56,7 @@
     },
     {
       "item": "init_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
         97,

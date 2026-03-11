@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "go_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extractor for Go AST nodes: encode method receivers into the name as ReceiverType.Method or (*ReceiverType).Method for method_declaration; navigate into type_spec for type_declaration names; navigate into const_spec/var_spec for const_declaration/var_declaration names. Return None for unrecognized kinds.",
       "source_span": [
         12,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Go language configuration for tree_path resolution: register tree-sitter-go grammar, .go extension, kind mappings for fn/method/type/const/var, and wire the custom go_node_name callback for receiver-encoded method names.",
       "source_span": [
         66,

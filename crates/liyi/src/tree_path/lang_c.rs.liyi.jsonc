@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "c_extract_declarator_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the function name from a C/C++ function_definition node by walking the declarator field chain (function_definition → function_declarator → declarator identifier), unwrapping pointer/parenthesized/attributed wrappers as needed.",
       "source_span": [
         12,
@@ -17,7 +17,7 @@
     },
     {
       "item": "unwrap_to_function_declarator",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively unwrap pointer_declarator, parenthesized_declarator, and attributed_declarator wrapper nodes to locate the inner function_declarator node. Must return None if no function_declarator is found in the chain.",
       "source_span": [
         21,
@@ -29,7 +29,7 @@
     },
     {
       "item": "c_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extractor for C AST nodes: dispatch to c_extract_declarator_name for function_definition, and read the declarator field directly for type_definition (typedef). Return None for all other node kinds.",
       "source_span": [
         36,
@@ -41,7 +41,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c extension only, kind mappings for fn/struct/enum/typedef, and wire the custom c_node_name callback for name extraction.",
       "source_span": [
         49,

@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "SidecarEntry",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represent a discovered .liyi.jsonc sidecar paired with its source file path and the repo-relative source path string.",
       "source_span": [
         11,
@@ -17,7 +17,7 @@
     },
     {
       "item": "DiscoveryResult",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Aggregate the results of a file-tree walk: collected sidecar entries (filtered by scope), all non-ignored files (for marker scanning), and any ambiguity warnings.",
       "source_span": [
         18,
@@ -29,7 +29,7 @@
     },
     {
       "item": "find_repo_root",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk up the directory tree from the given path to locate the nearest .git/ directory and return its parent as the repository root. Return None if no .git/ is found.",
       "source_span": [
         37,
@@ -44,7 +44,7 @@
     },
     {
       "item": "discover",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
         63,

@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "Highlighter",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Hold shared syntax-highlighting resources (SyntaxSet and Theme) that are initialised once per TUI session and reused across all candidates to avoid repeated loading.",
       "source_span": [
         20,
@@ -17,7 +17,7 @@
     },
     {
       "item": "ApproveTui",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, a quit flag, and a Highlighter for syntax colouring. On construction, loads syntect default syntaxes and the base16-eighties.dark theme and sets initial scroll to centre on the first candidate's span. Provides methods to advance (decide), go back (both auto-centre scroll on the new span), and check completion.",
       "source_span": [
         26,
@@ -29,7 +29,7 @@
     },
     {
       "item": "run_tui",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit.",
       "source_span": [
         94,
@@ -41,7 +41,7 @@
     },
     {
       "item": "draw",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
       "source_span": [
         158,
@@ -53,7 +53,7 @@
     },
     {
       "item": "go_forward",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Advance to the next candidate without changing its decision. If already on the last candidate, do nothing. Resets scroll to centre on the new candidate's span.",
       "source_span": [
         86,
@@ -64,7 +64,7 @@
     },
     {
       "item": "file_highlight_enabled",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return true if the source file is small enough for syntax highlighting (at most MAX_HIGHLIGHT_LINES lines). Files exceeding this threshold fall back to plain text to avoid UI lag.",
       "source_span": [
         237,
@@ -76,7 +76,7 @@
     },
     {
       "item": "line_highlight_enabled",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return true if a single line is short enough for syntax highlighting (at most MAX_LINE_LEN bytes). Longer lines fall back to plain text to prevent the regex engine from stalling.",
       "source_span": [
         243,
@@ -88,7 +88,7 @@
     },
     {
       "item": "draw_source",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line, and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
         247,

@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "php_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extractor for PHP const_declaration nodes: navigate into the const_element child and read its name field. Return None for all other node kinds.",
       "source_span": [
         8,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the PHP language configuration for tree_path resolution: register tree-sitter-php PHP-only grammar (no HTML interleaving), .php extension, kind mappings for fn/class/method/interface/enum/trait/namespace/const, and wire the custom php_node_name callback.",
       "source_span": [
         23,

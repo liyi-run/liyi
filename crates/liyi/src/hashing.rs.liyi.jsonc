@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "SpanError",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represent the three ways a source span can be invalid: end exceeds file length (PastEof), start > end (Inverted), or a zero index (Empty). Provide Display and Error impls for use in error propagation.",
       "source_span": [
         6,
@@ -17,7 +17,7 @@
     },
     {
       "item": "hash_span",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Compute a SHA-256 hash of the source lines in a 1-indexed inclusive [start, end] span. Join selected lines with LF (normalizing CRLF) before hashing. Return the hash as 'sha256:<hex>' and the first line as the anchor string. Reject empty, inverted, or past-EOF spans with SpanError.",
       "source_span": [
         37,

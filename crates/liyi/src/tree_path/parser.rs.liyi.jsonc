@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "Segment",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represents a single segment in a parsed tree_path: Kind for kind shorthands (fn, class), Name for item names, or Injection for M9 language injection markers.",
       "source_span": [
         18,
@@ -17,7 +17,7 @@
     },
     {
       "item": "TreePath",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parsed representation of a complete tree_path string. Provides parse() for deserializing from string and to_string() for serializing back with automatic quoting of complex names.",
       "source_span": [
         29,
@@ -29,7 +29,7 @@
     },
     {
       "item": "parse_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Handles :: delimited segments and injection markers attached directly to the preceding segment (name//lang) without requiring a :: separator.",
       "source_span": [
         99,
@@ -41,7 +41,7 @@
     },
     {
       "item": "parse_segment",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parses a single tree_path segment, trying injection markers, quoted strings, and simple names in order. Uses heuristic to classify simple names as Kind or Name.",
       "source_span": [
         114,
@@ -53,7 +53,7 @@
     },
     {
       "item": "serialize_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping.",
       "source_span": [
         65,

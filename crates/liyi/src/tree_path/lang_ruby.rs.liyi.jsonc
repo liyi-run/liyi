@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Ruby language configuration for tree_path resolution: register tree-sitter-ruby grammar v0.23.1, .rb/.rake/.gemspec extensions, kind mappings for fn (method), class (class), module (module), and singleton_method with custom name extraction for receiver encoding.",
       "source_span": [
         32,
@@ -17,7 +17,7 @@
     },
     {
       "item": "ruby_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extraction for Ruby singleton methods (def self.foo). Encodes the receiver type into the name as ReceiverType.method_name or self.method_name, enabling disambiguation of class methods.",
       "source_span": [
         9,

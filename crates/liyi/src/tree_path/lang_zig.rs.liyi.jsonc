@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Zig language configuration for tree_path resolution: register tree-sitter-zig grammar v1.1.2, .zig extension, kind mappings for fn (function_declaration), struct (variable_declaration for const Name = struct { ... }), and test (test_declaration). Uses custom name extraction and struct_declaration as body container for struct-as-namespace pattern.",
       "source_span": [
         62,
@@ -17,7 +17,7 @@
     },
     {
       "item": "zig_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extraction for Zig nodes. Handles function_declaration (finds identifier child), variable_declaration (detects const + struct_declaration pattern for struct-as-namespace), and test_declaration (extracts string literal content for test names).",
       "source_span": [
         18,
@@ -29,7 +29,7 @@
     },
     {
       "item": "find_child_by_kind",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Helper function to find the first child node with a given kind. Used by zig_node_name for identifier and string extraction.",
       "source_span": [
         6,

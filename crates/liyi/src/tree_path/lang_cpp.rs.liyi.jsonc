@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "cpp_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extractor for C++ AST nodes extending the C extractor: handle function_definition via c_extract_declarator_name, type_definition/alias_declaration via name or declarator fields, and template_declaration by transparently extracting the name from the wrapped inner declaration (class, struct, enum, concept, alias, function, or nested template).",
       "source_span": [
         11,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the C++ language configuration for tree_path resolution: register tree-sitter-cpp grammar, C++ file extensions (.cpp/.cc/.cxx/.hpp etc.), kind mappings for fn/class/struct/namespace/enum/template/typedef/using, and wire the custom cpp_node_name callback.",
       "source_span": [
         44,

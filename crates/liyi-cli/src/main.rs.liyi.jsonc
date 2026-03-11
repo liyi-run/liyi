@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "reset_sigpipe",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Reset SIGPIPE to SIG_DFL so that piping output into programs like `head` causes silent termination instead of a panic.",
       "source_span": [
         15,

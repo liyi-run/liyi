@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "ShiftResult",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represent the outcome of span relocation: either the span was found at a new position (Shifted with delta and new_span), or it could not be relocated (Stale).",
       "source_span": [
         5,
@@ -17,7 +17,7 @@
     },
     {
       "item": "detect_shift",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Try to relocate a span whose hash no longer matches at its recorded position. First check the original position (delta 0), then scan offsets in small-delta-first order (1, -1, 2, -2, ...) up to ±100 lines. Return Shifted on the first hash match, or Stale if no match is found.",
       "source_span": [
         21,
@@ -32,7 +32,7 @@
     },
     {
       "item": "detect_shift_with_hint",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Like detect_shift but try a caller-supplied hint_delta first (useful when multiple spans in the same file likely shifted by the same amount), then fall back to the full scan if the hint misses.",
       "source_span": [
         30,
@@ -44,7 +44,7 @@
     },
     {
       "item": "scan",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Perform the full bidirectional scan in small-delta-first order (1, -1, 2, -2, ..., WINDOW, -WINDOW), returning the first Shifted result or Stale if none matches.",
       "source_span": [
         46,
@@ -59,7 +59,7 @@
     },
     {
       "item": "try_offset",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Check a single offset delta: compute the candidate span by adding delta to both start and end, reject if either drops below 1, hash the candidate span, and return Some(Shifted) if the hash matches expected_hash, None otherwise.",
       "source_span": [
         59,
