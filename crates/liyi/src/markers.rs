@@ -440,7 +440,9 @@ mod tests {
 
     #[test]
     fn scan_end_requirement_chinese_alias() {
-        let m = scan_markers("<!-- \x40\u{7acb}\u{610f}:\u{9700}\u{6c42}\u{7ed3}\u{675f} exit-codes -->\n");
+        let m = scan_markers(
+            "<!-- \x40\u{7acb}\u{610f}:\u{9700}\u{6c42}\u{7ed3}\u{675f} exit-codes -->\n",
+        );
         assert_eq!(m.len(), 1);
         assert!(
             matches!(&m[0], SourceMarker::EndRequirement { name, line: 1 } if name == "exit-codes")
