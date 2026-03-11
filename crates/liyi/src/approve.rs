@@ -113,9 +113,7 @@ pub fn collect_approval_candidates(
     }
 
     // Try to locate the repo root for Git history lookups.
-    let repo_root = targets
-        .first()
-        .and_then(|p| find_repo_root(p));
+    let repo_root = targets.first().and_then(|p| find_repo_root(p));
 
     let mut candidates = Vec::new();
     for sidecar_path in &targets {
