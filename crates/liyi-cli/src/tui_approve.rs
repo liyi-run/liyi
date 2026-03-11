@@ -201,22 +201,85 @@ fn draw_header(
 }
 
 fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {
-    let intent_text = if candidate.intent == "=doc" {
+    let current_text = if candidate.intent == "=doc" {
         "(intent delegated to source docstring)".to_string()
     } else {
         candidate.intent.clone()
     };
 
-    let paragraph = Paragraph::new(intent_text)
-        .block(
-            Block::default()
-                .title(" Intent ")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Yellow)),
-        )
-        .wrap(Wrap { trim: false })
-        .style(Style::default().fg(Color::White));
-    f.render_widget(paragraph, area);
+    match &candidate.prev_intent {
+        None => {
+            // First-time item — no prior approval.
+            let paragraph = Paragraph::new(current_text)
+                .block(
+                    Block::default()
+                        .title(" Intent (new) ")
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Yellow)),
+                )
+                .wrap(Wrap { trim: false })
+                .style(Style::default().fg(Color::White));
+            f.render_widget(paragraph, area);
+        }
+        Some(prev) => {
+            let prev_text = if prev == "=doc" {
+                "(intent delegated to source docstring)".to_string()
+            } else {
+                prev.clone()
+            };
+
+            if prev_text == current_text {
+                // Intent unchanged — just show it with a note.
+                let paragraph = Paragraph::new(current_text)
+                    .block(
+                        Block::default()
+                            .title(" Intent (unchanged from last approval) ")
+                            .borders(Borders::ALL)
+                            .border_style(Style::default().fg(Color::Yellow)),
+                    )
+                    .wrap(Wrap { trim: false })
+                    .style(Style::default().fg(Color::White));
+                f.render_widget(paragraph, area);
+            } else {
+                // Intent changed — show previous and current with labels.
+                let mut lines: Vec<Line> = Vec::new();
+
+                lines.push(Line::from(Span::styled(
+                    "▼ Previously approved:",
+                    Style::default().fg(Color::DarkGray).bold(),
+                )));
+                for l in prev_text.lines() {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {l}"),
+                        Style::default().fg(Color::Red),
+                    )));
+                }
+
+                lines.push(Line::from(""));
+
+                lines.push(Line::from(Span::styled(
+                    "▲ Current (proposed):",
+                    Style::default().fg(Color::DarkGray).bold(),
+                )));
+                for l in current_text.lines() {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {l}"),
+                        Style::default().fg(Color::Green),
+                    )));
+                }
+
+                let paragraph = Paragraph::new(Text::from(lines))
+                    .block(
+                        Block::default()
+                            .title(" Intent (changed) ")
+                            .borders(Borders::ALL)
+                            .border_style(Style::default().fg(Color::Yellow)),
+                    )
+                    .wrap(Wrap { trim: false });
+                f.render_widget(paragraph, area);
+            }
+        }
+    }
 }
 
 /// Convert a syntect `Color` to a ratatui `Color`.
