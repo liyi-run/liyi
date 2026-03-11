@@ -25,6 +25,7 @@ mod lang_rust;
 mod lang_swift;
 mod lang_typescript;
 mod lang_zig;
+pub mod parser;
 
 use std::borrow::Cow;
 use std::path::Path;
