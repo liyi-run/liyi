@@ -32,6 +32,7 @@ pub enum SourceMarker {
 }
 
 /// Replace full-width punctuation with half-width equivalents.
+// @liyi:related marker-normalization
 pub fn normalize_line(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
     for ch in line.chars() {
@@ -72,6 +73,7 @@ const CANON_RELATED: &str = "\x40liyi:related";
 const CANON_INTENT: &str = "\x40liyi:intent";
 
 /// (alias, canonical) pairs.  Order does not matter.
+// @liyi:related marker-normalization
 const ALIAS_TABLE: &[(&str, &str)] = &[
     // ignore
     (CANON_IGNORE, CANON_IGNORE),
@@ -124,6 +126,7 @@ const ALIAS_TABLE: &[(&str, &str)] = &[
 
 /// Try to find a known marker at any position in `normalized`.
 /// Returns `(canonical, byte-offset of match start, byte-offset past the matched alias)` on success.
+// @liyi:related marker-normalization
 fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {
     for &(alias, canon) in ALIAS_TABLE {
         if let Some(pos) = normalized.find(alias) {
@@ -205,6 +208,7 @@ fn preceded_by_quote(line: &str, byte_pos: usize) -> bool {
 }
 
 /// Returns true if a trimmed line opens or closes a fenced code block.
+// @liyi:related markdown-fenced-block-skip
 fn is_fence_delimiter(line: &str) -> bool {
     let trimmed = line.trim_start();
     trimmed.starts_with("```") || trimmed.starts_with("~~~")
@@ -217,6 +221,8 @@ fn is_fence_delimiter(line: &str) -> bool {
 /// code blocks, inside inline backtick spans, or immediately after a
 /// quotation-mark character.  See *Self-hosting and the quine problem*
 /// in the design doc.
+// @liyi:related markdown-fenced-block-skip
+// @liyi:related quine-escape-in-source
 pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
     let mut markers = Vec::new();
     let mut in_fenced_block = false;

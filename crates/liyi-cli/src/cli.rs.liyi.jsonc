@@ -20,12 +20,12 @@
       "reviewed": false,
       "intent": "Define three severity filter levels (All, Warning, Error) that the --level CLI flag uses to control which diagnostics are displayed.",
       "source_span": [
-        16,
+        17,
         25
       ],
       "tree_path": "enum::DiagnosticLevel",
-      "source_hash": "sha256:209ab65d3d606a5bee1ecdd46f9db1ae0963cb9016b31b35e5e8947abb4b81dd",
-      "source_anchor": "#[derive(Debug, Clone, Copy, ValueEnum, Default)]"
+      "source_hash": "sha256:7922c5b8b196cf862164c0c56eddff967aa53427fbce5b6d85a9911c342ce03a",
+      "source_anchor": "pub enum DiagnosticLevel {"
     },
     {
       "item": "Commands",

@@ -31,6 +31,9 @@ struct RequirementRecord {
 /// Run the two-pass check and optionally apply `--fix` corrections.
 ///
 /// Returns a sorted list of diagnostics and the appropriate exit code.
+// @liyi:related requirement-name-uniqueness
+// @liyi:related requirement-discovery-global
+// @liyi:related cycle-detection
 pub fn run_check(
     root: &Path,
     scope_paths: &[PathBuf],
@@ -274,6 +277,8 @@ pub fn run_check(
 // Per-sidecar checking
 // ---------------------------------------------------------------------------
 
+// @liyi:related reviewed-semantics
+// @liyi:related fix-semantic-drift-protection
 fn check_sidecar(
     entry: &SidecarEntry,
     diagnostics: &mut Vec<Diagnostic>,

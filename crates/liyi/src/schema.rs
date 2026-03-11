@@ -3,6 +3,7 @@ use crate::sidecar::SidecarFile;
 const CURRENT_VERSION: &str = "0.1";
 
 /// Accept version "0.1" only; return an error for anything else.
+// @liyi:related version-field-required
 pub fn validate_version(version: &str) -> Result<(), String> {
     if version == CURRENT_VERSION {
         Ok(())

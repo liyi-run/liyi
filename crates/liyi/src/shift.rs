@@ -17,6 +17,7 @@ const WINDOW: i64 = 100;
 /// Searches offsets −100..+100 (skipping 0) in small-delta-first order
 /// (1, −1, 2, −2, …) and returns the first candidate whose hash equals
 /// `expected_hash`.
+// @liyi:related span-shift-heuristic
 pub fn detect_shift(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {
     try_offset(source_content, span, expected_hash, 0)
         .unwrap_or_else(|| scan(source_content, span, expected_hash))
@@ -41,6 +42,7 @@ pub fn detect_shift_with_hint(
 }
 
 /// Full scan in small-delta-first order: 1, −1, 2, −2, …
+// @liyi:related span-shift-heuristic
 fn scan(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {
     for abs_d in 1..=WINDOW {
         for sign in &[1i64, -1] {

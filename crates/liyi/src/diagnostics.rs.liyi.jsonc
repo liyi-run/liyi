@@ -83,12 +83,15 @@
       "reviewed": false,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        123,
-        157
+        124,
+        158
       ],
       "tree_path": "fn::compute_exit_code",
       "source_hash": "sha256:b6e34bbbb7428d119352d9c2b04786b60881ba6c991ece2203cd4670c204f792",
-      "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {"
+      "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {",
+      "related": {
+        "liyi-check-exit-code": null
+      }
     }
   ]
 }

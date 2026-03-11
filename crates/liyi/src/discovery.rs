@@ -59,6 +59,7 @@ pub fn find_repo_root(from: &Path) -> Option<PathBuf> {
 ///
 /// If `scope_paths` is non-empty, only sidecars whose `source_path` falls
 /// under one of the given paths are included (pass 2 scoping).
+// @liyi:related liyi-sidecar-naming-convention
 pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
     let mut all_files: Vec<PathBuf> = Vec::new();
     let mut sidecar_paths: Vec<PathBuf> = Vec::new();

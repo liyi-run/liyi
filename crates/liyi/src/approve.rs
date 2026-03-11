@@ -133,6 +133,7 @@ pub fn collect_approval_candidates(
 ///
 /// `decisions` is a slice parallel to the candidates returned by
 /// `collect_approval_candidates`.
+// @liyi:related reviewed-semantics
 pub fn apply_approval_decisions(
     candidates: &[ApprovalCandidate],
     decisions: &[Decision],

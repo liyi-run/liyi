@@ -46,6 +46,11 @@ pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, Strin
 /// grammar is available, locate the item by structural identity and update the
 /// span. Then recompute hash/anchor. When tree_path is empty or the language is
 /// unsupported, fall back to re-hashing at the recorded span.
+// @liyi:related tool-managed-fields
+// @liyi:related tree-path-reanchor-behavior
+// @liyi:related tree-path-empty-fallback
+// @liyi:related fix-never-modifies-human-fields
+// @liyi:related liyi-sidecar-naming-convention
 pub fn run_reanchor(
     sidecar_path: &Path,
     target_item: Option<&str>,

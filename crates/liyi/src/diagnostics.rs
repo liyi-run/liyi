@@ -120,6 +120,7 @@ pub enum LiyiExitCode {
     InternalError = 2,
 }
 
+// @liyi:related liyi-check-exit-code
 pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {
     let mut has_check_failure = false;
 

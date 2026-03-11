@@ -47,12 +47,15 @@
       "reviewed": false,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
-        62,
-        166
+        63,
+        167
       ],
       "tree_path": "fn::discover",
       "source_hash": "sha256:bbf8f0dbae10a6ccccac3e288b8bc72b6c5563678e4584556920135e205ff1a1",
-      "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {"
+      "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
+      "related": {
+        "liyi-sidecar-naming-convention": null
+      }
     }
   ]
 }

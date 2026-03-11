@@ -20,12 +20,15 @@
       "reviewed": false,
       "intent": "Compute a SHA-256 hash of the source lines in a 1-indexed inclusive [start, end] span. Join selected lines with LF (normalizing CRLF) before hashing. Return the hash as 'sha256:<hex>' and the first line as the anchor string. Reject empty, inverted, or past-EOF spans with SpanError.",
       "source_span": [
-        36,
-        59
+        37,
+        60
       ],
       "tree_path": "fn::hash_span",
       "source_hash": "sha256:25f017e0659e036f84cde56d738ec09d73a4c9bcb6f4f713d69fea684ad2a85b",
-      "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {"
+      "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {",
+      "related": {
+        "source-span-semantics": null
+      }
     }
   ]
 }

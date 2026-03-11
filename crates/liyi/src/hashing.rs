@@ -33,6 +33,7 @@ impl std::error::Error for SpanError {}
 /// `span` is a 1-indexed, inclusive `[start, end]` interval.
 /// Line endings are normalized to LF before hashing.
 /// The anchor is the literal text of the first line (after CR stripping, untrimmed).
+// @liyi:related source-span-semantics
 pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {
     let [start, end] = span;
     if start == 0 || end == 0 {

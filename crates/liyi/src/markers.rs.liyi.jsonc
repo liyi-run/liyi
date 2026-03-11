@@ -9,8 +9,8 @@
         57,
         62
       ],
-      "source_hash": "sha256:dba525ee5855a8efce23d18e88b36ee0225aab0e93eaa7ac74dd735a22fc34a0",
-      "source_anchor": "// @liyi:requirement(quine-escape)"
+      "source_hash": "sha256:c2ad7f02250feab1d1ed85efd874b1782fcc6ea8c197de7f4a9f4517ef19d96d",
+      "source_anchor": "/// scanner matching these string constants — the classic quine-escape problem."
     },
     {
       "item": "SourceMarker",
@@ -29,44 +29,53 @@
       "reviewed": false,
       "intent": "Replace full-width Unicode punctuation (＠ → @, ： → :, （ → (, ） → )) with ASCII equivalents so that markers written with CJK input methods are recognized.",
       "source_span": [
-        35,
-        47
+        36,
+        48
       ],
       "tree_path": "fn::normalize_line",
       "source_hash": "sha256:042886b54393166d59d9cd573722d841651cc1eba4321dc0f62d44de39379b09",
-      "source_anchor": "pub fn normalize_line(line: &str) -> String {"
+      "source_anchor": "pub fn normalize_line(line: &str) -> String {",
+      "related": {
+        "marker-normalization": null
+      }
     },
     {
       "item": "ALIAS_TABLE",
       "reviewed": false,
       "intent": "Map every accepted marker alias (English canonical forms plus Chinese, Japanese, Korean, Spanish, French, Portuguese variants) to its canonical @liyi:* form. This table is the single source of truth for multilingual marker recognition.",
       "source_span": [
-        75,
-        123
+        77,
+        125
       ],
       "tree_path": "const::ALIAS_TABLE",
       "source_hash": "sha256:0eebe3f11964541df61a658e4aa067747b473032480a5f3f0778ec8e5c88d9f4",
-      "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &["
+      "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &[",
+      "related": {
+        "marker-normalization": null
+      }
     },
     {
       "item": "find_marker",
       "reviewed": false,
       "intent": "Search a normalized line for any known marker alias from ALIAS_TABLE. Return the canonical marker keyword, the byte offset of the match start, and the byte offset past the matched alias, or None if no marker is found.",
       "source_span": [
-        127,
-        134
+        130,
+        137
       ],
       "tree_path": "fn::find_marker",
       "source_hash": "sha256:f69d93143a9f03203a2ea48d2342b9288d5ce42383a2d4bc0946567d0cdd6817",
-      "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {"
+      "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {",
+      "related": {
+        "marker-normalization": null
+      }
     },
     {
       "item": "QUOTE_CHARS",
       "reviewed": false,
       "intent": "Define the set of quotation-mark characters that suppress marker detection when they immediately precede the @ of a marker. Must cover ASCII quotes, typographic quotes, CJK corner brackets, and guillemets.",
       "source_span": [
-        166,
-        178
+        169,
+        181
       ],
       "tree_path": "const::QUOTE_CHARS",
       "source_hash": "sha256:006f1fb3b6a729bd108d4eaef8d2aba2154414b3cbbad05787d20c006756611f",
@@ -78,8 +87,8 @@
       "reviewed": false,
       "intent": "Determine whether a byte position on a line falls inside an inline backtick code span by counting backtick characters before the position. Odd count means inside code, even means outside.",
       "source_span": [
-        183,
-        194
+        186,
+        197
       ],
       "tree_path": "fn::is_in_inline_code",
       "source_hash": "sha256:535d27178d75557f1db35fd81223f988dfb924191959049b97c7eb9212444bae",
@@ -91,8 +100,8 @@
       "reviewed": false,
       "intent": "Return true if the character immediately before a byte position on a line is any character in the QUOTE_CHARS set (a quotation mark across locales).",
       "source_span": [
-        198,
-        205
+        201,
+        208
       ],
       "tree_path": "fn::preceded_by_quote",
       "source_hash": "sha256:a88665af3e20b2f6f189402eeac2638e4f496bc80a54f9aa15e61d1ca8bfe1b2",
@@ -104,21 +113,24 @@
       "reviewed": false,
       "intent": "Return true if a line (after stripping leading whitespace) starts with ``` or ~~~, indicating a Markdown fenced code block boundary.",
       "source_span": [
-        208,
-        211
+        212,
+        215
       ],
       "tree_path": "fn::is_fence_delimiter",
       "source_hash": "sha256:711e776c8924917ac4ef11c26546de9e31a80c466b2512cb854135558b6b98fe",
       "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
-      "confidence": 0.95
+      "confidence": 0.95,
+      "related": {
+        "markdown-fenced-block-skip": null
+      }
     },
     {
       "item": "extract_name",
       "reviewed": false,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present.",
       "source_span": [
-        139,
-        156
+        142,
+        159
       ],
       "tree_path": "fn::extract_name",
       "source_hash": "sha256:49fcb7884fcec40dcb0b329d971eddae3ee78ef7c167a0e63726c37a73ce2e50",
@@ -129,12 +141,16 @@
       "reviewed": false,
       "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, or immediately after quotation marks are suppressed (NL-quoting). Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
-        220,
-        315
+        226,
+        321
       ],
       "tree_path": "fn::scan_markers",
       "source_hash": "sha256:5a9629649bab1ac1ed9efb15dfdf5ecb20973369de24b7fcaa12b8a0f12a87da",
-      "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {"
+      "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
+      "related": {
+        "quine-escape-in-source": null,
+        "markdown-fenced-block-skip": null
+      }
     }
   ]
 }
