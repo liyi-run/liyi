@@ -5,156 +5,105 @@
   "specs": [
     {
       "requirement": "liyi-sidecar-naming-convention",
-      "source_span": [
-        343,
-        345
-      ],
+      "source_span": [343, 345],
       "source_hash": "sha256:0000eb15eb6a1ebe192c1f1b3d43b1f60e619935997bbfd8df5d1e80c02fe163",
       "source_anchor": "<!-- @liyi:requirement liyi-sidecar-naming-convention -->"
     },
     {
       "requirement": "version-field-required",
-      "source_span": [
-        377,
-        379
-      ],
+      "source_span": [377, 379],
       "source_hash": "sha256:b4f52a48481fe808a550884bee8949e665b3f34fd4dd77e55c51a0f46abd3009",
       "source_anchor": "<!-- @liyi:requirement version-field-required -->"
     },
     {
       "requirement": "reviewed-semantics",
-      "source_span": [
-        403,
-        405
-      ],
+      "source_span": [403, 405],
       "source_hash": "sha256:da9de772f9412fc5e5ac4a172b6978c191e267b2c04ed477694914868ecbbdbe",
       "source_anchor": "<!-- @liyi:requirement reviewed-semantics -->"
     },
     {
       "requirement": "source-span-semantics",
-      "source_span": [
-        427,
-        429
-      ],
+      "source_span": [427, 429],
       "source_hash": "sha256:4d0c5843b38c855e3c725b8a6d1a1a63943f332185481ff1e395006a10a6ccfe",
       "source_anchor": "<!-- @liyi:requirement source-span-semantics -->"
     },
     {
       "requirement": "tool-managed-fields",
-      "source_span": [
-        431,
-        433
-      ],
+      "source_span": [431, 433],
       "source_hash": "sha256:4169ca6d29fd03f03c1cafd61476e2ec7633981b298eced09fb2336ab38e990a",
       "source_anchor": "<!-- @liyi:requirement tool-managed-fields -->"
     },
     {
       "requirement": "span-shift-heuristic",
-      "source_span": [
-        443,
-        445
-      ],
+      "source_span": [443, 445],
       "source_hash": "sha256:dc52a0e237b136645c3d6cd05911414d947094eb91323e01969c124301606982",
       "source_anchor": "<!-- @liyi:requirement span-shift-heuristic -->"
     },
     {
       "requirement": "tree-path-reanchor-behavior",
-      "source_span": [
-        465,
-        469
-      ],
-      "source_hash": "sha256:845369bcf7b7044aa1a3087ff8a41c0ec0d5e7be2ce7df0928b6233bf2a59cb9",
-      "source_anchor": "**Quoting and injection.** Names containing spaces, `::`, or quotes are double-quoted with backslash escaping (`test::\"add function\"`). For multi-language files (M9), an injection marker `//lang` attaches to the preceding segment to cross a language boundary (`key::run//bash::fn::setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.2)."
+      "source_span": [469, 473],
+      "source_hash": "sha256:1df1d3238855b1d8c1b20493e2788af47135f318e399d43b650bded04c7c5a5a",
+      "source_anchor": "<!-- @liyi:requirement tree-path-reanchor-behavior -->"
     },
     {
       "requirement": "tree-path-empty-fallback",
-      "source_span": [
-        473,
-        481
-      ],
-      "source_hash": "sha256:0640051cf35edbedf41b53a801a2bd00dddce436ea8cd9ccd0d7a23c8b9ea5da",
-      "source_anchor": "<!-- /requirement -->"
+      "source_span": [477, 485],
+      "source_hash": "sha256:0bbc4ec24af3fb1c3abce91342f1249f5b0a029e2a6a0573544d5a13d59722d6",
+      "source_anchor": "<!-- @liyi:requirement tree-path-empty-fallback -->"
     },
     {
       "requirement": "requirement-name-uniqueness",
-      "source_span": [
-        629,
-        631
-      ],
-      "source_hash": "sha256:36b6ac28f97a670fb5e902406e0e86c51705ddf7cfb47566adea5c4a030f0dd0",
-      "source_anchor": "No `intent` field — the requirement text lives at the source site, not duplicated in the sidecar. No `reviewed` — the act of writing a requirement *is* the assertion of intent; provenance belongs to VCS (`git blame` tells you who wrote it and when). The `\"requirement\"` key itself signals prescriptiveness — no separate boolean needed."
+      "source_span": [633, 635],
+      "source_hash": "sha256:03a65c514532f4f424cbe30ed55fe7455c3a602ac286b1c62efa9722b0968700",
+      "source_anchor": "<!-- @liyi:requirement requirement-name-uniqueness -->"
     },
     {
       "requirement": "cycle-detection",
-      "source_span": [
-        754,
-        756
-      ],
-      "source_hash": "sha256:638676e2dd2e8b36aaa949892523061b55381f993ce157d71c69159dede96595",
-      "source_anchor": "```"
+      "source_span": [758, 760],
+      "source_hash": "sha256:66311f793af3fcf3539f50be30b4f2e7d4e56fd3d1dbd4069bf34b6699868542",
+      "source_anchor": "<!-- @liyi:requirement cycle-detection -->"
     },
     {
       "requirement": "requirement-discovery-global",
-      "source_span": [
-        1054,
-        1056
-      ],
-      "source_hash": "sha256:e50122cc204abef464a0b88636129acbb9dd870dc31b0bb903a7d8c873bca26d",
-      "source_anchor": "Inline annotations don’t work for files you can’t modify — generated code, vendored dependencies, protobuf bindings. The generator will overwrite any annotation you add."
+      "source_span": [1089, 1091],
+      "source_hash": "sha256:3f0928a2639b4fd062a2af53f159183665817cc3f7ed7a2c45774a622f8873e9",
+      "source_anchor": "<!-- @liyi:requirement requirement-discovery-global -->"
     },
     {
       "requirement": "liyi-check-exit-code",
-      "source_span": [
-        1177,
-        1183
-      ],
-      "source_hash": "sha256:23d3f13cfa09b7e029bf89c69aeae7cdfbb36d0a82d30c4d993b84f6faa12fd2",
-      "source_anchor": "**Limitation: explicit annotations only.** This mechanism enforces that every *existing* `@liyi:related` annotation has a corresponding sidecar edge. It does not detect *missing* annotations — items that semantically depend on a requirement but lack an `@liyi:related` marker in source. That is an inference problem (the agent or human must recognize the semantic dependency), not a coverage-checking problem, and is outside the linter's deterministic scope."
+      "source_span": [1214, 1220],
+      "source_hash": "sha256:6ed25f14e08ea936e927150a3d0cc82f881011edcd1360b5401e7a03658f53f9",
+      "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
     },
     {
       "requirement": "marker-normalization",
-      "source_span": [
-        1210,
-        1212
-      ],
-      "source_hash": "sha256:4f1a4b10b6baac121522a8ed95f10e3eac48e6c5cf5f7418423e27e859a69280",
-      "source_anchor": "| `error` | Errors only — parse errors, unknown versions, orphaned sources |"
+      "source_span": [1247, 1249],
+      "source_hash": "sha256:b4e1f5b698b77c4c661d15cbd070e30839ecfd2f42fb77286e0a7408e294bd1c",
+      "source_anchor": "<!-- @liyi:requirement marker-normalization -->"
     },
     {
       "requirement": "quine-escape-in-source",
-      "source_span": [
-        1224,
-        1226
-      ],
-      "source_hash": "sha256:946f04222d5a129ec28878260c8ca615ccfdf1d1e27c7705603261ae45bfe2b1",
-      "source_anchor": "- No LLM calls. No API keys. No network access."
+      "source_span": [1261, 1263],
+      "source_hash": "sha256:326dee10b54b25cc8f874d8577bb3218efa21313f1329e70dadcc83d03978e38",
+      "source_anchor": "<!-- @liyi:requirement quine-escape-in-source -->"
     },
     {
       "requirement": "markdown-fenced-block-skip",
-      "source_span": [
-        1230,
-        1236
-      ],
-      "source_hash": "sha256:47cccd00938c19259d7676c9531bbeb32c35778094dc7aa8b3dea2c6e25435fc",
-      "source_anchor": "CJK input methods default to full-width punctuation. Japanese IME often produces full-width `＠` as well. Requiring users to switch to half-width mode for every annotation is a constant friction — and a guaranteed source of \"why doesn't the linter see my marker\" bug reports."
+      "source_span": [1267, 1273],
+      "source_hash": "sha256:18e3c5d63b28b021f3ef45158fddfc73fbb2bdfd6433b63748d70df9736ba2e1",
+      "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
     },
     {
       "requirement": "fix-never-modifies-human-fields",
-      "source_span": [
-        1442,
-        1444
-      ],
-      "source_hash": "sha256:a55f807047e0c031ee73d97afd444d4da4423ad7a1541d6ad8ced6d0734c4ee3",
-      "source_anchor": "    %% ── Batch path ──"
+      "source_span": [1479, 1481],
+      "source_hash": "sha256:2c59f122385a46454e274ecfe0a77e78b47b846ca4f932c151ab3baa3c4c9250",
+      "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
     },
     {
       "requirement": "fix-semantic-drift-protection",
-      "source_span": [
-        1446,
-        1448
-      ],
-      "source_hash": "sha256:607df81587523fe5a12ddb1b5d4ef92aaed48c07811581d4c9fe40a8d6fe0b6a",
-      "source_anchor": "```"
+      "source_span": [1483, 1485],
+      "source_hash": "sha256:320f7c2667bf1a8163a2ec95adb0bdfeac648780042af08a2eab4ff27d0b74a2",
+      "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
     }
   ]
 }
