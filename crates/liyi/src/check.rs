@@ -56,6 +56,7 @@ pub fn run_check(
             severity: Severity::Warning,
             message: w.clone(),
             fix_hint: None,
+            fixed: false,
         });
     }
 
@@ -90,6 +91,7 @@ pub fn run_check(
                             existing.line,
                         ),
                         fix_hint: None,
+                        fixed: false,
                     });
                 } else {
                     requirements.insert(
@@ -219,6 +221,7 @@ pub fn run_check(
                     rec.line,
                 ),
                 fix_hint: None,
+                fixed: false,
             });
         }
     }
@@ -237,6 +240,7 @@ pub fn run_check(
                 severity: Severity::Info,
                 message: format!("requirement \"{name}\" is not referenced by any item"),
                 fix_hint: None,
+                fixed: false,
             });
         }
     }
@@ -259,6 +263,7 @@ pub fn run_check(
             severity: Severity::Error,
             message: format!("requirement cycle detected: {cycle_display}"),
             fix_hint: None,
+            fixed: false,
         });
     }
 
@@ -308,6 +313,7 @@ fn check_sidecar(
                 severity: Severity::Error,
                 message: format!("cannot read sidecar: {e}"),
                 fix_hint: None,
+                fixed: false,
             });
             return;
         }
@@ -323,6 +329,7 @@ fn check_sidecar(
                 severity: Severity::Error,
                 message: e,
                 fix_hint: None,
+                fixed: false,
             });
             return;
         }
@@ -339,6 +346,7 @@ fn check_sidecar(
             severity: Severity::Error,
             message: e,
             fix_hint: Some(format!("liyi migrate {rel_sidecar}")),
+            fixed: false,
         });
         return;
     }
@@ -358,6 +366,7 @@ fn check_sidecar(
                         severity: Severity::Error,
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
+                        fixed: false,
                     });
                 }
                 if let Some(ref related) = item.related {
@@ -374,6 +383,7 @@ fn check_sidecar(
                                     "related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
                                 ),
                                 fix_hint: None,
+                                fixed: false,
                             });
                         }
                     }
@@ -390,6 +400,7 @@ fn check_sidecar(
                         severity: Severity::Error,
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
+                        fixed: false,
                     });
                 }
             }
@@ -405,6 +416,7 @@ fn check_sidecar(
             severity: Severity::Error,
             message: format!("source file {} not found", entry.source_path.display()),
             fix_hint: None,
+            fixed: false,
         });
         return;
     }
@@ -439,6 +451,7 @@ fn check_sidecar(
                                 severity: Severity::Info,
                                 message: "hash matches".into(),
                                 fix_hint: None,
+                                fixed: false,
                             });
                         } else if item.source_hash.is_none() {
                             // No hash yet — fill it if --fix
@@ -459,6 +472,7 @@ fn check_sidecar(
                                 severity: Severity::Warning,
                                 message: "missing source_hash".into(),
                                 fix_hint: Some("liyi check --fix".into()),
+                                fixed: fix,
                             });
                         } else {
                             // Hash mismatch — try tree_path first, then shift
@@ -523,6 +537,7 @@ fn check_sidecar(
                                             new_span[0], new_span[1]
                                         ),
                                     fix_hint: Some("liyi check --fix".into()),
+                                    fixed: fix,
                                     });
                                 } else {
                                     // Content changed (semantic drift).
@@ -556,6 +571,7 @@ fn check_sidecar(
                                         severity: Severity::Warning,
                                         message: msg,
                                         fix_hint: None,
+                                        fixed: false,
                                     });
                                 }
                             } else {
@@ -592,6 +608,7 @@ fn check_sidecar(
                                                 new_span[0], new_span[1]
                                             ),
                                             fix_hint: Some("liyi check --fix".into()),
+                                            fixed: fix,
                                         });
                                     }
                                     ShiftResult::Stale => {
@@ -609,6 +626,7 @@ fn check_sidecar(
                                             severity: Severity::Warning,
                                             message: detail,
                                             fix_hint: None,
+                                            fixed: false,
                                         });
                                     }
                                 }
@@ -676,6 +694,7 @@ fn check_sidecar(
                                         new_span[0], new_span[1]
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
+                                fixed: fix,
                                 });
                             } else {
                                 // Content also changed — relocate span
@@ -698,6 +717,7 @@ fn check_sidecar(
                                         new_span[0], new_span[1]
                                     ),
                                 fix_hint: None,
+                                fixed: false,
                                 });
                             }
                         } else {
@@ -716,6 +736,7 @@ fn check_sidecar(
                                 severity: Severity::Error,
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
+                                fixed: false,
                             });
                         }
                     }
@@ -732,6 +753,7 @@ fn check_sidecar(
                                 item.source_span[0], item.source_span[1]
                             ),
                             fix_hint: None,
+                            fixed: false,
                         });
                     }
                 }
@@ -753,6 +775,7 @@ fn check_sidecar(
                         severity: Severity::Warning,
                         message: "not reviewed".into(),
                         fix_hint: None,
+                        fixed: false,
                     });
                 }
 
@@ -771,6 +794,7 @@ fn check_sidecar(
                                 severity: Severity::Info,
                                 message: "marked \x40liyi:trivial".into(),
                                 fix_hint: None,
+                                fixed: false,
                             });
                         }
                         SourceMarker::Ignore { line, .. }
@@ -783,6 +807,7 @@ fn check_sidecar(
                                 severity: Severity::Info,
                                 message: "marked \x40liyi:ignore".into(),
                                 fix_hint: None,
+                                fixed: false,
                             });
                         }
                         _ => {}
@@ -805,6 +830,7 @@ fn check_sidecar(
                                         "related requirement \"{req_name}\" not found"
                                     ),
                                     fix_hint: None,
+                                    fixed: false,
                                 });
                             }
                             Some(rec) => {
@@ -823,6 +849,7 @@ fn check_sidecar(
                                         severity: Severity::Warning,
                                         message: format!("requirement \"{req_name}\" has changed"),
                                         fix_hint: None,
+                                        fixed: false,
                                     });
                                 }
                             }
@@ -856,6 +883,7 @@ fn check_sidecar(
                                         "source has \x40liyi:related \"{name}\" but sidecar is missing the related edge"
                                     ),
                                 fix_hint: None,
+                                fixed: fix,
                                 });
                             }
                         }
@@ -888,6 +916,7 @@ fn check_sidecar(
                                 severity: Severity::Info,
                                 message: "requirement hash matches".into(),
                                 fix_hint: None,
+                                fixed: false,
                             });
                         } else {
                             if fix {
@@ -902,6 +931,7 @@ fn check_sidecar(
                                 severity: Severity::Warning,
                                 message: "requirement hash mismatch or missing".into(),
                                 fix_hint: None,
+                                fixed: fix,
                             });
                         }
                     }
@@ -961,6 +991,7 @@ fn check_sidecar(
                                         new_span[0], new_span[1]
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
+                                fixed: fix,
                                 });
                             } else {
                                 if fix {
@@ -981,6 +1012,7 @@ fn check_sidecar(
                                         new_span[0], new_span[1]
                                     ),
                                 fix_hint: None,
+                                fixed: false,
                                 });
                             }
                         } else {
@@ -999,6 +1031,7 @@ fn check_sidecar(
                                 severity: Severity::Error,
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
+                                fixed: false,
                             });
                         }
                     }
@@ -1015,6 +1048,7 @@ fn check_sidecar(
                                 req.source_span[0], req.source_span[1]
                             ),
                             fix_hint: None,
+                            fixed: false,
                         });
                     }
                 }

@@ -41,6 +41,8 @@ pub struct Diagnostic {
     pub message: String,
     /// Optional fix hint — the exact command to resolve this diagnostic.
     pub fix_hint: Option<String>,
+    /// Whether this diagnostic was resolved by `--fix`.
+    pub fixed: bool,
 }
 
 impl Diagnostic {
@@ -48,7 +50,11 @@ impl Diagnostic {
     /// file path so that output shows repo-relative paths.
     pub fn display_with_root(&self, root: &std::path::Path) -> String {
         let rel = self.file.strip_prefix(root).unwrap_or(&self.file);
-        let icon = Self::icon(&self.kind, self.severity);
+        let icon = if self.fixed {
+            "✓ fixed"
+        } else {
+            Self::icon(&self.kind, self.severity)
+        };
         let main_line = if self.item_or_req.is_empty() {
             format!("{}: {} {}", rel.display(), icon, self.message)
         } else {
@@ -61,8 +67,8 @@ impl Diagnostic {
             )
         };
         match &self.fix_hint {
-            Some(hint) => format!("{main_line}\n  fix: {hint}"),
-            None => main_line,
+            Some(hint) if !self.fixed => format!("{main_line}\n  fix: {hint}"),
+            _ => main_line,
         }
     }
 
@@ -86,7 +92,11 @@ impl Diagnostic {
 
 impl fmt::Display for Diagnostic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let icon = Self::icon(&self.kind, self.severity);
+        let icon = if self.fixed {
+            "✓ fixed"
+        } else {
+            Self::icon(&self.kind, self.severity)
+        };
         if self.item_or_req.is_empty() {
             write!(f, "{}: {} {}", self.file.display(), icon, self.message)
         } else {
@@ -125,6 +135,9 @@ pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> Liyi
     let mut has_check_failure = false;
 
     for d in diagnostics {
+        if d.fixed {
+            continue;
+        }
         match &d.kind {
             DiagnosticKind::ParseError { .. } | DiagnosticKind::UnknownVersion { .. } => {
                 return LiyiExitCode::InternalError;
@@ -169,8 +182,13 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
     let mut trivial = 0usize;
     let mut ignored = 0usize;
     let mut untracked = 0usize;
+    let mut fixed = 0usize;
 
     for d in diagnostics {
+        if d.fixed {
+            fixed += 1;
+            continue;
+        }
         match &d.kind {
             DiagnosticKind::Current => current += 1,
             DiagnosticKind::Stale => stale += 1,
@@ -189,6 +207,9 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
     let mut parts: Vec<String> = Vec::new();
     if current > 0 {
         parts.push(format!("{current} current"));
+    }
+    if fixed > 0 {
+        parts.push(format!("{fixed} fixed"));
     }
     if stale > 0 {
         parts.push(format!("{stale} stale"));

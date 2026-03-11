@@ -30,25 +30,25 @@
     {
       "item": "Diagnostic",
       "reviewed": true,
-      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, and an optional fix hint command.",
+      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, an optional fix hint command, and a fixed flag indicating whether --fix resolved this diagnostic.",
       "source_span": [
         36,
-        44
+        46
       ],
       "tree_path": "struct::Diagnostic",
-      "source_hash": "sha256:6b250c9ef83fc98a2dbe02f2d2e390035c30b957274bc120ca82cf5c717661ff",
+      "source_hash": "sha256:27448438d96ab4f43b23e0b20646ac6a8eb53a3e1cacac5afbfe4139a7db7163",
       "source_anchor": "pub struct Diagnostic {"
     },
     {
       "item": "impl Display for Diagnostic",
       "reviewed": true,
-      "intent": "Format a diagnostic for terminal output. display_with_root shows a repo-relative file path, selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
+      "intent": "Format a diagnostic for terminal output. display_with_root shows a repo-relative file path; for fixed diagnostics uses '✓ fixed' icon and suppresses fix hints, otherwise selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
-        46,
-        85
+        48,
+        91
       ],
       "tree_path": "impl::Diagnostic",
-      "source_hash": "sha256:4b4454e7d8492552129dee158f3f0d268af4835a58aee6bc8130e0657d164e51",
+      "source_hash": "sha256:c412dda3eebb039bc01ad5d91cbdb024b99180f494651243659df3a11332e8e2",
       "source_anchor": "impl Diagnostic {"
     },
     {
@@ -56,8 +56,8 @@
       "reviewed": true,
       "intent": "Hold the four boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed, fail_on_untracked) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
-        106,
-        111
+        116,
+        121
       ],
       "tree_path": "struct::CheckFlags",
       "source_hash": "sha256:eb21294a5b2b980a87e2c81ac57dd1be6f31cf4494b882d3b81dd3413f62bcd4",
@@ -68,8 +68,8 @@
       "reviewed": true,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        117,
-        121
+        127,
+        131
       ],
       "tree_path": "enum::LiyiExitCode",
       "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
@@ -81,13 +81,13 @@
     {
       "item": "compute_exit_code",
       "reviewed": true,
-      "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found, CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge) is present per the CheckFlags, otherwise Clean.",
+      "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found. Skip diagnostics with fixed=true. Return CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        124,
-        158
+        134,
+        171
       ],
       "tree_path": "fn::compute_exit_code",
-      "source_hash": "sha256:b6e34bbbb7428d119352d9c2b04786b60881ba6c991ece2203cd4670c204f792",
+      "source_hash": "sha256:4e97ed3aa5bbc6c622591a6d0aca56d7d7772e2fe8ec98da5d7e75e7c3a67e3f",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {",
       "related": {
         "liyi-check-exit-code": null

@@ -18,13 +18,13 @@
     {
       "item": "run_check",
       "reviewed": true,
-      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
+      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide and enriches them with hashes from existing sidecars; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place and their diagnostics are marked fixed. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         37,
-        274
+        279
       ],
       "tree_path": "fn::run_check",
-      "source_hash": "sha256:13ca74d5432770cc302492fcc1b8c60cee849726441dc80547cf0d20917209f6",
+      "source_hash": "sha256:c9bea445c1920dd52f9232c286d00ae7d591b5dd4d4f26a8bd4858086f275da0",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": null,
@@ -35,13 +35,13 @@
     {
       "item": "check_sidecar",
       "reviewed": true,
-      "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Write the sidecar back if --fix produced modifications.",
+      "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges. Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (semantic drift, structural errors). Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        282,
-        1030
+        287,
+        1064
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:15af1ed0747e0e2f748ef2c59dc1fcdf916f08893cd6f0488e8070ea96aae6a9",
+      "source_hash": "sha256:d5e7358a0cc8c074dac05e39c6ec3befad8bd68dde12f87b4e08f236bd1e94c5",
       "source_anchor": "fn check_sidecar(",
       "related": {
         "fix-semantic-drift-protection": null,
@@ -53,8 +53,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1095,
-        1106
+        1129,
+        1140
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",
