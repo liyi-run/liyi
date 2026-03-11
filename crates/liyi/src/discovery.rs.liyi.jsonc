@@ -29,7 +29,7 @@
     },
     {
       "item": "find_repo_root",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk up the directory tree from the given path to locate the nearest .git/ directory and return its parent as the repository root. Return None if no .git/ is found. On Unix, respect GIT_DISCOVERY_ACROSS_FILESYSTEM: when unset or \"0\", stop at filesystem boundaries (different st_dev); when \"1\" or \"true\", allow crossing mount points.",
       "source_span": [
         45,
