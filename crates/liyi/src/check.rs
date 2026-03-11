@@ -463,6 +463,9 @@ fn check_sidecar(
                                     item.tree_path =
                                         compute_tree_path(&source_content, item.source_span, l);
                                 }
+                                // Source changed since last review — clear
+                                // reviewed so a human re-confirms intent.
+                                item.reviewed = false;
                                 modified = true;
                             }
                             diagnostics.push(Diagnostic {
