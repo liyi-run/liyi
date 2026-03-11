@@ -897,17 +897,14 @@ fn check_sidecar(
                 }
 
                 // f. Fill in null hashes on existing related edges
-                if fix {
-                    if let Some(ref mut related) = item.related {
-                        for (req_name, hash_val) in related.iter_mut() {
-                            if hash_val.is_none() {
-                                if let Some(rec) = requirements.get(req_name) {
-                                    if let Some(ref h) = rec.hash {
-                                        *hash_val = Some(h.clone());
-                                        modified = true;
-                                    }
-                                }
-                            }
+                if fix && let Some(ref mut related) = item.related {
+                    for (req_name, hash_val) in related.iter_mut() {
+                        if hash_val.is_none()
+                            && let Some(rec) = requirements.get(req_name)
+                            && let Some(ref h) = rec.hash
+                        {
+                            *hash_val = Some(h.clone());
+                            modified = true;
                         }
                     }
                 }
