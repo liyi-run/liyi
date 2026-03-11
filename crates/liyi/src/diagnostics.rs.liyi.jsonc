@@ -75,7 +75,7 @@
       "source_hash": "sha256:64902732e47fc1a39e08864886bd476acb9ce4f97554e8fb9bbf5ec4f7705d77",
       "source_anchor": "pub enum LiyiExitCode {",
       "related": {
-        "liyi-check-exit-code": null
+        "liyi-check-exit-code": "sha256:d7c4ad4bd1d1abe361598373a376aacda6bc0d948bd611f9b8bdea0b23a74c7a"
       }
     },
     {
@@ -90,7 +90,7 @@
       "source_hash": "sha256:4e97ed3aa5bbc6c622591a6d0aca56d7d7772e2fe8ec98da5d7e75e7c3a67e3f",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {",
       "related": {
-        "liyi-check-exit-code": null
+        "liyi-check-exit-code": "sha256:d7c4ad4bd1d1abe361598373a376aacda6bc0d948bd611f9b8bdea0b23a74c7a"
       }
     }
   ]

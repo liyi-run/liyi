@@ -75,7 +75,7 @@
       "source_hash": "sha256:9c0d764481d5db271b8bb7bf96b2f6d13e040cad09b4845010123ff5c2cd1a87",
       "source_anchor": "pub fn apply_approval_decisions(",
       "related": {
-        "reviewed-semantics": null
+        "reviewed-semantics": "sha256:40020571498ef149fe7a67ebd78bc430320921aae1faac8b7be1c830f35ae636"
       }
     },
     {

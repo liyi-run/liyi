@@ -27,7 +27,7 @@
       "source_hash": "sha256:25f017e0659e036f84cde56d738ec09d73a4c9bcb6f4f713d69fea684ad2a85b",
       "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {",
       "related": {
-        "source-span-semantics": null
+        "source-span-semantics": "sha256:867bdee2970960b1cad64d2c07d813bdd6c0e0a8c0fae52cec7ed398fc2b9402"
       }
     }
   ]

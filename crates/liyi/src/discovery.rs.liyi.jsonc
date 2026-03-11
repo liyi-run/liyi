@@ -39,7 +39,7 @@
       "source_hash": "sha256:5cb715f4b3ed1964ec75652a361dd67bea2a804c5c84f1326af878c38607d976",
       "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {",
       "related": {
-        "liyi-sidecar-naming-convention": null
+        "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"
       }
     },
     {
@@ -54,7 +54,7 @@
       "source_hash": "sha256:bbf8f0dbae10a6ccccac3e288b8bc72b6c5563678e4584556920135e205ff1a1",
       "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
       "related": {
-        "liyi-sidecar-naming-convention": null
+        "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"
       }
     }
   ]

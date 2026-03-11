@@ -15,11 +15,11 @@
       "source_hash": "sha256:3ee785c5a09ff156f5e606425771ab8c12f43445a62c48cc8be659ad7351e5d6",
       "source_anchor": "pub fn run_reanchor(",
       "related": {
-        "fix-never-modifies-human-fields": null,
-        "liyi-sidecar-naming-convention": null,
-        "tool-managed-fields": null,
-        "tree-path-empty-fallback": null,
-        "tree-path-fix-behavior": null
+        "fix-never-modifies-human-fields": "sha256:e5c1b041dab62b4533a84b2bfc73c2ca8697a9ae7a454540686c8d479305ef5f",
+        "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470",
+        "tool-managed-fields": "sha256:4bc9df80baf61c519493cf82d6fd325a99acf9f2fa56ffbf5c08d15ce2f99994",
+        "tree-path-empty-fallback": "sha256:aa9a9bd3d6f00ac3aa69d4c4dc33bbedf2ca0b7781be40492679ebfcd21b7340",
+        "tree-path-fix-behavior": "sha256:5dca1e26d0fb939c33b2214db262701daf9a67cc8a2d13a6f58d65b413b5512c"
       }
     }
   ]
