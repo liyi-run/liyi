@@ -2,7 +2,8 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::discovery::resolve_sidecar_targets;
+use crate::discovery::{find_repo_root, resolve_sidecar_targets};
+use crate::git::git_show;
 use crate::hashing::hash_span;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
@@ -68,6 +69,37 @@ pub struct ApprovalCandidate {
     pub span_offset: usize,
     /// Number of lines in the reviewed span.
     pub span_len: usize,
+    /// Previously approved intent text from Git history, if available.
+    pub prev_intent: Option<String>,
+}
+
+/// Look up the previously approved intent for an item by querying Git
+/// for the last committed version of the sidecar file.
+fn lookup_prev_intent(
+    repo_root: Option<&Path>,
+    sidecar_path: &Path,
+    item_name: &str,
+    tree_path: &str,
+) -> Option<String> {
+    let root = repo_root?;
+    let rel = sidecar_path.strip_prefix(root).ok()?;
+    let rel_str = rel.to_str()?;
+    let old_content = git_show(root, rel_str, "HEAD")?;
+    let old_sidecar = parse_sidecar(&old_content).ok()?;
+    for spec in &old_sidecar.specs {
+        if let Spec::Item(old_item) = spec {
+            // Match by tree_path first (more reliable), fall back to item name.
+            let matched = if !tree_path.is_empty() && !old_item.tree_path.is_empty() {
+                old_item.tree_path == tree_path
+            } else {
+                old_item.item == item_name
+            };
+            if matched && old_item.reviewed {
+                return Some(old_item.intent.clone());
+            }
+        }
+    }
+    None
 }
 
 /// Collect all unreviewed items as approval candidates.
@@ -79,6 +111,11 @@ pub fn collect_approval_candidates(
     if targets.is_empty() {
         return Err(ApproveError::NoTargets);
     }
+
+    // Try to locate the repo root for Git history lookups.
+    let repo_root = targets
+        .first()
+        .and_then(|p| find_repo_root(p));
 
     let mut candidates = Vec::new();
     for sidecar_path in &targets {
@@ -112,6 +149,13 @@ pub fn collect_approval_candidates(
                 let span_offset = span_start;
                 let span_len = span_end.saturating_sub(span_start);
 
+                let prev_intent = lookup_prev_intent(
+                    repo_root.as_deref(),
+                    sidecar_path,
+                    &item.item,
+                    &item.tree_path,
+                );
+
                 candidates.push(ApprovalCandidate {
                     sidecar_path: sidecar_path.clone(),
                     source_display: sidecar.source.clone(),
@@ -122,6 +166,7 @@ pub fn collect_approval_candidates(
                     source_lines,
                     span_offset,
                     span_len,
+                    prev_intent,
                 });
             }
         }

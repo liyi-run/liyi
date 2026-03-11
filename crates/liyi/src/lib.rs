@@ -2,6 +2,7 @@ pub mod approve;
 pub mod check;
 pub mod diagnostics;
 pub mod discovery;
+pub mod git;
 pub mod hashing;
 pub mod init;
 pub mod markers;
