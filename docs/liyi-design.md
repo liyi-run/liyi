@@ -505,15 +505,15 @@ All languages are built-in — the binary ships with every supported tree-sitter
 | Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method::(*MyType).DoThing` (pointer) or `method::MyType.DoThing` (value). |
 | JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
+| Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods use `custom_name` callback for receiver encoding. |
+| Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
+| Zig | `tree-sitter-zig` | `fn`, `const`, `test`. Struct-as-namespace pattern (`const Foo = struct { ... }`) uses `custom_name`. |
 
 **Planned languages (0.1.x, see roadmap M7–M9):**
 
 | Language | Grammar | Notes |
 |---|---|---|
-| Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods need `custom_name` callback. |
-| Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
 | Dart | `tree-sitter-dart` | `class`, `method`, `mixin`, `extension`, `enum`. Grammar crate stability TBD. |
-| Zig | `tree-sitter-zig` | `fn`, `const`, `test`. Struct-as-namespace pattern (`const Foo = struct { ... }`) needs `custom_name`. |
 | TOML | `tree-sitter-toml` | Data file — `table`, `key`. Key-path identity, not named items. |
 | JSON | `tree-sitter-json` | Data file — `key` (from `pair`). Targets schemas, `package.json`. |
 | YAML | `tree-sitter-yaml` | Data file — `key` (from `block_mapping_pair`). Limited without injection framework (M9). |

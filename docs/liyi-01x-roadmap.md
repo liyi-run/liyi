@@ -987,7 +987,7 @@ End-to-end golden test demonstrating the full scaffold workflow:
 
 ## Appendix: tree_path Grammar Specification (v0.2)
 
-**Status:** ⏳ Design — pending implementation with nom parser.
+**Status:** ⏳ Partial — nom parser implemented (`tree_path/parser.rs`), integration into `resolve_tree_path`/`compute_tree_path` pending.
 
 The current `split("::")` parser is ambiguous when names contain `::` or spaces (as seen in Zig `test "add function"`). This appendix defines a formal grammar for unambiguous tree_path parsing.
 
@@ -1030,7 +1030,7 @@ The injection marker `//lang` appears as a standalone segment or appended to a n
 ### A.4 Implementation plan
 
 1. Add `nom = "8"` to `crates/liyi/Cargo.toml` ✅
-2. Create `tree_path/parser.rs` with nom combinators
+2. Create `tree_path/parser.rs` with nom combinators ✅
 3. Update `resolve_tree_path` to use the new parser
 4. Update `compute_tree_path` to escape names containing `::`, quotes, or spaces
 5. Add roundtrip property tests: `parse(serialize(path)) == path`
