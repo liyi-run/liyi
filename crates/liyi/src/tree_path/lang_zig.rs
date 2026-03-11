@@ -19,14 +19,11 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
     match node.kind() {
         "function_declaration" => {
             // Find the identifier child which is the function name
-            find_child_by_kind(node, "identifier")
-                .map(|n| source[n.byte_range()].to_string())
+            find_child_by_kind(node, "identifier").map(|n| source[n.byte_range()].to_string())
         }
         "variable_declaration" => {
             // Check if this is a `const` declaration
-            let is_const = node
-                .children(&mut node.walk())
-                .any(|c| c.kind() == "const");
+            let is_const = node.children(&mut node.walk()).any(|c| c.kind() == "const");
 
             if !is_const {
                 return None;
@@ -40,8 +37,7 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
             if has_struct {
                 // This is `const Name = struct { ... }` — extract just the name
                 // (the "struct::" prefix is added by compute_tree_path)
-                find_child_by_kind(node, "identifier")
-                    .map(|n| source[n.byte_range()].to_string())
+                find_child_by_kind(node, "identifier").map(|n| source[n.byte_range()].to_string())
             } else {
                 None
             }
@@ -49,14 +45,14 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
         "test_declaration" => {
             // Test declarations have a string child for the name
             // e.g., test "my test" { ... }
-            find_child_by_kind(node, "string")
-                .map(|n| {
-                    let raw = &source[n.byte_range()];
-                    // Remove surrounding quotes
-                    raw.strip_prefix('"').and_then(|s| s.strip_suffix('"'))
-                        .map(|s| s.to_string())
-                        .unwrap_or_default()
-                })
+            find_child_by_kind(node, "string").map(|n| {
+                let raw = &source[n.byte_range()];
+                // Remove surrounding quotes
+                raw.strip_prefix('"')
+                    .and_then(|s| s.strip_suffix('"'))
+                    .map(|s| s.to_string())
+                    .unwrap_or_default()
+            })
         }
         _ => None,
     }
@@ -188,8 +184,7 @@ test "add function" {
         let computed_path = compute_tree_path(SAMPLE_ZIG, resolved_span, Language::Zig);
         assert_eq!(computed_path, "struct::Point::fn::new");
 
-        let re_resolved =
-            resolve_tree_path(SAMPLE_ZIG, &computed_path, Language::Zig).unwrap();
+        let re_resolved = resolve_tree_path(SAMPLE_ZIG, &computed_path, Language::Zig).unwrap();
         assert_eq!(re_resolved, resolved_span);
     }
 

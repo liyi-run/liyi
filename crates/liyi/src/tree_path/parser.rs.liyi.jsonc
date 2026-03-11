@@ -7,40 +7,60 @@
       "item": "Segment",
       "reviewed": false,
       "intent": "Represents a single segment in a parsed tree_path: Kind for kind shorthands (fn, class), Name for item names, or Injection for M9 language injection markers.",
-      "source_span": [14, 22],
+      "source_span": [
+        18,
+        25
+      ],
       "tree_path": "enum::Segment",
+      "source_hash": "sha256:a39c9ad666dce2c942b63befc555c5ee3b0d31bd3a533892187c90441f107266",
       "source_anchor": "pub enum Segment {"
     },
     {
       "item": "TreePath",
       "reviewed": false,
       "intent": "Parsed representation of a complete tree_path string. Provides parse() for deserializing from string and to_string() for serializing back with automatic quoting of complex names.",
-      "source_span": [24, 32],
+      "source_span": [
+        29,
+        31
+      ],
       "tree_path": "struct::TreePath",
+      "source_hash": "sha256:0de76bc568b5f672322f5e55065fbde484625f3fb22da038178653ae22231793",
       "source_anchor": "pub struct TreePath {"
     },
     {
       "item": "parse_tree_path",
       "reviewed": false,
       "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Handles segment parsing and :: delimiter separation.",
-      "source_span": [60, 63],
+      "source_span": [
+        92,
+        98
+      ],
       "tree_path": "fn::parse_tree_path",
+      "source_hash": "sha256:b7c1726d5777001170c7e2395199eaa919620d01a589c303cd47f31f6c467ac6",
       "source_anchor": "fn parse_tree_path(input: &str) -> IResult<&str, TreePath> {"
     },
     {
       "item": "parse_segment",
       "reviewed": false,
       "intent": "Parses a single tree_path segment, trying injection markers, quoted strings, and simple names in order. Uses heuristic to classify simple names as Kind or Name.",
-      "source_span": [66, 80],
+      "source_span": [
+        101,
+        116
+      ],
       "tree_path": "fn::parse_segment",
+      "source_hash": "sha256:2d570524b2adefd28ed3af36218c7b77db1eff350d48dd830a7651b2eae2debd",
       "source_anchor": "fn parse_segment(input: &str) -> IResult<&str, Segment> {"
     },
     {
       "item": "serialize_name",
       "reviewed": false,
       "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping.",
-      "source_span": [35, 45],
+      "source_span": [
+        58,
+        77
+      ],
       "tree_path": "fn::serialize_name",
+      "source_hash": "sha256:0398cceb21d0564c22c3105074f081f493aaab7e7e6a7b171df93ace78192ad6",
       "source_anchor": "fn serialize_name(name: &str) -> String {"
     }
   ]

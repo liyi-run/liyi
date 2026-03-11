@@ -81,7 +81,10 @@ another_func {
 
     #[test]
     fn detect_bash_extensions() {
-        assert_eq!(detect_language(Path::new("script.sh")), Some(Language::Bash));
+        assert_eq!(
+            detect_language(Path::new("script.sh")),
+            Some(Language::Bash)
+        );
         assert_eq!(
             detect_language(Path::new("script.bash")),
             Some(Language::Bash)

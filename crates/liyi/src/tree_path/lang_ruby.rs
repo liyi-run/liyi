@@ -81,8 +81,15 @@ end
 
     #[test]
     fn resolve_ruby_class_in_module() {
-        let span = resolve_tree_path(SAMPLE_RUBY, "module::Billing::class::Invoice", Language::Ruby);
-        assert!(span.is_some(), "should resolve module::Billing::class::Invoice");
+        let span = resolve_tree_path(
+            SAMPLE_RUBY,
+            "module::Billing::class::Invoice",
+            Language::Ruby,
+        );
+        assert!(
+            span.is_some(),
+            "should resolve module::Billing::class::Invoice"
+        );
     }
 
     #[test]
@@ -160,15 +167,17 @@ end
         let computed_path = compute_tree_path(SAMPLE_RUBY, resolved_span, Language::Ruby);
         assert_eq!(computed_path, "class::Order::fn::process");
 
-        let re_resolved =
-            resolve_tree_path(SAMPLE_RUBY, &computed_path, Language::Ruby).unwrap();
+        let re_resolved = resolve_tree_path(SAMPLE_RUBY, &computed_path, Language::Ruby).unwrap();
         assert_eq!(re_resolved, resolved_span);
     }
 
     #[test]
     fn detect_ruby_extensions() {
         assert_eq!(detect_language(Path::new("app.rb")), Some(Language::Ruby));
-        assert_eq!(detect_language(Path::new("tasks.rake")), Some(Language::Ruby));
+        assert_eq!(
+            detect_language(Path::new("tasks.rake")),
+            Some(Language::Ruby)
+        );
         assert_eq!(
             detect_language(Path::new("my_gem.gemspec")),
             Some(Language::Ruby)
