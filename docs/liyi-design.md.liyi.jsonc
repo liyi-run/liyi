@@ -63,8 +63,8 @@
         465,
         469
       ],
-      "source_hash": "sha256:1df1d3238855b1d8c1b20493e2788af47135f318e399d43b650bded04c7c5a5a",
-      "source_anchor": "<!-- @liyi:requirement tree-path-reanchor-behavior -->"
+      "source_hash": "sha256:845369bcf7b7044aa1a3087ff8a41c0ec0d5e7be2ce7df0928b6233bf2a59cb9",
+      "source_anchor": "**Quoting and injection.** Names containing spaces, `::`, or quotes are double-quoted with backslash escaping (`test::\"add function\"`). For multi-language files (M9), an injection marker `//lang` attaches to the preceding segment to cross a language boundary (`key::run//bash::fn::setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.2)."
     },
     {
       "requirement": "tree-path-empty-fallback",
@@ -72,8 +72,8 @@
         473,
         481
       ],
-      "source_hash": "sha256:0bbc4ec24af3fb1c3abce91342f1249f5b0a029e2a6a0573544d5a13d59722d6",
-      "source_anchor": "<!-- @liyi:requirement tree-path-empty-fallback -->"
+      "source_hash": "sha256:0640051cf35edbedf41b53a801a2bd00dddce436ea8cd9ccd0d7a23c8b9ea5da",
+      "source_anchor": "<!-- /requirement -->"
     },
     {
       "requirement": "requirement-name-uniqueness",
@@ -81,8 +81,8 @@
         629,
         631
       ],
-      "source_hash": "sha256:03a65c514532f4f424cbe30ed55fe7455c3a602ac286b1c62efa9722b0968700",
-      "source_anchor": "<!-- @liyi:requirement requirement-name-uniqueness -->"
+      "source_hash": "sha256:36b6ac28f97a670fb5e902406e0e86c51705ddf7cfb47566adea5c4a030f0dd0",
+      "source_anchor": "No `intent` field — the requirement text lives at the source site, not duplicated in the sidecar. No `reviewed` — the act of writing a requirement *is* the assertion of intent; provenance belongs to VCS (`git blame` tells you who wrote it and when). The `\"requirement\"` key itself signals prescriptiveness — no separate boolean needed."
     },
     {
       "requirement": "cycle-detection",
@@ -90,8 +90,8 @@
         754,
         756
       ],
-      "source_hash": "sha256:66311f793af3fcf3539f50be30b4f2e7d4e56fd3d1dbd4069bf34b6699868542",
-      "source_anchor": "<!-- @liyi:requirement cycle-detection -->"
+      "source_hash": "sha256:638676e2dd2e8b36aaa949892523061b55381f993ce157d71c69159dede96595",
+      "source_anchor": "```"
     },
     {
       "requirement": "requirement-discovery-global",
@@ -99,8 +99,8 @@
         1054,
         1056
       ],
-      "source_hash": "sha256:c6a5b25878f52c9f835e31aa11a060af59e390e64f0730d153004a7993548c6f",
-      "source_anchor": "```gitignore"
+      "source_hash": "sha256:e50122cc204abef464a0b88636129acbb9dd870dc31b0bb903a7d8c873bca26d",
+      "source_anchor": "Inline annotations don’t work for files you can’t modify — generated code, vendored dependencies, protobuf bindings. The generator will overwrite any annotation you add."
     },
     {
       "requirement": "liyi-check-exit-code",
@@ -108,8 +108,8 @@
         1177,
         1183
       ],
-      "source_hash": "sha256:3c5e25f88155fb2751b7ff2b520cc60e1b6f0172c854077b54dab753e169f682",
-      "source_anchor": "**Summary-first output.** The summary line is printed before the per-item diagnostics, so that in large projects the user sees the aggregate picture immediately — without scrolling past hundreds of lines. (When the output is short enough, this also serves as a final line for quick scanning.)"
+      "source_hash": "sha256:23d3f13cfa09b7e029bf89c69aeae7cdfbb36d0a82d30c4d993b84f6faa12fd2",
+      "source_anchor": "**Limitation: explicit annotations only.** This mechanism enforces that every *existing* `@liyi:related` annotation has a corresponding sidecar edge. It does not detect *missing* annotations — items that semantically depend on a requirement but lack an `@liyi:related` marker in source. That is an inference problem (the agent or human must recognize the semantic dependency), not a coverage-checking problem, and is outside the linter's deterministic scope."
     },
     {
       "requirement": "marker-normalization",
@@ -117,8 +117,8 @@
         1210,
         1212
       ],
-      "source_hash": "sha256:5b12f3063785e56636d702bebcbd8f759ad512c72fa4af056edc5548fb13b116",
-      "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
+      "source_hash": "sha256:4f1a4b10b6baac121522a8ed95f10e3eac48e6c5cf5f7418423e27e859a69280",
+      "source_anchor": "| `error` | Errors only — parse errors, unknown versions, orphaned sources |"
     },
     {
       "requirement": "quine-escape-in-source",
@@ -126,8 +126,8 @@
         1224,
         1226
       ],
-      "source_hash": "sha256:f59014cebee07606dbb103f06b6b6336409222fce1f6bb6191e800e38c40cd61",
-      "source_anchor": "### Marker normalization (half-width / full-width equivalence)"
+      "source_hash": "sha256:946f04222d5a129ec28878260c8ca615ccfdf1d1e27c7705603261ae45bfe2b1",
+      "source_anchor": "- No LLM calls. No API keys. No network access."
     },
     {
       "requirement": "markdown-fenced-block-skip",
@@ -135,8 +135,8 @@
         1230,
         1236
       ],
-      "source_hash": "sha256:95608b3b77f9c441d2c9dfe396edfbd9ffe25ea5a5ff4ed2943356c5a30e382d",
-      "source_anchor": "| Half-width | Full-width | Role |"
+      "source_hash": "sha256:47cccd00938c19259d7676c9531bbeb32c35778094dc7aa8b3dea2c6e25435fc",
+      "source_anchor": "CJK input methods default to full-width punctuation. Japanese IME often produces full-width `＠` as well. Requiring users to switch to half-width mode for every annotation is a constant friction — and a guaranteed source of \"why doesn't the linter see my marker\" bug reports."
     },
     {
       "requirement": "fix-never-modifies-human-fields",
@@ -144,8 +144,8 @@
         1442,
         1444
       ],
-      "source_hash": "sha256:607df81587523fe5a12ddb1b5d4ef92aaed48c07811581d4c9fe40a8d6fe0b6a",
-      "source_anchor": "```"
+      "source_hash": "sha256:a55f807047e0c031ee73d97afd444d4da4423ad7a1541d6ad8ced6d0734c4ee3",
+      "source_anchor": "    %% ── Batch path ──"
     },
     {
       "requirement": "fix-semantic-drift-protection",
@@ -153,8 +153,8 @@
         1446,
         1448
       ],
-      "source_hash": "sha256:f40c009e185cefee8531edae568cab5de68a64203695d03e8575b16623e4910a",
-      "source_anchor": "**Direct re-inference: the fast path.** Triage adds value when many items are stale and a human needs to prioritize — a refactor that touches 30 functions, a CI pipeline processing a large PR. But during interactive editing — an agent making focused changes to 2-3 functions in a single session — triage is overhead. The agent already knows what it changed and why."
+      "source_hash": "sha256:607df81587523fe5a12ddb1b5d4ef92aaed48c07811581d4c9fe40a8d6fe0b6a",
+      "source_anchor": "```"
     }
   ]
 }

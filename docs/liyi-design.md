@@ -457,8 +457,12 @@ Without a `tree_path`, the fallback is: batch false positives on any line-shifti
 | `struct Money { … }` | `struct::Money` |
 | `mod billing { fn charge(…) }` | `mod::billing::fn::charge` |
 | `#[test] fn test_add()` | `fn::test_add` |
+| Zig `test "add function" { … }` | `test::"add function"` |
+| YAML `run:` with embedded Bash `setup_env()` | `key::run//bash::fn::setup_env` |
 
 The path identifies the item by node kind and name, not by position. The tool constructs the path by walking the tree-sitter CST from root to the node that covers `source_span`, recording each named ancestor. This is deterministic — the same source item always produces the same path regardless of where it appears in the file.
+
+**Quoting and injection.** Names containing spaces, `::`, or quotes are double-quoted with backslash escaping (`test::"add function"`). For multi-language files (M9), an injection marker `//lang` attaches to the preceding segment to cross a language boundary (`key::run//bash::fn::setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.2).
 
 **Behavior during reanchor and check.**
 
