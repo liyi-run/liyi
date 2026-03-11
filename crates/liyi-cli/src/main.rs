@@ -89,23 +89,13 @@ fn main() {
 
             process::exit(exit_code as i32);
         }
-        Commands::Reanchor {
-            files,
-            item,
-            span,
-            migrate,
-        } => {
-            if migrate && files.is_empty() {
-                eprintln!("--migrate requires at least one sidecar file path");
-                process::exit(2);
-            }
-
+        Commands::Migrate { files } => {
             if files.is_empty() {
                 eprintln!("at least one sidecar file or directory required");
                 process::exit(2);
             }
 
-            let targets = match liyi::reanchor::resolve_reanchor_targets(&files) {
+            let targets = match liyi::discovery::resolve_sidecar_targets(&files) {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("Error: {e}");
@@ -120,13 +110,9 @@ fn main() {
 
             let mut errors = 0;
             for sidecar_path in &targets {
-                match liyi::reanchor::run_reanchor(sidecar_path, item.as_deref(), span, migrate) {
+                match liyi::reanchor::run_reanchor(sidecar_path, None, None, true) {
                     Ok(()) => {
-                        if migrate {
-                            println!("Migrated: {}", sidecar_path.display());
-                        } else {
-                            println!("Reanchored: {}", sidecar_path.display());
-                        }
+                        println!("Migrated: {}", sidecar_path.display());
                     }
                     Err(e) => {
                         eprintln!("Error ({}): {e}", sidecar_path.display());

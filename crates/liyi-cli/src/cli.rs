@@ -68,23 +68,10 @@ pub enum Commands {
         level: DiagnosticLevel,
     },
 
-    /// Re-hash source spans in sidecar files
-    Reanchor {
-        /// Sidecar files or directories to reanchor (recursive)
-        #[arg(required_unless_present = "migrate")]
+    /// Migrate sidecar files to the current schema version
+    Migrate {
+        /// Sidecar files or directories to migrate (recursive)
         files: Vec<PathBuf>,
-
-        /// Target a specific item by name
-        #[arg(long, requires = "span")]
-        item: Option<String>,
-
-        /// Override span (start,end)
-        #[arg(long, requires = "item", value_parser = parse_span)]
-        span: Option<[usize; 2]>,
-
-        /// Migrate sidecar to current schema version
-        #[arg(long)]
-        migrate: bool,
     },
 
     /// Scaffold AGENTS.md or skeleton .liyi.jsonc sidecar
@@ -117,19 +104,3 @@ pub enum Commands {
     },
 }
 
-/// Parse a "start,end" string into a [usize; 2] span.
-fn parse_span(s: &str) -> Result<[usize; 2], String> {
-    let parts: Vec<&str> = s.split(',').collect();
-    if parts.len() != 2 {
-        return Err(format!("expected format 'start,end', got '{s}'"));
-    }
-    let start: usize = parts[0]
-        .trim()
-        .parse()
-        .map_err(|_| format!("invalid start: '{}'", parts[0].trim()))?;
-    let end: usize = parts[1]
-        .trim()
-        .parse()
-        .map_err(|_| format!("invalid end: '{}'", parts[1].trim()))?;
-    Ok([start, end])
-}

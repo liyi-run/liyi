@@ -338,7 +338,7 @@ fn check_sidecar(
             },
             severity: Severity::Error,
             message: e,
-            fix_hint: Some(format!("liyi reanchor --migrate {rel_sidecar}")),
+            fix_hint: Some(format!("liyi migrate {rel_sidecar}")),
         });
         return;
     }
@@ -457,7 +457,7 @@ fn check_sidecar(
                                 kind: DiagnosticKind::Stale,
                                 severity: Severity::Warning,
                                 message: "missing source_hash".into(),
-                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some("liyi check --fix".into()),
                             });
                         } else {
                             // Hash mismatch — try tree_path first, then shift
@@ -709,7 +709,7 @@ fn check_sidecar(
                                 },
                                 severity: Severity::Error,
                                 message: detail,
-                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some("liyi check --fix".into()),
                             });
                         }
                     }
@@ -990,7 +990,7 @@ fn check_sidecar(
                                 },
                                 severity: Severity::Error,
                                 message: detail,
-                                fix_hint: Some(format!("liyi reanchor {rel_sidecar}")),
+                                fix_hint: Some("liyi check --fix".into()),
                             });
                         }
                     }
