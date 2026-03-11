@@ -26,7 +26,10 @@ The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This docu
 | M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
 | M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
 | M5.3 `--prompt` mode | ⏳ Design | Design doc at `docs/prompt-mode-design.md` |
-| M7 Additional languages | ⏳ Planned | Ruby, Bash, Dart, Zig |
+| M7.1 Ruby | ✅ Complete | tree-sitter-ruby v0.23.1 |
+| M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
+| M7.3 Dart | ⏳ Planned | Flutter ecosystem |
+| M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
 | M8 Data file support | ⏳ Design | TOML, JSON, YAML; key-path tree_path paradigm |
 | M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
 | M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
@@ -971,14 +974,72 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | 13 | M10.2 Doc comment heuristic | ⏳ Planned | ~2h | `=doc` suggestions |
 | 14 | M10.3 Item size heuristic | ⏳ Planned | ~1h | Trivial suggestions |
 | 15 | M10.5 Combined scaffold test | ⏳ Planned | ~1h | Regression guard |
-| 16 | M7.1 Ruby | ⏳ Planned | ~2h | Ruby/Rails ecosystem |
-| 17 | M7.2 Bash | ⏳ Planned | ~1h | CI scripts, devops |
+| ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
+| ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
 | 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
 | 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
 | 20 | M7.3 Dart | ⏳ Planned | ~3h | Flutter ecosystem |
-| 21 | M7.4 Zig | ⏳ Planned | ~3h | Systems lang, growing |
+| ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
 | 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
 | 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
+
+---
+
+## Appendix: tree_path Grammar Specification (v0.2)
+
+**Status:** ⏳ Design — pending implementation with nom parser.
+
+The current `split("::")` parser is ambiguous when names contain `::` or spaces (as seen in Zig `test "add function"`). This appendix defines a formal grammar for unambiguous tree_path parsing.
+
+### A.1 Grammar (EBNF)
+
+```ebnf
+tree_path    := segment ("::" segment)*
+segment      := kind | name
+kind         := identifier
+name         := simple_name | quoted_string
+simple_name  := identifier | "self" | number
+quoted_string:= '"' (escaped_char | any_unicode_except_quote)* '"'
+identifier   := [A-Za-z_][A-Za-z0-9_]*
+number       := [0-9]+
+escaped_char := '\\' ( '"' | '\\' | 'n' | ':' )
+```
+
+### A.2 Design decisions
+
+1. **Quoted strings for complex names:** Any name containing spaces, `::`, quotes, or Unicode control characters must be quoted. Example: `test::"add function"`.
+
+2. **Backslash escaping:** Inside quoted strings, `"` and `\` must be escaped. `\:` is provided as a convenience for names containing colons (though `::` is the delimiter).
+
+3. **Unquoted shorthand:** Simple identifiers (alphanumeric + underscore) can remain unquoted for ergonomics. This preserves backward compatibility with existing tree_paths like `fn::add` or `class::MyClass`.
+
+4. **Kind disambiguation:** The parser doesn't validate that a segment is a "kind" vs "name" — that happens at resolution time using the `LanguageConfig::kind_map`. The grammar treats both uniformly at the syntactic level.
+
+### A.3 Injection syntax (future)
+
+When M9 (injection framework) is implemented, the grammar will extend to:
+
+```ebnf
+segment      := kind | name | injection_marker
+injection_marker := "//" language
+language     := identifier
+```
+
+The injection marker `//lang` appears as a standalone segment or appended to a name segment (`run//bash`). The latter preserves the even-pair invariant for shell-safe paths.
+
+### A.4 Implementation plan
+
+1. Add `nom = "8"` to `crates/liyi/Cargo.toml` ✅
+2. Create `tree_path/parser.rs` with nom combinators
+3. Update `resolve_tree_path` to use the new parser
+4. Update `compute_tree_path` to escape names containing `::`, quotes, or spaces
+5. Add roundtrip property tests: `parse(serialize(path)) == path`
+
+### A.5 Migration path
+
+- **Phase 1:** Parser accepts both old (unquoted) and new (quoted) syntax
+- **Phase 2:** `compute_tree_path` starts quoting names that need it
+- **Phase 3:** (Optional) Deprecate unquoted complex names with a warning
 
 ---
 
