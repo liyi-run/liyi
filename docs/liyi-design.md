@@ -342,7 +342,7 @@ The linter only checks for the *presence* of `@liyi:module` in a directory's fil
 
 <!-- @liyi:requirement liyi-sidecar-naming-convention -->
 **Naming convention.** The sidecar filename is the source filename with `.liyi.jsonc` appended: `money.rs` → `money.rs.liyi.jsonc`. Always append to the full filename, never strip the extension. This avoids ambiguity when files share a stem but differ in extension (`money.rs` and `money.py` would otherwise both claim `money.liyi.jsonc`). The rule is mechanical: one source file, one sidecar, derivable by concatenation.
-<!-- /requirement -->
+<!-- @liyi:end-requirement liyi-sidecar-naming-convention -->
 
 One per source file, co-located:
 
@@ -376,7 +376,7 @@ The `source` path is relative to the repository root — the same path you'd pas
 
 <!-- @liyi:requirement version-field-required -->
 `"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, structured fields in post-0.1). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi reanchor --migrate` will upgrade sidecar files in place.
-<!-- /requirement -->
+<!-- @liyi:end-requirement version-field-required -->
 
 **`liyi reanchor --migrate` behavior.** When the schema version changes (e.g., 0.1 → 0.2), `--migrate` reads each `.liyi.jsonc`, adds any newly required fields with default values, removes deprecated fields, updates `"version"` to the new version, and writes the file back. It is idempotent — running it twice produces the same output. It does not re-hash spans or re-infer intent; it only transforms the schema envelope. Migration is always additive in 0.x: no field present in 0.1 will change meaning, only new fields may appear.
 
@@ -402,7 +402,7 @@ After human review — either the human adds `@liyi:intent` in the source file (
 
 <!-- @liyi:requirement reviewed-semantics -->
 `"reviewed"` defaults to `false` when absent. The linter considers an item reviewed if **either** `"reviewed": true` in the sidecar **or** `@liyi:intent` exists in source. Source intent takes precedence for adversarial testing — it's the human's assertion, not the agent's inference. See *Source-level intent* and *Security model* below.
-<!-- /requirement -->
+<!-- @liyi:end-requirement reviewed-semantics -->
 
 ### Why a single `intent` field, not structured pre/postconditions?
 
@@ -426,11 +426,11 @@ Item-level intent carries machine metadata → JSONC wins.
 
 <!-- @liyi:requirement source-span-semantics -->
 `source_span` is a closed interval of 1-indexed line numbers: `[42, 58]` means lines 42 through 58, inclusive. This matches editor line numbers, `git blame` output, and coincidentally the mathematical convention for closed intervals. `source_hash` is always `sha256:<hex>` — the SHA-256 digest of those lines after normalizing line endings to `\n` (LF). This ensures cross-platform consistency: a Windows developer with `core.autocrlf=true` and a Linux CI runner produce identical hashes for identical content. No other hash algorithm is supported in 0.1. `source_anchor` is the literal text of the first line of the span — used by the linter for efficient shift detection (see below).
-<!-- /requirement -->
+<!-- @liyi:end-requirement source-span-semantics -->
 
 <!-- @liyi:requirement tool-managed-fields -->
 Both `source_hash` and `source_anchor` are **tool-managed fields**. The agent writes only `source_span` — the tool (`liyi reanchor`, or `liyi check --fix`) computes the hash and anchor deterministically from the source file. This is the same principle as not letting agents author lockfile checksums: the tool reads the actual bytes, so fabricated or hallucinated hashes are impossible.
-<!-- /requirement -->
+<!-- @liyi:end-requirement tool-managed-fields -->
 
 The agent records each item's line range (`source_span`) when writing the spec. The linter reads those lines from the source file, hashes them, and compares against `source_hash`. This gives per-item staleness without the linter needing to parse any language — it just reads a slice of lines.
 
@@ -442,7 +442,7 @@ Without a `tree_path`, the fallback is: batch false positives on any line-shifti
 
 <!-- @liyi:requirement span-shift-heuristic -->
 **Span-shift detection (included in 0.1).** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi reanchor`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
-<!-- /requirement -->
+<!-- @liyi:end-requirement span-shift-heuristic -->
 
 ### Structural identity via `tree_path`
 
@@ -470,7 +470,7 @@ The path identifies the item by node kind and name, not by position. The tool co
 1. `liyi reanchor`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found, update `source_span` to the node's line range, recompute `source_hash` and `source_anchor`. If not found (item was renamed or deleted), report an error — do not silently fall back.
 2. `liyi check --fix`: Same tree-sitter lookup. If the hash mismatches but the `tree_path` resolves to a valid node, update the span (the item moved but is still present). If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
 3. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
-<!-- /requirement -->
+<!-- @liyi:end-requirement tree-path-reanchor-behavior -->
 
 **Diagnostic clarity.** When a spec has no `tree_path` and the shift heuristic also fails, the diagnostic indicates why tree-path recovery was skipped — e.g., "no tree_path set, falling back to shift heuristic" — so that users can add the missing field or run `liyi reanchor` to auto-populate it. Diagnostics distinguish "no tree_path available" from "tree_path resolution failed (item may have been renamed or deleted)."
 
@@ -482,7 +482,7 @@ The path identifies the item by node kind and name, not by position. The tool co
 - **Complex or contrived cases** where the agent or human determines that a tree path is non-obvious or ambiguous.
 
 The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi reanchor` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
-<!-- /requirement -->
+<!-- @liyi:end-requirement tree-path-empty-fallback -->
 
 **Language support.** Tree-sitter support is grammar-dependent. Rust, Python, Go, JavaScript, and TypeScript are built-in. For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
 
@@ -632,11 +632,30 @@ No `intent` field — the requirement text lives at the source site, not duplica
 
 <!-- @liyi:requirement requirement-name-uniqueness -->
 **Naming and scope.** Requirement names are unique per repository. The linter reports an error if two `@liyi:requirement` markers declare the same name. Names are matched as exact strings (case-sensitive) after trimming leading/trailing whitespace inside parens. The name is a human-readable identifier, not a path — it can be in any language. No character set restriction: `multi-currency-addition`, `多币种加法`, and `인출한도` are all valid names.
-<!-- /requirement -->
+<!-- @liyi:end-requirement requirement-name-uniqueness -->
 
 **Requirements can live anywhere:** in the source file near the code they govern, in `README.md` alongside `@liyi:module`, in a dedicated requirements file, or in doc comments. The linter scans all non-ignored files for the marker.
 
-**End-of-block markers.** The linter does not require an explicit end marker for requirement blocks — `source_span` in the sidecar defines the block boundaries. An optional `@liyi:end-requirement` (or `@立意:需求止`) marker is **not supported in 0.1** — the linter does not look for it. A future version could accept it for visual clarity in Markdown files where contiguous-comment heuristics don't apply; adding it would be additive and non-breaking.
+**End-of-block markers.** The `@liyi:end-requirement <name>` marker closes a requirement block. The name must match the opening `@liyi:requirement <name>`. When both markers are present, the linter and reanchor tool pair them by name to deterministically compute `source_span` — this is the primary span recovery mechanism for files without tree-sitter support (e.g., Markdown). The end marker uses the same name syntax (parenthesized or whitespace-delimited), full-width normalization, and multilingual aliases as the opening marker:
+
+| Alias | Language |
+|---|---|
+| `@liyi:end-requirement` | English (canonical) |
+| `@立意:需求结束` | Chinese |
+| `@liyi:fin-requisito` | Spanish |
+| `@立意:要件終` | Japanese |
+| `@liyi:fin-exigence` | French |
+| `@립의:요건끝` | Korean |
+
+The end marker is **recommended** for Markdown requirement blocks but not required. When absent, the sidecar's recorded `source_span` is the only span authority and must be maintained manually or via tree-sitter recovery.
+
+Example:
+
+```markdown
+<!-- @liyi:requirement exit-codes -->
+Exit codes: 0 = clean, 1 = failures found, 2 = internal error.
+<!-- @liyi:end-requirement exit-codes -->
+```
 
 ### `@立意:有关` / `@liyi:related` — dependency edges
 
@@ -757,7 +776,7 @@ If `payment-security` changes → `multi-currency-addition` is flagged REQ CHANG
 
 <!-- @liyi:requirement cycle-detection -->
 The linter detects cycles (A → B → A) and reports them as errors without looping.
-<!-- /requirement -->
+<!-- @liyi:end-requirement cycle-detection -->
 
 **Use this sparingly.** Most teams should use flat requirements — one level of `@liyi:requirement` blocks with `@liyi:related` edges from code items. Requirement hierarchies are for organizations that already think in terms of system requirements decomposing into subsystem requirements (defense, aerospace, regulated industries). If you don't already have a requirement hierarchy, don't build one just because the tool allows it — the cascading noise from deep trees (a change at the root flags everything below) can be worse than the traceability it provides.
 
@@ -1088,7 +1107,7 @@ The linter resolves `"source"` paths in `.liyi.jsonc` relative to the repository
 
 <!-- @liyi:requirement requirement-discovery-global -->
 **Requirement discovery is project-global.** Positional args scope which items are checked (pass 2), not which requirements are indexed. Pass 1 always walks the full project root to discover all `@liyi:requirement` markers, regardless of CLI positional args. This ensures that `liyi check src/billing/` can resolve `@liyi:related` edges pointing to requirements defined in `docs/requirements.md` or any other location in the repo.
-<!-- /requirement -->
+<!-- @liyi:end-requirement requirement-discovery-global -->
 
 This handles the common case without configuration. `.gitignore` already excludes `node_modules/`, `.venv/`, `target/`, `__pycache__/`, `build/`, etc. `.liyiignore` picks up the rest — checked-in vendored code, generated protobuf bindings, FFI stubs.
 
@@ -1217,7 +1236,7 @@ Exit codes: 0 = clean, 1 = check failures (stale, unreviewed, or diverged specs)
 - `--fail-on-unreviewed` (default: false) — exit 1 if specs exist without `@liyi:intent` in source or `"reviewed": true` in sidecar
 - `--fail-on-req-changed` (default: true) — exit 1 if any reviewed spec references a requirement whose hash changed
 - `--fail-on-untracked` (default: true) — exit 1 if any `@liyi:requirement` marker has no sidecar entry, or any `@liyi:related` marker has no corresponding edge in the enclosing item's sidecar spec
-<!-- /requirement -->
+<!-- @liyi:end-requirement liyi-check-exit-code -->
 
 ### What it doesn't do
 
@@ -1246,7 +1265,7 @@ All of the following are equivalent:
 
 <!-- @liyi:requirement marker-normalization -->
 **Implementation approach: normalize-then-match.** The linter runs a single normalization pass on each scanned line — replacing the four full-width characters with their half-width equivalents — before applying the marker regex. This is a four-entry `str::replace` chain (or a single `translate` table), not a regex concern. The normalization happens only on lines being scanned for markers, not on the entire file, so it has negligible cost. The alias lookup table stores only half-width forms; normalization ensures they match regardless of what the user typed.
-<!-- /requirement -->
+<!-- @liyi:end-requirement marker-normalization -->
 
 This is strictly more robust than the alternative (doubling every regex to accept both forms), keeps the alias table simple, and confines the full-width concern to one function in the lexer.
 
@@ -1260,7 +1279,7 @@ This is strictly more robust than the alternative (doubling every regex to accep
 
 <!-- @liyi:requirement quine-escape-in-source -->
 In **source code**, the `@` character is escaped in string constants: `\x40` in Rust, `\u0040` in JSON. This is invisible to the reader (it's inside a string literal) and prevents the scanner from matching constants in the alias table, format strings, and test data. The `@liyi:requirement(quine-escape)` in `markers.rs` enforces this invariant.
-<!-- /requirement -->
+<!-- @liyi:end-requirement quine-escape-in-source -->
 
 In **documentation and prose** — Markdown files, design docs, READMEs, contributing guides — character escapes are unacceptable. A design document that writes `\x40liyi:module` instead of `@liyi:module` is unreadable. The scanner instead uses **natural-language context** to distinguish real markers from mentions:
 
@@ -1270,7 +1289,7 @@ In **documentation and prose** — Markdown files, design docs, READMEs, contrib
 2. **Inline code spans.** If the marker's position falls inside an inline backtick span on the same line (determined by counting backtick characters before the match position — odd count means inside code), the marker is rejected. This covers inline mentions like `` `@liyi:module` `` and `` `<!-- @liyi:module -->` ``.
 
 3. **Preceding quote characters.** If the character immediately before the `@` is a quotation mark — ASCII quotes (`'`, `"`), typographic quotes (`'`, `'`, `"`, `"`), CJK brackets (`「`, `」`), or guillemets (`«`, `»`) — the marker is rejected. This covers natural-language quoting conventions across locales: `"@liyi:intent"`, `'@liyi:module'`, `「@liyi:requirement」`, etc.
-<!-- /requirement -->
+<!-- @liyi:end-requirement markdown-fenced-block-skip -->
 
 Together, these three checks cover every conventional way that prose references a technical term without asserting it. The scanner remains line-oriented — fenced block state is a single boolean; inline code detection is a character count within one line; preceding-char is a one-character lookbehind. No Markdown parser is needed.
 
@@ -1478,11 +1497,11 @@ The agent instruction (rule 10) permits both paths. Teams can mandate triage for
 
 <!-- @liyi:requirement fix-never-modifies-human-fields -->
 `--fix` never modifies `"intent"`, `"reviewed"`, `"related"`, or any human-authored field. It only writes tool-managed fields. This is the same contract as `eslint --fix` or `cargo clippy --fix` — mechanical corrections, no semantic changes.
-<!-- /requirement -->
+<!-- @liyi:end-requirement fix-never-modifies-human-fields -->
 
 <!-- @liyi:requirement fix-semantic-drift-protection -->
 **Semantic drift protection.** When `tree_path` resolves an item to a new span, `--fix` compares the hash at the new location against the recorded `source_hash`. If the content is unchanged (pure positional shift), the span, hash, and anchor are all updated — this is a safe mechanical correction. If the content at the new span also changed (semantic drift), `--fix` updates `source_span` to track the item's current location but does **not** rewrite `source_hash` — the spec remains stale so the next `liyi check` flags it for human review. This prevents `--fix` from silently blessing semantic changes that may invalidate the declared intent.
-<!-- /requirement -->
+<!-- @liyi:end-requirement fix-semantic-drift-protection -->
 
 The shift heuristic (non-`tree_path` fallback) is inherently safe — it only matches when the *exact same content* is found at an offset — so no additional protection is needed there.
 
