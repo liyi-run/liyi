@@ -53,7 +53,7 @@
     },
     {
       "item": "draw_intent",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the intent pane with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current, show with reassuring title; (3) 'Intent (changed)' — show previous intent in red and current in green with labeled sections for easy comparison. Handles =doc sentinel for all branches.",
       "source_span": [
         203,

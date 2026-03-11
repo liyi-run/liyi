@@ -41,7 +41,7 @@
     },
     {
       "item": "ApprovalCandidate",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), span_len (number of span lines), and prev_intent (the previously approved intent from Git history, if any). Decouples data gathering from presentation.",
       "source_span": [
         53,
@@ -53,7 +53,7 @@
     },
     {
       "item": "lookup_prev_intent",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk Git history (up to 20 commits via git_log_revisions) to find the most recent commit where the item had reviewed=true in the sidecar. For each revision, retrieves the sidecar via git_show, parses it, and matches by tree_path (preferred) or item name. Returns Some(intent) from the first matching reviewed item. Returns None if repo_root is None, the path is not repo-relative, or no reviewed version exists in history.",
       "source_span": [
         81,
@@ -65,7 +65,7 @@
     },
     {
       "item": "collect_approval_candidates",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
       "source_span": [
         118,

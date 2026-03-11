@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "git_show",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Retrieve the contents of a file at a given Git revision by shelling out to `git show <revision>:<repo_relative_path>`. Runs git in repo_root as working directory, captures stdout, suppresses stderr. Returns None if git is unavailable, the command fails (e.g. file doesn't exist at that revision), or stdout is not valid UTF-8.",
       "source_span": [
         13,
@@ -17,7 +17,7 @@
     },
     {
       "item": "git_log_revisions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return commit hashes that touched a file, most recent first, by shelling out to `git log --follow --format=%H -<limit> -- <path>`. Runs in repo_root, captures stdout, suppresses stderr. Returns at most `limit` entries. Uses --follow to track renames. Returns empty vec if git is unavailable or the file has no history.",
       "source_span": [
         35,
