@@ -65,14 +65,12 @@ pub fn find_repo_root(from: &Path) -> Option<PathBuf> {
         }
         // Stop at filesystem boundaries unless explicitly allowed.
         #[cfg(unix)]
-        if !cross_fs {
-            if let Some(start) = start_dev {
-                if let Ok(meta) = std::fs::metadata(&dir) {
-                    if meta.dev() != start {
-                        return None;
-                    }
-                }
-            }
+        if !cross_fs
+            && let Some(start) = start_dev
+            && let Ok(meta) = std::fs::metadata(&dir)
+            && meta.dev() != start
+        {
+            return None;
         }
     }
 }

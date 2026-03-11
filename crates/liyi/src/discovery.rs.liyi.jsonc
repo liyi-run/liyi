@@ -36,7 +36,7 @@
         78
       ],
       "tree_path": "fn::find_repo_root",
-      "source_hash": "sha256:137dd90d93ff695fb4b56c7933ec59d43c25a0991df83b5025e86ea346f766cf",
+      "source_hash": "sha256:7ecd55269ab7598f9bfff4c957b74ac0646bc96072ffaec9a7a330ad9adb30d2",
       "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"
@@ -47,8 +47,8 @@
       "reviewed": true,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
-        90,
-        194
+        88,
+        192
       ],
       "tree_path": "fn::discover",
       "source_hash": "sha256:bbf8f0dbae10a6ccccac3e288b8bc72b6c5563678e4584556920135e205ff1a1",
