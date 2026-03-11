@@ -11,7 +11,7 @@ use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
-use crate::tree_path::{detect_language, resolve_tree_path};
+use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -445,6 +445,10 @@ fn check_sidecar(
                             if fix {
                                 item.source_hash = Some(computed_hash.clone());
                                 item.source_anchor = Some(computed_anchor.clone());
+                                let lang = detect_language(&entry.source_path);
+                                if let Some(l) = lang {
+                                    item.tree_path = compute_tree_path(&source_content, item.source_span, l);
+                                }
                                 modified = true;
                             }
                             diagnostics.push(Diagnostic {
@@ -499,6 +503,9 @@ fn check_sidecar(
                                             item.source_hash = Some(h);
                                             item.source_anchor = Some(a);
                                         }
+                                        if let Some(l) = lang {
+                                            item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        }
                                         modified = true;
                                     }
                                     diagnostics.push(Diagnostic {
@@ -526,6 +533,9 @@ fn check_sidecar(
                                         // Intentionally NOT updating hash —
                                         // leaves the spec stale so the next
                                         // `liyi check` flags it.
+                                        if let Some(l) = lang {
+                                            item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                        }
                                         modified = true;
                                     }
                                     let msg = if new_span != old_span {
@@ -558,6 +568,10 @@ fn check_sidecar(
                                             {
                                                 item.source_hash = Some(h);
                                                 item.source_anchor = Some(a);
+                                            }
+                                            let lang = detect_language(&entry.source_path);
+                                            if let Some(l) = lang {
+                                                item.tree_path = compute_tree_path(&source_content, new_span, l);
                                             }
                                             modified = true;
                                         }
@@ -639,6 +653,9 @@ fn check_sidecar(
                                         item.source_hash = Some(h);
                                         item.source_anchor = Some(a);
                                     }
+                                    if let Some(l) = lang {
+                                        item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                    }
                                     modified = true;
                                 }
                                 diagnostics.push(Diagnostic {
@@ -660,6 +677,9 @@ fn check_sidecar(
                                 // but leave hash stale.
                                 if fix {
                                     item.source_span = new_span;
+                                    if let Some(l) = lang {
+                                        item.tree_path = compute_tree_path(&source_content, new_span, l);
+                                    }
                                     modified = true;
                                 }
                                 diagnostics.push(Diagnostic {
@@ -916,6 +936,9 @@ fn check_sidecar(
                                         req.source_hash = Some(h);
                                         req.source_anchor = Some(a);
                                     }
+                                    if let Some(l) = lang {
+                                        req.tree_path = compute_tree_path(&source_content, new_span, l);
+                                    }
                                     modified = true;
                                 }
                                 diagnostics.push(Diagnostic {
@@ -935,6 +958,9 @@ fn check_sidecar(
                             } else {
                                 if fix {
                                     req.source_span = new_span;
+                                    if let Some(l) = lang {
+                                        req.tree_path = compute_tree_path(&source_content, new_span, l);
+                                    }
                                     modified = true;
                                 }
                                 diagnostics.push(Diagnostic {
