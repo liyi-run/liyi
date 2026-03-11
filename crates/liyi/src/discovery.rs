@@ -3,6 +3,9 @@ use std::path::{Path, PathBuf};
 
 use ignore::WalkBuilder;
 
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -34,18 +37,42 @@ const SIDECAR_SUFFIX: &str = ".liyi.jsonc";
 
 /// Walk up from `from` looking for a `.git/` directory.
 /// Returns the parent of `.git/` (i.e. the repo root).
+///
+/// Respects `GIT_DISCOVERY_ACROSS_FILESYSTEM`. When the variable is unset or
+/// `"0"`, the search stops at filesystem boundaries (different `st_dev`),
+/// matching Git's default behaviour. Set the variable to `"1"` to allow
+/// crossing mount points.
 pub fn find_repo_root(from: &Path) -> Option<PathBuf> {
+    let cross_fs = std::env::var("GIT_DISCOVERY_ACROSS_FILESYSTEM")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"));
+
     let mut dir = if from.is_file() {
         from.parent()?.to_path_buf()
     } else {
         from.to_path_buf()
     };
+
+    #[cfg(unix)]
+    let start_dev = std::fs::metadata(&dir).ok().map(|m| m.dev());
+
     loop {
         if dir.join(".git").is_dir() {
             return Some(dir);
         }
         if !dir.pop() {
             return None;
+        }
+        // Stop at filesystem boundaries unless explicitly allowed.
+        #[cfg(unix)]
+        if !cross_fs {
+            if let Some(start) = start_dev {
+                if let Ok(meta) = std::fs::metadata(&dir) {
+                    if meta.dev() != start {
+                        return None;
+                    }
+                }
+            }
         }
     }
 }
@@ -222,6 +249,7 @@ fn pathdiff(path: &Path, base: &Path) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     use std::fs;
     use tempfile::TempDir;
 
@@ -238,6 +266,31 @@ mod tests {
     fn find_repo_root_returns_none_when_missing() {
         let tmp = TempDir::new().unwrap();
         assert_eq!(find_repo_root(tmp.path()), None);
+    }
+
+    #[test]
+    fn find_repo_root_works_with_cross_fs_envvar() {
+        let tmp = TempDir::new().unwrap();
+        let nested = tmp.path().join("a/b/c");
+        fs::create_dir_all(&nested).unwrap();
+        fs::create_dir_all(tmp.path().join(".git")).unwrap();
+
+        // Same filesystem — should find root regardless of envvar value.
+        // SAFETY: test binary is single-threaded for this test; no other
+        // thread reads GIT_DISCOVERY_ACROSS_FILESYSTEM concurrently.
+        unsafe {
+            env::set_var("GIT_DISCOVERY_ACROSS_FILESYSTEM", "0");
+        }
+        assert_eq!(find_repo_root(&nested), Some(tmp.path().to_path_buf()));
+
+        unsafe {
+            env::set_var("GIT_DISCOVERY_ACROSS_FILESYSTEM", "1");
+        }
+        assert_eq!(find_repo_root(&nested), Some(tmp.path().to_path_buf()));
+
+        unsafe {
+            env::remove_var("GIT_DISCOVERY_ACROSS_FILESYSTEM");
+        }
     }
 
     #[test]
