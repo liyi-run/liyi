@@ -680,7 +680,7 @@ The primary mechanism for transitioning intent from "agent-inferred" to "human-a
 - Interactive by default when stdin is a TTY: show intent + source span, prompt `[y]es / [n]o / [e]dit / [s]kip`.
 - Batch mode via `--yes` or when non-TTY.
 - `--dry-run`, `--item <name>` flags.
-- Reanchors on approval (fills `source_hash`, `source_anchor`).
+- Fills `source_hash` and `source_anchor` on approval.
 
 ### M3.2. `liyi init` — scaffold command ✅
 

@@ -21,10 +21,10 @@
       "intent": "=doc",
       "source_span": [
         26,
-        242
+        228
       ],
       "tree_path": "fn::main",
-      "source_hash": "sha256:a11828b49d8e7c5b144423442c9bab41b1d84aff99c551e159e0c03558f70b06",
+      "source_hash": "sha256:5c447be7165dcba8bfd3d08fff588db7b2d95309ec9c474aa30487deeec02d49",
       "source_anchor": "fn main() {"
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        248,
-        250
+        234,
+        236
       ],
       "tree_path": "fn::is_tty",
       "source_hash": "sha256:36dcd447c8fa9e666c6682395c3148c216b7c07dce8cc88f3d76f90714207ccd",

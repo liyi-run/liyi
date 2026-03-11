@@ -6,13 +6,13 @@
     {
       "item": "resolve_reanchor_targets",
       "reviewed": false,
-      "intent": "Expand a list of file and directory paths into concrete .liyi.jsonc file paths. Directories are walked recursively respecting .gitignore and .liyiignore. Files are included directly. Non-existent paths produce an error. Results are sorted and deduplicated.",
+      "intent": "Backward-compatible alias that delegates to `discovery::resolve_sidecar_targets`.",
       "source_span": [
-        15,
-        40
+        11,
+        13
       ],
       "tree_path": "fn::resolve_reanchor_targets",
-      "source_hash": "sha256:7e38409f96830a3b46075be4b7055db02c4a7a7ed388923588570bba01bbcf25",
+      "source_hash": "sha256:da4d96d82f119c72456ff6b56219b8c109c2b2a2a26f1282967e6317b30e00c8",
       "source_anchor": "pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
     },
     {
@@ -20,18 +20,18 @@
       "reviewed": false,
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and rehash. Otherwise, for every spec: if tree_path is non-empty and a tree-sitter grammar is available, locate the item by structural identity and update the span; then recompute hash/anchor. Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
-        55,
-        156
+        28,
+        129
       ],
       "tree_path": "fn::run_reanchor",
       "source_hash": "sha256:3ee785c5a09ff156f5e606425771ab8c12f43445a62c48cc8be659ad7351e5d6",
       "source_anchor": "pub fn run_reanchor(",
       "related": {
         "tool-managed-fields": null,
-        "fix-never-modifies-human-fields": null,
         "tree-path-empty-fallback": null,
         "liyi-sidecar-naming-convention": null,
-        "tree-path-reanchor-behavior": null
+        "fix-never-modifies-human-fields": null,
+        "tree-path-fix-behavior": null
       }
     }
   ]

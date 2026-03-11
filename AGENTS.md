@@ -23,14 +23,14 @@ When writing or modifying code:
 2. When module-level invariants are apparent, write an `@liyi:module` block — in the directory's existing module doc (`README.md`, `doc.go`, `mod.rs` doc comment, etc.) or in a dedicated `LIYI.md`. Use the doc markup language's comment syntax for the marker.
 3. If a source item has a `@liyi:related <name>` annotation, record the dependency in `.liyi.jsonc` as `"related": {"<name>": null}`. The tool fills in the requirement's current hash.
 4. For each `@liyi:requirement <name>` block encountered, ensure it has a corresponding entry in the co-located `.liyi.jsonc` with `"requirement"` and `"source_span"`. (The tool fills in `"source_hash"`.)
-5. If a spec has `"related"` edges referencing a requirement, do not overwrite the requirement text during inference. Re-anchor the spec (update `source_span`) but preserve the `"related"` edges. Do not write `source_hash` — the tool fills it in.
+5. If a spec has `"related"` edges referencing a requirement, do not overwrite the requirement text during inference. Update the spec (update `source_span`) but preserve the `"related"` edges. Do not write `source_hash` — the tool fills it in.
 6. Only generate adversarial tests from items that have a `@liyi:intent` annotation in source or `"reviewed": true` in the sidecar (i.e., human-reviewed intent). When `@liyi:intent` is present in source, use its prose (or the docstring for `=doc`) as the authoritative intent for test generation.
 7. Tests should target boundary conditions, error-handling gaps, property violations, and semantic mismatches. Prioritize tests a subtly wrong implementation would fail.
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
 10. When `liyi check` reports stale items, choose one of two paths:
     - **Direct re-inference** (preferred during interactive editing with few stale items): re-read the source, update `source_span` and `intent` in the sidecar, leave `"reviewed"` unset. Appropriate when you are the agent that just made the change, the number of stale items is small, and the changes are straightforward.
-    - **Triage** (preferred for batch workflows, CI, or when many items are stale): assess each item — is the change cosmetic, semantic, or an intent violation? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in `suggested_intent`. For intent violations, flag for human review. Prefer triage when stale items have `"reviewed": true` or `@liyi:intent` in source — these carry human-vouched intent that deserves explicit assessment, not silent re-inference.
+    - **Triage** (preferred for batch workflows, CI, or when many items are stale): assess each item — is the change cosmetic, semantic, or an intent violation? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-fix. For semantic changes, propose updated intent in `suggested_intent`. For intent violations, flag for human review. Prefer triage when stale items have `"reviewed": true` or `@liyi:intent` in source — these carry human-vouched intent that deserves explicit assessment, not silent re-inference.
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. Do not commit with unresolved coverage gaps — CI will reject it.
 
 ### `.liyi.jsonc` Schema (v0.1)
@@ -104,7 +104,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
+          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi check --fix — agents should not produce this."
         },
         "source_anchor": {
           "type": "string",
@@ -128,7 +128,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         },
         "_hints": {
           "type": "object",
-          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi reanchor after initial review. Tools MUST NOT rely on any specific shape."
+          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi check --fix after initial review. Tools MUST NOT rely on any specific shape."
         }
       }
     },
@@ -149,7 +149,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. Computed by liyi reanchor or the linter."
+          "description": "Tool-managed. Computed by liyi check --fix."
         },
         "source_anchor": {
           "type": "string",
@@ -215,8 +215,8 @@ When `liyi check` reports stale items, the agent assesses each and writes the re
     },
     "action": {
       "type": "string",
-      "enum": ["auto-reanchor", "update-intent", "fix-code-or-update-intent", "manual-review"],
-      "description": "Recommended action. auto-reanchor for cosmetic, update-intent for semantic, fix-code-or-update-intent for intent-violation, manual-review for unclear."
+      "enum": ["auto-fix", "update-intent", "fix-code-or-update-intent", "manual-review"],
+      "description": "Recommended action. auto-fix for cosmetic, update-intent for semantic, fix-code-or-update-intent for intent-violation, manual-review for unclear."
     },
     "summary": {
       "type": "object",

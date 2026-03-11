@@ -31,8 +31,8 @@ liyi check --root .
 ## 工作原理
 
 1. **由智能体推断意图** — 当今的智能体会自动读取 `AGENTS.md`，于是便掌握了《立意》设计模式。在正常开发流程中，它们便会自动为每个代码条目维护 `.liyi.jsonc` sidecar 文件，包含 `source_span` 和自然语言 `intent`。如果没有自动维护，也总可以明确告诉它这么干。
-2. **`liyi check`** — 为智能体提供的源码区间计算内容哈希，检测内容是否过时、行号是否偏移、是否被复核过，并追踪需求边。零网络访问、零 LLM 依赖、行为完全确定。
-3. **`liyi reanchor`** — 在有意的代码变更后重新计算区间哈希。不修改意图或复核状态。
+2. **`liyi check`** — 为智能体提供的源码区间计算内容哈希，检测内容是否过时、行号是否偏移、是否被复核过，并追踪需求边。零网络访问、零 LLM 依赖、行为完全确定。加 `--fix` 可自动修正偏移区间、填充缺失哈希、计算 `tree_path`。
+3. **`liyi migrate`** — 当 schema 版本变更时升级 sidecar 文件。幂等。
 4. **由人类复核** — 在 `.liyi.jsonc` 中设置 `"reviewed": true` 以批准，或在源码中添加 `@liyi:intent` 以明确给出人类版本。
 
 ## 渐进式采用
@@ -56,10 +56,8 @@ liyi check [OPTIONS] [PATHS]...
     --fail-on-req-changed <true|false> 对已变更需求报错（默认：true）
     --root <PATH>                   覆盖仓库根目录
 
-liyi reanchor [FILE]
-    --item <NAME>     指定目标条目
-    --span <S,E>      覆盖区间（1 起始，闭区间）
-    --migrate         执行 schema 版本迁移
+liyi migrate [FILE|DIR]...
+    升级 sidecar schema 版本
 ```
 
 ## 退出状态码

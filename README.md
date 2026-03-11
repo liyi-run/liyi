@@ -30,8 +30,8 @@ liyi check --root .
 ## How It Works
 
 1. **Agent infers intent** — today's agents automatically read `AGENTS.md`, which teaches them the 立意 pattern. During normal development they maintain `.liyi.jsonc` sidecar files for each code item, with `source_span` and natural-language `intent`. If they don't do it automatically, you can always tell them to.
-2. **`liyi check`** — hashes source spans, detects staleness and shifts, checks review status, tracks requirement edges. Zero network, zero LLM, fully deterministic.
-3. **`liyi reanchor`** — re-hashes spans after intentional code changes. Never modifies intent or review state.
+2. **`liyi check`** — hashes source spans, detects staleness and shifts, checks review status, tracks requirement edges. Zero network, zero LLM, fully deterministic. With `--fix`, auto-corrects shifted spans, fills missing hashes, and computes `tree_path`.
+3. **`liyi migrate`** — upgrades sidecar files when the schema version changes. Idempotent.
 4. **Human reviews** — sets `"reviewed": true` in the sidecar to approve, or adds `@liyi:intent` in source to provide the authoritative human version.
 
 ## Progressive Adoption
@@ -55,10 +55,8 @@ liyi check [OPTIONS] [PATHS]...
     --fail-on-req-changed <true|false> Fail on changed requirements (default: true)
     --root <PATH>                   Override repo root
 
-liyi reanchor [FILE]
-    --item <NAME>     Target a specific item
-    --span <S,E>      Override span (1-indexed, inclusive)
-    --migrate         Schema version migration
+liyi migrate [FILE|DIR]...
+    Upgrade sidecar schema version
 ```
 
 ## Exit Codes

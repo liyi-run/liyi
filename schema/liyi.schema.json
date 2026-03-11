@@ -64,7 +64,7 @@
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
+          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi check --fix — agents should not produce this."
         },
         "source_anchor": {
           "type": "string",
@@ -88,7 +88,7 @@
         },
         "_hints": {
           "type": "object",
-          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi reanchor after initial review. Tools MUST NOT rely on any specific shape."
+          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi check --fix after initial review. Tools MUST NOT rely on any specific shape."
         }
       }
     },
@@ -109,7 +109,7 @@
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. Computed by liyi reanchor or the linter."
+          "description": "Tool-managed. Computed by liyi check --fix."
         },
         "source_anchor": {
           "type": "string",

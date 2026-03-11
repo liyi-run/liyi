@@ -30,26 +30,14 @@
     {
       "item": "Commands",
       "reviewed": false,
-      "intent": "Enumerate all CLI subcommands (Check, Reanchor, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --item requires --span, file is required unless --migrate, --level filters diagnostic output).",
+      "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --level filters diagnostic output).",
       "source_span": [
         28,
-        118
+        105
       ],
       "tree_path": "enum::Commands",
-      "source_hash": "sha256:383b23d5dbade566788d2673cb55fc05e8e7e33b70f4e2edd77df0245d09db65",
+      "source_hash": "sha256:94096c9cb7d64c3fd721c783da0c3f0482f6b548e317daac6b2c1d0ec902dd63",
       "source_anchor": "pub enum Commands {"
-    },
-    {
-      "item": "parse_span",
-      "reviewed": true,
-      "intent": "Parse a 'start,end' string into a [usize; 2] span, rejecting inputs that are not exactly two comma-separated unsigned integers.",
-      "source_span": [
-        121,
-        135
-      ],
-      "tree_path": "fn::parse_span",
-      "source_hash": "sha256:d57d01b6fb8d7fbefc54c62e3240b46d80cc2370a7d148811caad6d809b23977",
-      "source_anchor": "fn parse_span(s: &str) -> Result<[usize; 2], String> {"
     }
   ]
 }

@@ -5,7 +5,7 @@
 //! For example, `fn::add_money` or `impl::Money::fn::new`.
 //!
 //! When `tree_path` is populated and a tree-sitter grammar is available for
-//! the source language, `liyi reanchor` and `liyi check --fix` use it to
+//! the source language, `liyi check --fix` uses it to
 //! locate items by structural identity, making span recovery deterministic
 //! across formatting changes, import additions, and line reflows.
 

@@ -11,7 +11,7 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 **Deliverables:**
 
 1. `liyi check` — the CI linter binary (Rust) ✅
-2. `liyi reanchor` — the span re-hashing tool (subcommand of the same binary) ✅
+2. `liyi check --fix` — the span fixing tool (fills hashes, corrects shifts, computes tree_path) ✅
 3. `liyi.schema.json` — the JSON Schema for `.liyi.jsonc` v0.1 ✅
 4. Agent instruction — the ~12-line AGENTS.md paragraph ✅
 5. Demo repo — the linter's own codebase, dogfooded with `.liyi.jsonc` specs and `@liyi:module` markers ✅
@@ -25,14 +25,14 @@ This document is the implementation plan for 立意 v0.1 — the CI linter, the 
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| `cli.rs` | ✅ Done | `check`, `reanchor`, `init`, `approve` subcommands, all planned flags |
+| `cli.rs` | ✅ Done | `check`, `init`, `approve`, `migrate` subcommands, all planned flags |
 | `discovery.rs` | ✅ Done | `.liyiignore` support, ambiguous sidecar detection, scope filtering |
 | `sidecar.rs` | ✅ Done | JSONC comment stripping, serde, `deny_unknown_fields`, `tree_path` field |
 | `markers.rs` | ✅ Done | All 7 marker types, fullwidth normalization, multilingual aliases |
 | `hashing.rs` | ✅ Done | SHA-256, CRLF normalization, all `SpanError` variants |
 | `shift.rs` | ✅ Done | ±100-line scan with anchor hint shortcut |
 | `check.rs` | ✅ Done | Two-pass logic, `--fix` write-back, `--dry-run`, tree-sitter span recovery via `tree_path`, semantic drift protection, all 4 post-pass diagnostics wired |
-| `reanchor.rs` | ✅ Done | Targeted + batch re-hashing, multi-file/directory support, `--migrate` scaffold, tree-sitter span recovery |
+| `reanchor.rs` | ✅ Done | Internal module for batch re-hashing and `--migrate` logic, now invoked via `check --fix` and `migrate` subcommands |
 | `tree_path.rs` | ✅ Done | Tree-sitter structural identity & span recovery (R6). Resolve, compute, auto-populate. Rust grammar. |
 | `diagnostics.rs` | ✅ Done | All diagnostic types, formatting, exit codes, summary line output |
 | `schema.rs` | ✅ Done | Accepts `"0.1"` only, migration scaffold |
@@ -80,7 +80,7 @@ All `DiagnosticKind` variants are defined and emitted:
 |------|--------|-------|
 | `shift_proptest.rs` | ✅ Done | 4 property-based tests: insert/delete shifts, content modification, hint agreement |
 | CI (GitHub Actions) | ✅ Done | Workflow: `cargo test`, `cargo clippy`, `cargo fmt --check`, `liyi check --root .` (dogfood) |
-| Dogfooding locally | ✅ Done | Full loop confirmed: agent changes code → `liyi check` detects staleness → agent reanchors specs. CI wired. |
+| Dogfooding locally | ✅ Done | Full loop confirmed: agent changes code → `liyi check` detects staleness → agent fixes specs. CI wired. |
 | Summary line output | ✅ Done | Prints "N current, M stale, K unreviewed, ..." after diagnostics |
 | `liyi init` subcommand | ✅ Done | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
 | `liyi approve` subcommand | ✅ Done | Batch (`--yes`) and interactive modes, `--dry-run`, `--item` filter |
@@ -127,13 +127,13 @@ All `DiagnosticKind` variants are defined and emitted:
      │  - hash   │ └────────────────────┘
      │    spans  │
      │  - check  │         ┌────────────────────┐
-     │    review │         │ liyi reanchor      │
-     │  - resolve│         │                    │
-     │    related│         │ Fills source_hash, │
-     │    edges  │         │ source_anchor from │
-     │           │         │ actual source file │
-     │ Exit 0/1/2│         │ bytes. No LLM.     │
-     └───────────┘         └────────────────────┘
+     │    review │
+     │  - resolve│
+     │    related│
+     │    edges  │
+     │           │
+     │ Exit 0/1/2│
+     └───────────┘
 
      Post-MVP triage workflow:
      ┌────────────────────────────────────────────┐
@@ -144,7 +144,7 @@ All `DiagnosticKind` variants are defined and emitted:
      │  liyi triage --validate                     │
      │    → schema check                           │
      │  liyi triage --apply                        │
-     │    → auto-reanchor cosmetic items            │
+     │    → auto-fix cosmetic items                 │
      │    → present semantic/violation for review   │
      └────────────────────────────────────────────┘
 ```
@@ -156,15 +156,14 @@ A single Rust binary with subcommands:
 | Subcommand | Purpose |
 |---|---|
 | `liyi check [paths...]` | Lint: staleness, review status, requirement tracking |
-| `liyi check --fix` | Lint + auto-correct shifted spans, fill missing hashes |
+| `liyi check --fix` | Lint + auto-correct shifted spans, fill missing hashes, compute tree_path |
 | `liyi check --json` | Machine-readable output with full context for each stale item (feeds `liyi triage`) |
 | `liyi approve [paths...] [--yes]` | Interactive review: mark specs as human-approved |
 | `liyi init [source-file]` | Scaffold AGENTS.md or skeleton `.liyi.jsonc` sidecar |
-| `liyi reanchor <files-or-dirs...> [--item <name> --span <s,e>]` | Manual span re-hashing (accepts files or directories, recursive) |
-| `liyi reanchor --migrate` | Schema version migration (no-op in 0.1, scaffolded) |
+| `liyi migrate <files-or-dirs...>` | Schema version migration (no-op in 0.1, scaffolded) |
 | `liyi triage --prompt` | Assemble a self-contained LLM prompt from stale items (post-MVP) |
 | `liyi triage --validate <file>` | Validate an agent-produced triage report against the schema (post-MVP) |
-| `liyi triage --apply [file]` | Auto-reanchor cosmetic items, present remaining for review (post-MVP) |
+| `liyi triage --apply [file]` | Auto-fix cosmetic items, present remaining for review (post-MVP) |
 | `liyi triage --summary [file]` | Human-readable summary of a triage report (post-MVP) |
 
 ### Crate structure
@@ -183,7 +182,7 @@ liyi/
 │   │   │   ├── markers.rs       ← Source marker scanning (@liyi:*, normalization)
 │   │   │   ├── hashing.rs       ← source_span → SHA-256, anchor extraction
 │   │   │   ├── shift.rs         ← Span-shift detection
-│   │   │   ├── reanchor.rs      ← reanchor subcommand logic
+│   │   │   ├── reanchor.rs      ← internal re-hashing and migrate logic
 │   │   │   ├── tree_path.rs     ← Tree-sitter structural identity & span recovery
 │   │   │   ├── diagnostics.rs   ← Diagnostic types, formatting, exit codes
 │   │   │   ├── schema.rs        ← Version validation, migration scaffold
@@ -255,20 +254,11 @@ enum Command {
         root: Option<PathBuf>,
     },
 
-    /// Re-hash source spans in sidecar files
-    Reanchor {
-        /// Sidecar files or directories to reanchor (recursive)
+    /// Migrate sidecar schema version
+    Migrate {
+        /// Sidecar files or directories to migrate (recursive)
         files: Vec<PathBuf>,
-
-        /// Target a specific item by name
-        #[arg(long)]
-        item: Option<String>,
-
-        /// Override span (start,end)
-        #[arg(long, value_parser = parse_span)]
-        span: Option<(usize, usize)>,
-
-        /// Migrate sidecar to current schema version
+    },
         #[arg(long)]
         migrate: bool,
     },
@@ -572,13 +562,13 @@ For each `.liyi.jsonc` in scope:
    e. Check `@liyi:trivial` / `@liyi:ignore` within or immediately before the span. If found, mark as trivial/ignored (skip review requirement).
    f. If `related` is present: for each requirement name, look up in the pass-1 map. If not found → `ERROR: unknown requirement`. If found and hash differs from recorded hash → `REQ CHANGED`.
 5. For each `Spec::Requirement`:
-   a. Hash the `source_span`. If `source_hash` present and mismatches → STALE (requirement text changed but sidecar not updated — run `liyi reanchor`).
+   a. Hash the `source_span`. If `source_hash` present and mismatches → STALE (requirement text changed but sidecar not updated — run `liyi check --fix`).
 6. Report requirements from pass 1 that have no referencing items (informational).
 
 **`--fix` behavior (integrated into pass 2):**
 
 When `--fix` is active:
-- Fill in missing `source_hash` and `source_anchor` (same as `reanchor`).
+- Fill in missing `source_hash` and `source_anchor` (same behavior as `check --fix`).
 - Auto-correct SHIFTED spans (write new span, recompute hash/anchor).
 - Attempt tree-path re-resolution **before** validating span boundaries — if `tree_path` is set and the current `source_span` is past EOF or otherwise invalid, resolve via tree-sitter first.
 - Write modified sidecars back to disk.
@@ -611,23 +601,22 @@ enum ExitCode {
 
 ---
 
-### 8. `reanchor.rs` — Reanchor Subcommand
+### 8. `reanchor.rs` — Internal Re-hashing Module
 
-**Purpose:** Re-hash source spans in sidecar files. Manual tool for fixing spans after line shifts. Accepts one or more sidecar files or directories (recursive). When `tree_path` is populated, uses tree-sitter to locate items by structural identity before re-hashing.
+**Purpose:** Internal module for re-hashing source spans in sidecar files. Invoked by `liyi check --fix` (for span correction and hash filling) and `liyi migrate` (for schema version upgrades). When `tree_path` is populated, uses tree-sitter to locate items by structural identity before re-hashing.
 
 **Behavior:**
 
 1. Parse the target sidecar(s). If a directory is given, discover all `.liyi.jsonc` files under it recursively.
-2. If `--item` and `--span` are specified: find the named item, update its span, recompute hash/anchor.
-3. If neither: for every spec in the sidecar:
+2. For every spec in the sidecar:
    a. If `tree_path` is non-empty and a tree-sitter grammar is available for the source language: parse the source file, locate the item by structural identity, update `source_span` to the item's current line range, recompute hash/anchor. This handles formatting changes, import additions, and any line-shifting edits.
    b. Otherwise: recompute hash/anchor from the source file at the recorded span (existing behavior). This handles "code changed at the same span" (human confirms intent still holds → re-hash).
-4. If `--migrate`: update `"version"` to current (no-op in 0.1, but the scaffold ensures the flag exists and the code path handles future versions).
-5. Write modified sidecar back.
+3. If migrating: update `"version"` to current (no-op in 0.1, but the scaffold ensures the code path handles future versions).
+4. Write modified sidecar back.
 
 **Constraints:**
-- `reanchor` never modifies `intent`, `reviewed`, or `related`.
-- If the source file doesn't exist, emit an error (can't reanchor an orphaned spec).
+- Never modifies `intent`, `reviewed`, or `related`.
+- If the source file doesn't exist, emit an error (can't fix an orphaned spec).
 - Idempotent: running twice produces the same output.
 
 **Size estimate:** ~60 lines.
@@ -773,7 +762,7 @@ The convention defines 7 marker types that the linter recognizes in source files
 ## Key Constraints
 
 ### 1. No language-specific parsing (core path)
-The linter's core check path reads line ranges and hashes bytes. It does not parse any programming language. Source markers are found by string matching on individual lines (after normalization). This is the core design constraint that makes the tool work with any language. Tree-sitter is used **only** for `tree_path` span recovery in `liyi reanchor` and `liyi check --fix` — it is an optional enhancement, not a requirement. When tree-sitter has no grammar for a language (or `tree_path` is empty), the tool falls back to the language-agnostic line-number behavior.
+The linter's core check path reads line ranges and hashes bytes. It does not parse any programming language. Source markers are found by string matching on individual lines (after normalization). This is the core design constraint that makes the tool work with any language. Tree-sitter is used **only** for `tree_path` span recovery in `liyi check --fix` — it is an optional enhancement, not a requirement. When tree-sitter has no grammar for a language (or `tree_path` is empty), the tool falls back to the language-agnostic line-number behavior.
 
 ### 2. No LLM calls, no network access
 The linter is fully offline and deterministic. SHA-256 hashing, file I/O, string matching. No API keys, no configuration for models, no telemetry.
@@ -789,7 +778,7 @@ Configuration is expressed through:
 | Field | Written by | Never written by |
 |---|---|---|
 | `item`, `intent`, `source_span`, `confidence`, `related` (names) | Agent | — |
-| `source_hash`, `source_anchor`, `tree_path`, `related` (hashes) | `liyi reanchor` / `liyi check --fix` | Agent (may write initial `tree_path`), human |
+| `source_hash`, `source_anchor`, `tree_path`, `related` (hashes) | `liyi check --fix` | Agent (may write initial `tree_path`), human |
 | `reviewed` | Human (CLI / IDE) | Agent (security model) |
 
 ### 5. Exit code contract
@@ -815,7 +804,7 @@ All must-have and nice-to-have items are now complete.
 
 #### R1. `liyi approve` — interactive review command ✅
 
-Implemented in `crates/liyi/src/approve.rs`. Interactive by default when stdin is a TTY (show intent + source span, prompt y/n/s). Batch mode via `--yes` or when non-TTY. `--dry-run`, `--item <name>` flags. Reanchors on approval (fills `source_hash`, `source_anchor`).
+Implemented in `crates/liyi/src/approve.rs`. Interactive by default when stdin is a TTY (show intent + source span, prompt y/n/s). Batch mode via `--yes` or when non-TTY. `--dry-run`, `--item <name>` flags. Fills `source_hash` and `source_anchor` on approval.
 
 #### R2. `liyi init` — scaffold command ✅
 
@@ -938,7 +927,7 @@ The linter's own codebase has `.liyi.jsonc` specs. CI runs `liyi check`. This is
 
 1. **`liyi check` runs on a real codebase** — the linter's own source — and produces correct diagnostics. ✅ (43 unit + 22 golden/integration tests pass)
 2. **All golden-file tests pass** — covering every diagnostic in the catalog. ✅ (all 15+ planned fixtures exist)
-3. **`liyi reanchor` re-hashes spans** correctly, including `--item`/`--span` targeting. ✅
+3. **`liyi check --fix` fills tool-managed fields** correctly. ✅
 4. **The agent instruction works** — an LLM reading `AGENTS.md` produces valid `.liyi.jsonc` files that `liyi check` can lint. ✅
 5. **CI is green** — GitHub Actions runs `liyi check` on every push. ✅
 6. **The binary is small** — single static binary, <5 MB, zero runtime dependencies. ✅

@@ -372,13 +372,13 @@ The `source` path is relative to the repository root — the same path you'd pas
 }
 ```
 
-`source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi reanchor`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
+`source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi check --fix`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
 
 <!-- @liyi:requirement version-field-required -->
-`"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, structured fields in post-0.1). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi reanchor --migrate` will upgrade sidecar files in place.
+`"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, structured fields in post-0.1). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi migrate` will upgrade sidecar files in place.
 <!-- @liyi:end-requirement version-field-required -->
 
-**`liyi reanchor --migrate` behavior.** When the schema version changes (e.g., 0.1 → 0.2), `--migrate` reads each `.liyi.jsonc`, adds any newly required fields with default values, removes deprecated fields, updates `"version"` to the new version, and writes the file back. It is idempotent — running it twice produces the same output. It does not re-hash spans or re-infer intent; it only transforms the schema envelope. Migration is always additive in 0.x: no field present in 0.1 will change meaning, only new fields may appear.
+**`liyi migrate` behavior.** When the schema version changes (e.g., 0.1 → 0.2), `--migrate` reads each `.liyi.jsonc`, adds any newly required fields with default values, removes deprecated fields, updates `"version"` to the new version, and writes the file back. It is idempotent — running it twice produces the same output. It does not re-hash spans or re-infer intent; it only transforms the schema envelope. Migration is always additive in 0.x: no field present in 0.1 will change meaning, only new fields may appear.
 
 After human review — either the human adds `@liyi:intent` in the source file (see *Source-level intent* below), or sets `"reviewed": true` in the sidecar via CLI or IDE code action. Both paths mark the item as reviewed. When `"reviewed"` is set to `true`, `"confidence"` is removed — a human voucher replaces agent self-assessment. If the source later changes and the agent re-infers (producing a new unreviewed spec), `"confidence"` reappears:
 
@@ -429,7 +429,7 @@ Item-level intent carries machine metadata → JSONC wins.
 <!-- @liyi:end-requirement source-span-semantics -->
 
 <!-- @liyi:requirement tool-managed-fields -->
-Both `source_hash` and `source_anchor` are **tool-managed fields**. The agent writes only `source_span` — the tool (`liyi reanchor`, or `liyi check --fix`) computes the hash and anchor deterministically from the source file. This is the same principle as not letting agents author lockfile checksums: the tool reads the actual bytes, so fabricated or hallucinated hashes are impossible.
+Both `source_hash` and `source_anchor` are **tool-managed fields**. The agent writes only `source_span` — the tool (`liyi check --fix`) computes the hash and anchor deterministically from the source file. This is the same principle as not letting agents author lockfile checksums: the tool reads the actual bytes, so fabricated or hallucinated hashes are impossible.
 <!-- @liyi:end-requirement tool-managed-fields -->
 
 The agent records each item's line range (`source_span`) when writing the spec. The linter reads those lines from the source file, hashes them, and compares against `source_hash`. This gives per-item staleness without the linter needing to parse any language — it just reads a slice of lines.
@@ -441,12 +441,12 @@ The correct mitigation is language-aware span anchoring — resolving spec posit
 Without a `tree_path`, the fallback is: batch false positives on any line-shifting edit, corrected on the next agent inference pass. The damage is transient and mechanical — the agent re-reads the file, re-records spans, re-hashes — but noisy in CI until it does. Still fewer false positives than file-level hashing (where a docstring typo marks every spec in the file stale with no way to distinguish which items actually changed).
 
 <!-- @liyi:requirement span-shift-heuristic -->
-**Span-shift detection (included in 0.1).** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi reanchor`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
+**Span-shift detection (included in 0.1).** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi check --fix`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
 <!-- @liyi:end-requirement span-shift-heuristic -->
 
 ### Structural identity via `tree_path`
 
-`tree_path` is an optional field on both `itemSpec` and `requirementSpec` that provides **structural identity** — matching a spec to its source item by AST node path rather than line number. When present and non-empty, `liyi reanchor` and `liyi check --fix` use tree-sitter to locate the item by its structural position in the parse tree, then update `source_span` to the item's current line range. This makes span recovery deterministic across formatting changes, import additions, line reflows, and any other edit that moves lines without changing the item's identity.
+`tree_path` is an optional field on both `itemSpec` and `requirementSpec` that provides **structural identity** — matching a spec to its source item by AST node path rather than line number. When present and non-empty, `liyi check --fix` uses tree-sitter to locate the item by its structural position in the parse tree, then update `source_span` to the item's current line range. This makes span recovery deterministic across formatting changes, import additions, line reflows, and any other edit that moves lines without changing the item's identity.
 
 **Format.** A `tree_path` is a `::` delimited path of tree-sitter node kinds and name tokens that uniquely identifies an item within a file. Examples:
 
@@ -464,15 +464,14 @@ The path identifies the item by node kind and name, not by position. The tool co
 
 **Quoting and injection.** Names containing spaces, `::`, or quotes are double-quoted with backslash escaping (`test::"add function"`). For multi-language files (M9), an injection marker `//lang` attaches to the preceding segment to cross a language boundary (`key::run//bash::fn::setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.2).
 
-**Behavior during reanchor and check.**
+**Behavior during check.**
 
-<!-- @liyi:requirement tree-path-reanchor-behavior -->
-1. `liyi reanchor`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found, update `source_span` to the node's line range, recompute `source_hash` and `source_anchor`. If not found (item was renamed or deleted), report an error — do not silently fall back.
-2. `liyi check --fix`: Same tree-sitter lookup. If the hash mismatches but the `tree_path` resolves to a valid node, update the span (the item moved but is still present). If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
-3. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
-<!-- @liyi:end-requirement tree-path-reanchor-behavior -->
+<!-- @liyi:requirement tree-path-fix-behavior -->
+1. `liyi check --fix`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found and the content is unchanged (pure positional shift), update `source_span`, `source_hash`, and `source_anchor`. If found but the content also changed (semantic drift), update `source_span` to track the item's location but leave `source_hash` unchanged — the spec remains stale for review. If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
+2. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
+<!-- @liyi:end-requirement tree-path-fix-behavior -->
 
-**Diagnostic clarity.** When a spec has no `tree_path` and the shift heuristic also fails, the diagnostic indicates why tree-path recovery was skipped — e.g., "no tree_path set, falling back to shift heuristic" — so that users can add the missing field or run `liyi reanchor` to auto-populate it. Diagnostics distinguish "no tree_path available" from "tree_path resolution failed (item may have been renamed or deleted)."
+**Diagnostic clarity.** When a spec has no `tree_path` and the shift heuristic also fails, the diagnostic indicates why tree-path recovery was skipped — e.g., "no tree_path set, falling back to shift heuristic" — so that users can run `liyi check --fix` to auto-populate it. Diagnostics distinguish "no tree_path available" from "tree_path resolution failed (item may have been renamed or deleted)."
 
 <!-- @liyi:requirement tree-path-empty-fallback -->
 **Empty string fallback.** When `tree_path` is `""` (empty string) or absent, the tool falls back to the current line-number-based behavior — span-shift heuristic, `source_anchor` matching, delta propagation. This accommodates:
@@ -481,7 +480,7 @@ The path identifies the item by node kind and name, not by position. The tool co
 - **Generated code** where tree-sitter may not produce useful node kinds.
 - **Complex or contrived cases** where the agent or human determines that a tree path is non-obvious or ambiguous.
 
-The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi reanchor` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
+The agent MAY set `tree_path` to `""` explicitly to signal "I considered structural identity and it doesn't apply here." Absence of the field is equivalent to `""`. `liyi check --fix` auto-populates `tree_path` for every spec where a clear structural path can be resolved from the current `source_span` and a supported tree-sitter grammar — agents need not set it manually. When the span doesn't correspond to a recognizable AST item (macros, generated code, unsupported languages), the tool leaves `tree_path` empty.
 <!-- @liyi:end-requirement tree-path-empty-fallback -->
 
 **Language support.** Tree-sitter support is grammar-dependent. Rust, Python, Go, JavaScript, and TypeScript are built-in. For unsupported languages, `tree_path` is left empty and the tool falls back to line-number behavior. Adding a language is a matter of adding its tree-sitter grammar crate and a small mapping of node kinds — no changes to the core protocol or schema.
@@ -636,7 +635,7 @@ No `intent` field — the requirement text lives at the source site, not duplica
 
 **Requirements can live anywhere:** in the source file near the code they govern, in `README.md` alongside `@liyi:module`, in a dedicated requirements file, or in doc comments. The linter scans all non-ignored files for the marker.
 
-**End-of-block markers.** The `@liyi:end-requirement <name>` marker closes a requirement block. The name must match the opening `@liyi:requirement <name>`. When both markers are present, the linter and reanchor tool pair them by name to deterministically compute `source_span` — this is the primary span recovery mechanism for files without tree-sitter support (e.g., Markdown). The end marker uses the same name syntax (parenthesized or whitespace-delimited), full-width normalization, and multilingual aliases as the opening marker:
+**End-of-block markers.** The `@liyi:end-requirement <name>` marker closes a requirement block. The name must match the opening `@liyi:requirement <name>`. When both markers are present, the linter pairs them by name to deterministically compute `source_span` — this is the primary span recovery mechanism for files without tree-sitter support (e.g., Markdown). The end marker uses the same name syntax (parenthesized or whitespace-delimited), full-width normalization, and multilingual aliases as the opening marker:
 
 | Alias | Language |
 |---|---|
@@ -728,31 +727,26 @@ Exit code: `--fail-on-req-changed` (default: true) — exit 1 if any reviewed sp
 
 This closes the **spec rot gap**: when requirements change, the requirement hash changes, and all items with `"related"` edges to that requirement are transitively flagged. The human reviews whether the code still satisfies the updated requirement. No silent re-inference over a potentially broken implementation — the requirement text is the anchor.
 
-### `liyi reanchor`
+### Tool-managed fields and `liyi check --fix`
 
-`source_span` is the only positional field the agent writes. `source_hash` and `source_anchor` are tool-managed — computed by `liyi reanchor` (or the linter on first run) from the actual source file. Humans never compute them by hand.
+`source_span` is the only positional field the agent writes. `source_hash`, `source_anchor`, and `tree_path` are tool-managed — computed by `liyi check --fix` from the actual source file. Humans never compute them by hand.
 
-`liyi reanchor` is also the tool that populates hashes for new entries. When an agent writes a sidecar with `source_span` but no `source_hash`, running `liyi reanchor` (or `liyi check --fix`) reads the source lines, computes the SHA-256, and fills in both `source_hash` and `source_anchor`. This means a fresh agent-written sidecar is incomplete until the tool runs — by design.
+`liyi check --fix` also populates hashes for new entries. When an agent writes a sidecar with `source_span` but no `source_hash`, running `liyi check --fix` reads the source lines, computes the SHA-256, and fills in `source_hash`, `source_anchor`, and `tree_path`. This means a fresh agent-written sidecar is incomplete until the tool runs — by design.
 
-For resolving CI failures without an agent pass, the `liyi reanchor` subcommand re-hashes existing spans. It accepts one or more sidecar files or directories (recursive):
+For resolving CI failures without an agent pass, `liyi check --fix` re-hashes existing spans. It accepts a `--root` flag or operates on the current directory:
 
 ```bash
-$ liyi reanchor src/billing/money.rs.liyi.jsonc
+$ liyi check --fix
   add_money [42, 58]: hash updated (source changed at same span)
   convert_currency [60, 85]: hash unchanged
-$ liyi reanchor crates/          # reanchor all sidecars under crates/
-$ liyi reanchor a.rs.liyi.jsonc b.rs.liyi.jsonc
+  billing_handler [10, 35]: ↕ SHIFTED [10,35]→[12,37], hash updated
 ```
 
-This handles the case where code at those lines changed but lines didn't shift — the human has reviewed the change and is confirming "the intent still holds." The tool computes the new hash; the human never touches it.
+This handles the common cases: missing hashes on fresh sidecars, positional shifts after line-changing edits, and re-hashing after the human has reviewed a change and confirmed "the intent still holds." The tool computes the new hash; the human never touches it.
 
-If lines shifted, the span points to wrong lines. Resolution paths:
+If lines shifted and tree-sitter recovery isn't available, `--fix` uses the span-shift heuristic (±100 lines, delta propagation) to auto-correct. If neither tree-sitter nor the heuristic can locate the item, the spec remains `STALE` for the agent or human to re-record the span.
 
-- **The agent finds it** — the standard path. The agent understands code structure, re-records the span.
-- **The human specifies it** — `liyi reanchor --item add_money --span 45,61`. The human looked it up in the editor ("go to definition"), the tool computes the hash.
-- **Post-MVP: `--find`** — simple heuristics (grep for `fn add_money`, `def add_money`, etc.) to locate the item and update the span. Not a parser, but covers the common case.
-
-`liyi reanchor` is a thin wrapper on the same hashing logic used by `liyi check`. No LLM calls.
+`liyi check --fix` is deterministic. No LLM calls.
 
 ### Prescriptive specs without code
 
@@ -971,7 +965,7 @@ The second case matters for the scaffold workflow (see *Tree-sitter item discove
 The source-level path (`@liyi:intent`) and the sidecar path (`"reviewed": true`) serve different needs:
 
 - **No `"reviewed"` field to forge.** The security concern — an agent writing `"reviewed": true` directly — dissolves. Review is visible in source diffs, attributable via `git blame` on the actual source file, and covered by CODEOWNERS. An agent would have to write `@liyi:intent` in source to fake review, which is conspicuous in code review.
-- **Merge conflicts become trivial.** If humans never touch the sidecar, it's fully regenerable — `liyi reanchor` after merge, zero human intervention. Same model as `Cargo.lock` or `pnpm-lock.yaml`.
+- **Merge conflicts become trivial.** If humans never touch the sidecar, it's fully regenerable — `liyi check --fix` after merge, zero human intervention. Same model as `Cargo.lock` or `pnpm-lock.yaml`.
 - **Review is visible where it matters.** A `@liyi:intent` block above a function is visible in the normal code review flow — no need to open a separate `.liyi.jsonc` diff tab.
 
 The sidecar retains: `"item"`, `"reviewed"` (optional, defaults to `false`), `"intent"` (the agent's *inferred* intent or `"=doc"`), `"source_span"`, `"source_hash"`, `"source_anchor"`, `"confidence"`, and `"related"`. The agent writes `"item"`, `"intent"`, `"source_span"`, `"confidence"`, and `"related"`. The tool fills in `"source_hash"` and `"source_anchor"`. The human (or CLI/IDE) sets `"reviewed": true`.
@@ -1321,7 +1315,7 @@ All three paths converge on the same report schema and the same `--validate` / `
 |---|---|---|
 | `liyi triage --prompt` | Assemble a self-contained prompt from `liyi check --json` output — includes stale items with full context, the triage schema, assessment instructions, and output format spec. Print to stdout. | No |
 | `liyi triage --validate <file>` | Validate an agent-produced triage report against the schema; check that every assessed item corresponds to a real stale item | No |
-| `liyi triage --apply [file]` | Auto-reanchor items with `cosmetic` verdict; present `semantic` items with suggested intents; flag `intent-violation` items for human review | No |
+| `liyi triage --apply [file]` | Auto-fix items with `cosmetic` verdict; present `semantic` items with suggested intents; flag `intent-violation` items for human review | No |
 | `liyi triage --summary [file]` | Print human-readable summary of a triage report | No |
 
 The `--prompt` flag is the bridge for CI/script pipelines that have an `llm` CLI or API wrapper but no full agentic framework:
@@ -1414,7 +1408,7 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 
 | Verdict | Meaning | Default action |
 |---|---|---|
-| `cosmetic` | Variable rename, reformatting, comment edit — no behavioral change | Auto-reanchor (no human review needed) |
+| `cosmetic` | Variable rename, reformatting, comment edit — no behavioral change | Auto-fix (no human review needed) |
 | `semantic` | Code legitimately evolved — intent is stale but code is correct | Update intent (human reviews suggested intent) |
 | `intent-violation` | Code contradicts declared intent — either code is wrong or intent is wrong | Fix code or update intent (human decides) |
 | `unclear` | LLM can't determine with sufficient confidence | Manual review (human decides) |
@@ -1431,7 +1425,7 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 | `change_summary` | string | What changed in the code (1–2 sentences) |
 | `invariant_summary` | string | What stayed the same (1–2 sentences) |
 | `reasoning` | string | Why the verdict was assigned (2–3 sentences, citable in reviews) |
-| `action` | enum | auto-reanchor / update-intent / fix-code-or-update-intent / manual-review |
+| `action` | enum | auto-fix / update-intent / fix-code-or-update-intent / manual-review |
 | `suggested_intent` | string? | Proposed new intent text (only for `semantic` verdict) |
 | `impact` | array | Transitively affected items via `related` graph |
 
@@ -1442,7 +1436,7 @@ This is the full context an assessor needs. The agent (or script, or CI wrapper)
 | CI/PR comment | `summary` + items with verdict ≠ cosmetic | Format as markdown table in PR comment |
 | Dashboard | `summary` for aggregate view; items for drill-down | Read JSON, render charts / tables |
 | LSP | Items for inline diagnostics at `source_span` | Watch `.liyi/triage.json`, map items to diagnostic locations |
-| `liyi triage --apply` | Items with `verdict: cosmetic` | Auto-reanchor those items (write back to sidecars) |
+| `liyi triage --apply` | Items with `verdict: cosmetic` | Auto-fix those items (write back to sidecars) |
 | Agent (next session) | `suggested_intent` for items with `verdict: semantic` | Read triage, propose intent updates in sidecar |
 | Human (terminal) | Formatted summary + triage table | `liyi triage --summary`; `--json` for raw |
 
@@ -1460,7 +1454,7 @@ flowchart TD
 
     %% ── Batch path ──
     Decision -- "batch path<br/>(many items, CI)" --> Triage["Agent triages<br/><i>reads stale items, reasons about each<br/>(or: liyi triage --prompt | llm-call)</i>"]
-    Triage -- "writes .liyi/triage.json" --> Apply["liyi triage --apply<br/><i>auto-reanchors cosmetic items,<br/>prints remaining for review</i>"]
+    Triage -- "writes .liyi/triage.json" --> Apply["liyi triage --apply<br/><i>auto-fixes cosmetic items,<br/>prints remaining for review</i>"]
     Apply --> HumanB["Human reviews<br/><i>reads triage report or PR comment,<br/>accepts suggested intents or fixes code</i>"]
 ```
 
@@ -1476,7 +1470,7 @@ The tradeoff: direct re-inference does not distinguish intent violations from le
 |---|---|---|
 | Agent just wrote or modified the code in the current session | Direct re-inference | The agent has full context; triage would assess its own changes against its own prior inference — little value added. |
 | Few stale items (≤ 5) from straightforward changes | Direct re-inference | The overhead of a structured triage report exceeds the classification benefit. |
-| Many stale items from a large refactor or merge | Triage | The structured report helps humans prioritize which items need re-review vs. auto-reanchor. |
+| Many stale items from a large refactor or merge | Triage | The structured report helps humans prioritize which items need re-review vs. auto-fix. |
 | Stale items from changes made by a *different* agent or human | Triage | The assessing agent lacks the original author's context; the old-intent-vs-new-code comparison is more valuable. |
 | CI pipeline processing a PR | Triage | Batch assessment with structured output is the natural fit for non-interactive workflows. |
 | Items with `"reviewed": true` or `@liyi:intent` in source | Triage recommended | These items have human-vouched intent. When they go stale, the change deserves explicit assessment against the human's stated intent, not silent re-inference. |
@@ -1505,11 +1499,9 @@ The agent instruction (rule 10) permits both paths. Teams can mandate triage for
 
 The shift heuristic (non-`tree_path` fallback) is inherently safe — it only matches when the *exact same content* is found at an offset — so no additional protection is needed there.
 
-`liyi reanchor` remains as the explicit manual tool for targeted re-hashing (e.g., `liyi reanchor --item add_money --span 45,61`). `--fix` is the batch equivalent for CI and post-merge workflows.
-
 ### Implementation
 
-~3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~900 lines; the remainder covers tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `reanchor`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
+~3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~900 lines; the remainder covers tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `migrate`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
 
 No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are a post-MVP consideration.
 
@@ -1517,7 +1509,7 @@ No config file reader. `.liyiignore` handles file exclusion; config-based ignore
 
 **Performance.** The linter's work is directory walking + line slicing + SHA-256 hashing — all I/O-bound and parallelizable. A monorepo with 10,000 source files and proportional sidecars should complete in seconds. The `ignore` crate already handles `.gitignore`/`.liyiignore` filtering efficiently.
 
-**Merge conflicts in sidecars.** Two branches editing the same source file will both update `source_span`/`source_hash` in the co-located `.liyi.jsonc`, causing a merge conflict. Resolution: `liyi reanchor` after merge, same model as `pnpm install` / `yarn install` resolving lockfile conflicts — re-run the tool, the derived fields are recomputed from the merged source. True intent-text conflicts (both branches edited the same item's `intent` prose) are rare and handled by normal git conflict resolution.
+**Merge conflicts in sidecars.** Two branches editing the same source file will both update `source_span`/`source_hash` in the co-located `.liyi.jsonc`, causing a merge conflict. Resolution: `liyi check --fix` after merge, same model as `pnpm install` / `yarn install` resolving lockfile conflicts — re-run the tool, the derived fields are recomputed from the merged source. True intent-text conflicts (both branches edited the same item's `intent` prose) are rare and handled by normal git conflict resolution.
 
 ### Diagnostic catalog
 
@@ -1527,7 +1519,7 @@ Every diagnostic the linter can emit, with its severity, audience, exit code con
 
 | Audience | Meaning | Examples |
 |---|---|---|
-| `tool` | Fixable by `liyi reanchor` or `liyi check --fix` — no reasoning required | missing `source_hash`, SHIFTED |
+| `tool` | Fixable by `liyi check --fix` — no reasoning required | missing `source_hash`, SHIFTED |
 | `agent` | Fixable by agent re-inference or sidecar editing — requires reading source but no human judgment | STALE (content changed), UNTRACKED, MISSING RELATED |
 | `human` | Requires human judgment — review, approval, or design decision | unreviewed, intent-violation, unknown requirement |
 
@@ -1538,7 +1530,7 @@ This distinction was motivated by dogfooding experience: an AI agent maintaining
 | Spec current and reviewed | info | — | 0 | `<source>: <item>: ✓ reviewed, current` | — |
 | Spec current but unreviewed | warning | human | 1 if `--fail-on-unreviewed` | `<source>: <item>: ⚠ unreviewed` | `liyi approve <sidecar>` |
 | Source hash mismatch (stale) | warning | agent | 1 if `--fail-on-stale` | `<source>: <item>: ⚠ STALE — source changed since spec was written` | — |
-| Missing source_hash (fresh spec) | warning | tool | 1 if `--fail-on-stale` | `<source>: <item>: ⚠ missing source_hash` | `liyi reanchor <sidecar>` |
+| Missing source_hash (fresh spec) | warning | tool | 1 if `--fail-on-stale` | `<source>: <item>: ⚠ missing source_hash` | `liyi check --fix` |
 | Source hash found at offset (shifted) | info | tool | 0 (auto-corrected with `--fix`) | `<source>: <item>: ↕ SHIFTED [old]→[new]` | `liyi check --fix` |
 | Referenced requirement hash changed | warning | agent | 1 if `--fail-on-req-changed` | `<source>: <item>: ⚠ REQ CHANGED — requirement "<name>" updated` | — |
 | `@liyi:related X` where X doesn't exist | error | human | 1 | `<source>: <item>: ✗ ERROR — unknown requirement "<name>"` | — |
@@ -1547,13 +1539,13 @@ This distinction was motivated by dogfooding experience: an AI agent maintaining
 | Requirement with no referencing items | info | — | 0 | `<source>: <name>: · requirement has no related items` | — |
 | Item annotated `@liyi:trivial` | info | — | 0 | `<source>: <item>: · trivial` | — |
 | Item annotated `@liyi:ignore` | info | — | 0 | `<source>: <item>: · ignored` | — |
-| `source_span` past EOF | error | tool | 1 | `<source>: <item>: ✗ source_span [s, e] extends past end of file (<n> lines)` | `liyi reanchor <sidecar>` |
+| `source_span` past EOF | error | tool | 1 | `<source>: <item>: ✗ source_span [s, e] extends past end of file (<n> lines)` | `liyi check --fix` |
 | Inverted or zero-length `source_span` | error | human | 1 | `<sidecar>: <item>: ✗ invalid source_span [e, s]` | — |
 | Malformed `source_hash` | error | human | 1 | `<sidecar>: <item>: ✗ malformed source_hash` | — |
 | Duplicate item + span | warning | human | 0 | `<sidecar>: <item>: ⚠ duplicate entry` | — |
 | Source file deleted / not found | error | human | 1 | `<sidecar>: ✗ source file not found — spec is orphaned` | — |
 | Malformed JSONC | error | human | 2 | `<sidecar>: ✗ parse error: <detail>` | — |
-| Unknown `"version"` | error | tool | 2 | `<sidecar>: ✗ unknown version "<v>"` | `liyi reanchor --migrate <sidecar>` |
+| Unknown `"version"` | error | tool | 2 | `<sidecar>: ✗ unknown version "<v>"` | `liyi migrate <sidecar>` |
 | Cycle in requirement hierarchy | error | human | 1 | `<source>: <name>: ✗ requirement cycle detected: <path>` | — |
 | Ambiguous sidecar (duplicate naming) | warning | human | 0 | `<sidecar>: ⚠ ambiguous sidecar — both <correct>.liyi.jsonc and <wrong>.liyi.jsonc exist` | — |
 
@@ -1589,14 +1581,14 @@ When writing or modifying code:
 2. When module-level invariants are apparent, write an `@liyi:module` block — in the directory's existing module doc (`README.md`, `doc.go`, `mod.rs` doc comment, etc.) or in a dedicated `LIYI.md`. Use the doc markup language's comment syntax for the marker.
 3. If a source item has a `@liyi:related <name>` annotation, record the dependency in `.liyi.jsonc` as `"related": {"<name>": null}`. The tool fills in the requirement's current hash.
 4. For each `@liyi:requirement <name>` block encountered, ensure it has a corresponding entry in the co-located `.liyi.jsonc` with `"requirement"` and `"source_span"`. (The tool fills in `"source_hash"`.)
-5. If a spec has `"related"` edges referencing a requirement, do not overwrite the requirement text during inference. Re-anchor the spec (update `source_span`) but preserve the `"related"` edges. Do not write `source_hash` — the tool fills it in.
+5. If a spec has `"related"` edges referencing a requirement, do not overwrite the requirement text during inference. Update the spec (update `source_span`) but preserve the `"related"` edges. Do not write `source_hash` — the tool fills it in.
 6. Only generate adversarial tests from items that have a `@liyi:intent` annotation in source or `"reviewed": true` in the sidecar (i.e., human-reviewed intent). When `@liyi:intent` is present in source, use its prose (or the docstring for `=doc`) as the authoritative intent for test generation.
 7. Tests should target boundary conditions, error-handling gaps, property violations, and semantic mismatches. Prioritize tests a subtly wrong implementation would fail.
 8. Skip items annotated with `@liyi:ignore` or `@liyi:trivial`, and files matched by `.liyiignore`. Respect `@liyi:nontrivial` — if present, always infer a spec for that item and never override with `@liyi:trivial`.
 9. Use a different model for test generation than the one that wrote the code, when possible.
 10. When `liyi check` reports stale items, choose one of two paths:
     - **Direct re-inference** (preferred during interactive editing with few stale items): re-read the source, update `source_span` and `intent` in the sidecar, leave `"reviewed"` unset. Appropriate when you are the agent that just made the change, the number of stale items is small, and the changes are straightforward.
-    - **Triage** (preferred for batch workflows, CI, or when many items are stale): assess each item — is the change cosmetic, semantic, or an intent violation? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-reanchor. For semantic changes, propose updated intent in `suggested_intent`. For intent violations, flag for human review. Prefer triage when stale items have `"reviewed": true` or `@liyi:intent` in source — these carry human-vouched intent that deserves explicit assessment, not silent re-inference.
+    - **Triage** (preferred for batch workflows, CI, or when many items are stale): assess each item — is the change cosmetic, semantic, or an intent violation? Write the assessment to `.liyi/triage.json` following the triage report schema. For cosmetic changes, run `liyi triage --apply` to auto-fix. For semantic changes, propose updated intent in `suggested_intent`. For intent violations, flag for human review. Prefer triage when stale items have `"reviewed": true` or `@liyi:intent` in source — these carry human-vouched intent that deserves explicit assessment, not silent re-inference.
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 ```
 
@@ -1678,7 +1670,7 @@ An LSP (Language Server Protocol) server wraps `liyi check` output as editor dia
 | LSP Feature | 立意 Use |
 |---|---|
 | **Diagnostics** | Inline warnings at STALE, REQ CHANGED, and unreviewed sites |
-| **Code Actions** | \"Accept inferred intent\" (sets `\"reviewed\": true` in sidecar), \"Assert intent in source\" (inserts `@liyi:intent`), \"Reanchor span\", \"Go to requirement\", \"Challenge\" (on-demand semantic verification via LLM) |
+| **Code Actions** | \"Accept inferred intent\" (sets `\"reviewed\": true` in sidecar), \"Assert intent in source\" (inserts `@liyi:intent`), \"Fix span\", \"Go to requirement\", \"Challenge\" (on-demand semantic verification via LLM) |
 | **Hover** | Show the intent spec when hovering over a specced item |
 | **Go to Definition** | Jump from `@liyi:related X` to the `@liyi:requirement X` block |
 
@@ -1694,11 +1686,11 @@ Candidate tools:
 |---|---|
 | `liyi_check` | Run `liyi check` on a path, return structured results (stale, reviewed, diverged) |
 | `liyi_check_json` | Run `liyi check --json` — return full context for stale items, suitable for agent-driven triage |
-| `liyi_reanchor` | Re-hash spans for a given file |
+| `liyi_fix` | Fix spans and fill tool-managed fields for a given path |
 | `liyi_get_requirement` | Look up a named requirement — return its text, location, and current hash |
 | `liyi_list_related` | List all items with `"related"` edges to a given requirement |
 | `liyi_triage_validate` | Validate an agent-produced triage report against the schema |
-| `liyi_triage_apply` | Apply a validated triage report — auto-reanchor cosmetic items |
+| `liyi_triage_apply` | Apply a validated triage report — auto-fix cosmetic items |
 
 The MCP tools provide *context for* reasoning and *application of* results. The reasoning itself (triage assessment, challenge verdicts) happens in the agent — which already has model access, conversation context, and the AGENTS.md instruction. This avoids duplicating LLM call logic inside the MCP server.
 
@@ -1718,7 +1710,7 @@ For each unapproved item in the target file(s), display:
 
 Prompt: `approve? [y]es / [n]o / [e]dit intent / [s]kip`
 
-- **y** — set `"reviewed": true`, update `source_hash` and `source_anchor` via reanchor.
+- **y** — set `"reviewed": true`, update `source_hash` and `source_anchor`.
 - **n** — set `"reviewed": false` (explicit rejection). Leave hash unchanged.
 - **e** — open `$EDITOR` with the intent text. After save, re-display and re-prompt.
 - **s** — skip without changing anything.
@@ -1731,7 +1723,7 @@ liyi approve --yes src/money.rs "add_money"  # approve specific item
 liyi approve --yes .                         # approve all sidecars under cwd
 ```
 
-Sets `"reviewed": true` and reanchors without prompting.
+Sets `"reviewed": true` and fixes hashes without prompting.
 
 **Flags:**
 - `--yes` — non-interactive, approve all matched items.
@@ -1870,7 +1862,7 @@ After the agent processes this scaffold, the sidecar might look like:
 }
 ```
 
-Note: the agent removed the `impl::Money` container entry (containers are often not worth speccing independently), used `=doc` for the well-documented struct, `=trivial` for the getter, and wrote explicit intent for the rest. The `_hints` fields are gone — `liyi reanchor` strips them.
+Note: the agent removed the `impl::Money` container entry (containers are often not worth speccing independently), used `=doc` for the well-documented struct, `=trivial` for the getter, and wrote explicit intent for the rest. The `_hints` fields are gone — `liyi check --fix` strips them.
 
 #### `_hints` — cold-start inference aids
 
@@ -1893,7 +1885,7 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
 - The absence of a schema contract *is* the contract. Downstream tooling cannot build on `_hints` because the shape is not guaranteed. This prevents accidental coupling to an ephemeral inference aid.
 - `liyi init` can freely evolve what hints it emits without breaking anything.
 
-**Lifecycle.** `liyi init` writes `_hints` → the agent reads hints, infers intent, fills the `"intent"` field → `liyi reanchor` strips `_hints` from all spec entries. The linter ignores `_hints` (does not error on its presence). Hints are never committed in steady-state sidecars — they exist only during the cold-start inference window.
+**Lifecycle.** `liyi init` writes `_hints` → the agent reads hints, infers intent, fills the `"intent"` field → `liyi check --fix` strips `_hints` from all spec entries. The linter ignores `_hints` (does not error on its presence). Hints are never committed in steady-state sidecars — they exist only during the cold-start inference window.
 
 **Per-item, not per-file.** Each spec entry gets its own `_hints` based on that item's span. A function with 47 commits and 3 bug fixes gets different hints than the simple getter next to it.
 
@@ -2077,7 +2069,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 | Agent instruction (AGENTS.md paragraph) | 1 hour | 15 minutes |
 | `@liyi:module` convention + examples | 30 minutes | 10 minutes |
 | `.liyi.jsonc` examples for a demo repo | 1–2 hours | 20 minutes |
-| CI linter (`liyi check` + `liyi reanchor` + `liyi approve` + `liyi init`, ~3000 lines) | 3–5 days | 2–4 hours |
+| CI linter (`liyi check` + `liyi check --fix` + `liyi approve` + `liyi init` + `liyi migrate`, ~3000 lines) | 3–5 days | 2–4 hours |
 | Blog post explaining the practice | 1 day | 2–3 hours |
 | **Total** | **3–5 days** | **Half a day** |
 
@@ -2085,7 +2077,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 
 ## What This Is
 
-- A **CI linter** — `liyi check` + `liyi reanchor`, ~3000 lines across two crates (with tree-sitter-based span recovery). The enforcement mechanism.
+- A **CI linter** — `liyi check` + `liyi check --fix`, ~3000 lines across two crates (with tree-sitter-based span recovery). The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
 - A **triage protocol** (post-MVP) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
@@ -2128,7 +2120,7 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 | **1. The review** | Review inferred intent in PRs — set `"reviewed": true` in sidecar (quick) or add `@liyi:intent` in source (explicit) | The review surface for intent is typically ~10% of the code surface — a few lines of spec per item instead of the full implementation. You catch wrong intent before wrong code gets tested. Careless review undermines adversarial testing quality — see *Why careless review is self-limiting* in the Security Model. | Seconds per item |
 | **2. The docs** | Add `## 立意` sections to READMEs / doc comments | Module-level invariants are documented, visible in rendered docs, discoverable by agents and humans. This is just good documentation practice. | 5 min per module |
 | **3. The linter** | Run `liyi check` in CI | Stale specs fail the build. You know which items changed since their intent was written. Deterministic enforcement. | Install a binary |
-| **3.5. Triage** | When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. `liyi triage --apply` auto-reanchors cosmetics. Skippable — agents can directly re-infer intent instead (see *Direct re-inference* in the triage section). Triage is most valuable for batch workflows (CI, large PRs) and when stale items carry human-reviewed intent. | Noise from refactors and renames is eliminated automatically. Remaining items are sorted by action type — update intent, fix code, or manual review. Graph-aware impact propagation flags transitively affected items. | Agent follows the triage instruction (or skips triage and re-infers directly) |
+| **3.5. Triage** | When stale items are flagged, the agent assesses each: cosmetic, semantic, or intent violation. `liyi triage --apply` auto-fixes cosmetics. Skippable — agents can directly re-infer intent instead (see *Direct re-inference* in the triage section). Triage is most valuable for batch workflows (CI, large PRs) and when stale items carry human-reviewed intent. | Noise from refactors and renames is eliminated automatically. Remaining items are sorted by action type — update intent, fix code, or manual review. Graph-aware impact propagation flags transitively affected items. | Agent follows the triage instruction (or skips triage and re-infers directly) |
 | **4. Challenge** | Click "Challenge" on a specced item in the editor, or include challenge in the agent workflow | A second model verifies code against intent, or intent against requirement. On-demand semantic verification — no pipeline, no test files. The trust gap between reviewing intent and trusting it blindly closes. | One click / prompt per item |
 | **5. Requirements** | Write `@liyi:requirement` blocks and `@liyi:related` annotations for critical-path items | Requirements are tracked, hashable, versionable. When a requirement changes, all related items are transitively flagged. Challenge verifies intent actually covers the requirement, not just that hashes match. | Minutes per requirement |
 | **6. The adversarial tests** | Configure a different model for test generation from reviewed specs | A second model reads the *intent* (not the code) and tries to break the implementation. Different training data, different blind spots. | Agent configuration |
@@ -2218,7 +2210,7 @@ What the day-to-day experience looks like once all deliverables exist:
 1. **Write code.** (Or have an agent write it.) The agent instruction in AGENTS.md tells it to also generate `.liyi.jsonc` specs alongside the code.
 2. **Review intent, not implementation.** The agent infers intent and writes the sidecar. Read the inferred intent (via IDE hover or in the sidecar diff). If correct, accept it — either set `"reviewed": true` (one click, zero source noise) or add `@liyi:intent=doc` in source (one line, maximum visibility). If wrong, correct the intent: write `@liyi:intent <prose>` in source with your own words, or edit the docstring. The review surface is ~10% of the code surface per item — a few lines of constraints and invariants instead of the full implementation.
 3. **CI runs `liyi check`.** The linter verifies that existing specs aren't stale (source hash matches) and reports unreviewed specs. Stale specs fail the build.
-4. **Handle staleness.** When stale items are flagged, the agent takes one of two paths. **Direct re-inference** (the fast path): the agent re-reads the source, updates `source_span` and `intent` in the sidecar, and leaves `"reviewed"` unset — appropriate during interactive editing with few stale items. **Triage** (the batch path, optional): the agent assesses each stale item as cosmetic, semantic, or intent violation, writes `.liyi/triage.json`, and `liyi triage --apply` auto-reanchors cosmetics. Triage is most valuable for large PRs, CI pipelines, or when stale items have human-reviewed intent (`"reviewed": true` or `@liyi:intent`).
+4. **Handle staleness.** When stale items are flagged, the agent takes one of two paths. **Direct re-inference** (the fast path): the agent re-reads the source, updates `source_span` and `intent` in the sidecar, and leaves `"reviewed"` unset — appropriate during interactive editing with few stale items. **Triage** (the batch path, optional): the agent assesses each stale item as cosmetic, semantic, or intent violation, writes `.liyi/triage.json`, and `liyi triage --apply` auto-fixes cosmetics. Triage is most valuable for large PRs, CI pipelines, or when stale items have human-reviewed intent (`"reviewed": true` or `@liyi:intent`).
 5. **Adversarial testing (optional).** A different model reads the reviewed intents and generates tests designed to break the implementation. Different training data, different blind spots.
 6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent re-infers or triages, the human re-reviews. The cycle is fast because reviewing intent is fast.
 
@@ -2305,13 +2297,13 @@ The success criterion remains: at least one team reports catching a real defect 
 
 ### 4. `source_span` brittleness in 0.1 (mitigated by `tree_path`)
 
-Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi reanchor` handles non-uniform shifts manually.
+Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi check --fix` handles non-uniform shifts when `tree_path` is available.
 
 **v8.4 update:** This risk prompted the introduction of `tree_path` in 0.1 (see *Structural identity via `tree_path`*). When `tree_path` is populated, span recovery is deterministic — the tool locates the item by AST identity regardless of how lines shifted. The span-shift heuristic remains as a fallback for items without a `tree_path` (macros, generated code, unsupported languages).
 
-The remaining friction for items without `tree_path`: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi reanchor`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless. For supported languages (Rust in 0.1), `tree_path` eliminates this friction entirely.
+The remaining friction for items without `tree_path`: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless. For supported languages (Rust in 0.1), `tree_path` eliminates this friction entirely.
 
-**Mitigation in 0.1:** `tree_path` structural anchoring (primary), span-shift auto-correction (fallback), `liyi reanchor`, agent re-inference on next pass.
+**Mitigation in 0.1:** `tree_path` structural anchoring (primary), span-shift auto-correction (fallback), `liyi check --fix`, agent re-inference on next pass.
 
 ### 5. Convention absorption and licensing (added 2026-03-06)
 
@@ -2388,7 +2380,7 @@ pub fn add_money(a: Money, b: Money) -> Result<Money, CurrencyError> {
 
 ### 2. Sidecar (after agent + tool)
 
-The agent writes `source_span` and `intent`. The tool (`liyi reanchor` or the linter on first run) fills in `source_hash` and `source_anchor`. The result on disk:
+The agent writes `source_span` and `intent`. The tool (`liyi check --fix`) fills in `source_hash` and `source_anchor`. The result on disk:
 
 ```jsonc
 // src/billing/money.rs.liyi.jsonc
@@ -2551,7 +2543,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi reanchor or the linter — agents should not produce this."
+          "description": "Tool-managed. SHA-256 hex digest of the source lines in the span. Computed by liyi check --fix — agents should not produce this."
         },
         "source_anchor": {
           "type": "string",
@@ -2592,7 +2584,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",
-          "description": "Tool-managed. Computed by liyi reanchor or the linter."
+          "description": "Tool-managed. Computed by liyi check --fix."
         },
         "source_anchor": {
           "type": "string",

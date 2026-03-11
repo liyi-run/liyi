@@ -49,8 +49,8 @@
     },
     "action": {
       "type": "string",
-      "enum": ["auto-reanchor", "update-intent", "fix-code-or-update-intent", "manual-review"],
-      "description": "Recommended action. auto-reanchor for cosmetic, update-intent for semantic, fix-code-or-update-intent for intent-violation, manual-review for unclear."
+      "enum": ["auto-fix", "update-intent", "fix-code-or-update-intent", "manual-review"],
+      "description": "Recommended action. auto-fix for cosmetic, update-intent for semantic, fix-code-or-update-intent for intent-violation, manual-review for unclear."
     },
     "summary": {
       "type": "object",

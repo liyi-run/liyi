@@ -60,13 +60,13 @@
         130
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:1fc98ea41edd3bed9c13d936635399d5e27a81f1f8acec326368b1eb532bda7c",
+      "source_hash": "sha256:f16f381eb67bf6126a0acfe022aac1ee575696b1d32a5cb46cee6bf2eb15a1d2",
       "source_anchor": "pub fn collect_approval_candidates("
     },
     {
       "item": "apply_approval_decisions",
       "reviewed": false,
-      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and reanchor hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
+      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
         137,
         206
