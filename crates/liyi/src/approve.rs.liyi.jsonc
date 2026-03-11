@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
       "source_span": [
-        11,
-        16
+        12,
+        17
       ],
       "tree_path": "struct::ApproveResult",
       "source_hash": "sha256:c508a96f425f3db28dbead37eafe6c7dc6c16d95fce87747cbd36bc60b62812c",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
       "source_span": [
-        20,
-        24
+        21,
+        25
       ],
       "tree_path": "enum::ApproveError",
       "source_hash": "sha256:173a61b1f98538798224266b4af28015e5332da0463f5c4b360c60d0f784f801",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Public enum representing a user's approval decision: Yes (approve item), No (reject), or Skip (defer). Used by both interactive TUI and batch workflows.",
       "source_span": [
-        44,
-        48
+        45,
+        49
       ],
       "tree_path": "enum::Decision",
       "source_hash": "sha256:78ddefd2929bc0724782cf7017063ca80dab606d4b2871a7b54b162c008d4d82",
@@ -41,26 +41,38 @@
     },
     {
       "item": "ApprovalCandidate",
-      "reviewed": true,
-      "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), and span_len (number of span lines). Decouples data gathering from presentation.",
+      "reviewed": false,
+      "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), span_len (number of span lines), and prev_intent (the previously approved intent from Git history, if any). Decouples data gathering from presentation.",
       "source_span": [
-        52,
-        71
+        53,
+        74
       ],
       "tree_path": "struct::ApprovalCandidate",
-      "source_hash": "sha256:10f31e4fa2425ab1fd8c4b5ee39eebe1600fbe1dcf73a8cc703ab929fb395fff",
+      "source_hash": "sha256:44c6930ed728452604482bb5e1801d63ea6c827ea6703b337642bfe4731d68e0",
       "source_anchor": "pub struct ApprovalCandidate {"
     },
     {
-      "item": "collect_approval_candidates",
-      "reviewed": true,
-      "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Returns error if no targets found.",
+      "item": "lookup_prev_intent",
+      "reviewed": false,
+      "intent": "Query Git for the last committed version of a sidecar file and find the previously approved intent for a given item. Computes the repo-relative path from repo_root and sidecar_path, calls git_show at HEAD, parses the old sidecar, and matches by tree_path (preferred) or item name. Returns Some(intent) only if the matched item had reviewed=true. Returns None if repo_root is None, path cannot be made relative, git_show fails, parsing fails, or no reviewed match is found.",
       "source_span": [
-        74,
-        130
+        78,
+        103
+      ],
+      "tree_path": "fn::lookup_prev_intent",
+      "source_hash": "sha256:2afb3edcf38078735a164192fa06f820711ea5e29dc69fd4893e4e637cf722e4",
+      "source_anchor": "fn lookup_prev_intent("
+    },
+    {
+      "item": "collect_approval_candidates",
+      "reviewed": false,
+      "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
+      "source_span": [
+        106,
+        175
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:f16f381eb67bf6126a0acfe022aac1ee575696b1d32a5cb46cee6bf2eb15a1d2",
+      "source_hash": "sha256:2566c54c4c4d9ed571f573b72336a437e3a62b9d2c9279359c208dafd148aa44",
       "source_anchor": "pub fn collect_approval_candidates("
     },
     {
@@ -68,8 +80,8 @@
       "reviewed": true,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        137,
-        206
+        182,
+        251
       ],
       "tree_path": "fn::apply_approval_decisions",
       "source_hash": "sha256:9c0d764481d5db271b8bb7bf96b2f6d13e040cad09b4845010123ff5c2cd1a87",
@@ -83,8 +95,8 @@
       "reviewed": true,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        209,
-        220
+        254,
+        265
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",

@@ -1,0 +1,19 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/git.rs",
+  "specs": [
+    {
+      "item": "git_show",
+      "reviewed": false,
+      "intent": "Retrieve the contents of a file at a given Git revision by shelling out to `git show <revision>:<repo_relative_path>`. Runs git in repo_root as working directory, captures stdout, suppresses stderr. Returns None if git is unavailable, the command fails (e.g. file doesn't exist at that revision), or stdout is not valid UTF-8.",
+      "source_span": [
+        13,
+        29
+      ],
+      "tree_path": "fn::git_show",
+      "source_hash": "sha256:035e396f612a614509cd8a27725dba7f49da18395c82cc44e54c4e5f473fbf98",
+      "source_anchor": "pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {"
+    }
+  ]
+}
