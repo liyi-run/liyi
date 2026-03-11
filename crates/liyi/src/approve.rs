@@ -3,7 +3,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::hashing::hash_span;
-use crate::reanchor::resolve_reanchor_targets;
+use crate::discovery::resolve_sidecar_targets;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
 /// Result of an approve operation on a single sidecar.
@@ -75,7 +75,7 @@ pub fn collect_approval_candidates(
     paths: &[PathBuf],
     item_filter: Option<&str>,
 ) -> Result<Vec<ApprovalCandidate>, ApproveError> {
-    let targets = resolve_reanchor_targets(paths).map_err(ApproveError::Parse)?;
+    let targets = resolve_sidecar_targets(paths).map_err(ApproveError::Parse)?;
     if targets.is_empty() {
         return Err(ApproveError::NoTargets);
     }

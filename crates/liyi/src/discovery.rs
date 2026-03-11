@@ -177,6 +177,37 @@ fn source_name_from_sidecar(sidecar: &Path) -> String {
         .to_string()
 }
 
+/// Expand a list of file/directory paths into concrete `.liyi.jsonc` file
+/// paths. If a path is a directory, walk it recursively (respecting
+/// `.gitignore` and `.liyiignore`) and collect all sidecar files found.
+/// If a path is a file, include it directly.
+pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
+    let mut result: Vec<PathBuf> = Vec::new();
+    for p in paths {
+        if p.is_dir() {
+            let walker = WalkBuilder::new(p)
+                .add_custom_ignore_filename(".liyiignore")
+                .build();
+            for entry in walker {
+                let entry = entry.map_err(|e| format!("walk error: {e}"))?;
+                if entry.file_type().is_some_and(|ft| ft.is_file())
+                    && let Some(name) = entry.path().file_name().and_then(|n| n.to_str())
+                    && name.ends_with(SIDECAR_SUFFIX)
+                {
+                    result.push(entry.into_path());
+                }
+            }
+        } else if p.is_file() {
+            result.push(p.clone());
+        } else {
+            return Err(format!("path does not exist: {}", p.display()));
+        }
+    }
+    result.sort();
+    result.dedup();
+    Ok(result)
+}
+
 /// Compute `path` relative to `base` using pure lexical processing.
 fn pathdiff(path: &Path, base: &Path) -> Option<String> {
     path.strip_prefix(base)
