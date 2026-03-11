@@ -873,9 +873,8 @@ fn check_sidecar(
                             if !has_edge {
                                 if fix {
                                     let related = item.related.get_or_insert_with(BTreeMap::new);
-                                    let hash_val = requirements
-                                        .get(name)
-                                        .and_then(|rec| rec.hash.clone());
+                                    let hash_val =
+                                        requirements.get(name).and_then(|rec| rec.hash.clone());
                                     related.insert(name.clone(), hash_val);
                                     modified = true;
                                 }
