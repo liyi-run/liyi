@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Top-level `.liyi.jsonc` file representation
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub struct ItemSpec {
     pub confidence: Option<f64>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub related: Option<HashMap<String, Option<String>>>,
+    pub related: Option<BTreeMap<String, Option<String>>>,
 }
 
 /// Details of a module requirement/invariant

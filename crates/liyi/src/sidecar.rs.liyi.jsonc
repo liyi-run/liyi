@@ -46,8 +46,8 @@
         47,
         60
       ],
-      "source_hash": "sha256:80fb1f6f3b1f13c07d70d2cae39a895914c96f8e3ae18a908c4f0cb5ac6eafc0",
-      "source_anchor": "    pub related: Option<HashMap<String, Option<String>>>,"
+      "source_hash": "sha256:534ce4d553fb5d621cb1f4f0b3c9fc03a4d8ae20d12da9c2e80dc3dad5f8dd52",
+      "source_anchor": "    pub related: Option<BTreeMap<String, Option<String>>>,"
     },
     {
       "item": "strip_jsonc_comments",

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -835,7 +835,7 @@ fn check_sidecar(
                                 item.related.as_ref().is_some_and(|r| r.contains_key(name));
                             if !has_edge {
                                 if fix {
-                                    let related = item.related.get_or_insert_with(HashMap::new);
+                                    let related = item.related.get_or_insert_with(BTreeMap::new);
                                     related.insert(name.clone(), None);
                                     modified = true;
                                 }

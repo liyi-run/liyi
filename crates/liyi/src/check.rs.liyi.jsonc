@@ -28,8 +28,8 @@
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": null,
-        "requirement-name-uniqueness": null,
-        "requirement-discovery-global": null
+        "requirement-discovery-global": null,
+        "requirement-name-uniqueness": null
       }
     },
     {
@@ -41,11 +41,11 @@
         1022
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:e1919fe4c31925d44e75df6525ba3716524fb7dc6436b85e49cdbafa54fa6fef",
+      "source_hash": "sha256:4dcb913f15f9da76399b61a71f597592b285655b03c3cba15f7817bc5531ce9a",
       "source_anchor": "fn check_sidecar(",
       "related": {
-        "reviewed-semantics": null,
-        "fix-semantic-drift-protection": null
+        "fix-semantic-drift-protection": null,
+        "reviewed-semantics": null
       }
     },
     {
