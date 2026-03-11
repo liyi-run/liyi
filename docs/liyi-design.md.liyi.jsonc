@@ -141,8 +141,8 @@
     {
       "requirement": "fix-never-modifies-human-fields",
       "source_span": [
-        1492,
-        1494
+        1494,
+        1496
       ],
       "source_hash": "sha256:e5c1b041dab62b4533a84b2bfc73c2ca8697a9ae7a454540686c8d479305ef5f",
       "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
@@ -150,8 +150,8 @@
     {
       "requirement": "fix-semantic-drift-protection",
       "source_span": [
-        1496,
-        1498
+        1498,
+        1500
       ],
       "source_hash": "sha256:87f70b0fa07c386eb7478b420f8edc70f7b7bb709c416e2aaf17a1a913fa0ce5",
       "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"

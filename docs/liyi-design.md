@@ -1,6 +1,6 @@
-# 立意 (Lìyì) — Design v8.10
+# 立意 (Lìyì) — Design v8.11
 
-Establish intent before execution · 2026-03-11
+Establish intent before execution · 2026-03-12
 
 ---
 
@@ -23,7 +23,7 @@ Frameworks already declare some intent: middleware stacks declare auth and rate-
 
 Intent flows in two directions. **Descriptive**: an agent infers what existing code should do, a human reviews it, and the reviewed spec becomes authoritative. **Prescriptive**: a human (or agent) states a requirement before or alongside coding, and code must satisfy it. Both directions produce the same artifacts, use the same linter, and feed the same challenge and adversarial testing pipeline.
 
-Persistence is the foundation. Review is what persistence enables. Challenge is a trust aid — it lets a reviewer verify intent without reading all the code. Adversarial testing is the payoff — but even without it, persistent reviewed intent is valuable on its own.
+Persistence is the foundation. **Human review is the primary value that persistence enables** — a few lines of NL intent instead of the full implementation. Challenge is a force multiplier on that review: it lets a reviewer verify intent without reading all the code. Adversarial testing is the payoff — but even without it, persistent reviewed intent is valuable on its own. Without review, the system degenerates into auto-updating specs (which is what optimistic tools do); the human's judgment is what makes intent authoritative rather than merely descriptive.
 
 The agent instructions are the protocol. The CI linter is what makes it deterministic.
 
@@ -1291,6 +1291,8 @@ Together, these three checks cover every conventional way that prose references 
 
 **Why not a separate prefix (`@metaliyi:`, etc.)?** An alternate prefix for self-referential use was considered and rejected. It would require a mode switch (env var, config file, or CLI flag) to tell the scanner which prefix to use, splitting the convention into two variants. The NL-quoting approach is simpler: one prefix, one alias table, one scanner — and the disambiguation rule (backtick your mentions) is already standard technical writing practice.
 
+**The self-reference is not accidental — it is inherent.** The convention is a fixpoint of its own application: applying 立意 ("establish intent before execution") to the development of 立意 yields 立意. The design document contains `@liyi:requirement` blocks that the linter's code tracks via `@liyi:related` edges; CI runs `liyi check` on its own source; the AGENTS.md instruction that agents follow to write specs is itself a spec of how specs should be written; the intent-first orchestration pattern (see *Adoption Story*) is 立意 applied to its own development task. Every 立意-enabled workflow inherently bootstraps the same cycle — state what you intend, persist it, verify against it — because the convention occupies this fixpoint. This explains why dogfooding works naturally rather than requiring special-casing, and why teams adopting the convention discover the same recursive structure regardless of their starting point.
+
 ### Post-MVP: `liyi triage` — agent-driven staleness assessment
 
 When `liyi check` reports stale items, the next question is: *does it matter?* A variable rename is cosmetic; a new code path is semantic; a contradiction to declared intent is a bug. Answering that question requires LLM reasoning — but `liyi` itself never calls an LLM.
@@ -2156,6 +2158,34 @@ flowchart TD
 **Greenfield** is straightforward: `liyi init` scaffolds the agent instruction into `AGENTS.md`, and every file the agent writes from that point forward gets specs alongside code. The codebase conforms from day one.
 
 **Brownfield** adds a bootstrapping step. `liyi init --hints` creates skeleton sidecars populated with cheap VCS/filesystem signals (`_hints`) — commit count, bug-fix frequency, test presence, docstring coverage. The agent reads these hints to prioritize where to invest inference effort: a function with 47 commits and 3 bug fixes warrants `git log` investigation; a simple getter written once and never touched can be inferred from source alone. Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
+
+### Intent-first orchestration
+
+The tagline says *establish intent before execution*. The greenfield and brownfield paths above both begin with code (or existing code) and add intent afterward — the descriptive direction. But the prescriptive pillar enables a forward-edge pattern where intent comes first and drives implementation:
+
+1. User asks an orchestrator agent to implement a feature ("add a billing module").
+2. The orchestrator writes `@liyi:requirement` blocks and a `@liyi:module` section (in `LIYI.md`, `README.md`, or source doc comments) *before generating any code*. These capture what the implementation must satisfy — business rules, domain invariants, error-handling constraints.
+3. A human reviews the plan — the 太浅了 phase. This is a few lines of NL prose, not code. The review cost is minimal; the leverage is maximal, because everything downstream derives from it.
+4. The orchestrator dispatches sub-agents to implement the code, passing the requirements as context. Sub-agents write `.liyi.jsonc` item specs alongside their code, with `@liyi:related` edges back to the requirements.
+5. `liyi check` verifies the full graph: requirements tracked, related edges present, no coverage gaps.
+
+**The planning artifacts become the enforcement artifacts.** The requirements written before code are not throwaway plans — they are the same `@liyi:requirement` blocks that `liyi check` enforces in CI from that point forward. No translation, no plan-to-discard phase. This is the structural difference from spec-driven competitors: in GitHub Spec Kit, the spec drives implementation and then exists as untracked prose; in Augment Intent, specs auto-update optimistically. In 立意, the forward plan and the CI-enforced convention are the same files.
+
+**Model separation is built in.** The orchestrator (planning) and implementers (sub-agents) are naturally different model invocations, which aligns with the adversarial principle: the model that planned the intent is not the model that implemented it.
+
+**Human review is load-bearing.** If the human skips reviewing the forward plan and the orchestrator writes bad requirements, the sub-agents implement confidently against wrong intent, and `liyi check` passes because the graph is internally consistent. The staleness machinery detects *drift*, not *correctness*. Challenge mode and adversarial testing help the reviewer form judgments faster, but they do not replace the judgment. In the classroom metaphor: without the teacher's 太浅了, the essay is confidently off-topic.
+
+**The forward workflow maps to specific artifact layers:**
+
+| Layer | Forward-edge fit | Author |
+|---|---|---|
+| `@liyi:module` in `LIYI.md` / README | Excellent — pure prose, no `source_span` needed | Orchestrator |
+| `@liyi:requirement` blocks | Excellent — can exist before code (see *Prescriptive specs without code*) | Orchestrator |
+| Item-level `.liyi.jsonc` | Post-hoc only — `source_span` requires code to exist | Sub-agents |
+
+The forward workflow is a two-phase process: requirements first (prescriptive, orchestrator), item specs after (descriptive, sub-agents). The two phases have different authors, different review semantics, and different staleness triggers — which is exactly how the *Two Pillars* table frames the distinction.
+
+**This is a convention, not new tooling.** Nothing in `liyi` the binary needs to change. The forward-edge story is an AGENTS.md instruction pattern: "When asked to implement a new module, first write `@liyi:requirement` blocks and a `@liyi:module` section, then implement." The linter already handles requirements-before-code. The value is in naming this as a first-class adoption path.
 
 ### Why this and not X
 
