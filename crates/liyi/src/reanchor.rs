@@ -1,16 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::discovery::resolve_sidecar_targets;
 use crate::hashing::hash_span;
 use crate::markers::{requirement_spans, scan_markers};
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
-
-/// Backward-compatible alias for [`crate::discovery::resolve_sidecar_targets`].
-pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
-    resolve_sidecar_targets(paths)
-}
 
 /// Re-hash source spans in a sidecar file.
 ///

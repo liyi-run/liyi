@@ -4,24 +4,12 @@
   "source": "crates/liyi/src/reanchor.rs",
   "specs": [
     {
-      "item": "resolve_reanchor_targets",
-      "reviewed": false,
-      "intent": "Backward-compatible alias that delegates to `discovery::resolve_sidecar_targets`.",
-      "source_span": [
-        11,
-        13
-      ],
-      "tree_path": "fn::resolve_reanchor_targets",
-      "source_hash": "sha256:da4d96d82f119c72456ff6b56219b8c109c2b2a2a26f1282967e6317b30e00c8",
-      "source_anchor": "pub fn resolve_reanchor_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
-    },
-    {
       "item": "run_reanchor",
       "reviewed": true,
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and rehash. Otherwise, for every spec: if tree_path is non-empty and a tree-sitter grammar is available, locate the item by structural identity and update the span; then recompute hash/anchor. Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
-        28,
-        129
+        22,
+        123
       ],
       "tree_path": "fn::run_reanchor",
       "source_hash": "sha256:3ee785c5a09ff156f5e606425771ab8c12f43445a62c48cc8be659ad7351e5d6",
