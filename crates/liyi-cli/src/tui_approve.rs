@@ -157,7 +157,11 @@ fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {
         .trim()
         .to_string();
 
-    if result.is_empty() { None } else { Some(result) }
+    if result.is_empty() {
+        None
+    } else {
+        Some(result)
+    }
 }
 
 /// Run the interactive TUI approval flow. Returns decisions parallel to
