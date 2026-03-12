@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Write;
 use std::path::Path;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
@@ -90,6 +91,75 @@ impl<'a> ApproveTui<'a> {
     }
 }
 
+/// Open `$EDITOR` (or `$VISUAL`, falling back to `vi`) on a tempfile
+/// pre-populated with the current intent.  Previous intent, item name,
+/// and source location are presented as comment lines (stripped on read-back),
+/// following the Git commit-message editing convention.
+///
+/// Returns `Some(edited_text)` if the user saved a non-empty result, or
+/// `None` if the file was emptied or the editor exited with an error.
+fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {
+    use std::process::Command;
+
+    let editor = std::env::var("VISUAL")
+        .or_else(|_| std::env::var("EDITOR"))
+        .unwrap_or_else(|_| "vi".to_string());
+
+    let dir = std::env::temp_dir();
+    let path = dir.join("liyi-approve-intent.txt");
+
+    // Build tempfile content.
+    let mut content = String::new();
+    // Editable intent — lines above the comment separator.
+    content.push_str(&candidate.intent);
+    content.push('\n');
+
+    // Comment block with context (stripped on read-back).
+    content.push_str("\n# --- Do not edit below this line ---\n");
+    content.push_str(&format!(
+        "# Item: {}  ({}:{}-{})\n",
+        candidate.item_name,
+        candidate.source_display,
+        candidate.source_span[0],
+        candidate.source_span[1],
+    ));
+    if let Some(prev) = &candidate.prev_intent {
+        content.push_str("#\n# Previously approved intent:\n");
+        for line in prev.lines() {
+            content.push_str(&format!("#   {line}\n"));
+        }
+    }
+    content.push_str("#\n# Lines starting with '#' are ignored.\n");
+    content.push_str("# An empty result (after stripping comments) cancels the edit.\n");
+
+    // Write tempfile.
+    {
+        let mut f = std::fs::File::create(&path).ok()?;
+        f.write_all(content.as_bytes()).ok()?;
+    }
+
+    let status = Command::new(&editor).arg(&path).status().ok()?;
+
+    if !status.success() {
+        let _ = std::fs::remove_file(&path);
+        return None;
+    }
+
+    let raw = std::fs::read_to_string(&path).ok()?;
+    let _ = std::fs::remove_file(&path);
+
+    // Strip comment lines and trailing whitespace.
+    let result: String = raw
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string();
+
+    if result.is_empty() { None } else { Some(result) }
+}
+
 /// Run the interactive TUI approval flow. Returns decisions parallel to
 /// the candidates slice.
 pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {
@@ -116,6 +186,22 @@ pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {
                 KeyCode::Char('n') | KeyCode::Char('N') => app.decide(Decision::No),
                 KeyCode::Char('s') | KeyCode::Char('S') | KeyCode::Enter => {
                     app.decide(Decision::Skip)
+                }
+                KeyCode::Char('e') | KeyCode::Char('E') => {
+                    // Leave TUI to run $EDITOR.
+                    disable_raw_mode()?;
+                    crossterm::execute!(io::stderr(), LeaveAlternateScreen)?;
+
+                    let candidate = app.candidate();
+                    if let Some(edited) = edit_intent_in_editor(candidate) {
+                        app.decide(Decision::Edit(edited));
+                    }
+                    // else: edit cancelled — stay on the same item.
+
+                    // Re-enter TUI.
+                    enable_raw_mode()?;
+                    crossterm::execute!(io::stderr(), EnterAlternateScreen)?;
+                    terminal = Terminal::new(CrosstermBackend::new(io::stderr()))?;
                 }
                 KeyCode::Char('a') | KeyCode::Char('A') => {
                     // Approve all remaining.
@@ -501,20 +587,20 @@ fn draw_keys(f: &mut ratatui::Frame, area: Rect) {
         Span::raw(" approve  "),
         Span::styled("n", Style::default().fg(Color::Red).bold()),
         Span::raw(" reject  "),
+        Span::styled("e", Style::default().fg(Color::Cyan).bold()),
+        Span::raw(" edit  "),
         Span::styled("s", Style::default().fg(Color::Yellow).bold()),
         Span::raw("/"),
         Span::styled("↵", Style::default().fg(Color::Yellow).bold()),
         Span::raw(" skip  "),
         Span::styled("a", Style::default().fg(Color::Cyan).bold()),
-        Span::raw(" approve all  "),
+        Span::raw(" all  "),
         Span::styled("b", Style::default().fg(Color::Blue).bold()),
         Span::raw("/"),
         Span::styled("←→", Style::default().fg(Color::Blue).bold()),
-        Span::raw(" prev/next  "),
+        Span::raw(" nav  "),
         Span::styled("j/k", Style::default().fg(Color::DarkGray).bold()),
         Span::raw(" scroll  "),
-        Span::styled("PgUp/Dn", Style::default().fg(Color::DarkGray).bold()),
-        Span::raw(" page  "),
         Span::styled("q", Style::default().fg(Color::Red).bold()),
         Span::raw("/"),
         Span::styled("esc", Style::default().fg(Color::Red).bold()),

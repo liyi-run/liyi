@@ -41,11 +41,13 @@ impl From<io::Error> for ApproveError {
 }
 
 /// User decision for an approval candidate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Decision {
     Yes,
     No,
     Skip,
+    /// Approve with edited intent text.
+    Edit(String),
 }
 
 /// A single item pending approval, with all context needed for display.
@@ -197,8 +199,8 @@ pub fn apply_approval_decisions(
     use std::collections::HashMap;
 
     // Group decisions by sidecar path.
-    let mut per_sidecar: HashMap<&Path, Vec<(usize, Decision)>> = HashMap::new();
-    for (candidate, &decision) in candidates.iter().zip(decisions.iter()) {
+    let mut per_sidecar: HashMap<&Path, Vec<(usize, &Decision)>> = HashMap::new();
+    for (candidate, decision) in candidates.iter().zip(decisions.iter()) {
         per_sidecar
             .entry(candidate.sidecar_path.as_path())
             .or_default()
@@ -217,11 +219,24 @@ pub fn apply_approval_decisions(
         let mut rejected = 0usize;
         let mut modified = false;
 
-        for &(spec_index, decision) in item_decisions {
+        for &(spec_index, ref decision) in item_decisions {
             if let Some(Spec::Item(item)) = sidecar.specs.get_mut(spec_index) {
                 match decision {
                     Decision::Yes => {
                         if !dry_run {
+                            item.reviewed = true;
+                            if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span)
+                            {
+                                item.source_hash = Some(hash);
+                                item.source_anchor = Some(anchor);
+                            }
+                            modified = true;
+                        }
+                        approved += 1;
+                    }
+                    Decision::Edit(new_intent) => {
+                        if !dry_run {
+                            item.intent = new_intent.clone();
                             item.reviewed = true;
                             if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span)
                             {
