@@ -29,7 +29,7 @@
     },
     {
       "item": "run_tui",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, e=edit (leaves TUI for $EDITOR, approves with edited intent or cancels on empty result), s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit. The e key suspends raw mode and alternate screen, spawns the editor, then re-enters both, rebuilding the terminal.",
       "source_span": [
         165,
@@ -53,7 +53,7 @@
     },
     {
       "item": "draw_intent",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the intent pane with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current, show with reassuring title; (3) 'Intent (changed)' — show previous and current intents with word-level diff highlighting via diff_spans: removed words in white-on-red, inserted words in white-on-green, unchanged text in base red/green. Uses push_span_lines for newline-aware rendering. Handles =doc sentinel for all branches.",
       "source_span": [
         352,
@@ -65,7 +65,7 @@
     },
     {
       "item": "go_forward",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Advance to the next candidate without changing its decision. If already on the last candidate, do nothing. Resets scroll to centre on the new candidate's span.",
       "source_span": [
         86,
@@ -113,7 +113,7 @@
     },
     {
       "item": "edit_intent_in_editor",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, and previous intent (if any). Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
       "source_span": [
         101,
@@ -125,7 +125,7 @@
     },
     {
       "item": "diff_spans",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Produce styled ratatui Spans for one side of a word-level diff between old and new text. Uses similar::TextDiff with Patience algorithm. Equal segments get base_style; segments matching the selected side (Delete for previous, Insert for current) get highlight_style; the other side's changes are omitted.",
       "source_span": [
         297,
@@ -137,7 +137,7 @@
     },
     {
       "item": "push_span_lines",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Convert a vec of styled Spans into indented display Lines, splitting on embedded newlines. Each logical line is prefixed with two-space indentation.",
       "source_span": [
         326,
@@ -148,7 +148,7 @@
     },
     {
       "item": "draw_keys",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the keybinding footer line showing all available keys: y (approve), n (reject), e (edit), s/Enter (skip), a (approve all), b/arrows (navigation), j/k (scroll), q/Esc (quit).",
       "source_span": [
         584,
