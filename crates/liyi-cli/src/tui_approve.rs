@@ -11,6 +11,7 @@ use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Gauge, Paragraph, Wrap};
+use similar::{ChangeTag, TextDiff};
 use syntect::highlighting::{self, ThemeSet};
 use syntect::parsing::SyntaxSet;
 
@@ -200,6 +201,68 @@ fn draw_header(
     f.render_widget(block, area);
 }
 
+/// Expand a `TextDiff` into styled `Span`s for one side of the diff.
+///
+/// `side` selects which changes to include:
+/// - `ChangeTag::Delete` → previous (removed text highlighted)
+/// - `ChangeTag::Insert` → current (inserted text highlighted)
+///
+/// Equal segments use `base_style`; changed segments use `highlight_style`.
+fn diff_spans<'a>(
+    old: &str,
+    new: &str,
+    side: ChangeTag,
+    base_style: Style,
+    highlight_style: Style,
+) -> Vec<Span<'a>> {
+    let diff = TextDiff::configure()
+        .algorithm(similar::Algorithm::Patience)
+        .diff_words(old, new);
+    let mut spans = Vec::new();
+    for change in diff.iter_all_changes() {
+        match change.tag() {
+            ChangeTag::Equal => {
+                spans.push(Span::styled(change.value().to_owned(), base_style));
+            }
+            tag if tag == side => {
+                spans.push(Span::styled(change.value().to_owned(), highlight_style));
+            }
+            _ => {
+                // Other side's change — skip.
+            }
+        }
+    }
+    spans
+}
+
+/// Append styled `Span`s as indented display lines, splitting on embedded
+/// newlines.  Each logical line is prefixed with two-space indentation.
+fn push_span_lines<'a>(spans: Vec<Span<'a>>, lines: &mut Vec<Line<'a>>) {
+    let mut current_line_spans: Vec<Span<'a>> = vec![Span::raw("  ")];
+    for span in spans {
+        let text = span.content.to_string();
+        let style = span.style;
+        let mut parts = text.split('\n');
+        if let Some(first) = parts.next()
+            && !first.is_empty()
+        {
+            current_line_spans.push(Span::styled(first.to_owned(), style));
+        }
+        for part in parts {
+            lines.push(Line::from(std::mem::replace(
+                &mut current_line_spans,
+                vec![Span::raw("  ")],
+            )));
+            if !part.is_empty() {
+                current_line_spans.push(Span::styled(part.to_owned(), style));
+            }
+        }
+    }
+    if current_line_spans.len() > 1 {
+        lines.push(Line::from(current_line_spans));
+    }
+}
+
 fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {
     let current_text = if candidate.intent == "=doc" {
         "(intent delegated to source docstring)".to_string()
@@ -241,19 +304,26 @@ fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate
                     .style(Style::default().fg(Color::White));
                 f.render_widget(paragraph, area);
             } else {
-                // Intent changed — show previous and current with labels.
+                // Intent changed — show previous and current with
+                // word-level diff highlighting.
                 let mut lines: Vec<Line> = Vec::new();
 
                 lines.push(Line::from(Span::styled(
                     "▼ Previously approved:",
                     Style::default().fg(Color::DarkGray).bold(),
                 )));
-                for l in prev_text.lines() {
-                    lines.push(Line::from(Span::styled(
-                        format!("  {l}"),
-                        Style::default().fg(Color::Red),
-                    )));
-                }
+
+                let prev_spans = diff_spans(
+                    &prev_text,
+                    &current_text,
+                    ChangeTag::Delete,
+                    Style::default().fg(Color::Red),
+                    Style::default()
+                        .fg(Color::White)
+                        .bg(Color::Red)
+                        .add_modifier(Modifier::BOLD),
+                );
+                push_span_lines(prev_spans, &mut lines);
 
                 lines.push(Line::from(""));
 
@@ -261,12 +331,18 @@ fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate
                     "▲ Current (proposed):",
                     Style::default().fg(Color::DarkGray).bold(),
                 )));
-                for l in current_text.lines() {
-                    lines.push(Line::from(Span::styled(
-                        format!("  {l}"),
-                        Style::default().fg(Color::Green),
-                    )));
-                }
+
+                let cur_spans = diff_spans(
+                    &prev_text,
+                    &current_text,
+                    ChangeTag::Insert,
+                    Style::default().fg(Color::Green),
+                    Style::default()
+                        .fg(Color::White)
+                        .bg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                );
+                push_span_lines(cur_spans, &mut lines);
 
                 let paragraph = Paragraph::new(Text::from(lines))
                     .block(
