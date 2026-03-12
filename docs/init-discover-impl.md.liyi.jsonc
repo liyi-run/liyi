@@ -1,0 +1,79 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "docs/init-discover-impl.md",
+  "specs": [
+    {
+      "requirement": "exhaustive-inclusion",
+      "source_span": [
+        23,
+        25
+      ],
+      "source_hash": "sha256:7b8c91a432205a56acfb9cbf8da8bc3f35394dd99659e9eedfa2b1c700b1898f",
+      "source_anchor": "<!-- @liyi:requirement exhaustive-inclusion -->"
+    },
+    {
+      "requirement": "hints-are-ephemeral",
+      "source_span": [
+        27,
+        29
+      ],
+      "source_hash": "sha256:b3a4dc0791ee2ac8c90be4bf8e98980f5ba91e7d1af48ffc19e0ff9d0566082e",
+      "source_anchor": "<!-- @liyi:requirement hints-are-ephemeral -->"
+    },
+    {
+      "requirement": "hints-intentionally-unstructured",
+      "source_span": [
+        31,
+        33
+      ],
+      "source_hash": "sha256:05bf58a1f6b0da5de4c0cffe14abacdc0c276287705d61717295796355381381",
+      "source_anchor": "<!-- @liyi:requirement hints-intentionally-unstructured -->"
+    },
+    {
+      "requirement": "tree-sitter-signals-always-present",
+      "source_span": [
+        35,
+        37
+      ],
+      "source_hash": "sha256:13a12566941a5d02a43e57fb1ec4d41b757e9e7b0cd5a2af3ac19afad013e5d7",
+      "source_anchor": "<!-- @liyi:requirement tree-sitter-signals-always-present -->"
+    },
+    {
+      "requirement": "graceful-degradation",
+      "source_span": [
+        39,
+        41
+      ],
+      "source_hash": "sha256:571696b0a47d9e6952df9d594fe403a5de1d89fbba3c78026af6dc6eb295bec7",
+      "source_anchor": "<!-- @liyi:requirement graceful-degradation -->"
+    },
+    {
+      "requirement": "no-git2-dependency",
+      "source_span": [
+        43,
+        45
+      ],
+      "source_hash": "sha256:13de4c9a9adb79e8beefbf595f364232ae6fe36ef9589ae4ce86ebacf493474f",
+      "source_anchor": "<!-- @liyi:requirement no-git2-dependency -->"
+    },
+    {
+      "requirement": "item-naming-uses-leaf-name",
+      "source_span": [
+        47,
+        49
+      ],
+      "source_hash": "sha256:e799ed5bc9cefc895b2f4ef746b712c7e371b6e36675f6b0b29c5f19816ca281",
+      "source_anchor": "<!-- @liyi:requirement item-naming-uses-leaf-name -->"
+    },
+    {
+      "requirement": "reuse-kind-map-as-item-definition",
+      "source_span": [
+        51,
+        53
+      ],
+      "source_hash": "sha256:c8ac15e618130dedd0d18e05d4985a90cab0816f661756cef768ac1f036742b5",
+      "source_anchor": "<!-- @liyi:requirement reuse-kind-map-as-item-definition -->"
+    }
+  ]
+}
