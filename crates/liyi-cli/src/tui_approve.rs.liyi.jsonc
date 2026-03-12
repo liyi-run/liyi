@@ -113,7 +113,7 @@
     },
     {
       "item": "edit_intent_in_editor",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, and previous intent (if any). Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
       "source_span": [
         101,
@@ -125,7 +125,7 @@
     },
     {
       "item": "diff_spans",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Produce styled ratatui Spans for one side of a word-level diff between old and new text. Uses similar::TextDiff with Patience algorithm. Equal segments get base_style; segments matching the selected side (Delete for previous, Insert for current) get highlight_style; the other side's changes are omitted.",
       "source_span": [
         301,

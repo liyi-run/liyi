@@ -34,7 +34,7 @@
     },
     {
       "item": "check_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (structural errors). On semantic drift (tree_path resolves but content changed): for reviewed specs, update span but leave hash stale so the spec is flagged for intent review; for unreviewed specs, also rehash at the new location since no human judgment is at stake. When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         311,
