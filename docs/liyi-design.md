@@ -2247,6 +2247,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - Projects with formal verification or contracts already in place.
 - Domains where the primary failure mode is performance or perceptual (rendering, audio, latency-critical hot paths) — NL specs can express constraints, but adversarial tests can't see pixels or measure nanoseconds.
 - Writers and poets — where betraying your original intent *is* the breakthrough. (The "any human language" selling point applies to formalized intent, not to the 文随意转 kind that must stay fluid to survive.)
+- Teams in the survive-or-die sprint toward product-market fit — where any process overhead competes for the scarcest resource (founder attention). These teams don't need to adopt 立意; they need to know it exists, so they can reach for it when the codebase outlives its original authors. Paradoxically, the faster a team iterates, the higher the rate of intent entropy — but the forcing function for adoption is a painful incident, not a proactive decision, and premature adoption risks poisoning the team's perception of the tool before they're ready.
 
 ### Intended workflow
 
