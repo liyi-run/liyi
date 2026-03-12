@@ -412,6 +412,53 @@ fn semantic_drift_fix_preserves_stale() {
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
 
+/// Semantic drift on an UNREVIEWED spec: tree_path resolves to a new span,
+/// content has changed, but `reviewed` is false — no human judgment at stake.
+/// `--fix` should update the span AND rehash (auto-rehash for unreviewed).
+/// After fix, the spec should be current (not stale).
+#[test]
+fn semantic_drift_unreviewed_auto_rehash() {
+    let (_tmp, root) = fixture_in_tmp("semantic_drift_unreviewed");
+    let flags = CheckFlags {
+        fail_on_stale: true,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+        fail_on_untracked: true,
+    };
+
+    // First pass with --fix: should update span via tree_path AND rehash
+    // because the spec is unreviewed — no human judgment to protect.
+    let (diags_fix, _) = run_check(&root, &[], true, false, &flags);
+
+    let has_stale_fixed = diags_fix
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Stale) && d.fixed);
+    assert!(
+        has_stale_fixed,
+        "expected a fixed Stale diagnostic during --fix pass, got: {diags_fix:#?}"
+    );
+
+    // Second pass WITHOUT --fix: the span should be corrected to [4,6]
+    // and hash updated — spec should now be Current, not Stale.
+    let (diags_recheck, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    let has_current = diags_recheck
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Current));
+    assert!(
+        has_current,
+        "expected Current on re-check (unreviewed spec auto-rehashed), got: {diags_recheck:#?}"
+    );
+    let still_stale = diags_recheck
+        .iter()
+        .any(|d| matches!(d.kind, DiagnosticKind::Stale));
+    assert!(
+        !still_stale,
+        "unreviewed spec should not remain stale after --fix, got: {diags_recheck:#?}"
+    );
+    assert_eq!(exit_code, LiyiExitCode::Clean);
+}
+
 #[test]
 fn req_changed() {
     let root = fixture_path("req_changed");

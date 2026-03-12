@@ -568,38 +568,73 @@ fn check_sidecar(
                                     });
                                 } else {
                                     // Content changed (semantic drift).
-                                    // Update span to track the item's
-                                    // current location but do NOT rehash —
-                                    // the stale hash is the signal that
-                                    // intent review is needed.
-                                    if fix && new_span != old_span {
-                                        item.source_span = new_span;
-                                        // Intentionally NOT updating hash —
-                                        // leaves the spec stale so the next
-                                        // `liyi check` flags it.
-                                        if let Some(l) = lang {
-                                            item.tree_path =
-                                                compute_tree_path(&source_content, new_span, l);
+                                    // For reviewed specs (sidecar or
+                                    // @liyi:intent in source): update span
+                                    // but do NOT rehash — the stale hash
+                                    // signals that intent review is needed.
+                                    // For unreviewed specs: rehash is safe
+                                    // since no human judgment is at stake.
+                                    let effectively_reviewed = item.reviewed
+                                        || source_markers.iter().any(|m| {
+                                            matches!(m, SourceMarker::Intent { line, .. } if *line >= new_span[0] && *line <= new_span[1])
+                                        });
+                                    if fix {
+                                        if new_span != old_span {
+                                            item.source_span = new_span;
+                                            if let Some(l) = lang {
+                                                item.tree_path =
+                                                    compute_tree_path(&source_content, new_span, l);
+                                            }
+                                        }
+                                        if !effectively_reviewed {
+                                            // Unreviewed: rehash at
+                                            // current location.
+                                            if let Ok((h, a)) =
+                                                hash_span(&source_content, new_span)
+                                            {
+                                                item.source_hash = Some(h);
+                                                item.source_anchor = Some(a);
+                                            }
                                         }
                                         modified = true;
                                     }
-                                    let msg = if new_span != old_span {
-                                        format!(
-                                            "source changed and shifted → [{}, {}] (tree_path resolved, not auto-rehashed)",
-                                            new_span[0], new_span[1]
-                                        )
+                                    if effectively_reviewed {
+                                        let msg = if new_span != old_span {
+                                            format!(
+                                                "source changed and shifted → [{}, {}] (tree_path resolved, not auto-rehashed — reviewed)",
+                                                new_span[0], new_span[1]
+                                            )
+                                        } else {
+                                            "source changed at tree_path location (not auto-rehashed — reviewed)".into()
+                                        };
+                                        diagnostics.push(Diagnostic {
+                                            file: entry.source_path.clone(),
+                                            item_or_req: label.clone(),
+                                            kind: DiagnosticKind::Stale,
+                                            severity: Severity::Warning,
+                                            message: msg,
+                                            fix_hint: None,
+                                            fixed: false,
+                                        });
                                     } else {
-                                        "source changed at tree_path location".into()
-                                    };
-                                    diagnostics.push(Diagnostic {
-                                        file: entry.source_path.clone(),
-                                        item_or_req: label.clone(),
-                                        kind: DiagnosticKind::Stale,
-                                        severity: Severity::Warning,
-                                        message: msg,
-                                        fix_hint: None,
-                                        fixed: false,
-                                    });
+                                        let msg = if new_span != old_span {
+                                            format!(
+                                                "source changed and shifted → [{}, {}] (tree_path resolved, auto-rehashed — unreviewed)",
+                                                new_span[0], new_span[1]
+                                            )
+                                        } else {
+                                            "source changed at tree_path location (auto-rehashed — unreviewed)".into()
+                                        };
+                                        diagnostics.push(Diagnostic {
+                                            file: entry.source_path.clone(),
+                                            item_or_req: label.clone(),
+                                            kind: DiagnosticKind::Stale,
+                                            severity: Severity::Warning,
+                                            message: msg,
+                                            fix_hint: Some("liyi check --fix".into()),
+                                            fixed: fix,
+                                        });
+                                    }
                                 }
                             } else {
                                 // Fallback to shift heuristic
@@ -724,28 +759,55 @@ fn check_sidecar(
                                 fixed: fix,
                                 });
                             } else {
-                                // Content also changed — relocate span
-                                // but leave hash stale.
+                                // Content also changed — relocate span.
+                                // For reviewed specs: leave hash stale.
+                                // For unreviewed: rehash at new location.
+                                let effectively_reviewed = item.reviewed
+                                    || source_markers.iter().any(|m| {
+                                        matches!(m, SourceMarker::Intent { line, .. } if *line >= new_span[0] && *line <= new_span[1])
+                                    });
                                 if fix {
                                     item.source_span = new_span;
                                     if let Some(l) = lang {
                                         item.tree_path =
                                             compute_tree_path(&source_content, new_span, l);
                                     }
+                                    if !effectively_reviewed
+                                        && let Ok((h, a)) =
+                                            hash_span(&source_content, new_span)
+                                    {
+                                        item.source_hash = Some(h);
+                                        item.source_anchor = Some(a);
+                                    }
                                     modified = true;
                                 }
-                                diagnostics.push(Diagnostic {
-                                    file: entry.source_path.clone(),
-                                    item_or_req: label.clone(),
-                                    kind: DiagnosticKind::Stale,
-                                    severity: Severity::Warning,
-                                    message: format!(
-                                        "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed)",
-                                        new_span[0], new_span[1]
-                                    ),
-                                fix_hint: None,
-                                fixed: false,
-                                });
+                                if effectively_reviewed {
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::Stale,
+                                        severity: Severity::Warning,
+                                        message: format!(
+                                            "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed — reviewed)",
+                                            new_span[0], new_span[1]
+                                        ),
+                                        fix_hint: None,
+                                        fixed: false,
+                                    });
+                                } else {
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::Stale,
+                                        severity: Severity::Warning,
+                                        message: format!(
+                                            "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] (auto-rehashed — unreviewed)",
+                                            new_span[0], new_span[1]
+                                        ),
+                                        fix_hint: Some("liyi check --fix".into()),
+                                        fixed: fix,
+                                    });
+                                }
                             }
                         } else {
                             let detail = if tp_note.is_empty() {
