@@ -113,26 +113,26 @@
     },
     {
       "item": "edit_intent_in_editor",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, and previous intent (if any). Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
       "source_span": [
         101,
         165
       ],
       "tree_path": "fn::edit_intent_in_editor",
-      "source_hash": "sha256:8ff97648babc9b1e4c39050b8d2589bd8fd84f2c0841cd3478db100d84fa5e80",
+      "source_hash": "sha256:495cd3750e82d0a11c3a0a256cbf49b25f356df77a9da9cf72b1919e5cb7c311",
       "source_anchor": "fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {"
     },
     {
       "item": "diff_spans",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Produce styled ratatui Spans for one side of a word-level diff between old and new text. Uses similar::TextDiff with Patience algorithm. Equal segments get base_style; segments matching the selected side (Delete for previous, Insert for current) get highlight_style; the other side's changes are omitted.",
       "source_span": [
         301,
         326
       ],
       "tree_path": "fn::diff_spans",
-      "source_hash": "sha256:e44ffbee749651fac835d3f18495f26d14b7b370e166dfa23148d9cb5e41b8ad",
+      "source_hash": "sha256:e3f1fb033acd0e19d9608efee056d2f366c94fe812c5a95088d89577a53790f9",
       "source_anchor": "fn diff_spans<'a>("
     },
     {

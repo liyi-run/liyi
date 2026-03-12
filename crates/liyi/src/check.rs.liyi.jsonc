@@ -38,10 +38,10 @@
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore markers, and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (structural errors). On semantic drift (tree_path resolves but content changed): for reviewed specs, update span but leave hash stale so the spec is flagged for intent review; for unreviewed specs, also rehash at the new location since no human judgment is at stake. When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         311,
-        1175
+        1173
       ],
       "tree_path": "fn::check_sidecar",
-      "source_hash": "sha256:43402a5303d8187213d46147d159089b0395b4dd22024ab05e3e935b925c9b9d",
+      "source_hash": "sha256:1f621d7f4f188ef824256094636cf27df8fd845231fdf87aa2817fd210cac5cc",
       "source_anchor": "fn check_sidecar(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:8748cbe52efb4e6633262ea5db42e9f33fdd83ab3cc5a7576c27689d58ee9ef8",
@@ -54,8 +54,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1240,
-        1251
+        1238,
+        1249
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:77c7602b283fb2e67c7953f98ef11b417c83903d96011f370b7b0421778f52c2",
