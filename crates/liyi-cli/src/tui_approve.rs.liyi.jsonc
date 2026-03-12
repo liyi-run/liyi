@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Hold shared syntax-highlighting resources (SyntaxSet and Theme) that are initialised once per TUI session and reused across all candidates to avoid repeated loading.",
       "source_span": [
-        20,
-        23
+        22,
+        25
       ],
       "tree_path": "struct::Highlighter",
       "source_hash": "sha256:6f587bdd27e8479b8d1da76b5a04e96990e65a23b22737b1c93175f8585e9b00",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Hold TUI state for the approval workflow: a reference to the candidates slice, a parallel decisions vector (initialized to Skip), the current item index, a vertical scroll offset for the source pane, a quit flag, and a Highlighter for syntax colouring. On construction, loads syntect default syntaxes and the base16-eighties.dark theme and sets initial scroll to centre on the first candidate's span. Provides methods to advance (decide), go back (both auto-centre scroll on the new span), and check completion.",
       "source_span": [
-        26,
-        34
+        28,
+        36
       ],
       "tree_path": "struct::ApproveTui",
       "source_hash": "sha256:2b3c0b9d640826313723410910daa03ae18e8f98035e928627be44313fada02e",
@@ -29,14 +29,14 @@
     },
     {
       "item": "run_tui",
-      "reviewed": true,
-      "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit.",
+      "reviewed": false,
+      "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, e=edit (leaves TUI for $EDITOR, approves with edited intent or cancels on empty result), s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit. The e key suspends raw mode and alternate screen, spawns the editor, then re-enters both, rebuilding the terminal.",
       "source_span": [
-        94,
-        156
+        165,
+        243
       ],
       "tree_path": "fn::run_tui",
-      "source_hash": "sha256:ac647b13c854f8e4da3ca2983c8ccad22334de34e7e1255340e2827cda1e4773",
+      "source_hash": "sha256:73c7ee7fce82fbb79c2fe0e0573e658e2b22390c6c417d1d97e0bf94b877ed0a",
       "source_anchor": "pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {"
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
       "source_span": [
-        158,
-        180
+        245,
+        267
       ],
       "tree_path": "fn::draw",
       "source_hash": "sha256:6650e4e5f3c9a926b94ca1fced17ebb189572e68e04611b39b6dadd944d64a84",
@@ -53,34 +53,35 @@
     },
     {
       "item": "draw_intent",
-      "reviewed": true,
-      "intent": "Render the intent pane with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current, show with reassuring title; (3) 'Intent (changed)' — show previous intent in red and current in green with labeled sections for easy comparison. Handles =doc sentinel for all branches.",
+      "reviewed": false,
+      "intent": "Render the intent pane with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current, show with reassuring title; (3) 'Intent (changed)' — show previous and current intents with word-level diff highlighting via diff_spans: removed words in white-on-red, inserted words in white-on-green, unchanged text in base red/green. Uses push_span_lines for newline-aware rendering. Handles =doc sentinel for all branches.",
       "source_span": [
-        203,
-        284
+        352,
+        445
       ],
       "tree_path": "fn::draw_intent",
-      "source_hash": "sha256:fb0ed791925b957cf06cb49986f8bebc75987b2eb74519ac948bcd8e49cc0960",
+      "source_hash": "sha256:a2a98d2d895dcc6e43520e3649d9188761fbf9a915614c708fff11fc069ea58d",
       "source_anchor": "fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {"
     },
     {
       "item": "go_forward",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Advance to the next candidate without changing its decision. If already on the last candidate, do nothing. Resets scroll to centre on the new candidate's span.",
       "source_span": [
         86,
-        92
+        91
       ],
-      "source_hash": "sha256:a5001a7df93509eeb75dcc3c99dbdfcae321bc79a38bcebaf0a0c2cf74858b7a",
-      "source_anchor": "            self.current += 1;"
+      "tree_path": "impl::ApproveTui<'a>::fn::go_forward",
+      "source_hash": "sha256:b5e65bd9e59d5b7e696781d0b39d8e6d37efd4c6ee78e6ff82c40cb3f059107f",
+      "source_anchor": "    fn go_forward(&mut self) {"
     },
     {
       "item": "file_highlight_enabled",
       "reviewed": true,
       "intent": "Return true if the source file is small enough for syntax highlighting (at most MAX_HIGHLIGHT_LINES lines). Files exceeding this threshold fall back to plain text to avoid UI lag.",
       "source_span": [
-        300,
-        302
+        462,
+        464
       ],
       "tree_path": "fn::file_highlight_enabled",
       "source_hash": "sha256:821830209cdb75e5eb3b1150ee23a4d64f85784dbe745ca74e452e1bc824ad94",
@@ -91,8 +92,8 @@
       "reviewed": true,
       "intent": "Return true if a single line is short enough for syntax highlighting (at most MAX_LINE_LEN bytes). Longer lines fall back to plain text to prevent the regex engine from stalling.",
       "source_span": [
-        306,
-        308
+        468,
+        470
       ],
       "tree_path": "fn::line_highlight_enabled",
       "source_hash": "sha256:4d7b4288503aacc75636635972c3155aa6a58a175264395d9f79d8b10947fa86",
@@ -103,12 +104,59 @@
       "reviewed": true,
       "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line, and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
-        310,
-        404
+        472,
+        566
       ],
       "tree_path": "fn::draw_source",
       "source_hash": "sha256:5ea7fd49aaa4f40cb48ed4292b8474f55b11b20de125aa3a95e28f2af673a0c7",
       "source_anchor": "fn draw_source("
+    },
+    {
+      "item": "edit_intent_in_editor",
+      "reviewed": false,
+      "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, and previous intent (if any). Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
+      "source_span": [
+        101,
+        162
+      ],
+      "tree_path": "fn::edit_intent_in_editor",
+      "source_hash": "sha256:8ff97648babc9b1e4c39050b8d2589bd8fd84f2c0841cd3478db100d84fa5e80",
+      "source_anchor": "fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {"
+    },
+    {
+      "item": "diff_spans",
+      "reviewed": false,
+      "intent": "Produce styled ratatui Spans for one side of a word-level diff between old and new text. Uses similar::TextDiff with Patience algorithm. Equal segments get base_style; segments matching the selected side (Delete for previous, Insert for current) get highlight_style; the other side's changes are omitted.",
+      "source_span": [
+        297,
+        324
+      ],
+      "tree_path": "fn::diff_spans",
+      "source_hash": "sha256:e44ffbee749651fac835d3f18495f26d14b7b370e166dfa23148d9cb5e41b8ad",
+      "source_anchor": "fn diff_spans<'a>("
+    },
+    {
+      "item": "push_span_lines",
+      "reviewed": false,
+      "intent": "Convert a vec of styled Spans into indented display Lines, splitting on embedded newlines. Each logical line is prefixed with two-space indentation.",
+      "source_span": [
+        326,
+        349
+      ],
+      "source_hash": "sha256:665fa116220a8f209a92f6bfcbe97cffcb8d2e529a06186a5da1de91892929ba",
+      "source_anchor": "fn push_span_lines<'a>(spans: Vec<Span<'a>>, lines: &mut Vec<Line<'a>>) {"
+    },
+    {
+      "item": "draw_keys",
+      "reviewed": false,
+      "intent": "Render the keybinding footer line showing all available keys: y (approve), n (reject), e (edit), s/Enter (skip), a (approve all), b/arrows (navigation), j/k (scroll), q/Esc (quit).",
+      "source_span": [
+        584,
+        610
+      ],
+      "tree_path": "fn::draw_keys",
+      "source_hash": "sha256:8431e999e2119b33f02465b01787d7cb6502308f4d68dc41039043d16fc6f229",
+      "source_anchor": "fn draw_keys(f: &mut ratatui::Frame, area: Rect) {"
     }
   ]
 }

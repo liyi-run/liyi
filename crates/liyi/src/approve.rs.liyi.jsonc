@@ -29,14 +29,14 @@
     },
     {
       "item": "Decision",
-      "reviewed": true,
-      "intent": "Public enum representing a user's approval decision: Yes (approve item), No (reject), or Skip (defer). Used by both interactive TUI and batch workflows.",
+      "reviewed": false,
+      "intent": "Public enum representing a user's approval decision: Yes (approve and accept inferred intent), No (reject), Skip (defer), or Edit(String) (approve with human-overridden intent text). Used by both interactive TUI and batch workflows.",
       "source_span": [
         45,
-        49
+        51
       ],
       "tree_path": "enum::Decision",
-      "source_hash": "sha256:78ddefd2929bc0724782cf7017063ca80dab606d4b2871a7b54b162c008d4d82",
+      "source_hash": "sha256:7ef0f139b48b1ba38b41a76619f77ac2d7a2997177de5bf1b1bf7788a16edaea",
       "source_anchor": "pub enum Decision {"
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), span_len (number of span lines), and prev_intent (the previously approved intent from Git history, if any). Decouples data gathering from presentation.",
       "source_span": [
-        53,
-        74
+        55,
+        76
       ],
       "tree_path": "struct::ApprovalCandidate",
       "source_hash": "sha256:44c6930ed728452604482bb5e1801d63ea6c827ea6703b337642bfe4731d68e0",
@@ -56,8 +56,8 @@
       "reviewed": true,
       "intent": "Walk Git history (up to 20 commits via git_log_revisions) to find the most recent commit where the item had reviewed=true in the sidecar. For each revision, retrieves the sidecar via git_show, parses it, and matches by tree_path (preferred) or item name. Returns Some(intent) from the first matching reviewed item. Returns None if repo_root is None, the path is not repo-relative, or no reviewed version exists in history.",
       "source_span": [
-        81,
-        115
+        83,
+        117
       ],
       "tree_path": "fn::lookup_prev_intent",
       "source_hash": "sha256:b5ce613c5c51a99342f0509fa1a1eb3a3368e1a86d38d734cf5a1bc0ace1e342",
@@ -68,8 +68,8 @@
       "reviewed": true,
       "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
       "source_span": [
-        118,
-        185
+        120,
+        187
       ],
       "tree_path": "fn::collect_approval_candidates",
       "source_hash": "sha256:e87ea63a0590c5b196a5f0f067a2f6cf11ed97a2d34b6c2b8eaebde2df532cdb",
@@ -77,14 +77,14 @@
     },
     {
       "item": "apply_approval_decisions",
-      "reviewed": true,
-      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
+      "reviewed": false,
+      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For Edit(text): update intent text, set reviewed=true, and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        192,
-        261
+        194,
+        276
       ],
       "tree_path": "fn::apply_approval_decisions",
-      "source_hash": "sha256:9c0d764481d5db271b8bb7bf96b2f6d13e040cad09b4845010123ff5c2cd1a87",
+      "source_hash": "sha256:b197034db3a78599e9dd253fa045ba35bc6308a411e89f7d3ed4e7e56e395752",
       "source_anchor": "pub fn apply_approval_decisions(",
       "related": {
         "reviewed-semantics": "sha256:40020571498ef149fe7a67ebd78bc430320921aae1faac8b7be1c830f35ae636"
@@ -95,8 +95,8 @@
       "reviewed": true,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        264,
-        275
+        279,
+        290
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",
