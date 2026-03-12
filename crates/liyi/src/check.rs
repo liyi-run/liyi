@@ -589,8 +589,7 @@ fn check_sidecar(
                                         if !effectively_reviewed {
                                             // Unreviewed: rehash at
                                             // current location.
-                                            if let Ok((h, a)) =
-                                                hash_span(&source_content, new_span)
+                                            if let Ok((h, a)) = hash_span(&source_content, new_span)
                                             {
                                                 item.source_hash = Some(h);
                                                 item.source_anchor = Some(a);
@@ -773,8 +772,7 @@ fn check_sidecar(
                                             compute_tree_path(&source_content, new_span, l);
                                     }
                                     if !effectively_reviewed
-                                        && let Ok((h, a)) =
-                                            hash_span(&source_content, new_span)
+                                        && let Ok((h, a)) = hash_span(&source_content, new_span)
                                     {
                                         item.source_hash = Some(h);
                                         item.source_anchor = Some(a);
