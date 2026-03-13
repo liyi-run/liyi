@@ -36,13 +36,16 @@ fn arb_name() -> impl Strategy<Value = String> {
 fn arb_kind() -> impl Strategy<Value = String> {
     prop::sample::select(vec![
         "fn",
+        "array_table",
         "class",
         "struct",
         "enum",
         "trait",
         "impl",
+        "key",
         "mod",
         "const",
+        "table",
         "type",
         "test",
         "method",
@@ -64,7 +67,13 @@ fn arb_kind() -> impl Strategy<Value = String> {
 
 /// Strategy for a (Kind, Name) pair.
 fn arb_segment_pair() -> impl Strategy<Value = (Segment, Segment)> {
-    (arb_kind(), arb_name()).prop_map(|(k, n)| (Segment::Kind(k), Segment::Name(n)))
+    (arb_kind(), arb_name()).prop_map(|(k, n)| (Segment::Kind(k), Segment::Name(n, None)))
+}
+
+/// Strategy for a (Kind, Name) pair with optional index.
+fn arb_segment_pair_indexed() -> impl Strategy<Value = (Segment, Segment)> {
+    (arb_kind(), arb_name(), prop::option::of(0..100usize))
+        .prop_map(|(k, n, idx)| (Segment::Kind(k), Segment::Name(n, idx)))
 }
 
 /// Strategy for a complete TreePath (1–4 segment pairs, no injection).
@@ -75,22 +84,39 @@ fn arb_tree_path() -> impl Strategy<Value = TreePath> {
     })
 }
 
+/// Strategy for a complete TreePath with optional indices (1–4 pairs).
+fn arb_tree_path_indexed() -> impl Strategy<Value = TreePath> {
+    prop::collection::vec(arb_segment_pair_indexed(), 1..=4).prop_map(|pairs| {
+        let segments: Vec<Segment> = pairs.into_iter().flat_map(|(k, n)| vec![k, n]).collect();
+        TreePath { segments }
+    })
+}
+
 /// Check if a string is a kind keyword in our expanded list.
 fn is_kind(s: &str) -> bool {
     matches!(
         s,
         "fn" | "annotation"
+            | "array_table"
             | "class"
             | "const"
+            | "const_constructor"
             | "constructor"
             | "delegate"
             | "enum"
+            | "extension"
+            | "extension_type"
+            | "factory"
+            | "factory_redirect"
+            | "getter"
             | "impl"
             | "init"
             | "interface"
+            | "key"
             | "macro"
             | "method"
             | "method_decl"
+            | "mixin"
             | "mod"
             | "module"
             | "namespace"
@@ -98,9 +124,11 @@ fn is_kind(s: &str) -> bool {
             | "property"
             | "protocol"
             | "record"
+            | "setter"
             | "singleton_method"
             | "static"
             | "struct"
+            | "table"
             | "template"
             | "test"
             | "trait"
@@ -122,19 +150,43 @@ proptest! {
 
         // Extract (kind, name) pairs from both, ignoring Kind/Name classification
         let original_pairs: Vec<(&str, &str)> = path.segments.chunks(2).map(|pair| {
-            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s) => s.as_str(), _ => panic!() };
-            let n = match &pair[1] { Segment::Kind(s) | Segment::Name(s) => s.as_str(), _ => panic!() };
+            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
+            let n = match &pair[1] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
             (k, n)
         }).collect();
 
         let reparsed_pairs: Vec<(&str, &str)> = reparsed.segments.chunks(2).map(|pair| {
-            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s) => s.as_str(), _ => panic!() };
-            let n = match &pair[1] { Segment::Kind(s) | Segment::Name(s) => s.as_str(), _ => panic!() };
+            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
+            let n = match &pair[1] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
             (k, n)
         }).collect();
 
         prop_assert_eq!(original_pairs, reparsed_pairs,
             "Roundtrip failed for serialized form: {:?}", serialized);
+    }
+
+    /// Roundtrip for paths with optional array indices.
+    #[test]
+    fn roundtrip_serialize_parse_indexed(path in arb_tree_path_indexed()) {
+        let serialized = path.serialize();
+        let reparsed = TreePath::parse(&serialized)
+            .unwrap_or_else(|e| panic!("Failed to parse indexed path {serialized:?}: {e}"));
+
+        // Extract (kind, name, index) triples
+        let original_triples: Vec<(&str, &str, Option<usize>)> = path.segments.chunks(2).map(|pair| {
+            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
+            let (n, idx) = match &pair[1] { Segment::Name(s, idx) => (s.as_str(), *idx), Segment::Kind(s) => (s.as_str(), None), _ => panic!() };
+            (k, n, idx)
+        }).collect();
+
+        let reparsed_triples: Vec<(&str, &str, Option<usize>)> = reparsed.segments.chunks(2).map(|pair| {
+            let k = match &pair[0] { Segment::Kind(s) | Segment::Name(s, _) => s.as_str(), _ => panic!() };
+            let (n, idx) = match &pair[1] { Segment::Name(s, idx) => (s.as_str(), *idx), Segment::Kind(s) => (s.as_str(), None), _ => panic!() };
+            (k, n, idx)
+        }).collect();
+
+        prop_assert_eq!(original_triples, reparsed_triples,
+            "Indexed roundtrip failed for serialized form: {:?}", serialized);
     }
 
     /// serialize_name roundtrip: the serialized form should parse back to the original name.
@@ -146,7 +198,7 @@ proptest! {
         let parsed = TreePath::parse(&path_str)
             .unwrap_or_else(|e| panic!("Failed to parse fn::{serialized}: {e}"));
         let parsed_name = match &parsed.segments[1] {
-            Segment::Kind(s) | Segment::Name(s) => s.clone(),
+            Segment::Kind(s) | Segment::Name(s, _) => s.clone(),
             _ => panic!("Expected Kind or Name segment"),
         };
         prop_assert_eq!(name, parsed_name,

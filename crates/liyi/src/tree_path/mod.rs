@@ -301,22 +301,32 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
 
     let parsed = parser::TreePath::parse(tree_path).ok()?;
 
-    // Collect non-injection segments into (kind, name) pairs.
-    let flat: Vec<&str> = parsed
-        .segments
-        .iter()
-        .filter_map(|s| match s {
-            parser::Segment::Kind(k) => Some(k.as_str()),
-            parser::Segment::Name(n) => Some(n.as_str()),
-            parser::Segment::Injection(_) => None,
-        })
-        .collect();
+    // Collect non-injection segments into (kind, name, optional_index) triples.
+    let mut flat: Vec<FlatSegment<'_>> = Vec::new();
+    for s in &parsed.segments {
+        match s {
+            parser::Segment::Kind(k) => flat.push(FlatSegment::KindOrName(k.as_str(), None)),
+            parser::Segment::Name(n, idx) => flat.push(FlatSegment::KindOrName(n.as_str(), *idx)),
+            parser::Segment::Injection(_) => {}
+        }
+    }
 
     if !flat.len().is_multiple_of(2) || flat.is_empty() {
         return None;
     }
 
-    let pairs: Vec<(&str, &str)> = flat.chunks(2).map(|c| (c[0], c[1])).collect();
+    let pairs: Vec<PathPair<'_>> = flat
+        .chunks(2)
+        .map(|c| {
+            let kind = c[0].text();
+            let (name, idx) = c[1].text_and_index();
+            PathPair {
+                kind,
+                name,
+                index: idx,
+            }
+        })
+        .collect();
 
     let config = lang.config();
     let mut parser = make_parser(lang);
@@ -331,29 +341,61 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
     Some([start_line, end_line])
 }
 
+/// Intermediate representation for flattened segments.
+enum FlatSegment<'a> {
+    KindOrName(&'a str, Option<usize>),
+}
+
+impl<'a> FlatSegment<'a> {
+    fn text(&self) -> &'a str {
+        let FlatSegment::KindOrName(s, _) = self;
+        s
+    }
+
+    fn text_and_index(&self) -> (&'a str, Option<usize>) {
+        let FlatSegment::KindOrName(s, idx) = self;
+        (s, *idx)
+    }
+}
+
+/// A (kind, name, optional_index) triple for resolution.
+struct PathPair<'a> {
+    kind: &'a str,
+    name: &'a str,
+    index: Option<usize>,
+}
+
 /// Walk the tree to find a node matching the given path segments.
 fn resolve_segments<'a>(
     config: &LanguageConfig,
     parent: &Node<'a>,
-    segments: &[(&str, &str)],
+    segments: &[PathPair<'_>],
     source: &'a str,
 ) -> Option<Node<'a>> {
     if segments.is_empty() {
         return Some(*parent);
     }
 
-    let (kind, name) = segments[0];
-    let ts_kind = config.shorthand_to_kind(kind)?;
+    let pair = &segments[0];
+    let ts_kind = config.shorthand_to_kind(pair.kind)?;
 
     let mut cursor = parent.walk();
     for child in parent.children(&mut cursor) {
         if child.kind() == ts_kind {
-            if let Some(node_name) = config.node_name(&child, source) {
-                if *node_name == *name && segments.len() == 1 {
-                    return Some(child);
-                } else if *node_name == *name {
+            if let Some(node_name) = config.node_name(&child, source)
+                && *node_name == *pair.name
+            {
+                let resolved = if let Some(idx) = pair.index {
+                    // Index into the Nth positional child of this node's body
+                    resolve_indexed_child(config, &child, idx, &segments[1..], source)
+                } else if segments.len() == 1 {
+                    Some(child)
+                } else {
                     // Descend — look inside this node's body
-                    return resolve_in_body(config, &child, &segments[1..], source);
+                    resolve_in_body(config, &child, &segments[1..], source)
+                };
+                if resolved.is_some() {
+                    return resolved;
                 }
             }
         } else if config.transparent_kinds.contains(&child.kind()) {
@@ -367,11 +409,39 @@ fn resolve_segments<'a>(
     None
 }
 
+/// Resolve the Nth positional child of a node's value (for data-file arrays).
+///
+/// After finding the named key node, this looks for its value child (typically
+/// an array node) and selects the child at the given 0-based index. If there
+/// are subsequent path segments, resolution continues from the indexed child.
+fn resolve_indexed_child<'a>(
+    config: &LanguageConfig,
+    node: &Node<'a>,
+    index: usize,
+    remaining: &[PathPair<'_>],
+    source: &'a str,
+) -> Option<Node<'a>> {
+    // For data-file grammars, the "body" of a key-value pair is its value
+    // node (an array or object). Find it, then select the Nth child.
+    let body = config.find_body(node)?;
+    let mut cursor = body.walk();
+    let child = body
+        .children(&mut cursor)
+        .filter(|c| c.is_named())
+        .nth(index)?;
+
+    if remaining.is_empty() {
+        Some(child)
+    } else {
+        resolve_segments(config, &child, remaining, source)
+    }
+}
+
 /// Find subsequent segments inside an item's body (e.g., methods inside impl).
 fn resolve_in_body<'a>(
     config: &LanguageConfig,
     node: &Node<'a>,
-    segments: &[(&str, &str)],
+    segments: &[PathPair<'_>],
     source: &'a str,
 ) -> Option<Node<'a>> {
     let body = config.find_body(node)?;
