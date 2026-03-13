@@ -1,0 +1,34 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "docs/approve-impl.md",
+  "specs": [
+    {
+      "requirement": "reqchanged-orthogonal-to-reviewed",
+      "source_span": [
+        22,
+        24
+      ],
+      "source_hash": "sha256:5c85639dd24c2cecdeb7c466e414319fdd40451d0abb896e495fcd13d63a78d8",
+      "source_anchor": "<!-- @liyi:requirement reqchanged-orthogonal-to-reviewed -->"
+    },
+    {
+      "requirement": "approve-never-approves-requirements",
+      "source_span": [
+        26,
+        28
+      ],
+      "source_hash": "sha256:c2b107468dd999e0802bd648e619c863f6769835468fe187cc49d3255168994b",
+      "source_anchor": "<!-- @liyi:requirement approve-never-approves-requirements -->"
+    },
+    {
+      "requirement": "reqchanged-demands-human-judgment",
+      "source_span": [
+        30,
+        32
+      ],
+      "source_hash": "sha256:30ba3f1eea4b3e68d6c5b3926c643cd41d753636d9420329934d9dd43ae14de5",
+      "source_anchor": "<!-- @liyi:requirement reqchanged-demands-human-judgment -->"
+    }
+  ]
+}
