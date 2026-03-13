@@ -66,7 +66,7 @@
     },
     {
       "item": "ancestors_match",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Check whether required ancestor keys appear as an ordered subsequence of the actual ancestor chain. Empty required slice always matches. The check is ordered but not contiguous — intervening keys are allowed.",
       "source_span": [
         83,
@@ -165,7 +165,7 @@
     },
     {
       "item": "find_descendant_by_kind",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         222,
@@ -177,7 +177,7 @@
     },
     {
       "item": "find_flow_scalar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         237,

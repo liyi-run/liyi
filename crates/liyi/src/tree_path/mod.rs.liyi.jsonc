@@ -232,7 +232,7 @@
     },
     {
       "item": "find_ancestor_pair",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         924,
