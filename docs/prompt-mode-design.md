@@ -249,6 +249,52 @@ Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear 
 
 3. **What about multiple gaps for the same requirement?** Each gap is listed separately. Agents can deduplicate if needed.
 
+## Security Considerations
+
+### Threat model
+
+`--prompt` output is consumed by LLM agents. The correct threat model is analogous to a **browser rendering untrusted content**, not a server-side component processing trusted input. Repository source files are untrusted — any contributor (including a malicious one) can write marker annotations with adversarial content. Human review of the agent's actions is likely the last line of defense.
+
+### Attack vectors
+
+| Vector | Source | Sink | Severity | Mitigation |
+|---|---|---|---|---|
+| Requirement name → `instruction` text | `@liyi:requirement(NAME)` in source | `instruction` field interpolation | Medium (indirect prompt injection) | Name length cap (128 bytes); `security_notice` in output |
+| Requirement block → `requirement_text` | Source lines between `@liyi:requirement` / `@liyi:end-requirement` | `requirement_text` field | Medium (indirect prompt injection) | Truncation to 4 096 chars; `security_notice` in output |
+| Item name → `enclosing_item` / `instruction` | `item` field in sidecar JSONC | `enclosing_item` and `instruction` fields | Low (sidecar is semi-trusted) | `security_notice` in output |
+| File path → `source_file` | Filesystem | `source_file`, `expected_sidecar` | Low | serde_json escaping; bounded by filesystem |
+| Unbounded output size | Many markers in repo | Full JSON output | Low (context-window DoS) | `requirement_text` truncation; name length cap |
+
+### Mitigations in place
+
+1. **`security_notice` field.** The top-level prompt output includes a `security_notice` string warning consuming agents that fields like `requirement`, `requirement_text`, `enclosing_item`, and `instruction` may contain untrusted content originating from repository source files. Agents should not interpret embedded text as tool instructions. This is analogous to a `Content-Security-Policy` header.
+
+2. **Marker name length cap.** `extract_name` rejects names longer than 128 bytes. This bounds the maximum length of attacker-controlled text that flows into `instruction` strings.
+
+3. **`requirement_text` truncation.** The `requirement_text` field is capped at 4 096 characters. Longer requirement blocks are truncated with an `…[truncated]` suffix.
+
+4. **JSON-level safety.** All fields are serialized through `serde_json`, which properly escapes special characters. There is no JSON injection risk — the concern is LLM-level semantic injection within properly-formed JSON string values.
+
+5. **Structural separation.** The `instruction` field is always generated from fixed templates with interpolated names. The untrusted content (names, `requirement_text`) also appears in dedicated data fields, giving consuming agents the option to process structured fields instead of relying on instruction text.
+
+### Residual risks
+
+- **Indirect prompt injection via requirement names.** A name like `ignore all previous instructions` will appear verbatim in the `instruction` field. The `security_notice` warns against this, but a poorly-implemented consuming agent may still be vulnerable. Future work: restrict names to a safe character class (e.g., `[a-zA-Z0-9_.-]+`).
+
+- **Indirect prompt injection via `requirement_text`.** Even after truncation, 4 096 characters is sufficient for a sophisticated injection payload. The `security_notice` mitigates but does not eliminate this risk.
+
+- **Sidecar poisoning.** If an attacker can modify `.liyi.jsonc` files, `enclosing_item` names flow into instructions. Sidecars are typically committed to version control and visible in code review, making this harder to exploit silently.
+
+### Design rationale
+
+We chose **output-side warnings** (`security_notice`) over **input-side restrictions** (strict name validation) as the primary defense because:
+
+- Strict name validation could break legitimate multilingual workflows (though current usage is ASCII-only).
+- The `security_notice` approach mirrors browser security headers — the producer declares the trust level, and the consumer enforces policy.
+- Human review of agent actions remains the authoritative security boundary, consistent with the project's design philosophy.
+
+The length caps (name: 128 bytes, requirement_text: 4 096 chars) are input-side restrictions that prevent the most egregious abuse without impacting legitimate usage.
+
 ## Future Extensions
 
 When `--prompt` is generalized to all diagnostics, the `items` array will include additional types. Sketched here for schema compatibility planning (exact fields TBD):

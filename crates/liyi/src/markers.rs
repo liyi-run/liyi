@@ -150,26 +150,35 @@ fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {
     None
 }
 
+/// Maximum allowed length (in bytes) for requirement / related names.
+/// Bounds the size of attacker-controlled text that flows into `--prompt`
+/// instruction strings.  See `docs/prompt-mode-design.md` §Security.
+const MAX_NAME_LEN: usize = 128;
+
 /// Extract a name from the remainder after a keyword.
 /// Rules: if first non-WS char is `(`, take everything up to matching `)`;
 /// otherwise take the first whitespace-delimited token.
+/// Names longer than [`MAX_NAME_LEN`] bytes are rejected.
 fn extract_name(rest: &str) -> Option<String> {
     let trimmed = rest.trim_start();
     if trimmed.is_empty() {
         return None;
     }
-    if let Some(inner) = trimmed.strip_prefix('(') {
+    let name = if let Some(inner) = trimmed.strip_prefix('(') {
         let end = inner.find(')')?;
-        let name = inner[..end].trim();
-        if name.is_empty() {
-            None
-        } else {
-            Some(name.to_string())
+        let n = inner[..end].trim();
+        if n.is_empty() {
+            return None;
         }
+        n.to_string()
     } else {
         let token = trimmed.split_whitespace().next()?;
-        Some(token.to_string())
+        token.to_string()
+    };
+    if name.len() > MAX_NAME_LEN {
+        return None;
     }
+    Some(name)
 }
 
 // ---------------------------------------------------------------------------

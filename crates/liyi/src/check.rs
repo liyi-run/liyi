@@ -241,6 +241,9 @@ pub fn run_check(
     for (name, rec) in &requirements {
         if !requirements_with_sidecar.contains(name) {
             // Extract requirement block text for prompt mode.
+            // Capped at MAX_REQ_TEXT_CHARS to bound untrusted content in
+            // --prompt output.  See docs/prompt-mode-design.md §Security.
+            const MAX_REQ_TEXT_CHARS: usize = 4096;
             let req_text = read_cached(&mut source_cache, &rec.file).and_then(|content| {
                 let markers = scan_markers(&content);
                 let spans = requirement_spans(&markers);
@@ -248,7 +251,16 @@ pub fn run_check(
                     let lines: Vec<&str> = content.lines().collect();
                     let start = span[0].saturating_sub(1);
                     let end = span[1].min(lines.len());
-                    lines[start..end].join("\n")
+                    let text = lines[start..end].join("\n");
+                    if text.chars().count() > MAX_REQ_TEXT_CHARS {
+                        let boundary = text
+                            .char_indices()
+                            .nth(MAX_REQ_TEXT_CHARS)
+                            .map_or(text.len(), |(i, _)| i);
+                        format!("{}\u{2026}[truncated]", &text[..boundary])
+                    } else {
+                        text
+                    }
                 })
             });
             diagnostics.push(Diagnostic {

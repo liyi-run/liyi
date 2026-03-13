@@ -6,13 +6,13 @@
     {
       "item": "PromptOutput",
       "reviewed": false,
-      "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with version, optional root, items array, and exit_code.",
+      "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with version, optional root, security_notice (warning consuming agents about untrusted content), items array, and exit_code.",
       "source_span": [
         8,
-        14
+        15
       ],
       "tree_path": "struct::PromptOutput",
-      "source_hash": "sha256:441a1b6db4da29b91fa6a7b015ab6be9ef086f34ca0b74b5cda33303fd16a0de",
+      "source_hash": "sha256:0b9d743a6e567011b4f2ad4eaa40284a57b8f50609f3f769e9881b1c4d1a99c9",
       "source_anchor": "pub struct PromptOutput {"
     },
     {
@@ -20,23 +20,23 @@
       "reviewed": false,
       "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema.",
       "source_span": [
-        17,
+        19,
         47
       ],
       "tree_path": "enum::PromptItem",
-      "source_hash": "sha256:175009b614eadeef9d5566d92828d529a0fffa18400a047970010bcb61fe75d3",
-      "source_anchor": "#[serde(tag = \"type\")]"
+      "source_hash": "sha256:15d24ffd350cdbb761cc925e0436d80fb12b61b7fea7fbf3838b9c93d9a344c8",
+      "source_anchor": "pub enum PromptItem {"
     },
     {
       "item": "build_prompt_output",
       "reviewed": false,
-      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item natural-language resolution instructions. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
+      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item natural-language resolution instructions. Includes a security_notice warning that embedded fields may contain untrusted repository content. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
       "source_span": [
-        52,
-        131
+        53,
+        136
       ],
       "tree_path": "fn::build_prompt_output",
-      "source_hash": "sha256:d84c83ba69f835a27555ac3fddb105079399bed79dbe08bb13a06e4e48c243b8",
+      "source_hash": "sha256:30fe3f86b3c6cf025678ff0ffb38301c0f60a19b4322ce158f03066a481b4a8e",
       "source_anchor": "pub fn build_prompt_output("
     }
   ]
