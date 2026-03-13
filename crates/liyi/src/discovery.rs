@@ -35,6 +35,12 @@ pub struct DiscoveryResult {
 /// <!-- @立意:有关 liyi-sidecar-naming-convention -->
 const SIDECAR_SUFFIX: &str = ".liyi.jsonc";
 
+/// Directory names to always skip during discovery.
+///
+/// VCS internal directories are never valid scan targets and are not
+/// covered by `.gitignore` (Git implicitly excludes its own `.git/`).
+const SKIP_DIRS: &[&str] = &[".git", ".hg", ".svn", ".bzr", ".jj"];
+
 /// Walk up from `from` looking for a `.git/` directory.
 /// Returns the parent of `.git/` (i.e. the repo root).
 ///
@@ -96,6 +102,16 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
     let walker = WalkBuilder::new(root)
         .hidden(false)
         .add_custom_ignore_filename(".liyiignore")
+        .filter_entry(|entry| {
+            // Skip VCS internal directories — they are never valid scan
+            // targets and are not excluded by .gitignore.
+            if entry.file_type().is_some_and(|ft| ft.is_dir())
+                && let Some(name) = entry.file_name().to_str()
+            {
+                return !SKIP_DIRS.contains(&name);
+            }
+            true
+        })
         .build();
 
     for entry in walker.flatten() {
