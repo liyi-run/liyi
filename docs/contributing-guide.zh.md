@@ -71,6 +71,11 @@
 - 行宽应保持在合理长度（建议在 80–100 字符左右折行）。
 - 应在文档文件顶部添加 SPDX 许可证头（`<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->`）。
 
+对于 Rust 代码：
+
+- 遵守官方 rustfmt 风格（`cargo fmt`）。
+- 不要有 Clippy lints。
+
 ### 自引用转义约定（Quine-escape）
 
 检查器通过纯子串匹配在源文件中扫描 `@liyi:*` 标记——不具备语言感知能力。因此，包含标记文本字面量的字符串常量、格式化字符串和测试数据会被误识别为真实标记（即程序读取自身源码的经典"自引用"问题）。
@@ -176,3 +181,8 @@ Signed-off-by: Contributor Name <contributor@example.com>
 - ✅ 提交说明符合 Conventional Commits 规范及 AIGC 政策要求。
 - ✅ 不包含敏感信息。
 - ✅ 变更范围限于单一逻辑单元。
+
+对于 Rust 代码，请额外检查：
+
+- `cargo clippy` 通过。
+- `cargo fmt --check` 通过。

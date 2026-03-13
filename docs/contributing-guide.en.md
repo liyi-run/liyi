@@ -71,6 +71,11 @@ As the project grows, expect additional top-level directories for implementation
 - Keep lines at a reasonable length (wrap around 80–100 characters where practical).
 - SPDX license headers (`<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->`) should appear at the top of documentation files.
 
+For Rust code:
+
+- Conform to the official rustfmt style (`cargo fmt`).
+- Keep free from Clippy lints.
+
 ### Quine-escape convention
 
 The linter scans source files for `@liyi:*` markers using plain substring matching — it has no language awareness. This means string constants, format strings, and test data that contain literal marker text will be misidentified as real markers (the classic "quine" problem of a program reading its own source).
@@ -176,3 +181,8 @@ Before finalizing a commit, verify:
 - ✅ Commit message follows Conventional Commits and AIGC policy requirements.
 - ✅ No sensitive information is included.
 - ✅ Changes are scoped to a single logical unit.
+
+For Rust code, additionally verify:
+
+- `cargo clippy` passes.
+- `cargo fmt --check` passes.

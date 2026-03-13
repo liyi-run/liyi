@@ -13,6 +13,20 @@ If the session language is unclear, default to the Chinese version.
 
 The contributing guide covers project structure, content workflows, code style, commit message conventions, AIGC policy compliance, and the validation checklist. All of those rules are authoritative and must be followed.
 
+## Code style (quick reference)
+
+For Rust code:
+
+- Conform to official rustfmt style.
+- Keep free from Clippy lints.
+
+Before committing, ensure:
+
+- `cargo fmt --check` passes.
+- `cargo clippy` passes.
+
+See the contributing guide for full details.
+
 ## Commit conventions (quick reference)
 
 Follow Conventional Commits: `<type>(<scope>): <summary>`
