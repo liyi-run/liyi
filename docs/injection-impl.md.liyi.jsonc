@@ -1,0 +1,61 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "docs/injection-impl.md",
+  "specs": [
+    {
+      "requirement": "injection-profile-isolation",
+      "source_span": [
+        28,
+        35
+      ],
+      "source_hash": "sha256:d2f82443c8f3ac27a172ff0c0ede58ce93c331e3c9db165425852e6c77b662eb",
+      "source_anchor": "<!-- @liyi:requirement injection-profile-isolation -->"
+    },
+    {
+      "requirement": "path-based-dialect-detection",
+      "source_span": [
+        37,
+        43
+      ],
+      "source_hash": "sha256:9a1ccc3eb8dce442e3c13e459d637d2460a713abb25f7fcb0b72a372bb78d00f",
+      "source_anchor": "<!-- @liyi:requirement path-based-dialect-detection -->"
+    },
+    {
+      "requirement": "no-injection-without-profile",
+      "source_span": [
+        45,
+        50
+      ],
+      "source_hash": "sha256:0e60861d11a0d281260c4925cec6444ece90cfbc3c0086b4704dbd89eff7a027",
+      "source_anchor": "<!-- @liyi:requirement no-injection-without-profile -->"
+    },
+    {
+      "requirement": "even-pair-invariant",
+      "source_span": [
+        52,
+        58
+      ],
+      "source_hash": "sha256:c53ca81cd6f18dff94a9a771c610adcf1f50f6149682152bae03948632405831",
+      "source_anchor": "<!-- @liyi:requirement even-pair-invariant -->"
+    },
+    {
+      "requirement": "content-offset-correctness",
+      "source_span": [
+        60,
+        66
+      ],
+      "source_hash": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a",
+      "source_anchor": "<!-- @liyi:requirement content-offset-correctness -->"
+    },
+    {
+      "requirement": "ancestor-path-matching",
+      "source_span": [
+        68,
+        75
+      ],
+      "source_hash": "sha256:c78c6d23e38b348d798c40a8d4258f3a33c7032458e84000f8324ac9acbffc01",
+      "source_anchor": "<!-- @liyi:requirement ancestor-path-matching -->"
+    }
+  ]
+}
