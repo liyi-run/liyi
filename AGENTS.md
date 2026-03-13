@@ -13,6 +13,18 @@ If the session language is unclear, default to the Chinese version.
 
 The contributing guide covers project structure, content workflows, code style, commit message conventions, AIGC policy compliance, and the validation checklist. All of those rules are authoritative and must be followed.
 
+## Commit conventions (quick reference)
+
+Follow Conventional Commits: `<type>(<scope>): <summary>`
+
+- Types: `feat`, `fix`, `docs`, `refactor`, `build`, `ci`. Do **not** use `chore`.
+- Scopes: `linter`, `design`, `template`, `docs`, `policy`, `meta`.
+- One logical change per commit — do not combine unrelated changes.
+- AIGC trailers required: `AI-assisted-by:` and `Original prompt:` (quoted block).
+- Do **not** add `Signed-off-by` on behalf of the user.
+
+See the contributing guide for full details and examples.
+
 ---
 
 ## 立意 (Intent Specs)
