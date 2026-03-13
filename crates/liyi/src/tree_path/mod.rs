@@ -733,6 +733,216 @@ pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> Stri
     build_path_to_node(config, &root, &node, source)
 }
 
+/// Compute the canonical `tree_path` for the AST node at the given span,
+/// with injection profile detection.
+///
+/// When `repo_path` matches an active injection profile and `span` falls inside
+/// an injection zone (e.g., a `run:` block scalar in GitHub Actions YAML), the
+/// returned path includes the `//lang` injection marker and inner-language path
+/// segments.
+///
+/// Falls back to `compute_tree_path` when no injection applies.
+// @liyi:related injection-pair-attachment
+// @liyi:related content-offset-correctness
+pub fn compute_tree_path_injected(
+    source: &str,
+    span: [usize; 2],
+    lang: Language,
+    repo_path: &Path,
+) -> String {
+    let profiles = inject::detect_injection_profiles(repo_path);
+    if profiles.is_empty() {
+        return compute_tree_path(source, span, lang);
+    }
+
+    let config = lang.config();
+    let mut ts_parser = make_parser(lang);
+    let tree = match ts_parser.parse(source, None) {
+        Some(t) => t,
+        None => return String::new(),
+    };
+    let root = tree.root_node();
+
+    let target_start = span[0].saturating_sub(1);
+    let target_end = span[1].saturating_sub(1);
+
+    // Try to find an injection zone containing the target span.
+    if let Some(result) =
+        find_injection_zone(config, &root, source, target_start, target_end, &profiles)
+    {
+        return result;
+    }
+
+    // No injection zone — fall back to base-language compute.
+    let node = match find_item_in_range(config, &root, target_start, target_end) {
+        Some(n) => n,
+        None => return String::new(),
+    };
+    build_path_to_node(config, &root, &node, source)
+}
+
+/// Search for an injection zone containing the target span.
+///
+/// Walks the host AST looking for `block_mapping_pair` nodes whose value
+/// contains the target span and whose key name matches an active injection
+/// rule. When found, extracts the content, sub-parses it, computes the
+/// inner tree_path, and returns the composite `host_path//lang::inner_path`.
+fn find_injection_zone(
+    config: &LanguageConfig,
+    root: &Node,
+    source: &str,
+    target_start: usize,
+    target_end: usize,
+    profiles: &[&inject::InjectionProfile],
+) -> Option<String> {
+    // Find all block_mapping_pair nodes that contain the target span.
+    let mut candidate = find_injection_candidate(root, source, target_start, target_end)?;
+
+    // Walk up from the candidate to find one matching an injection rule.
+    loop {
+        let key_name = {
+            let key_node = candidate.child_by_field_name("key")?;
+            lang_yaml::leaf_text_pub(&key_node, source)?.to_string()
+        };
+
+        // Collect ancestor keys for the candidate node.
+        let ancestor_keys_owned = inject::collect_ancestor_keys(&candidate, source);
+        let ancestor_keys: Vec<&str> = ancestor_keys_owned.iter().map(|s| s.as_str()).collect();
+
+        // Check each active profile for a matching rule.
+        for profile in profiles {
+            if let Some(rule) = profile.find_rule(&key_name, &ancestor_keys) {
+                // Found a matching injection rule.
+                let value_node = candidate.child_by_field_name("value")?;
+                let extracted = inject::extract_yaml_content(&value_node, source)?;
+
+                // Check that the target span falls within the extracted content.
+                let content_start = extracted.line_offset;
+                let content_end = content_start + extracted.text.lines().count().max(1) - 1;
+                if target_start < content_start || target_end > content_end {
+                    continue;
+                }
+
+                // Build the host-side path to this injection-point node.
+                let host_path = build_path_to_node(config, root, &candidate, source);
+                if host_path.is_empty() {
+                    return None;
+                }
+
+                // Map the injection language to its name string.
+                let lang_name = language_to_name(rule.language);
+
+                // Translate target span to inner coordinates.
+                let inner_start = target_start - extracted.line_offset;
+                let inner_end = target_end - extracted.line_offset;
+                let inner_span = [inner_start + 1, inner_end + 1]; // back to 1-indexed
+
+                // Compute the inner tree_path.
+                let inner_path = compute_tree_path(&extracted.text, inner_span, rule.language);
+
+                if inner_path.is_empty() {
+                    // Target is inside injection zone but no structural item found.
+                    return Some(format!("{host_path}//{lang_name}"));
+                }
+
+                return Some(format!("{host_path}//{lang_name}::{inner_path}"));
+            }
+        }
+
+        // Move up to parent block_mapping_pair.
+        candidate = find_ancestor_pair(&candidate)?;
+    }
+}
+
+/// Find the innermost `block_mapping_pair` whose value range contains
+/// [target_start, target_end] (0-indexed rows).
+fn find_injection_candidate<'a>(
+    root: &Node<'a>,
+    _source: &str,
+    target_start: usize,
+    target_end: usize,
+) -> Option<Node<'a>> {
+    let mut best: Option<Node<'a>> = None;
+
+    fn walk<'a>(
+        node: &Node<'a>,
+        target_start: usize,
+        target_end: usize,
+        best: &mut Option<Node<'a>>,
+    ) {
+        if node.kind() == "block_mapping_pair"
+            && let Some(value) = node.child_by_field_name("value")
+        {
+            let v_start = value.start_position().row;
+            let v_end = value.end_position().row;
+            if v_start <= target_start && v_end >= target_end {
+                // This pair's value contains the target — prefer the
+                // innermost (smallest) match.
+                if let Some(b) = best {
+                    let b_size = b.end_position().row - b.start_position().row;
+                    let n_size = node.end_position().row - node.start_position().row;
+                    if n_size < b_size {
+                        *best = Some(*node);
+                    }
+                } else {
+                    *best = Some(*node);
+                }
+            }
+        }
+
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            let c_start = child.start_position().row;
+            let c_end = child.end_position().row;
+            if c_start <= target_end && c_end >= target_start {
+                walk(&child, target_start, target_end, best);
+            }
+        }
+    }
+
+    walk(root, target_start, target_end, &mut best);
+    best
+}
+
+/// Walk up from a node to find the nearest ancestor `block_mapping_pair`.
+fn find_ancestor_pair<'a>(node: &Node<'a>) -> Option<Node<'a>> {
+    let mut current = node.parent();
+    while let Some(n) = current {
+        if n.kind() == "block_mapping_pair" {
+            return Some(n);
+        }
+        current = n.parent();
+    }
+    None
+}
+
+/// Map a `Language` to its canonical injection marker name.
+fn language_to_name(lang: Language) -> &'static str {
+    match lang {
+        Language::Bash => "bash",
+        Language::Rust => "rust",
+        Language::Python => "python",
+        Language::JavaScript => "javascript",
+        Language::TypeScript => "typescript",
+        Language::Tsx => "tsx",
+        Language::Go => "go",
+        Language::Ruby => "ruby",
+        Language::C => "c",
+        Language::Cpp => "cpp",
+        Language::Java => "java",
+        Language::CSharp => "csharp",
+        Language::Php => "php",
+        Language::ObjectiveC => "objc",
+        Language::Kotlin => "kotlin",
+        Language::Swift => "swift",
+        Language::Dart => "dart",
+        Language::Zig => "zig",
+        Language::Toml => "toml",
+        Language::Json => "json",
+        Language::Yaml => "yaml",
+    }
+}
+
 /// Find the best item node within [target_start, target_end] (0-indexed rows).
 ///
 /// Attributes in Rust are sibling nodes, not children of the item, so a
@@ -1528,5 +1738,115 @@ jobs:
             span.is_none(),
             "should return None for unknown injected language"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Compute injection tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn compute_injection_bash_function() {
+        // The setup() function in SAMPLE_GHA_FUNC starts at line 11
+        // (0-indexed row 10). Given the block scalar starts at row 10
+        // (content after indicator), setup() { is on line 11.
+        let lines: Vec<&str> = SAMPLE_GHA_FUNC.lines().collect();
+        // Find the line with "setup() {"
+        let setup_line = lines
+            .iter()
+            .position(|l| l.contains("setup()"))
+            .expect("should find setup() line")
+            + 1; // 1-indexed
+        let end_line = lines
+            .iter()
+            .rposition(|l| l.trim() == "}")
+            .expect("should find closing brace")
+            + 1;
+
+        let path = compute_tree_path_injected(
+            SAMPLE_GHA_FUNC,
+            [setup_line, end_line],
+            Language::Yaml,
+            Path::new(".github/workflows/ci.yml"),
+        );
+
+        assert!(
+            path.contains("//bash"),
+            "path should contain //bash injection marker, got: {path}"
+        );
+        assert!(
+            path.contains("fn.setup"),
+            "path should contain fn.setup, got: {path}"
+        );
+        assert!(
+            path.contains("key.run"),
+            "path should contain key.run, got: {path}"
+        );
+    }
+
+    #[test]
+    fn compute_injection_roundtrip() {
+        // Roundtrip test using a simpler fixture without array indexing,
+        // since YAML array indexes are not yet produced by build_path_to_node.
+        let yaml = r#"name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    run: |
+      setup() {
+        echo "hello"
+      }
+      setup
+"#;
+        let lines: Vec<&str> = yaml.lines().collect();
+        let setup_line = lines
+            .iter()
+            .position(|l| l.contains("setup()"))
+            .expect("should find setup() line")
+            + 1;
+        let closing_line = lines
+            .iter()
+            .enumerate()
+            .skip(setup_line)
+            .find(|(_, l)| l.trim() == "}")
+            .map(|(i, _)| i + 1)
+            .expect("should find closing brace");
+
+        let computed_path = compute_tree_path_injected(
+            yaml,
+            [setup_line, closing_line],
+            Language::Yaml,
+            Path::new(".github/workflows/ci.yml"),
+        );
+
+        assert!(
+            !computed_path.is_empty(),
+            "computed path should not be empty"
+        );
+        assert!(
+            computed_path.contains("//bash"),
+            "computed path should contain //bash, got: {computed_path}"
+        );
+
+        let resolved_span = resolve_tree_path(yaml, &computed_path, Language::Yaml);
+        assert!(
+            resolved_span.is_some(),
+            "resolve should succeed for computed path: {computed_path}"
+        );
+    }
+
+    #[test]
+    fn compute_no_injection_for_plain_yaml() {
+        // When the repo path doesn't match any injection profile,
+        // compute_tree_path_injected should behave like compute_tree_path.
+        let yaml = "name: test\nversion: 1\n";
+        let base = compute_tree_path(yaml, [1, 1], Language::Yaml);
+        let injected = compute_tree_path_injected(
+            yaml,
+            [1, 1],
+            Language::Yaml,
+            Path::new("config/settings.yaml"),
+        );
+        assert_eq!(base, injected);
     }
 }
