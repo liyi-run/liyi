@@ -645,7 +645,11 @@ fn prompt_clean() {
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
     assert_eq!(output.version, "0.1");
-    assert!(output.items.is_empty(), "expected no items, got: {:?}", output.items);
+    assert!(
+        output.items.is_empty(),
+        "expected no items, got: {:?}",
+        output.items
+    );
     assert_eq!(output.exit_code, 0);
 }
 
@@ -658,7 +662,11 @@ fn prompt_errors_only() {
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
     // Error-class diagnostics produce exit_code 2 but no coverage-gap items.
-    assert!(output.items.is_empty(), "expected no items for error-only, got: {:?}", output.items);
+    assert!(
+        output.items.is_empty(),
+        "expected no items for error-only, got: {:?}",
+        output.items
+    );
     assert_eq!(output.exit_code, 2);
 }
 
@@ -700,5 +708,8 @@ fn prompt_multi_file() {
         source_files.contains(&"beta.rs"),
         "expected gaps from beta.rs, got: {source_files:?}"
     );
-    assert!(output.items.len() >= 2, "expected at least 2 gap items across files");
+    assert!(
+        output.items.len() >= 2,
+        "expected at least 2 gap items across files"
+    );
 }

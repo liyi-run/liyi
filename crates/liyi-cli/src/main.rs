@@ -58,11 +58,11 @@ fn main() {
                 liyi::check::run_check(&repo_root, &paths, fix, dry_run, &flags);
 
             if prompt {
-                let output =
-                    liyi::prompt::build_prompt_output(&diagnostics, exit_code, &repo_root);
+                let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &repo_root);
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&output).expect("failed to serialize prompt output")
+                    serde_json::to_string_pretty(&output)
+                        .expect("failed to serialize prompt output")
                 );
                 process::exit(exit_code as i32);
             }
@@ -245,5 +245,3 @@ fn main() {
 fn is_tty() -> bool {
     io::stderr().is_terminal()
 }
-
-
