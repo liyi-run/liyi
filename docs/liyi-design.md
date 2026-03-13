@@ -1538,7 +1538,7 @@ The shift heuristic (non-`tree_path` fallback) is inherently safe — it only ma
 
 ### Implementation
 
-~3000 lines of Rust across two crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic is ~900 lines; the remainder covers tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `migrate`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
+Two Rust crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic, tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `migrate`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
 
 No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are a post-MVP consideration.
 
@@ -2106,7 +2106,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 | Agent instruction (AGENTS.md paragraph) | 1 hour | 15 minutes |
 | `@liyi:module` convention + examples | 30 minutes | 10 minutes |
 | `.liyi.jsonc` examples for a demo repo | 1–2 hours | 20 minutes |
-| CI linter (`liyi check` + `liyi check --fix` + `liyi approve` + `liyi init` + `liyi migrate`, ~3000 lines) | 3–5 days | 2–4 hours |
+| CI linter (`liyi check` + `liyi check --fix` + `liyi approve` + `liyi init` + `liyi migrate`) | 3–5 days | 2–4 hours |
 | Blog post explaining the practice | 1 day | 2–3 hours |
 | **Total** | **3–5 days** | **Half a day** |
 
@@ -2114,7 +2114,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 
 ## What This Is
 
-- A **CI linter** — `liyi check` + `liyi check --fix`, ~3000 lines across two crates (with tree-sitter-based span recovery). The enforcement mechanism.
+- A **CI linter** — `liyi check` + `liyi check --fix`, with tree-sitter-based span recovery. The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
 - A **triage protocol** (post-MVP) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
@@ -2319,7 +2319,7 @@ On adversarial testing specifically: AI generates code faster than humans can re
 
 ### 1. Positioning gap
 
-The design doc is 2000+ lines of careful reasoning. The deliverable is a JSONC sidecar convention and a ~3000-line linter (including tree-sitter-based span recovery). The intellectual depth is real, but the surface artifact is simple enough that it risks being dismissed as "just a staleness checker for doc comments." The pitch must convey why persistent intent matters *without* requiring the reader to follow the full design evolution from verification language (v3) through proc macros (v4) through interchange format (v5) through adversarial CLI (v6) to the current convention.
+The design doc is lengthy and detailed. The deliverable is a JSONC sidecar convention and a Rust linter. The intellectual depth is real, but the surface artifact is simple enough that it risks being dismissed as "just a staleness checker for doc comments." The pitch must convey why persistent intent matters *without* requiring the reader to follow the full design evolution from verification language (v3) through proc macros (v4) through interchange format (v5) through adversarial CLI (v6) to the current convention.
 
 The one-paragraph pitch should lead with the *gap* — what frameworks can't declare — rather than the *mechanism* — sidecar files and hashing. "立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable" is a stronger hook than "write specs for everything." The progressive adoption ladder does this structurally — each level has a clear "what you do / what you get" — but the pitch needs to land on first contact. The project competes for attention against tools with flashier architecture and larger scope. Simplicity is the design's strength; it must also be the pitch's strength, not its liability.
 
