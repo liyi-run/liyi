@@ -19,7 +19,7 @@
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38",
         "tool-managed-fields": "sha256:b1b5caaebc89ce62a3b2e59f7468b813a67caf784a6fe03209c46ab67a2f7dbc",
         "tree-path-empty-fallback": "sha256:93c0520e982193e67ecef00b351b6967775bfcb9d989290fe51795b747decceb",
-        "tree-path-fix-behavior": "sha256:12dad455865dc90e76def7bdd7366b34bdd89134b22e217d6d0077e59dab413f"
+        "tree-path-fix-behavior": "sha256:1f5c710fae63a2d2466bcc01a45b30b1f85ab4a22bfb19f961958b1167d47d0c"
       }
     }
   ]
