@@ -79,12 +79,12 @@
         },
         "source_file": {
           "type": "string",
-          "description": "Repo-relative path to the source file containing the @liyi:requirement annotation."
+          "description": "Repo-relative path to the source file containing the `@liyi:requirement` annotation."
         },
         "annotation_line": {
           "type": "integer",
           "minimum": 1,
-          "description": "1-indexed line number of the @liyi:requirement marker."
+          "description": "1-indexed line number of the `@liyi:requirement` marker."
         },
         "expected_sidecar": {
           "type": "string",
@@ -92,7 +92,7 @@
         },
         "requirement_text": {
           "type": "string",
-          "description": "Full text of the @liyi:requirement block, when available. Included so agents need not re-read the source file."
+          "description": "Full text of the `@liyi:requirement` block, when available. Included so agents need not re-read the source file."
         },
         "instruction": {
           "type": "string",
@@ -151,12 +151,12 @@
         },
         "source_file": {
           "type": "string",
-          "description": "Repo-relative path to the source file containing the @liyi:requirement annotation."
+          "description": "Repo-relative path to the source file containing the `@liyi:requirement` annotation."
         },
         "annotation_line": {
           "type": "integer",
           "minimum": 1,
-          "description": "1-indexed line number of the @liyi:requirement marker."
+          "description": "1-indexed line number of the `@liyi:requirement` marker."
         },
         "expected_sidecar": {
           "type": "string",
