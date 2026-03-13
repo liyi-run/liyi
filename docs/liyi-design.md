@@ -514,7 +514,7 @@ All languages are built-in — the binary ships with every supported tree-sitter
 | Language | Grammar crate | Notes |
 |---|---|---|
 | Python | `tree-sitter-python` | Flat AST; methods are `function_definition` inside `class_definition` body. No `impl`-block equivalent. |
-| Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method::(*MyType).DoThing` (pointer) or `method::MyType.DoThing` (value). |
+| Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method::"(*MyType).DoThing"` (pointer) or `method::"MyType.DoThing"` (value) — names with parens/dots are quoted per the tree_path grammar. |
 | JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
 | Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods use `custom_name` callback for receiver encoding. |

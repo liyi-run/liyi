@@ -5,7 +5,7 @@ use tree_sitter::Node;
 /// Custom name extraction for Ruby nodes.
 ///
 /// Handles `singleton_method` (class methods like `def self.foo`) which encodes
-/// the class name in the path: `singleton_method::ClassName.method_name`.
+/// the class name in the path: `singleton_method::"ClassName.method_name"`.
 fn ruby_node_name(node: &Node, source: &str) -> Option<String> {
     match node.kind() {
         "singleton_method" => {

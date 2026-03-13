@@ -117,7 +117,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 | `var` | `var_declaration` (name extracted from inner `var_spec`) |
 
 **Design notes:**
-- Go methods encode the receiver type in tree_path: `method::(*MyType).DoThing` (pointer receiver) or `method::MyType.DoThing` (value receiver). This disambiguates methods with the same name on different types.
+- Go methods encode the receiver type in tree_path: `method::"(*MyType).DoThing"` (pointer receiver) or `method::"MyType.DoThing"` (value receiver). Names containing parens or dots are quoted per the tree_path grammar (Appendix A). This disambiguates methods with the same name on different types.
 - `type_declaration` wraps `type_spec` which has the actual name. A `custom_name` callback navigates the indirection. A single `type` shorthand covers structs, interfaces, and type aliases — Go type names are unique per package, so no disambiguation is needed.
 - No nesting equivalent to Rust's `impl` or Python's class body — all functions/methods are top-level.
 
@@ -987,9 +987,9 @@ End-to-end golden test demonstrating the full scaffold workflow:
 
 ## Appendix: tree_path Grammar Specification (v0.2)
 
-**Status:** ⏳ Partial — nom parser implemented (`tree_path/parser.rs`), integration into `resolve_tree_path`/`compute_tree_path` pending.
+**Status:** ✅ Complete — nom parser implemented and integrated into `resolve_tree_path`/`compute_tree_path`. Roundtrip property tests passing.
 
-The current `split("::")` parser is ambiguous when names contain `::` or spaces (as seen in Zig `test "add function"`). This appendix defines a formal grammar for unambiguous tree_path parsing.
+The original `split("::")` parser was ambiguous when names contained `::` or spaces (as seen in Zig `test "add function"`). This appendix defines the formal grammar used for unambiguous tree_path parsing.
 
 ### A.1 Grammar (EBNF)
 
@@ -1032,15 +1032,13 @@ The injection marker `//lang` attaches to the preceding name segment (`run//bash
 
 1. Add `nom = "8"` to `crates/liyi/Cargo.toml` ✅
 2. Create `tree_path/parser.rs` with nom combinators ✅
-3. Update `resolve_tree_path` to use the new parser
-4. Update `compute_tree_path` to escape names containing `::`, quotes, or spaces
-5. Add roundtrip property tests: `parse(serialize(path)) == path`
+3. Update `resolve_tree_path` to use the new parser ✅
+4. Update `compute_tree_path` to escape names containing `::`, quotes, or spaces ✅
+5. Add roundtrip property tests: `parse(serialize(path)) == path` ✅
 
 ### A.5 Migration path
 
-- **Phase 1:** Parser accepts both old (unquoted) and new (quoted) syntax
-- **Phase 2:** `compute_tree_path` starts quoting names that need it
-- **Phase 3:** (Optional) Deprecate unquoted complex names with a warning
+No phased migration was needed — the old `split("::")` parser was replaced outright before any external users existed. The nom parser is the sole parser; `compute_tree_path` always quotes names that require it.
 
 ---
 

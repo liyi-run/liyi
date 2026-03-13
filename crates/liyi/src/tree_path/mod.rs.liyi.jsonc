@@ -66,7 +66,7 @@
     {
       "item": "parse_tree_path",
       "reviewed": true,
-      "intent": "Parse a tree_path string into segments of (kind, name) pairs by splitting on '::' and grouping consecutive pairs. Return None if the number of parts is odd (malformed). Validate each kind against the known shorthand set.",
+      "intent": "Parse a tree_path string into segments of (kind, name) pairs by delegating to the nom-based grammar parser (parser::TreePath::parse). Filters out injection segments, validates even-pair structure, and returns None on malformed input.",
       "source_span": [
         276,
         292
