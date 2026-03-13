@@ -1,0 +1,23 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/inject/github_actions.rs",
+  "specs": [
+    {
+      "item": "PROFILE",
+      "reviewed": false,
+      "intent": "GitHub Actions injection profile. Activates for .github/workflows/**/*.yml|yaml and .github/actions/**/*.yml|yaml. The single rule injects run: values under jobs: as Bash. Adding this profile must not modify lang_yaml.rs or any existing LanguageConfig.",
+      "source_span": [
+        10,
+        23
+      ],
+      "tree_path": "static.PROFILE",
+      "source_hash": "sha256:cce6d627a646459117cc8d15160598eb6ca0a2451595e13b863394f37248a885",
+      "source_anchor": "pub(crate) static PROFILE: InjectionProfile = InjectionProfile {",
+      "related": {
+        "injection-profile-isolation": "sha256:d2f82443c8f3ac27a172ff0c0ede58ce93c331e3c9db165425852e6c77b662eb",
+        "path-based-dialect-detection": "sha256:9a1ccc3eb8dce442e3c13e459d637d2460a713abb25f7fcb0b72a372bb78d00f"
+      }
+    }
+  ]
+}

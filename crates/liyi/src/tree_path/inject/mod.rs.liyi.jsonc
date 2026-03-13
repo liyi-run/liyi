@@ -1,0 +1,205 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/inject/mod.rs",
+  "specs": [
+    {
+      "item": "InjectionRule",
+      "reviewed": false,
+      "intent": "A static, data-driven rule describing one injection point: the key name that triggers injection, the language to sub-parse as, and an ordered ancestor-key constraint that must be satisfied for the rule to fire.",
+      "source_span": [
+        27,
+        42
+      ],
+      "tree_path": "struct.InjectionRule",
+      "source_hash": "sha256:e35d759e527c71a2e60745eb978a0db54f81e275e7708bf7072d98629c2a5aa3",
+      "source_anchor": "pub struct InjectionRule {",
+      "related": {
+        "ancestor-path-matching": "sha256:c78c6d23e38b348d798c40a8d4258f3a33c7032458e84000f8324ac9acbffc01",
+        "injection-pair-attachment": "sha256:1acfbdf7d5a6272774346b2951f7692a016b02542b100b412b11bb948d58ec97"
+      }
+    },
+    {
+      "item": "InjectionProfile",
+      "reviewed": false,
+      "intent": "Associates a host language and a set of file-path glob patterns with injection rules. When a repo-relative path matches any pattern, the profile activates and its rules become candidates for injection. An empty pattern slice means the profile is never auto-activated.",
+      "source_span": [
+        45,
+        55
+      ],
+      "tree_path": "struct.InjectionProfile",
+      "source_hash": "sha256:58a4e66816d6ae74bbb3928898607c15b55856b49375450393e4be88b74d4870",
+      "source_anchor": "pub struct InjectionProfile {",
+      "related": {
+        "injection-profile-isolation": "sha256:d2f82443c8f3ac27a172ff0c0ede58ce93c331e3c9db165425852e6c77b662eb"
+      }
+    },
+    {
+      "item": "InjectionProfile::matches_path",
+      "reviewed": false,
+      "intent": "Return true if the given repo-relative path matches any of the profile's glob patterns. Uses globset for pattern matching. Returns false when path_patterns is empty.",
+      "source_span": [
+        58,
+        69
+      ],
+      "tree_path": "impl.InjectionProfile::fn.matches_path",
+      "source_hash": "sha256:5e9f495639915be92ad79227929a4302d55d7015bb4ec8f679a8d1a49380956f",
+      "source_anchor": "    pub fn matches_path(&self, repo_path: &Path) -> bool {",
+      "related": {
+        "path-based-dialect-detection": "sha256:9a1ccc3eb8dce442e3c13e459d637d2460a713abb25f7fcb0b72a372bb78d00f"
+      }
+    },
+    {
+      "item": "InjectionProfile::find_rule",
+      "reviewed": false,
+      "intent": "Find the first injection rule whose key_name matches and whose ancestor_keys are an ordered subsequence of the given ancestor chain. Returns None if no rule fires.",
+      "source_span": [
+        73,
+        80
+      ],
+      "tree_path": "impl.InjectionProfile::fn.find_rule",
+      "source_hash": "sha256:62d2b83cc14bfc0edb653ec1106c2cfb7b63adc5b2acdd4c0acc65d0734a9fdd",
+      "source_anchor": "    // @liyi:related ancestor-path-matching",
+      "related": {
+        "ancestor-path-matching": "sha256:c78c6d23e38b348d798c40a8d4258f3a33c7032458e84000f8324ac9acbffc01"
+      }
+    },
+    {
+      "item": "ancestors_match",
+      "reviewed": false,
+      "intent": "Check whether required ancestor keys appear as an ordered subsequence of the actual ancestor chain. Empty required slice always matches. The check is ordered but not contiguous — intervening keys are allowed.",
+      "source_span": [
+        83,
+        99
+      ],
+      "tree_path": "fn.ancestors_match",
+      "source_hash": "sha256:63136ce51296c14eb1133954650eb8098dd3d06983d9aaf9904c19fdea60d6af",
+      "source_anchor": "fn ancestors_match(required: &[&str], actual: &[&str]) -> bool {",
+      "related": {
+        "ancestor-path-matching": "sha256:c78c6d23e38b348d798c40a8d4258f3a33c7032458e84000f8324ac9acbffc01"
+      }
+    },
+    {
+      "item": "REGISTRY",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        102,
+        102
+      ],
+      "tree_path": "static.REGISTRY",
+      "source_hash": "sha256:dcbbfdea6926f2f0e3f41bbc278edb07f7ca62c289fe44c3c00009f4377d6503",
+      "source_anchor": "static REGISTRY: &[&InjectionProfile] = &[&github_actions::PROFILE];"
+    },
+    {
+      "item": "detect_injection_profiles",
+      "reviewed": false,
+      "intent": "Return all injection profiles whose path patterns match the given repo-relative path. Returns an empty vec when no profile matches, ensuring no injection occurs without a matching profile.",
+      "source_span": [
+        109,
+        115
+      ],
+      "tree_path": "fn.detect_injection_profiles",
+      "source_hash": "sha256:cd82b58f9a6b2668f7d7f68c919c127245cd0ec918ddb400f6dcc3b51fe32a91",
+      "source_anchor": "pub fn detect_injection_profiles(path: &Path) -> Vec<&'static InjectionProfile> {",
+      "related": {
+        "no-injection-without-profile": "sha256:0e60861d11a0d281260c4925cec6444ece90cfbc3c0086b4704dbd89eff7a027",
+        "path-based-dialect-detection": "sha256:9a1ccc3eb8dce442e3c13e459d637d2460a713abb25f7fcb0b72a372bb78d00f"
+      }
+    },
+    {
+      "item": "ExtractedContent",
+      "reviewed": false,
+      "intent": "Holds the extracted text ready for sub-parsing and the 0-indexed line offset in the outer file. The line offset is added to inner-parser line numbers to translate back to outer-file coordinates.",
+      "source_span": [
+        124,
+        130
+      ],
+      "tree_path": "struct.ExtractedContent",
+      "source_hash": "sha256:3193e99eb55f9b98bd8119e7accae740904bffb39224dbabfe76b20178c1872d",
+      "source_anchor": "pub struct ExtractedContent {",
+      "related": {
+        "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a"
+      }
+    },
+    {
+      "item": "extract_block_scalar",
+      "reviewed": false,
+      "intent": "Extract the content of a YAML block scalar for injection. Must strip the indicator line (|, >, |+, |- etc.), determine base indentation from the first non-empty content line, strip that indentation uniformly, and record the line offset as scalar_start_line + 1 (skipping the indicator).",
+      "source_span": [
+        140,
+        183
+      ],
+      "source_hash": "sha256:88d054504d2e4ab6f2352e8317b6aa861b08b3eefbd439306e756f4f2d6534c4",
+      "source_anchor": "pub fn extract_block_scalar(node: &Node, source: &str) -> Option<ExtractedContent> {",
+      "related": {
+        "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a"
+      }
+    },
+    {
+      "item": "extract_flow_scalar",
+      "reviewed": false,
+      "intent": "Extract the content of a YAML flow scalar (inline string) for injection. Handles double_quote_scalar, single_quote_scalar, and plain_scalar by stripping surrounding quotes. Line offset is the scalar's start row.",
+      "source_span": [
+        190,
+        215
+      ],
+      "tree_path": "fn.extract_flow_scalar",
+      "source_hash": "sha256:fd0cfc7c47795ef86357de964a4545e849777424c263b82581b642271feb53b4",
+      "source_anchor": "pub fn extract_flow_scalar(node: &Node, source: &str) -> Option<ExtractedContent> {",
+      "related": {
+        "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a"
+      }
+    },
+    {
+      "item": "extract_yaml_content",
+      "reviewed": false,
+      "intent": "Try block scalar extraction first, then fall back to flow scalar. This is the primary entry point for extracting injected content from a YAML value node.",
+      "source_span": [
+        217,
+        219
+      ],
+      "tree_path": "fn.extract_yaml_content",
+      "source_hash": "sha256:65e25df434522e2fff8875407e12a608e37acea9b824c71c43cb10ae4527001a",
+      "source_anchor": "pub fn extract_yaml_content(node: &Node, source: &str) -> Option<ExtractedContent> {"
+    },
+    {
+      "item": "find_descendant_by_kind",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        222,
+        234
+      ],
+      "tree_path": "fn.find_descendant_by_kind",
+      "source_hash": "sha256:32fbc49b35cefd6c4e7a3b94536ff1a4d8447f74275347b14a36affb85b78219",
+      "source_anchor": "fn find_descendant_by_kind<'a>(node: &Node<'a>, kind: &str) -> Option<Node<'a>> {"
+    },
+    {
+      "item": "find_flow_scalar",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        237,
+        250
+      ],
+      "tree_path": "fn.find_flow_scalar",
+      "source_hash": "sha256:fbd5aff5d7a6861314180c13a1445afe1f4711fb93944a759c23fb933bacfa0d",
+      "source_anchor": "fn find_flow_scalar<'a>(node: &Node<'a>) -> Option<Node<'a>> {"
+    },
+    {
+      "item": "collect_ancestor_keys",
+      "reviewed": false,
+      "intent": "Walk up from a YAML node via parent(), collecting key names from block_mapping_pair nodes. Returns keys from outermost to innermost. Used to verify ancestor constraints from injection rules.",
+      "source_span": [
+        255,
+        273
+      ],
+      "source_hash": "sha256:f15d948d368f482c5453244c4752af14453f2538007de583684de8aa02b18406",
+      "source_anchor": "pub fn collect_ancestor_keys(node: &Node, source: &str) -> Vec<String> {",
+      "related": {
+        "ancestor-path-matching": "sha256:c78c6d23e38b348d798c40a8d4258f3a33c7032458e84000f8324ac9acbffc01"
+      }
+    }
+  ]
+}
