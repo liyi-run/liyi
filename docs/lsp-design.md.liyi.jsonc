@@ -1,0 +1,70 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "docs/lsp-design.md",
+  "specs": [
+    {
+      "requirement": "lsp-reuses-library-crate",
+      "source_span": [
+        23,
+        25
+      ],
+      "source_hash": "sha256:4f11cc79432f4939870cb9c15bbb84acc91673cb6bda08fb40422eb42d8582e8",
+      "source_anchor": "<!-- @liyi:requirement lsp-reuses-library-crate -->"
+    },
+    {
+      "requirement": "lsp-diagnostics-match-cli",
+      "source_span": [
+        27,
+        29
+      ],
+      "source_hash": "sha256:f21954cf3c671ef5c7dbc44d7bee359ff6de8d85283a4aef5f35231f5e99a222",
+      "source_anchor": "<!-- @liyi:requirement lsp-diagnostics-match-cli -->"
+    },
+    {
+      "requirement": "lsp-requirement-registry-cached",
+      "source_span": [
+        31,
+        33
+      ],
+      "source_hash": "sha256:1ed24eb47e186f718853073cb40568e8fb374dbd72c1c9aae3964c7345a9a7db",
+      "source_anchor": "<!-- @liyi:requirement lsp-requirement-registry-cached -->"
+    },
+    {
+      "requirement": "lsp-no-domain-logic-in-server",
+      "source_span": [
+        35,
+        37
+      ],
+      "source_hash": "sha256:48039e71b0d2dd09d6ba8ed459351f611dd6926e85fa8e5253d79868040aeaee",
+      "source_anchor": "<!-- @liyi:requirement lsp-no-domain-logic-in-server -->"
+    },
+    {
+      "requirement": "lsp-check-refactor-exposes-registry",
+      "source_span": [
+        39,
+        41
+      ],
+      "source_hash": "sha256:04b6505befda604a5d93ee3c8024a9f388fec4562be13375a2eb264bd5d6ef41",
+      "source_anchor": "<!-- @liyi:requirement lsp-check-refactor-exposes-registry -->"
+    },
+    {
+      "requirement": "lsp-synchronous-library-async-server",
+      "source_span": [
+        43,
+        45
+      ],
+      "source_hash": "sha256:263f90cbcde44c9c64caed638d58e0f9e55b1497d26e15704815431821d56590",
+      "source_anchor": "<!-- @liyi:requirement lsp-synchronous-library-async-server -->"
+    },
+    {
+      "requirement": "lsp-sidecar-source-pairing",
+      "source_span": [
+        47,
+        49
+      ],
+      "source_hash": "sha256:8d47a9de263b1dbbdd465b74893a607446fe8b1b93d3388e69b8a597c281fba6",
+      "source_anchor": "<!-- @liyi:requirement lsp-sidecar-source-pairing -->"
+    }
+  ]
+}
