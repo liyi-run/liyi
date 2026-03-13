@@ -376,7 +376,7 @@ fn check_sidecar(
     }
 
     // 2b. Validate source_hash format on all specs
-    let hash_re = regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap();
+    let hash_re = regex::Regex::new(r"^sha256t?:[0-9a-f]+$").unwrap();
     for spec in &sidecar.specs {
         match spec {
             Spec::Item(item) => {

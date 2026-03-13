@@ -144,7 +144,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
         ));
     }
 
-    let hash_re = regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap();
+    let hash_re = regex::Regex::new(r"^sha256t?:[0-9a-f]+$").unwrap();
 
     for (idx, spec) in sidecar.specs.iter().enumerate() {
         match spec {

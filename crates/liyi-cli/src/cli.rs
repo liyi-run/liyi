@@ -102,4 +102,10 @@ pub enum Commands {
         #[arg(long)]
         item: Option<String>,
     },
+
+    /// Re-hash all sidecars from sha256 to sha256t (temporary migration command)
+    Rehash {
+        /// Sidecar files or directories to rehash (recursive)
+        paths: Vec<PathBuf>,
+    },
 }
