@@ -1,7 +1,7 @@
 //! tree_path parser — formal grammar implementation using nom.
 //!
 //! This module implements the tree_path grammar spec (v0.3) from
-//! `docs/liyi-01x-roadmap.md` Appendix A.
+//! `docs/liyi-design.md` *Appendix: tree_path Grammar Specification (v0.3)*.
 //!
 //! v0.3 syntax: `kind.name::kind.name` — the `.` binds a kind shorthand
 //! to its name within a single pair, while `::` separates successive pairs

@@ -4,7 +4,7 @@
 
 **Status:** ✅ Complete (core framework + GitHub Actions profile)
 **Target:** v0.1.x (M9)
-**Design authority:** `docs/liyi-design.md` — *Quoting and injection*, tree_path Grammar v0.3
+**Design authority:** `docs/liyi-design.md` — *Quoting and injection*, *Appendix: tree_path Grammar Specification (v0.3)*
 
 ---
 

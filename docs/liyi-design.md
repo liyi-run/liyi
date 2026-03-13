@@ -471,7 +471,7 @@ Without a `tree_path`, the fallback is: batch false positives on any line-shifti
 
 The path identifies the item by node kind and name, not by position. The tool constructs the path by walking the tree-sitter CST from root to the node that covers `source_span`, recording each named ancestor. This is deterministic — the same source item always produces the same path regardless of where it appears in the file.
 
-**Quoting and injection.** Names containing spaces, `::`, `.`, or quotes are double-quoted with backslash escaping (`test."add function"`, `key."abc.kubernetes.io"`). For multi-language files (M9), an injection marker `//lang` attaches to the name within a pair to cross a language boundary (`key.run//bash::fn.setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.3).
+**Quoting and injection.** Names containing spaces, `::`, `.`, or quotes are double-quoted with backslash escaping (`test."add function"`, `key."abc.kubernetes.io"`). For multi-language files (M9), an injection marker `//lang` attaches to the name within a pair to cross a language boundary (`key.run//bash::fn.setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in *Appendix: tree_path Grammar Specification (v0.3)* below.
 
 **Behavior during check.**
 
@@ -546,14 +546,17 @@ All languages are built-in — the binary ships with every supported tree-sitter
 | Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
 | Zig | `tree-sitter-zig` | `fn`, `const`, `test`. Struct-as-namespace pattern (`const Foo = struct { ... }`) uses `custom_name`. |
 
-**Planned languages (0.1.x, see roadmap M7–M9):**
+**Additional languages (shipped in 0.1.x):**
 
 | Language | Grammar | Notes |
 |---|---|---|
-| Dart | `tree-sitter-dart` | `class`, `method`, `mixin`, `extension`, `enum`. Grammar crate stability TBD. |
-| TOML | `tree-sitter-toml` | Data file — `table`, `key`. Key-path identity, not named items. |
+| Ruby | `tree-sitter-ruby` v0.23.1 | `class`, `module`, `method`, `singleton_method`. |
+| Bash | `tree-sitter-bash` v0.25.1 | `function_definition` only — shell is structurally flat. |
+| Dart | `tree-sitter-dart` v0.1.0 | `class`, `method`, `mixin`, `extension`, `enum`, `getter`, `setter`, constructors. |
+| Zig | `tree-sitter-zig` v1.1.2 | `fn_decl`, `var_decl` (const), `test_decl`. Struct-as-namespace pattern. |
+| TOML | `tree-sitter-toml-ng` | Data file — `table`, `key`. Key-path identity, not named items. |
 | JSON | `tree-sitter-json` | Data file — `key` (from `pair`). Targets schemas, `package.json`. |
-| YAML | `tree-sitter-yaml` | Data file — `key` (from `block_mapping_pair`). Limited without injection framework (M9). |
+| YAML | `tree-sitter-yaml` | Data file — `key` (from `block_mapping_pair`). Injection framework enables descent into embedded shell in `run:` blocks. |
 
 **Deferred languages:**
 
@@ -2424,6 +2427,18 @@ The project's value proposition relies on agents following the AGENTS.md instruc
 
 **Action:** Restructure AGENTS.md into tiered form and extend `--prompt` to cover all diagnostics (not just coverage gaps). This is a convention change that affects the agent skill template — downstream repositories that adopted the current AGENTS.md will need to update. Ship the restructured instruction alongside the `--prompt` generalization.
 
+### 6. Git-aware triage — considered and rejected
+
+**Proposal:** Store `anchored_at` (git commit hash) per sidecar. Use `git diff <anchored_at>..HEAD` to give the triage agent a bounded, focused diff instead of the full file.
+
+**Why rejected:**
+- `source_hash` is already a content-addressed anchor — strictly more robust than a temporal anchor (immune to history rewriting, rebased commits, shallow clones).
+- The triage question is "does current code match declared intent?" — answerable from current code + intent alone. History tells you *how* drift happened, not *whether* intent still holds.
+- Adds git as a soft dependency. The sidecar model is currently VCS-agnostic.
+- Two staleness signals (hash + commit) that can disagree create ambiguity.
+
+**If git context helps triage quality**, it belongs in the triage **workflow** (the agent invokes `git log`/`git blame` at triage time), not the **data layer** (the sidecar schema). Zero schema changes, zero backward-compatibility concerns.
+
 ---
 
 ## Appendix: Worked Example
@@ -2668,6 +2683,43 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
 ```
 
 This schema ships as `liyi.schema.json` in the linter's release artifacts and is published at the `$id` URL. Editors that support JSON Schema (VSCode, IntelliJ, Neovim with `SchemaStore`) will provide validation and autocompletion for `.liyi.jsonc` files when configured with `"$schema": "https://liyi.run/schema/0.1/liyi.schema.json"` at the top of the sidecar, or via a workspace-level `json.schemas` setting.
+
+---
+
+## Appendix: tree_path Grammar Specification (v0.3)
+
+The v0.2 grammar used `::` as a uniform segment separator with an even-pair invariant (alternating kind–name segments). This was ambiguous when names contained `::` and required a heuristic (`is_common_kind`) to distinguish kind from name segments. v0.3 eliminates the ambiguity by binding kind to name with `.` within a pair, and using `::` only as a descent separator between pairs.
+
+### Grammar (EBNF)
+
+```ebnf
+tree_path    := pair ("::" pair)*
+pair         := kind "." name
+kind         := identifier
+name         := (simple_name | quoted_string) index? injection?
+index        := '[' number ']'
+injection    := "//" language
+language     := identifier
+simple_name  := identifier | "self" | number
+quoted_string:= '"' (escaped_char | any_unicode_except_quote)* '"'
+identifier   := [A-Za-z_][A-Za-z0-9_]*
+number       := [0-9]+
+escaped_char := '\\' ( '"' | '\\' | 'n' | ':' | '.' )
+```
+
+### Design decisions
+
+1. **Dot as kind–name binder:** `.` binds a kind shorthand to its name within a single pair. This makes pairing explicit and eliminates the `is_common_kind` heuristic and the even-pair invariant. Example: `fn.add_money`, `impl.Money::fn.new`.
+
+2. **Double-colon as descent separator:** `::` separates pairs (descent into nested items). This is unambiguous because `.` always appears within a pair: `class.Order::fn.process` is three tokens — pair, separator, pair.
+
+3. **Quoted strings for complex names:** Any name containing spaces, `::`, `.`, quotes, or Unicode control characters must be quoted. Example: `test."add function"`. Names containing `.` must be quoted to avoid ambiguity with the kind–name binder: `key."abc.kubernetes.io"`.
+
+4. **Backslash escaping:** Inside quoted strings, `"` and `\` must be escaped. `\.` is provided as a convenience for names containing dots (since `.` is the kind–name binder). `\:` is available for names containing colons.
+
+5. **Array index syntax:** Data-file arrays use a `[N]` suffix on the name for 0-based positional selection: `key.specs[2]::key.item`. The index attaches to the name within the pair.
+
+6. **Injection syntax:** The `//lang` marker attaches to the name within a pair, crossing a language boundary: `key.run//bash::fn.setup_env`. The `//` delimiter requires no shell escaping. Injection is always part of the pair, not a standalone segment.
 
 ---
 
