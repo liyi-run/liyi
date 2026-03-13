@@ -153,6 +153,7 @@ fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {
 /// Maximum allowed length (in bytes) for requirement / related names.
 /// Bounds the size of attacker-controlled text that flows into `--prompt`
 /// instruction strings.  See `docs/prompt-mode-design.md` §Security.
+// @liyi:intent=doc
 const MAX_NAME_LEN: usize = 128;
 
 /// Extract a name from the remainder after a keyword.
