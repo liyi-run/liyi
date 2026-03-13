@@ -1070,8 +1070,8 @@ fn init_scaffold_combined() {
     fs::copy(&source, &tmp_source).unwrap();
 
     // Phase 1: run init with discover (default threshold = 5)
-    let sidecar_path = liyi::init::init_sidecar(&tmp_source, false, true, 5)
-        .expect("init_sidecar should succeed");
+    let sidecar_path =
+        liyi::init::init_sidecar(&tmp_source, false, true, 5).expect("init_sidecar should succeed");
 
     let content = fs::read_to_string(&sidecar_path).unwrap();
     let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
@@ -1099,14 +1099,70 @@ fn init_scaffold_combined() {
         trivial: bool,
     }
     let expected: &[Expected] = &[
-        Expected { tp: "struct::Point",                name: "Point",             span: [2, 5],   body: 4,  has_doc: true,  trivial: false },
-        Expected { tp: "struct::Internal",             name: "Internal",          span: [7, 7],   body: 1,  has_doc: false, trivial: true },
-        Expected { tp: "impl::Point",                  name: "Point",             span: [9, 28],  body: 20, has_doc: false, trivial: false },
-        Expected { tp: "impl::Point::fn::origin",      name: "Point::origin",     span: [11, 13], body: 3,  has_doc: true,  trivial: false },
-        Expected { tp: "impl::Point::fn::distance_to", name: "Point::distance_to", span: [18, 22], body: 5, has_doc: true, trivial: false },
-        Expected { tp: "impl::Point::fn::translate",   name: "Point::translate",  span: [24, 27], body: 4,  has_doc: false, trivial: true },
-        Expected { tp: "fn::scale_all",                name: "scale_all",         span: [31, 36], body: 6,  has_doc: true,  trivial: false },
-        Expected { tp: "fn::identity",                 name: "identity",          span: [38, 40], body: 3,  has_doc: false, trivial: true },
+        Expected {
+            tp: "struct::Point",
+            name: "Point",
+            span: [2, 5],
+            body: 4,
+            has_doc: true,
+            trivial: false,
+        },
+        Expected {
+            tp: "struct::Internal",
+            name: "Internal",
+            span: [7, 7],
+            body: 1,
+            has_doc: false,
+            trivial: true,
+        },
+        Expected {
+            tp: "impl::Point",
+            name: "Point",
+            span: [9, 28],
+            body: 20,
+            has_doc: false,
+            trivial: false,
+        },
+        Expected {
+            tp: "impl::Point::fn::origin",
+            name: "Point::origin",
+            span: [11, 13],
+            body: 3,
+            has_doc: true,
+            trivial: false,
+        },
+        Expected {
+            tp: "impl::Point::fn::distance_to",
+            name: "Point::distance_to",
+            span: [18, 22],
+            body: 5,
+            has_doc: true,
+            trivial: false,
+        },
+        Expected {
+            tp: "impl::Point::fn::translate",
+            name: "Point::translate",
+            span: [24, 27],
+            body: 4,
+            has_doc: false,
+            trivial: true,
+        },
+        Expected {
+            tp: "fn::scale_all",
+            name: "scale_all",
+            span: [31, 36],
+            body: 6,
+            has_doc: true,
+            trivial: false,
+        },
+        Expected {
+            tp: "fn::identity",
+            name: "identity",
+            span: [38, 40],
+            body: 3,
+            has_doc: false,
+            trivial: true,
+        },
     ];
 
     assert_eq!(
@@ -1127,21 +1183,38 @@ fn init_scaffold_combined() {
         assert_eq!(item.source_span, e.span, "{}: source_span mismatch", e.tp);
         assert!(!item.reviewed, "{}: reviewed should be false", e.tp);
         assert!(item.intent.is_empty(), "{}: intent should be empty", e.tp);
-        assert!(item.source_hash.is_none(), "{}: source_hash should be None", e.tp);
-        assert!(item.source_anchor.is_none(), "{}: source_anchor should be None", e.tp);
+        assert!(
+            item.source_hash.is_none(),
+            "{}: source_hash should be None",
+            e.tp
+        );
+        assert!(
+            item.source_anchor.is_none(),
+            "{}: source_anchor should be None",
+            e.tp
+        );
 
-        let hints = item._hints.as_ref().unwrap_or_else(|| panic!("{}: missing _hints", e.tp));
-        assert_eq!(hints["_body_lines"], e.body, "{}: _body_lines mismatch", e.tp);
+        let hints = item
+            ._hints
+            .as_ref()
+            .unwrap_or_else(|| panic!("{}: missing _hints", e.tp));
+        assert_eq!(
+            hints["_body_lines"], e.body,
+            "{}: _body_lines mismatch",
+            e.tp
+        );
         assert_eq!(hints["_has_doc"], e.has_doc, "{}: _has_doc mismatch", e.tp);
         if e.trivial {
             assert_eq!(
                 hints["_likely_trivial"], true,
-                "{}: expected _likely_trivial: true", e.tp
+                "{}: expected _likely_trivial: true",
+                e.tp
             );
         } else {
             assert!(
                 hints.get("_likely_trivial").is_none(),
-                "{}: should NOT have _likely_trivial", e.tp
+                "{}: should NOT have _likely_trivial",
+                e.tp
             );
         }
     }
@@ -1156,7 +1229,8 @@ fn init_scaffold_combined() {
     liyi::check::run_check(tmp.path(), &[], true, false, &flags);
 
     let after_content = fs::read_to_string(&sidecar_path).unwrap();
-    let after = liyi::sidecar::parse_sidecar(&after_content).expect("sidecar should parse after fix");
+    let after =
+        liyi::sidecar::parse_sidecar(&after_content).expect("sidecar should parse after fix");
 
     for spec in &after.specs {
         if let liyi::sidecar::Spec::Item(item) = spec {
@@ -1192,6 +1266,9 @@ fn init_scaffold_combined() {
             )
         })
         .collect();
-    assert!(failures.is_empty(), "unexpected diagnostics after fix: {failures:#?}");
+    assert!(
+        failures.is_empty(),
+        "unexpected diagnostics after fix: {failures:#?}"
+    );
     assert_eq!(exit_code, liyi::diagnostics::LiyiExitCode::Clean);
 }
