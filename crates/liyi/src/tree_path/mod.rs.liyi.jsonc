@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding), an optional doc_comment_detector callback that checks whether a doc comment is attached to an item node, and a transparent_kinds list of node kinds that resolve_segments should recurse through transparently (for grammars that wrap item nodes in intermediate containers, e.g., Dart class_member).",
       "source_span": [
-        47,
-        75
+        63,
+        91
       ],
       "tree_path": "struct.LanguageConfig",
       "source_hash": "sha256:b0b42fad068403f34ec1530685e69a61e871990f2ffbc2eeaa4ae9fb339c8c17",
@@ -20,8 +20,8 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        233,
-        310
+        249,
+        326
       ],
       "tree_path": "fn.detect_language",
       "source_hash": "sha256:352ea33c19064f9f471ca99d46977cc4731ffebdc3155333dd6f3fa976a75ee5",
@@ -35,8 +35,8 @@
       "reviewed": true,
       "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, Zig, TOML, JSON, and YAML. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
-        162,
-        184
+        178,
+        200
       ],
       "tree_path": "enum.Language",
       "source_hash": "sha256:22ac6ffee8cb31c56dc49788f70b5ddf5a7e7e3d40fd1ba96053073b5c797416",
@@ -47,8 +47,8 @@
       "reviewed": true,
       "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
-        99,
-        119
+        115,
+        135
       ],
       "tree_path": "impl.LanguageConfig::fn.node_name",
       "source_hash": "sha256:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
@@ -59,11 +59,11 @@
       "reviewed": false,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse). When the parsed path contains an injection marker (//lang), delegates to resolve_with_injection for sub-parsing. Otherwise, collect Pairs into (kind, name, optional index) triples and walk the tree-sitter AST via resolve_segments to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
-        333,
-        372
+        349,
+        388
       ],
       "tree_path": "fn.resolve_tree_path",
-      "source_hash": "sha256:079d9ddef8be60eb347b3a48befca4e70a325728757a1cfba9d776b8feb1cc5d",
+      "source_hash": "sha256:8833ea54e59f99c50eae9ac1d12cb9081b7a356780f00c6a5a397e081cd7fedd",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {",
       "related": {
         "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a",
@@ -75,8 +75,8 @@
       "reviewed": true,
       "intent": "Hold the result of a hash-based sibling scan: the 1-indexed inclusive span of the matched sibling element and the updated tree_path with the corrected array index.",
       "source_span": [
-        479,
-        484
+        495,
+        500
       ],
       "tree_path": "struct.SiblingScanResult",
       "source_hash": "sha256:16f08b111123e54dffb3cbdba88814476eea4ff857aaf1941bebd85157e8180c",
@@ -87,8 +87,8 @@
       "reviewed": true,
       "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path into Pairs, find the last pair with an index, resolve the parent array container, iterate all named children (resolving any suffix pairs within each), hash each candidate's span, and return the unique match. Returns None when no pair has an index, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
-        498,
-        602
+        514,
+        618
       ],
       "tree_path": "fn.resolve_tree_path_sibling_scan",
       "source_hash": "sha256:da012019e6266a0dffd8863794e6e4208d51061fe1a2fac790fb181d55a4432e",
@@ -102,8 +102,8 @@
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[PathPair] (kind, name, optional index) triples. For segments with an index, delegate to resolve_indexed_child for positional array access. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member, YAML block_node/block_mapping).",
       "source_span": [
-        612,
-        653
+        628,
+        669
       ],
       "tree_path": "fn.resolve_segments",
       "source_hash": "sha256:d701a59918c33182385f2ddd6d6bbbbef485d0fe2f27d798ca9bb1357ab21292",
@@ -114,8 +114,8 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[PathPair] (kind, name, optional index) triples.",
       "source_span": [
-        698,
-        706
+        714,
+        722
       ],
       "tree_path": "fn.resolve_in_body",
       "source_hash": "sha256:aa2789a394092d4abffef26e10ea466447c79cd3733487aac172732344b82524",
@@ -126,8 +126,8 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        713,
-        734
+        729,
+        750
       ],
       "tree_path": "fn.compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
@@ -138,11 +138,11 @@
       "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        952,
-        998
+        968,
+        1014
       ],
       "tree_path": "fn.find_item_in_range",
-      "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
+      "source_hash": "sha256:1ba8ea4c1e3f8910d3d25438c8dd2442d5874262cd76984721130cebf8c0b0a0",
       "source_anchor": "fn find_item_in_range<'a>("
     },
     {
@@ -150,8 +150,8 @@
       "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting kind.name path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        1017,
-        1063
+        1033,
+        1079
       ],
       "tree_path": "fn.collect_path",
       "source_hash": "sha256:d6db330999717bbea6d21f24455ff2720da3393a219f0c4119e481535e67c729",
@@ -167,11 +167,11 @@
       "reviewed": false,
       "intent": "Handle injection-enabled tree_path resolution. Resolve host-side segments to the injection-point node, extract the injected content from the YAML value, sub-parse it with the injected language's grammar, and resolve remaining inner segments. Translate inner spans back to outer-file coordinates by adding the line offset. Returns the full injected content span if no inner segments follow the //lang marker.",
       "source_span": [
-        381,
-        448
+        397,
+        464
       ],
       "tree_path": "fn.resolve_with_injection",
-      "source_hash": "sha256:d1ae8afa66707310865320d53b6c85a2946c60d48e57a0102d07738deb8f8140",
+      "source_hash": "sha256:28582d2ed47fc8a19ec7e5ef7b21ce30f556c1f6e29d1e6d1ebfd29df03e91ad",
       "source_anchor": "fn resolve_with_injection(",
       "related": {
         "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a",
@@ -183,11 +183,11 @@
       "reviewed": false,
       "intent": "Map an injection marker language string (e.g., 'bash', 'py', 'rs') to a Language enum variant. Supports common aliases. Returns None for unknown languages.",
       "source_span": [
-        451,
-        477
+        467,
+        492
       ],
       "tree_path": "fn.language_from_name",
-      "source_hash": "sha256:4296694f5511dfa6dca1293bc520e1b4bb4545bcf0e63a0f7d4b11be03a63769",
+      "source_hash": "sha256:73fa2aae1efdaf87d9ab5bd5bc8c84549425cec118e44c155722203f8417d99c",
       "source_anchor": "fn language_from_name(name: &str) -> Option<Language> {"
     },
     {
@@ -195,11 +195,11 @@
       "reviewed": false,
       "intent": "Repo-path-aware variant of compute_tree_path. Detects active injection profiles for the given path; when the target span falls inside an injection zone, emits the //lang marker and computes the inner-language path. Falls back to standard compute_tree_path when no injection profile matches or the span is not inside an injection zone.",
       "source_span": [
-        747,
-        787
+        763,
+        798
       ],
       "tree_path": "fn.compute_tree_path_injected",
-      "source_hash": "sha256:28d8ebb09c27eccdc3605e2673e8dcd3ed973a27890e8653f45f80a6eb4e6104",
+      "source_hash": "sha256:a60ecfabe2d1845f23196261a7935a0807555643c09f7f24d75d2378d762c2f4",
       "source_anchor": "pub fn compute_tree_path_injected(",
       "related": {
         "content-offset-correctness": "sha256:bb335adf95f08bc33400de939be514ef2bfdcdb0180fd261a33f2e8653c8e37a",
@@ -211,11 +211,11 @@
       "reviewed": false,
       "intent": "Find the nearest block_mapping_pair whose value contains the target span and whose key name matches an active injection rule (including ancestor-key verification). Extract content, sub-parse with the inner language, compute the inner tree_path, and return the composite host_path//lang::inner_path string.",
       "source_span": [
-        790,
-        856
+        806,
+        871
       ],
       "tree_path": "fn.find_injection_zone",
-      "source_hash": "sha256:a8fba5e5d2fd3a68ae7b6d0446ec219f0a2bf37e3b0195d878a9ab33bc2d1a4e",
+      "source_hash": "sha256:c896283836e5d46d34e5007513a093a3145adc804b41e8d71a7ac9fd6edb1b57",
       "source_anchor": "fn find_injection_zone("
     },
     {
@@ -223,8 +223,8 @@
       "reviewed": false,
       "intent": "Walk the YAML AST to find the innermost block_mapping_pair node whose value range contains [target_start, target_end]. Prefers the smallest (innermost) match.",
       "source_span": [
-        859,
-        905
+        875,
+        921
       ],
       "tree_path": "fn.find_injection_candidate",
       "source_hash": "sha256:92702300ecffefd8bda8775a7316cac494bef3aa96dfd3cb2ede7ad6608950ca",
@@ -235,11 +235,11 @@
       "reviewed": false,
       "intent": "=trivial",
       "source_span": [
-        908,
-        918
+        924,
+        933
       ],
       "tree_path": "fn.find_ancestor_pair",
-      "source_hash": "sha256:62651f3e0cf0e3d9384c940aedf7d0ab97e9fb4d1dff55b43db6a5ce6fecdfc9",
+      "source_hash": "sha256:9e0cd419679148068d82d1ac708400f44bc2e0e5c8a1227c01340b3ec634a286",
       "source_anchor": "fn find_ancestor_pair<'a>(node: &Node<'a>) -> Option<Node<'a>> {"
     },
     {
@@ -247,11 +247,11 @@
       "reviewed": false,
       "intent": "Map a Language enum variant to its canonical injection marker string. Inverse of language_from_name (using canonical names only, no aliases).",
       "source_span": [
-        920,
-        948
+        936,
+        960
       ],
       "tree_path": "fn.language_to_name",
-      "source_hash": "sha256:6b32704cd90612045d5950d170973498c431c1998ab7e63893217e43c3428386",
+      "source_hash": "sha256:968d9ec759ea341d48fe8d1768bd373ff064aeed9ab4c4e77b61c287279018b8",
       "source_anchor": "fn language_to_name(lang: Language) -> &'static str {"
     }
   ]

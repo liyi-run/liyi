@@ -69,9 +69,11 @@
       "intent": "Run `liyi check` against the repository root to verify that all sidecar specs are current (no stale hashes, no coverage gaps). Must fail the PR if liyi check exits non-zero.",
       "source_span": [
         47,
-        55
+        54
       ],
-      "tree_path": "key.jobs::key.\"liyi-check\""
+      "tree_path": "key.jobs::key.\"liyi-check\"",
+      "source_hash": "sha256:991baeb9c5382d8fab9e2c777bd2af27a7c6c9fcc08b64263f7b5963f7ba0909",
+      "source_anchor": "  liyi-check:"
     }
   ]
 }

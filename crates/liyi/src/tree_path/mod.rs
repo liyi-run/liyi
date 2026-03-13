@@ -39,6 +39,22 @@ use tree_sitter::{Language as TSLanguage, Node, Parser};
 
 use crate::hashing::hash_span;
 
+/// Convert a tree-sitter node's exclusive end-position row to a 0-indexed
+/// *inclusive* end row.  Tree-sitter end positions point one byte past the
+/// last byte of the node.  When that byte is at column 0, the node's last
+/// content is on the *previous* row (the trailing `\n` pushed the cursor
+/// forward).  This function returns the row that actually contains the
+/// node's last non-newline content.
+#[inline]
+fn node_end_row_inclusive(node: &Node) -> usize {
+    let end = node.end_position();
+    if end.column == 0 && end.row > node.start_position().row {
+        end.row - 1
+    } else {
+        end.row
+    }
+}
+
 /// Language-specific configuration for tree_path resolution.
 ///
 /// Each supported language provides a static `LanguageConfig` that defines
@@ -367,7 +383,7 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
 
     // Return 1-indexed inclusive line range
     let start_line = node.start_position().row + 1;
-    let end_line = node.end_position().row + 1;
+    let end_line = node_end_row_inclusive(&node) + 1;
     Some([start_line, end_line])
 }
 
@@ -443,7 +459,7 @@ fn resolve_with_injection(
 
     // Translate inner spans back to outer-file coordinates.
     let start_line = inner_node.start_position().row + extracted.line_offset + 1;
-    let end_line = inner_node.end_position().row + extracted.line_offset + 1;
+    let end_line = node_end_row_inclusive(&inner_node) + extracted.line_offset + 1;
     Some([start_line, end_line])
 }
 
@@ -572,7 +588,7 @@ pub fn resolve_tree_path_sibling_scan(
         };
 
         let start_line = target_node.start_position().row + 1;
-        let end_line = target_node.end_position().row + 1;
+        let end_line = node_end_row_inclusive(&target_node) + 1;
         let span = [start_line, end_line];
 
         if let Ok((hash, _)) = hash_span(source, span)
@@ -965,7 +981,7 @@ fn find_item_in_range<'a>(
         best: &mut Option<Node<'a>>,
     ) {
         let start = node.start_position().row;
-        let end = node.end_position().row;
+        let end = node_end_row_inclusive(node);
 
         // Skip nodes that don't overlap our target
         if start > target_end || end < target_start {
@@ -976,7 +992,7 @@ fn find_item_in_range<'a>(
         if start >= target_start && end <= target_end && is_item_node(config, node) {
             // Prefer the widest (outermost) match
             if let Some(b) = best {
-                let b_size = b.end_position().row - b.start_position().row;
+                let b_size = node_end_row_inclusive(b) - b.start_position().row;
                 let n_size = end - start;
                 if n_size >= b_size {
                     *best = Some(*node);
@@ -1126,7 +1142,7 @@ fn discover_walk(
         };
 
         let start_line = child.start_position().row + 1;
-        let end_line = child.end_position().row + 1;
+        let end_line = node_end_row_inclusive(&child) + 1;
         let span = [start_line, end_line];
 
         let tree_path = build_path_to_node(config, root, &child, source);
