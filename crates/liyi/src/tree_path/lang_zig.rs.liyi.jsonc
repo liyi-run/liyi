@@ -17,7 +17,7 @@
     },
     {
       "item": "zig_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extraction for Zig nodes. Handles function_declaration (finds identifier child), variable_declaration (detects const + struct_declaration pattern for struct-as-namespace), and test_declaration (extracts string literal content for test names).",
       "source_span": [
         18,

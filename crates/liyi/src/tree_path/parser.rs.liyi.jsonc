@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "Pair",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represents a single kind.name pair in a parsed tree_path: bundles a kind shorthand, item name, optional 0-based positional index for data-file arrays, and optional injection language marker.",
       "source_span": [
         28,
@@ -17,7 +17,7 @@
     },
     {
       "item": "TreePath",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parsed representation of a complete tree_path string as a list of Pairs. Provides parse() for deserializing from string and serialize() for serializing back with automatic quoting of complex names.",
       "source_span": [
         41,
@@ -29,7 +29,7 @@
     },
     {
       "item": "parse_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Parses the first pair then collects subsequent pairs preceded by :: delimiters.",
       "source_span": [
         116,
@@ -53,7 +53,7 @@
     },
     {
       "item": "serialize_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Serializes a name, automatically quoting if it contains special characters (dots, colons, ::, spaces, tabs, newlines, quotes, backslashes) or is not a simple identifier. Escapes backslashes and quotes within quoted strings. Public so that collect_path in mod.rs can use it for tree_path construction.",
       "source_span": [
         80,

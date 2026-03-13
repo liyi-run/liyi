@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "json_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract names from JSON pair nodes: get the key field (a string node), find the string_content child inside it, and return its text. Return None for non-pair nodes.",
       "source_span": [
         10,

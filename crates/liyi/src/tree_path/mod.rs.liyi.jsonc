@@ -17,7 +17,7 @@
     },
     {
       "item": "detect_language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         232,
@@ -32,7 +32,7 @@
     },
     {
       "item": "Language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, Zig, TOML, JSON, and YAML. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
         161,
@@ -56,7 +56,7 @@
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect Pairs into (kind, name, optional index) triples, then walk the tree-sitter AST via resolve_segments to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         325,
@@ -68,7 +68,7 @@
     },
     {
       "item": "SiblingScanResult",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Hold the result of a hash-based sibling scan: the 1-indexed inclusive span of the matched sibling element and the updated tree_path with the corrected array index.",
       "source_span": [
         360,
@@ -80,7 +80,7 @@
     },
     {
       "item": "resolve_tree_path_sibling_scan",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path into Pairs, find the last pair with an index, resolve the parent array container, iterate all named children (resolving any suffix pairs within each), hash each candidate's span, and return the unique match. Returns None when no pair has an index, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
         367,
@@ -142,7 +142,7 @@
     },
     {
       "item": "collect_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively walk from root to target node, collecting kind.name path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
         688,
