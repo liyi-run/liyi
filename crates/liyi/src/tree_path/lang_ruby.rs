@@ -42,6 +42,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body", "statements"],
     custom_name: Some(ruby_node_name),
+    doc_comment_detector: None,
 };
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 use super::LanguageConfig;
+use super::lang_javascript::js_has_doc_comment;
 
 /// TypeScript language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
@@ -16,6 +17,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
 };
 
 /// TSX language configuration.
@@ -34,6 +36,7 @@ pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
 };
 
 #[cfg(test)]

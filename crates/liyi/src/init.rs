@@ -115,6 +115,18 @@ pub fn init_sidecar(source_file: &Path, force: bool, discover: bool) -> Result<P
             discovered
                 .into_iter()
                 .map(|d| {
+                    let mut hints = serde_json::Map::new();
+                    if let Some(has_doc) = d.has_doc_comment {
+                        hints.insert(
+                            "_has_doc".to_string(),
+                            serde_json::Value::Bool(has_doc),
+                        );
+                    }
+                    let _hints = if hints.is_empty() {
+                        None
+                    } else {
+                        Some(serde_json::Value::Object(hints))
+                    };
                     Spec::Item(ItemSpec {
                         item: d.name,
                         reviewed: false,
@@ -125,7 +137,7 @@ pub fn init_sidecar(source_file: &Path, force: bool, discover: bool) -> Result<P
                         source_anchor: None,
                         confidence: None,
                         related: None,
-                        _hints: None,
+                        _hints,
                     })
                 })
                 .collect()

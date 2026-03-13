@@ -1,5 +1,22 @@
 use super::LanguageConfig;
 
+use tree_sitter::Node;
+
+/// Detect JSDoc comments (`/** ... */` before a declaration).
+pub(super) fn js_has_doc_comment(node: &Node, source: &str) -> bool {
+    let sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        if s.kind() == "comment" {
+            let text = &source[s.byte_range()];
+            if text.starts_with("/**") {
+                return true;
+            }
+        }
+        break;
+    }
+    false
+}
+
 /// JavaScript language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_javascript::LANGUAGE.into(),
@@ -13,6 +30,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
 };
 
 #[cfg(test)]

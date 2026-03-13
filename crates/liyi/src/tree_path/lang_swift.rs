@@ -17,6 +17,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: None,
 };
 
 #[cfg(test)]

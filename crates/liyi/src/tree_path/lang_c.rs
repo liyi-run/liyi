@@ -59,6 +59,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: Some(c_node_name),
+    doc_comment_detector: None,
 };
 
 #[cfg(test)]

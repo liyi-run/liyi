@@ -852,3 +852,44 @@ fn init_no_discover_produces_empty_specs() {
         sidecar.specs.len()
     );
 }
+
+#[test]
+fn init_discover_detects_doc_comments() {
+    let fixture = fixture_path("init_discover");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    let sidecar_path =
+        liyi::init::init_sidecar(&tmp_source, false, true).expect("init_sidecar should succeed");
+
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    // The struct Money has a doc comment (/// A monetary amount)
+    let money_struct = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "struct::Money" => Some(i),
+        _ => None,
+    });
+    assert!(money_struct.is_some(), "should find struct::Money");
+    let hints = money_struct.unwrap()._hints.as_ref().expect("should have _hints");
+    assert_eq!(
+        hints.get("_has_doc"),
+        Some(&serde_json::Value::Bool(true)),
+        "struct Money should have _has_doc: true"
+    );
+
+    // standalone function has no doc comment
+    let standalone = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "fn::standalone" => Some(i),
+        _ => None,
+    });
+    assert!(standalone.is_some(), "should find fn::standalone");
+    let hints = standalone.unwrap()._hints.as_ref().expect("should have _hints");
+    assert_eq!(
+        hints.get("_has_doc"),
+        Some(&serde_json::Value::Bool(false)),
+        "standalone should have _has_doc: false"
+    );
+}

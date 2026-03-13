@@ -54,6 +54,9 @@ pub struct LanguageConfig {
     /// (e.g., Go methods with receiver types, Go type_declaration wrapping type_spec).
     /// Returns `Some(name)` for handled kinds, `None` to fall through to default.
     custom_name: Option<fn(&Node, &str) -> Option<String>>,
+    /// Optional callback to detect whether a doc comment is attached to an item node.
+    /// Returns true if a doc comment immediately precedes or is inside the item.
+    doc_comment_detector: Option<fn(&Node, &str) -> bool>,
 }
 
 impl LanguageConfig {
@@ -121,6 +124,12 @@ impl LanguageConfig {
     /// Check if the given file extension is associated with this language.
     pub fn matches_extension(&self, ext: &str) -> bool {
         self.extensions.contains(&ext)
+    }
+
+    /// Detect whether a doc comment is attached to an item node.
+    /// Returns `None` if the language has no doc comment detector.
+    pub fn has_doc_comment(&self, node: &Node, source: &str) -> Option<bool> {
+        self.doc_comment_detector.map(|f| f(node, source))
     }
 }
 
@@ -505,6 +514,8 @@ pub struct DiscoveredItem {
     pub span: [usize; 2],
     /// Canonical tree_path (e.g., "impl::Money::fn::new").
     pub tree_path: String,
+    /// Whether a doc comment was detected (None if detector unavailable).
+    pub has_doc_comment: Option<bool>,
 }
 
 /// Discover all items in a source file using tree-sitter AST traversal.
@@ -566,6 +577,7 @@ fn discover_walk(
             name: display_name,
             span,
             tree_path,
+            has_doc_comment: config.has_doc_comment(&child, source),
         });
 
         // If this item has a body, recurse into it for nested items

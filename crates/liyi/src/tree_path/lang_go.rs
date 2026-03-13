@@ -62,6 +62,19 @@ fn go_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
+/// Detect Go doc comments (`// Comment` before a declaration).
+fn go_has_doc_comment(node: &Node, source: &str) -> bool {
+    let _ = source;
+    let sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        if s.kind() == "comment" {
+            return true;
+        }
+        break;
+    }
+    false
+}
+
 /// Go language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_go::LANGUAGE.into(),
@@ -77,6 +90,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: Some(go_node_name),
+    doc_comment_detector: Some(go_has_doc_comment),
 };
 
 #[cfg(test)]

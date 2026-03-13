@@ -1,5 +1,38 @@
 use super::LanguageConfig;
 
+use tree_sitter::Node;
+
+/// Detect Python docstrings (`"""..."""`/`'''...'''` as first statement of body).
+fn python_has_doc_comment(node: &Node, source: &str) -> bool {
+    // Python docstrings are the first expression_statement in the body
+    // containing a string literal.
+    if let Some(body) = node.child_by_field_name("body") {
+        let mut cursor = body.walk();
+        for child in body.children(&mut cursor) {
+            if child.kind() == "expression_statement" {
+                let mut inner_cursor = child.walk();
+                for inner in child.children(&mut inner_cursor) {
+                    if inner.kind() == "string" {
+                        let text = &source[inner.byte_range()];
+                        if text.starts_with("\"\"\"")
+                            || text.starts_with("'''")
+                        {
+                            return true;
+                        }
+                    }
+                }
+                // Only check the first statement
+                break;
+            }
+            // Skip comments/decorators, only check the first non-decorator statement
+            if child.kind() != "comment" && child.kind() != "decorator" {
+                break;
+            }
+        }
+    }
+    false
+}
+
 /// Python language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_python::LANGUAGE.into(),
@@ -9,6 +42,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: Some(python_has_doc_comment),
 };
 
 #[cfg(test)]

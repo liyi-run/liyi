@@ -73,6 +73,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     // container for struct-as-namespace contents (methods, fields).
     body_fields: &["block", "struct_declaration"],
     custom_name: Some(zig_node_name),
+    doc_comment_detector: None,
 };
 
 #[cfg(test)]

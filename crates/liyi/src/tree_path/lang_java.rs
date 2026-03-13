@@ -1,5 +1,27 @@
 use super::LanguageConfig;
 
+use tree_sitter::Node;
+
+/// Detect Javadoc comments (`/** ... */` before a declaration).
+fn java_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        if s.kind() == "block_comment" {
+            let text = &source[s.byte_range()];
+            if text.starts_with("/**") {
+                return true;
+            }
+        }
+        // Skip modifiers (public, static, etc.)
+        if s.kind() == "modifiers" {
+            sibling = s.prev_sibling();
+            continue;
+        }
+        break;
+    }
+    false
+}
+
 /// Java language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_java::LANGUAGE.into(),
@@ -17,6 +39,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
+    doc_comment_detector: Some(java_has_doc_comment),
 };
 
 #[cfg(test)]
