@@ -110,9 +110,11 @@ pub fn build_prompt_output(
                     annotation_line,
                     expected_sidecar,
                     instruction: format!(
-                        "Requirement \"{name}\" has no items referencing it via \
-                         \"related\". Add a \"related\": {{\"{name}\": null}} edge \
-                         to at least one itemSpec that depends on this requirement."
+                        "Requirement \"{name}\" is defined but no item references it. \
+                         Identify which item(s) depend on this requirement, add a \
+                         `// @liyi:related {name}` annotation to their source code, \
+                         then add \"related\": {{\"{name}\": null}} to the \
+                         corresponding itemSpec(s) in the sidecar."
                     ),
                 });
             }

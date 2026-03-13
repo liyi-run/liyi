@@ -147,7 +147,7 @@
         },
         "requirement": {
           "type": "string",
-          "description": "Name of the requirement that has no items referencing it."
+          "description": "Name of the requirement that has no items referencing it. The agent must identify which items depend on this requirement, add `@liyi:related` annotations to their source, then update the sidecar."
         },
         "source_file": {
           "type": "string",

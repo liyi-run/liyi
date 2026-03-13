@@ -59,7 +59,7 @@ The formal schema is at `schema/prompt.schema.json`.
       "source_file": "src/auth/middleware.rs",
       "annotation_line": 15,
       "expected_sidecar": "src/auth/middleware.rs.liyi.jsonc",
-      "instruction": "Requirement \"auth-check\" has no items referencing it via \"related\". Add a \"related\": {\"auth-check\": null} edge to at least one itemSpec that depends on this requirement."
+      "instruction": "Requirement \"auth-check\" is defined but no item references it. Identify which item(s) depend on this requirement, add a `// @liyi:related auth-check` annotation to their source code, then add \"related\": {\"auth-check\": null} to the corresponding itemSpec(s) in the sidecar."
     }
   ],
   "exit_code": 1
@@ -176,7 +176,7 @@ In the itemSpec for "{item}", add "related": {"{name}": null}.
 
 **Requirement with no related items:**
 ```
-Requirement "{name}" has no items referencing it via "related". Add a "related": {"{name}": null} edge to at least one itemSpec that depends on this requirement.
+Requirement "{name}" is defined but no item references it. Identify which item(s) depend on this requirement, add a `// @liyi:related {name}` annotation to their source code, then add "related": {"{name}": null} to the corresponding itemSpec(s) in the sidecar.
 ```
 
 ### 5. Modify `run_check` to support prompt mode
