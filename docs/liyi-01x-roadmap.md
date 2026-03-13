@@ -30,7 +30,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
 | M7.3 Dart | ✅ Complete | tree-sitter-dart v0.1.0 |
 | M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
-| M8 Data file support | ⏳ Design | TOML, JSON, YAML; key-path tree_path paradigm |
+| M8 Data file support | ⏳ In progress | TOML, JSON, YAML; key-path tree_path paradigm |
 | M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
 | M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
 | M6.4 `.liyiignore` cleanup | ✅ Complete | docs/ removed from ignore |
@@ -795,26 +795,53 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 ## M8. Data file support
 
-**Status:** ⏳ Design
+**Status:** ⏳ In progress (M8.1 complete, M8.2–M8.4 planned)
 
 **Goal:** Extend tree-sitter structural identity to data/config files — TOML, JSON, and YAML. These files carry crucial metadata (dependency declarations, CI definitions, Kubernetes manifests, JSON Schemas) that are legitimate intent-spec targets. Sidecars are depgraph leaves and are excluded — this targets non-sidecar config-as-source.
 
-### M8.1. Data file tree_path paradigm
+### M8.1. Data file tree_path paradigm ✅
+
+**Status:** ✅ Complete — parser, resolver, and serializer extended.
 
 Data files are fundamentally different from code languages. The tree_path concept maps to **structural keys** rather than named items:
 
 | Format | "Item" concept | Example tree_path |
 |--------|---------------|-------------------|
 | TOML | Table, key | `table::package::key::name` |
-| JSON | Object key | `key::specs::key::item` |
-| YAML | Mapping key | `key::jobs::key::build::key::steps` |
+| JSON | Object key | `key::specs[2]::key::item` |
+| YAML | Mapping key | `key::jobs::key::build::key::steps[0]` |
 
-The `LanguageConfig` abstraction assumes items have (kind, name) pairs where kind maps to an AST node type. Data files have a uniform node type (key-value pair) with identity carried entirely by the key path. Two design options:
+The `LanguageConfig` abstraction assumes items have (kind, name) pairs where kind maps to an AST node type. Data files have a uniform node type (key-value pair) with identity carried entirely by the key path. Arrays require positional indexing.
 
-1. **Stretch the existing abstraction** — use `"key"` as the universal kind shorthand, rely on nested body traversal. This works for TOML tables and YAML/JSON mappings but breaks for arrays (index-based, not name-based).
-2. **Extend `LanguageConfig`** — add an `array_index_mode` field to handle positional children. More principled but a schema change to the internal config struct (not the sidecar schema).
+**Design decision:** Extend the `Segment::Name` variant with an optional 0-based index: `Name(String, Option<usize>)`. The grammar production is:
 
-Option 2 is preferred. The `LanguageConfig` extension is internal only — no sidecar schema changes, no user-facing impact.
+```ebnf
+name := (simple_name | quoted_string) index?
+index := '[' number ']'
+```
+
+The `[N]` suffix attaches to the name segment, preserving the even-pair invariant (no extra segments injected). The resolver, upon encountering an indexed name, navigates to the named key node, finds its value (array) body, and selects the Nth named child.
+
+**Why attached syntax (`key::specs[2]`) over separated (`key::specs::[2]`):**
+1. Preserves the even-pair invariant that the resolver and injection framework (M9) depend on.
+2. One navigation operation per pair — "find key `specs`, index element 2" is a single step.
+3. Matches array indexing syntax in every major programming language.
+4. No shell escaping needed (`[N]` is safe in all shells).
+5. Minimal parser change — one new production, one new field.
+
+**Implementation:**
+- `Segment::Name(String, Option<usize>)` — index is `None` for non-indexed names.
+- `parse_optional_index` combinator parses `'[' digit+ ']'`.
+- `serialize` emits `[N]` suffix when index is `Some`.
+- `resolve_indexed_child` finds the body of the named node and selects the Nth named child.
+- `is_common_kind` extended with `key`, `table`, `array_table` for data-file kind shorthands.
+- Proptest roundtrip strategy generates paths with arbitrary indices.
+
+**Acceptance criteria:**
+- ✅ `key::specs[2]::key::item` parses to two (kind, name) pairs with index on first.
+- ✅ Serialization roundtrips: `parse(serialize(path)) == path` for indexed paths.
+- ✅ Proptest `roundtrip_serialize_parse_indexed` passes.
+- ✅ All existing code-language tests unaffected.
 
 ### M8.2. TOML ⏳
 
@@ -1019,7 +1046,8 @@ The original `split("::")` parser was ambiguous when names contained `::` or spa
 tree_path    := segment ("::" segment)*
 segment      := kind | name
 kind         := identifier
-name         := simple_name | quoted_string
+name         := (simple_name | quoted_string) index?
+index        := '[' number ']'
 simple_name  := identifier | "self" | number
 quoted_string:= '"' (escaped_char | any_unicode_except_quote)* '"'
 identifier   := [A-Za-z_][A-Za-z0-9_]*
@@ -1036,6 +1064,8 @@ escaped_char := '\\' ( '"' | '\\' | 'n' | ':' )
 3. **Unquoted shorthand:** Simple identifiers (alphanumeric + underscore) can remain unquoted for ergonomics. This preserves backward compatibility with existing tree_paths like `fn::add` or `class::MyClass`.
 
 4. **Kind disambiguation:** The parser doesn't validate that a segment is a "kind" vs "name" — that happens at resolution time using the `LanguageConfig::kind_map`. The grammar treats both uniformly at the syntactic level.
+
+5. **Array index syntax:** Data-file arrays (JSON arrays, YAML sequences, TOML array-of-tables) use a `[N]` suffix on the name segment for 0-based positional selection: `key::specs[2]::key::item`. The index attaches to the name rather than occupying a separate segment, preserving the even-pair invariant. `[N]` requires no shell escaping and reads naturally as "element N of this key's value." Considered and rejected: `key::specs::[2]::key::item` (breaks even-pair invariant, orphans the index segment).
 
 ### A.3 Injection syntax (future)
 
