@@ -81,7 +81,7 @@ enum Status {
     #[test]
     fn resolve_php_class() {
         let span = resolve_tree_path(SAMPLE_PHP, "class.UserService", Language::Php);
-        assert!(span.is_some(), "should resolve class::UserService");
+        assert!(span.is_some(), "should resolve class.UserService");
     }
 
     #[test]
@@ -93,32 +93,32 @@ enum Status {
         );
         assert!(
             span.is_some(),
-            "should resolve class::UserService::method.findUser"
+            "should resolve class.UserService::method.findUser"
         );
     }
 
     #[test]
     fn resolve_php_interface() {
         let span = resolve_tree_path(SAMPLE_PHP, "interface.Repository", Language::Php);
-        assert!(span.is_some(), "should resolve interface::Repository");
+        assert!(span.is_some(), "should resolve interface.Repository");
     }
 
     #[test]
     fn resolve_php_trait() {
         let span = resolve_tree_path(SAMPLE_PHP, "trait.Cacheable", Language::Php);
-        assert!(span.is_some(), "should resolve trait::Cacheable");
+        assert!(span.is_some(), "should resolve trait.Cacheable");
     }
 
     #[test]
     fn resolve_php_function() {
         let span = resolve_tree_path(SAMPLE_PHP, "fn.helper", Language::Php);
-        assert!(span.is_some(), "should resolve fn::helper");
+        assert!(span.is_some(), "should resolve fn.helper");
     }
 
     #[test]
     fn resolve_php_enum() {
         let span = resolve_tree_path(SAMPLE_PHP, "enum.Status", Language::Php);
-        assert!(span.is_some(), "should resolve enum::Status");
+        assert!(span.is_some(), "should resolve enum.Status");
     }
 
     #[test]

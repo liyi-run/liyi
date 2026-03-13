@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn resolve_json_top_level_key() {
         let span = resolve_tree_path(SAMPLE_JSON, "key.name", Language::Json);
-        assert!(span.is_some(), "should resolve key::name");
+        assert!(span.is_some(), "should resolve key.name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
         assert!(
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn resolve_json_nested_key() {
         let span = resolve_tree_path(SAMPLE_JSON, "key.nested::key.deep", Language::Json);
-        assert!(span.is_some(), "should resolve key::nested::key.deep");
+        assert!(span.is_some(), "should resolve key.nested::key.deep");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
         assert!(
@@ -96,7 +96,7 @@ mod tests {
         );
         assert!(
             span.is_some(),
-            "should resolve key::nested::key.deep::key.value"
+            "should resolve key.nested::key.deep::key.value"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
@@ -111,7 +111,7 @@ mod tests {
     fn resolve_json_indexed_array_element() {
         // specs[1] → second element → {"item": "bar", ...}
         let span = resolve_tree_path(SAMPLE_JSON, "key.specs[1]::key.item", Language::Json);
-        assert!(span.is_some(), "should resolve key::specs[1]::key.item");
+        assert!(span.is_some(), "should resolve key.specs[1]::key.item");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
         assert!(

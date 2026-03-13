@@ -39,7 +39,7 @@ another_func {
     #[test]
     fn resolve_bash_function_with_function_keyword() {
         let span = resolve_tree_path(SAMPLE_BASH, "fn.helper", Language::Bash);
-        assert!(span.is_some(), "should resolve fn::helper");
+        assert!(span.is_some(), "should resolve fn.helper");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_BASH.lines().collect();
         assert!(
@@ -52,7 +52,7 @@ another_func {
     #[test]
     fn resolve_bash_function_with_parens_syntax() {
         let span = resolve_tree_path(SAMPLE_BASH, "fn.main_func", Language::Bash);
-        assert!(span.is_some(), "should resolve fn::main_func");
+        assert!(span.is_some(), "should resolve fn.main_func");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_BASH.lines().collect();
         assert!(

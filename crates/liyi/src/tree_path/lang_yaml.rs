@@ -89,7 +89,7 @@ metadata:
     #[test]
     fn resolve_yaml_top_level_key() {
         let span = resolve_tree_path(SAMPLE_YAML, "key.name", Language::Yaml);
-        assert!(span.is_some(), "should resolve key::name");
+        assert!(span.is_some(), "should resolve key.name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
         assert!(
@@ -102,7 +102,7 @@ metadata:
     #[test]
     fn resolve_yaml_nested_key() {
         let span = resolve_tree_path(SAMPLE_YAML, "key.jobs::key.build", Language::Yaml);
-        assert!(span.is_some(), "should resolve key::jobs::key.build");
+        assert!(span.is_some(), "should resolve key.jobs::key.build");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
         assert!(
@@ -121,7 +121,7 @@ metadata:
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key.build::key.\"runs-on\""
+            "should resolve key.jobs::key.build::key.\"runs-on\""
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -142,7 +142,7 @@ metadata:
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key.build::key.steps[1]::key.name"
+            "should resolve key.jobs::key.build::key.steps[1]::key.name"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -162,7 +162,7 @@ metadata:
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key.build::key.steps[2]::key.run"
+            "should resolve key.jobs::key.build::key.steps[2]::key.run"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();

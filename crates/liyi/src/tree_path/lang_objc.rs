@@ -110,7 +110,7 @@ void helper(void) {
     #[test]
     fn resolve_objc_function() {
         let span = resolve_tree_path(SAMPLE_OBJC, "fn.helper", Language::ObjectiveC);
-        assert!(span.is_some(), "should resolve fn::helper");
+        assert!(span.is_some(), "should resolve fn.helper");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_OBJC.lines().collect();
         assert!(
@@ -122,7 +122,7 @@ void helper(void) {
     #[test]
     fn resolve_objc_struct() {
         let span = resolve_tree_path(SAMPLE_OBJC, "struct.CGPoint", Language::ObjectiveC);
-        assert!(span.is_some(), "should resolve struct::CGPoint");
+        assert!(span.is_some(), "should resolve struct.CGPoint");
     }
 
     #[test]

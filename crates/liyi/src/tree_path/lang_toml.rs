@@ -89,7 +89,7 @@ name = "other"
     #[test]
     fn resolve_toml_table() {
         let span = resolve_tree_path(SAMPLE_TOML, "table.package", Language::Toml);
-        assert!(span.is_some(), "should resolve table::package");
+        assert!(span.is_some(), "should resolve table.package");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
         assert!(
@@ -102,7 +102,7 @@ name = "other"
     #[test]
     fn resolve_toml_key_in_table() {
         let span = resolve_tree_path(SAMPLE_TOML, "table.package::key.name", Language::Toml);
-        assert!(span.is_some(), "should resolve table::package::key.name");
+        assert!(span.is_some(), "should resolve table.package::key.name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
         assert!(
@@ -115,7 +115,7 @@ name = "other"
     #[test]
     fn resolve_toml_key_version() {
         let span = resolve_tree_path(SAMPLE_TOML, "table.package::key.version", Language::Toml);
-        assert!(span.is_some(), "should resolve table::package::key.version");
+        assert!(span.is_some(), "should resolve table.package::key.version");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
         assert!(
@@ -130,7 +130,7 @@ name = "other"
         let span = resolve_tree_path(SAMPLE_TOML, "table.dependencies::key.serde", Language::Toml);
         assert!(
             span.is_some(),
-            "should resolve table::dependencies::key.serde"
+            "should resolve table.dependencies::key.serde"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
@@ -144,7 +144,7 @@ name = "other"
     #[test]
     fn resolve_toml_array_table() {
         let span = resolve_tree_path(SAMPLE_TOML, "array_table.test", Language::Toml);
-        assert!(span.is_some(), "should resolve array_table::test");
+        assert!(span.is_some(), "should resolve array_table.test");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
         assert!(
@@ -157,7 +157,7 @@ name = "other"
     #[test]
     fn resolve_toml_array_table_key() {
         let span = resolve_tree_path(SAMPLE_TOML, "array_table.test::key.name", Language::Toml);
-        assert!(span.is_some(), "should resolve array_table::test.key::name");
+        assert!(span.is_some(), "should resolve array_table.test.key.name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TOML.lines().collect();
         assert!(

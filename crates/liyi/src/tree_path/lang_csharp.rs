@@ -68,7 +68,7 @@ record Person(string Name, int Age);
         );
         assert!(
             span.is_some(),
-            "should resolve namespace::MyApp::class.Calculator"
+            "should resolve namespace.MyApp::class.Calculator"
         );
     }
 
@@ -92,7 +92,7 @@ record Person(string Name, int Age);
             "namespace.MyApp::class.Calculator::property.Name",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve property::Name");
+        assert!(span.is_some(), "should resolve property.Name");
     }
 
     #[test]
@@ -102,7 +102,7 @@ record Person(string Name, int Age);
             "namespace.MyApp::interface.IComputable",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve interface::IComputable");
+        assert!(span.is_some(), "should resolve interface.IComputable");
     }
 
     #[test]
@@ -112,7 +112,7 @@ record Person(string Name, int Age);
             "namespace.MyApp::struct.Vector",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve struct::Vector");
+        assert!(span.is_some(), "should resolve struct.Vector");
     }
 
     #[test]
@@ -122,7 +122,7 @@ record Person(string Name, int Age);
             "namespace.MyApp::enum.Direction",
             Language::CSharp,
         );
-        assert!(span.is_some(), "should resolve enum::Direction");
+        assert!(span.is_some(), "should resolve enum.Direction");
     }
 
     #[test]

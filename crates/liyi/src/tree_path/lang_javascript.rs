@@ -64,7 +64,7 @@ const utils = {
     #[test]
     fn resolve_js_function() {
         let span = resolve_tree_path(SAMPLE_JS, "fn.createCounter", Language::JavaScript);
-        assert!(span.is_some(), "should resolve fn::createCounter");
+        assert!(span.is_some(), "should resolve fn.createCounter");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();
         assert!(
@@ -76,7 +76,7 @@ const utils = {
     #[test]
     fn resolve_js_class() {
         let span = resolve_tree_path(SAMPLE_JS, "class.Counter", Language::JavaScript);
-        assert!(span.is_some(), "should resolve class::Counter");
+        assert!(span.is_some(), "should resolve class.Counter");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();
         assert!(
@@ -94,7 +94,7 @@ const utils = {
         );
         assert!(
             span.is_some(),
-            "should resolve class::Counter::method.increment"
+            "should resolve class.Counter::method.increment"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();

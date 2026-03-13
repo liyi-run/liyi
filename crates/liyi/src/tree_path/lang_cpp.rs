@@ -90,7 +90,7 @@ void standalone() {}
     #[test]
     fn resolve_cpp_namespace() {
         let span = resolve_tree_path(SAMPLE_CPP, "namespace.math", Language::Cpp);
-        assert!(span.is_some(), "should resolve namespace::math");
+        assert!(span.is_some(), "should resolve namespace.math");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_CPP.lines().collect();
         assert!(
@@ -109,7 +109,7 @@ void standalone() {}
         );
         assert!(
             span.is_some(),
-            "should resolve namespace::math::class.Calculator"
+            "should resolve namespace.math::class.Calculator"
         );
     }
 
@@ -132,7 +132,7 @@ void standalone() {}
     #[test]
     fn resolve_cpp_standalone() {
         let span = resolve_tree_path(SAMPLE_CPP, "fn.standalone", Language::Cpp);
-        assert!(span.is_some(), "should resolve fn::standalone");
+        assert!(span.is_some(), "should resolve fn.standalone");
     }
 
     #[test]

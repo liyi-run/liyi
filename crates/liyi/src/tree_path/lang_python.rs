@@ -64,7 +64,7 @@ def calculate_total(items):
     #[test]
     fn resolve_python_function() {
         let span = resolve_tree_path(SAMPLE_PYTHON, "fn.calculate_total", Language::Python);
-        assert!(span.is_some(), "should resolve fn::calculate_total");
+        assert!(span.is_some(), "should resolve fn.calculate_total");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(
@@ -76,7 +76,7 @@ def calculate_total(items):
     #[test]
     fn resolve_python_class() {
         let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order", Language::Python);
-        assert!(span.is_some(), "should resolve class::Order");
+        assert!(span.is_some(), "should resolve class.Order");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(
@@ -88,7 +88,7 @@ def calculate_total(items):
     #[test]
     fn resolve_python_class_method() {
         let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order::fn.process", Language::Python);
-        assert!(span.is_some(), "should resolve class::Order::fn.process");
+        assert!(span.is_some(), "should resolve class.Order::fn.process");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(
@@ -100,7 +100,7 @@ def calculate_total(items):
     #[test]
     fn resolve_python_init_method() {
         let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order::fn.__init__", Language::Python);
-        assert!(span.is_some(), "should resolve class::Order::fn.__init__");
+        assert!(span.is_some(), "should resolve class.Order::fn.__init__");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(

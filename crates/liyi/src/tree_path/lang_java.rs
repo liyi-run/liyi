@@ -74,7 +74,7 @@ record Point(int x, int y) {}
     #[test]
     fn resolve_java_class() {
         let span = resolve_tree_path(SAMPLE_JAVA, "class.Calculator", Language::Java);
-        assert!(span.is_some(), "should resolve class::Calculator");
+        assert!(span.is_some(), "should resolve class.Calculator");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JAVA.lines().collect();
         assert!(
@@ -86,7 +86,7 @@ record Point(int x, int y) {}
     #[test]
     fn resolve_java_method() {
         let span = resolve_tree_path(SAMPLE_JAVA, "class.Calculator::fn.add", Language::Java);
-        assert!(span.is_some(), "should resolve class::Calculator::fn.add");
+        assert!(span.is_some(), "should resolve class.Calculator::fn.add");
     }
 
     #[test]
@@ -102,19 +102,19 @@ record Point(int x, int y) {}
     #[test]
     fn resolve_java_interface() {
         let span = resolve_tree_path(SAMPLE_JAVA, "interface.Computable", Language::Java);
-        assert!(span.is_some(), "should resolve interface::Computable");
+        assert!(span.is_some(), "should resolve interface.Computable");
     }
 
     #[test]
     fn resolve_java_enum() {
         let span = resolve_tree_path(SAMPLE_JAVA, "enum.Direction", Language::Java);
-        assert!(span.is_some(), "should resolve enum::Direction");
+        assert!(span.is_some(), "should resolve enum.Direction");
     }
 
     #[test]
     fn resolve_java_record() {
         let span = resolve_tree_path(SAMPLE_JAVA, "record.Point", Language::Java);
-        assert!(span.is_some(), "should resolve record::Point");
+        assert!(span.is_some(), "should resolve record.Point");
     }
 
     #[test]

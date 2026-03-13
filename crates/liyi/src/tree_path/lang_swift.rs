@@ -48,25 +48,25 @@ typealias Callback = () -> Void
     #[test]
     fn resolve_swift_protocol() {
         let span = resolve_tree_path(SAMPLE_SWIFT, "protocol.Drawable", Language::Swift);
-        assert!(span.is_some(), "should resolve protocol::Drawable");
+        assert!(span.is_some(), "should resolve protocol.Drawable");
     }
 
     #[test]
     fn resolve_swift_class() {
         let span = resolve_tree_path(SAMPLE_SWIFT, "class.Shape", Language::Swift);
-        assert!(span.is_some(), "should resolve class::Shape");
+        assert!(span.is_some(), "should resolve class.Shape");
     }
 
     #[test]
     fn resolve_swift_method() {
         let span = resolve_tree_path(SAMPLE_SWIFT, "class.Shape::fn.area", Language::Swift);
-        assert!(span.is_some(), "should resolve class::Shape::fn.area");
+        assert!(span.is_some(), "should resolve class.Shape::fn.area");
     }
 
     #[test]
     fn resolve_swift_function() {
         let span = resolve_tree_path(SAMPLE_SWIFT, "fn.standalone", Language::Swift);
-        assert!(span.is_some(), "should resolve fn::standalone");
+        assert!(span.is_some(), "should resolve fn.standalone");
     }
 
     #[test]

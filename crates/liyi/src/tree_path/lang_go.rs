@@ -135,7 +135,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_function() {
         let span = resolve_tree_path(SAMPLE_GO, "fn.Add", Language::Go);
-        assert!(span.is_some(), "should resolve fn::Add");
+        assert!(span.is_some(), "should resolve fn.Add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(
@@ -150,7 +150,7 @@ func Add(a, b int) int {
         let span = resolve_tree_path(SAMPLE_GO, "method.\"(*Calculator).Add\"", Language::Go);
         assert!(
             span.is_some(),
-            "should resolve method::\"(*Calculator).Add\""
+            "should resolve method.\"(*Calculator).Add\""
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -164,10 +164,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_value_method() {
         let span = resolve_tree_path(SAMPLE_GO, "method.\"Calculator.Value\"", Language::Go);
-        assert!(
-            span.is_some(),
-            "should resolve method::\"Calculator.Value\""
-        );
+        assert!(span.is_some(), "should resolve method.\"Calculator.Value\"");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(
@@ -180,7 +177,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_type_struct() {
         let span = resolve_tree_path(SAMPLE_GO, "type.Calculator", Language::Go);
-        assert!(span.is_some(), "should resolve type::Calculator");
+        assert!(span.is_some(), "should resolve type.Calculator");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(
@@ -193,7 +190,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_type_interface() {
         let span = resolve_tree_path(SAMPLE_GO, "type.Reader", Language::Go);
-        assert!(span.is_some(), "should resolve type::Reader");
+        assert!(span.is_some(), "should resolve type.Reader");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(
@@ -206,7 +203,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_const() {
         let span = resolve_tree_path(SAMPLE_GO, "const.MaxRetries", Language::Go);
-        assert!(span.is_some(), "should resolve const::MaxRetries");
+        assert!(span.is_some(), "should resolve const.MaxRetries");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(
@@ -219,7 +216,7 @@ func Add(a, b int) int {
     #[test]
     fn resolve_go_var() {
         let span = resolve_tree_path(SAMPLE_GO, "var.DefaultTimeout", Language::Go);
-        assert!(span.is_some(), "should resolve var::DefaultTimeout");
+        assert!(span.is_some(), "should resolve var.DefaultTimeout");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
         assert!(

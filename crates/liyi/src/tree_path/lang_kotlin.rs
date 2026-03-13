@@ -82,25 +82,25 @@ typealias StringList = List<String>
     #[test]
     fn resolve_kotlin_class() {
         let span = resolve_tree_path(SAMPLE_KOTLIN, "class.Calculator", Language::Kotlin);
-        assert!(span.is_some(), "should resolve class::Calculator");
+        assert!(span.is_some(), "should resolve class.Calculator");
     }
 
     #[test]
     fn resolve_kotlin_method() {
         let span = resolve_tree_path(SAMPLE_KOTLIN, "class.Calculator::fn.add", Language::Kotlin);
-        assert!(span.is_some(), "should resolve class::Calculator::fn.add");
+        assert!(span.is_some(), "should resolve class.Calculator::fn.add");
     }
 
     #[test]
     fn resolve_kotlin_object() {
         let span = resolve_tree_path(SAMPLE_KOTLIN, "object.Singleton", Language::Kotlin);
-        assert!(span.is_some(), "should resolve object::Singleton");
+        assert!(span.is_some(), "should resolve object.Singleton");
     }
 
     #[test]
     fn resolve_kotlin_function() {
         let span = resolve_tree_path(SAMPLE_KOTLIN, "fn.standalone", Language::Kotlin);
-        assert!(span.is_some(), "should resolve fn::standalone");
+        assert!(span.is_some(), "should resolve fn.standalone");
     }
 
     #[test]

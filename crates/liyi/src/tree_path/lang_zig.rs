@@ -107,7 +107,7 @@ test "add function" {
     #[test]
     fn resolve_zig_function() {
         let span = resolve_tree_path(SAMPLE_ZIG, "fn.add", Language::Zig);
-        assert!(span.is_some(), "should resolve fn::add");
+        assert!(span.is_some(), "should resolve fn.add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
         assert!(
@@ -120,7 +120,7 @@ test "add function" {
     #[test]
     fn resolve_zig_struct_as_namespace() {
         let span = resolve_tree_path(SAMPLE_ZIG, "struct.Point", Language::Zig);
-        assert!(span.is_some(), "should resolve struct::Point");
+        assert!(span.is_some(), "should resolve struct.Point");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
         assert!(

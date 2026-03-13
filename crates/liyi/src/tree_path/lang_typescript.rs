@@ -81,7 +81,7 @@ function createUser(name: string): User {
     #[test]
     fn resolve_ts_interface() {
         let span = resolve_tree_path(SAMPLE_TS, "interface.User", Language::TypeScript);
-        assert!(span.is_some(), "should resolve interface::User");
+        assert!(span.is_some(), "should resolve interface.User");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
         assert!(
@@ -93,7 +93,7 @@ function createUser(name: string): User {
     #[test]
     fn resolve_ts_type_alias() {
         let span = resolve_tree_path(SAMPLE_TS, "type.UserId", Language::TypeScript);
-        assert!(span.is_some(), "should resolve type::UserId");
+        assert!(span.is_some(), "should resolve type.UserId");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
         assert!(
@@ -105,7 +105,7 @@ function createUser(name: string): User {
     #[test]
     fn resolve_ts_enum() {
         let span = resolve_tree_path(SAMPLE_TS, "enum.UserRole", Language::TypeScript);
-        assert!(span.is_some(), "should resolve enum::UserRole");
+        assert!(span.is_some(), "should resolve enum.UserRole");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
         assert!(
@@ -123,7 +123,7 @@ function createUser(name: string): User {
         );
         assert!(
             span.is_some(),
-            "should resolve class::UserService::method.findById"
+            "should resolve class.UserService::method.findById"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
@@ -186,7 +186,7 @@ class Container extends React.Component<Props> {
     #[test]
     fn resolve_tsx_function() {
         let span = resolve_tree_path(SAMPLE_TSX, "fn.Counter", Language::Tsx);
-        assert!(span.is_some(), "should resolve fn::Counter in TSX");
+        assert!(span.is_some(), "should resolve fn.Counter in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
         assert!(
@@ -198,7 +198,7 @@ class Container extends React.Component<Props> {
     #[test]
     fn resolve_tsx_class() {
         let span = resolve_tree_path(SAMPLE_TSX, "class.Container", Language::Tsx);
-        assert!(span.is_some(), "should resolve class::Container in TSX");
+        assert!(span.is_some(), "should resolve class.Container in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
         assert!(
@@ -210,7 +210,7 @@ class Container extends React.Component<Props> {
     #[test]
     fn resolve_tsx_interface() {
         let span = resolve_tree_path(SAMPLE_TSX, "interface.Props", Language::Tsx);
-        assert!(span.is_some(), "should resolve interface::Props in TSX");
+        assert!(span.is_some(), "should resolve interface.Props in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
         assert!(

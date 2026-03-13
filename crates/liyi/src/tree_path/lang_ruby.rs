@@ -78,7 +78,7 @@ end
     #[test]
     fn resolve_ruby_module() {
         let span = resolve_tree_path(SAMPLE_RUBY, "module.Billing", Language::Ruby);
-        assert!(span.is_some(), "should resolve module::Billing");
+        assert!(span.is_some(), "should resolve module.Billing");
     }
 
     #[test]
@@ -86,7 +86,7 @@ end
         let span = resolve_tree_path(SAMPLE_RUBY, "module.Billing::class.Invoice", Language::Ruby);
         assert!(
             span.is_some(),
-            "should resolve module::Billing::class.Invoice"
+            "should resolve module.Billing::class.Invoice"
         );
     }
 
