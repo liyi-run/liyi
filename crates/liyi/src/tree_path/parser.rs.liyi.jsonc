@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "Pair",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represents a single kind.name pair in a parsed tree_path: bundles a kind shorthand, item name, optional 0-based positional index for data-file arrays, and optional injection language marker.",
       "source_span": [
         28,

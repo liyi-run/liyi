@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "leaf_text",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Delegate to leaf_text_pub; thin private wrapper preserving the original call-site contract.",
       "source_span": [
         10,
@@ -17,7 +17,7 @@
     },
     {
       "item": "leaf_text_pub",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively descend through named children of a YAML wrapper node until reaching a leaf (no named children) and return its source text. Used to unwrap flow_node → plain_scalar → string_scalar chains to extract key text. Public within the crate for use by the injection framework.",
       "source_span": [
         15,

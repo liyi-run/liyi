@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "on",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         5,
@@ -17,7 +17,7 @@
     },
     {
       "item": "permissions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Restrict the GITHUB_TOKEN to read-only content access (principle of least privilege). No job in this workflow needs write permissions.",
       "source_span": [
         10,
@@ -29,7 +29,7 @@
     },
     {
       "item": "jobs::test",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Run the full workspace test suite (`cargo test --workspace`). Must fail the PR if any test fails.",
       "source_span": [
         17,
@@ -41,7 +41,7 @@
     },
     {
       "item": "jobs::clippy",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Run Clippy on the full workspace with `-D warnings` so that any lint fires a hard failure. Must install the clippy component before running.",
       "source_span": [
         26,
@@ -53,7 +53,7 @@
     },
     {
       "item": "jobs::fmt",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Verify that all code is formatted with `cargo fmt --check`. Must install the rustfmt component before running. Must not reformat in place — only check.",
       "source_span": [
         37,
@@ -65,7 +65,7 @@
     },
     {
       "item": "jobs::liyi-check",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Run `liyi check` against the repository root to verify that all sidecar specs are current (no stale hashes, no coverage gaps). Must fail the PR if liyi check exits non-zero.",
       "source_span": [
         47,

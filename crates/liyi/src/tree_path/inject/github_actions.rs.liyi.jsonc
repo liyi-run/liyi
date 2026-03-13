@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "PROFILE",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "GitHub Actions injection profile. Activates for .github/workflows/**/*.yml|yaml and .github/actions/**/*.yml|yaml. The single rule injects run: values under jobs: as Bash. Adding this profile must not modify lang_yaml.rs or any existing LanguageConfig.",
       "source_span": [
         10,

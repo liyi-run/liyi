@@ -44,7 +44,7 @@
     },
     {
       "item": "discover",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, including hidden directories (e.g. .github/). Collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
         88,

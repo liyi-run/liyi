@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "InjectionRule",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "A static, data-driven rule describing one injection point: the key name that triggers injection, the language to sub-parse as, and an ordered ancestor-key constraint that must be satisfied for the rule to fire.",
       "source_span": [
         27,
@@ -21,7 +21,7 @@
     },
     {
       "item": "InjectionProfile",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Associates a host language and a set of file-path glob patterns with injection rules. When a repo-relative path matches any pattern, the profile activates and its rules become candidates for injection. An empty pattern slice means the profile is never auto-activated.",
       "source_span": [
         45,
@@ -36,7 +36,7 @@
     },
     {
       "item": "InjectionProfile::matches_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return true if the given repo-relative path matches any of the profile's glob patterns. Uses globset for pattern matching. Returns false when path_patterns is empty.",
       "source_span": [
         58,
@@ -51,7 +51,7 @@
     },
     {
       "item": "InjectionProfile::find_rule",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Find the first injection rule whose key_name matches and whose ancestor_keys are an ordered subsequence of the given ancestor chain. Returns None if no rule fires.",
       "source_span": [
         73,
@@ -81,7 +81,7 @@
     },
     {
       "item": "REGISTRY",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         102,
@@ -93,7 +93,7 @@
     },
     {
       "item": "detect_injection_profiles",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return all injection profiles whose path patterns match the given repo-relative path. Returns an empty vec when no profile matches, ensuring no injection occurs without a matching profile.",
       "source_span": [
         109,
@@ -109,7 +109,7 @@
     },
     {
       "item": "ExtractedContent",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Holds the extracted text ready for sub-parsing and the 0-indexed line offset in the outer file. The line offset is added to inner-parser line numbers to translate back to outer-file coordinates.",
       "source_span": [
         124,
@@ -124,7 +124,7 @@
     },
     {
       "item": "extract_block_scalar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the content of a YAML block scalar for injection. Must strip the indicator line (|, >, |+, |- etc.), determine base indentation from the first non-empty content line, strip that indentation uniformly, and record the line offset as scalar_start_line + 1 (skipping the indicator).",
       "source_span": [
         140,
@@ -138,7 +138,7 @@
     },
     {
       "item": "extract_flow_scalar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the content of a YAML flow scalar (inline string) for injection. Handles double_quote_scalar, single_quote_scalar, and plain_scalar by stripping surrounding quotes. Line offset is the scalar's start row.",
       "source_span": [
         190,
@@ -153,7 +153,7 @@
     },
     {
       "item": "extract_yaml_content",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Try block scalar extraction first, then fall back to flow scalar. This is the primary entry point for extracting injected content from a YAML value node.",
       "source_span": [
         217,
@@ -189,7 +189,7 @@
     },
     {
       "item": "collect_ancestor_keys",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk up from a YAML node via parent(), collecting key names from block_mapping_pair nodes. Returns keys from outermost to innermost. Used to verify ancestor constraints from injection rules.",
       "source_span": [
         255,
