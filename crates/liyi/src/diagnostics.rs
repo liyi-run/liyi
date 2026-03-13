@@ -70,11 +70,7 @@ impl Diagnostic {
         let main_line = if self.item_or_req.is_empty() {
             format!("{file_loc}: {icon} {}", self.message)
         } else {
-            format!(
-                "{file_loc}: {}: {icon} {}",
-                self.item_or_req,
-                self.message
-            )
+            format!("{file_loc}: {}: {icon} {}", self.item_or_req, self.message)
         };
         match &self.fix_hint {
             Some(hint) if !self.fixed => format!("{main_line}\n  fix: {hint}"),

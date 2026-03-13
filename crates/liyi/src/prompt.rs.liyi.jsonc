@@ -45,10 +45,10 @@
       "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item structured instructions with template/context separation (no interpolation — templates are compile-time constants, context carries untrusted values). Includes a security_notice declaring trust levels. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
       "source_span": [
         82,
-        176
+        185
       ],
       "tree_path": "fn::build_prompt_output",
-      "source_hash": "sha256:d20f7d47137672f29126a248ee450af234d1172966917aca91e2d272c4fa6bfc",
+      "source_hash": "sha256:e80895ecb3693c86ff7fe759497329100e6dd3d31d49ebedb87300c5424e6f70",
       "source_anchor": "pub fn build_prompt_output("
     }
   ]

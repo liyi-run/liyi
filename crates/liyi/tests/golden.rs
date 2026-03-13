@@ -755,9 +755,9 @@ fn trivial_sidecar_sentinel() {
     );
 
     // compute_total has @liyi:nontrivial in source + =trivial in sidecar → ConflictingTriviality error
-    let has_conflict = diagnostics
-        .iter()
-        .any(|d| d.item_or_req == "compute_total" && matches!(d.kind, DiagnosticKind::ConflictingTriviality));
+    let has_conflict = diagnostics.iter().any(|d| {
+        d.item_or_req == "compute_total" && matches!(d.kind, DiagnosticKind::ConflictingTriviality)
+    });
     assert!(
         has_conflict,
         "expected ConflictingTriviality for compute_total, got: {diagnostics:#?}"

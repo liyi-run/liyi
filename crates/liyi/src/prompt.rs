@@ -106,7 +106,10 @@ pub fn build_prompt_output(
             DiagnosticKind::Untracked => {
                 let name = &d.item_or_req;
                 let mut ctx = BTreeMap::new();
-                ctx.insert("requirement".into(), serde_json::Value::String(name.clone()));
+                ctx.insert(
+                    "requirement".into(),
+                    serde_json::Value::String(name.clone()),
+                );
                 ctx.insert(
                     "annotation_line".into(),
                     serde_json::Value::Number(annotation_line.into()),
@@ -130,7 +133,10 @@ pub fn build_prompt_output(
                     "enclosing_item".into(),
                     serde_json::Value::String(enclosing.clone()),
                 );
-                ctx.insert("requirement".into(), serde_json::Value::String(name.clone()));
+                ctx.insert(
+                    "requirement".into(),
+                    serde_json::Value::String(name.clone()),
+                );
                 items.push(PromptItem::MissingRelatedEdge {
                     requirement: name.clone(),
                     source_file: source_rel,
@@ -146,7 +152,10 @@ pub fn build_prompt_output(
             DiagnosticKind::ReqNoRelated => {
                 let name = &d.item_or_req;
                 let mut ctx = BTreeMap::new();
-                ctx.insert("requirement".into(), serde_json::Value::String(name.clone()));
+                ctx.insert(
+                    "requirement".into(),
+                    serde_json::Value::String(name.clone()),
+                );
                 items.push(PromptItem::ReqNoRelated {
                     requirement: name.clone(),
                     source_file: source_rel,
