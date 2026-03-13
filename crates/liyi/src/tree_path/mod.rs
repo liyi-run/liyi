@@ -9,6 +9,7 @@
 //! locate items by structural identity, making span recovery deterministic
 //! across formatting changes, import additions, and line reflows.
 
+pub mod inject;
 mod lang_bash;
 mod lang_c;
 mod lang_cpp;

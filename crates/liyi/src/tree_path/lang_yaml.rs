@@ -8,6 +8,11 @@ use tree_sitter::Node;
 /// (or `double_quote_scalar`, `single_quote_scalar`).  This function
 /// recursively descends through named children until it finds a leaf.
 fn leaf_text<'a>(node: &Node<'a>, source: &'a str) -> Option<&'a str> {
+    leaf_text_pub(node, source)
+}
+
+/// Public accessor for `leaf_text`, used by the injection framework.
+pub(super) fn leaf_text_pub<'a>(node: &Node<'a>, source: &'a str) -> Option<&'a str> {
     if node.named_child_count() == 0 {
         return Some(&source[node.byte_range()]);
     }
