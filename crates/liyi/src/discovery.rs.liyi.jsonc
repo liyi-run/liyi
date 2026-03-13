@@ -29,21 +29,29 @@
     },
     {
       "item": "SKIP_DIRS",
+      "reviewed": false,
       "intent": "=trivial",
       "source_span": [
         38,
         42
-      ]
+      ],
+      "tree_path": "const.SKIP_DIRS",
+      "source_hash": "sha256:0a05e161d8a1ad359f4bc92776cb7ccb3eb8a31d6713dd4fff3486bd6f5672df",
+      "source_anchor": "/// Directory names to always skip during discovery.",
+      "related": {
+        "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
+      }
     },
     {
       "item": "find_repo_root",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Walk up the directory tree from the given path to locate the nearest .git/ directory and return its parent as the repository root. Return None if no .git/ is found. On Unix, respect GIT_DISCOVERY_ACROSS_FILESYSTEM: when unset or \"0\", stop at filesystem boundaries (different st_dev); when \"1\" or \"true\", allow crossing mount points.",
       "source_span": [
         51,
-        84
+        82
       ],
       "tree_path": "fn.find_repo_root",
+      "source_hash": "sha256:f1f4e276ab92b7991ed34a0551f2020e54cd7531e0408a8d0c7dc505e38bae86",
       "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
@@ -58,6 +66,7 @@
         211
       ],
       "tree_path": "fn.discover",
+      "source_hash": "sha256:c840ea0d15f908784afc8c65823614478e35bec7727c88d4ae53cc70379a1c8a",
       "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
