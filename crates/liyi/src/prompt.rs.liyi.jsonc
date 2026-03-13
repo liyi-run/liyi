@@ -8,35 +8,47 @@
       "reviewed": false,
       "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with version, optional root, security_notice (warning consuming agents about untrusted content), items array, and exit_code.",
       "source_span": [
-        8,
-        15
+        9,
+        16
       ],
       "tree_path": "struct::PromptOutput",
       "source_hash": "sha256:0b9d743a6e567011b4f2ad4eaa40284a57b8f50609f3f769e9881b1c4d1a99c9",
       "source_anchor": "pub struct PromptOutput {"
     },
     {
+      "item": "Instruction",
+      "reviewed": false,
+      "intent": "Structured instruction with template/context separation for prompt injection defense. 'template' is a trusted compile-time constant with {placeholder} tokens; 'context' carries untrusted values keyed by placeholder name. No interpolation is performed — consuming agents substitute context into template themselves.",
+      "source_span": [
+        25,
+        28
+      ],
+      "tree_path": "struct::Instruction",
+      "source_hash": "sha256:e0a3d452b7e3bbfe1ecf324105637b7bad3543534b3a70921a2ec95bb54e773f",
+      "source_anchor": "pub struct Instruction {"
+    },
+    {
       "item": "PromptItem",
       "reviewed": false,
-      "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema.",
+      "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema. The instruction field is an Instruction struct (template/context separation) instead of an interpolated string.",
       "source_span": [
-        19,
-        47
+        32,
+        60
       ],
       "tree_path": "enum::PromptItem",
-      "source_hash": "sha256:15d24ffd350cdbb761cc925e0436d80fb12b61b7fea7fbf3838b9c93d9a344c8",
+      "source_hash": "sha256:4e8a7499047a6e7fbb9338bbe08bcaba620ea4371b26c33174fdfe0a1b43fd64",
       "source_anchor": "pub enum PromptItem {"
     },
     {
       "item": "build_prompt_output",
       "reviewed": false,
-      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item natural-language resolution instructions. Includes a security_notice warning that embedded fields may contain untrusted repository content. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
+      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item structured instructions with template/context separation (no interpolation — templates are compile-time constants, context carries untrusted values). Includes a security_notice declaring trust levels. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
       "source_span": [
-        53,
-        136
+        82,
+        176
       ],
       "tree_path": "fn::build_prompt_output",
-      "source_hash": "sha256:30fe3f86b3c6cf025678ff0ffb38301c0f60a19b4322ce158f03066a481b4a8e",
+      "source_hash": "sha256:d20f7d47137672f29126a248ee450af234d1172966917aca91e2d272c4fa6bfc",
       "source_anchor": "pub fn build_prompt_output("
     }
   ]
