@@ -370,4 +370,149 @@ mod tests {
         let profile = &github_actions::PROFILE;
         assert!(profile.find_rule("run", &[]).is_none());
     }
+
+    // ---- content extraction ----
+
+    fn parse_yaml(source: &str) -> tree_sitter::Tree {
+        let mut parser = tree_sitter::Parser::new();
+        parser
+            .set_language(&tree_sitter_yaml::LANGUAGE.into())
+            .unwrap();
+        parser.parse(source, None).unwrap()
+    }
+
+    /// Find a block_mapping_pair node by key name in the YAML tree.
+    fn find_pair_by_key<'a>(
+        node: &tree_sitter::Node<'a>,
+        source: &str,
+        key: &str,
+    ) -> Option<tree_sitter::Node<'a>> {
+        if node.kind() == "block_mapping_pair" {
+            if let Some(key_node) = node.child_by_field_name("key") {
+                if let Some(text) = super::super::lang_yaml::leaf_text_pub(&key_node, source) {
+                    if text == key {
+                        return Some(*node);
+                    }
+                }
+            }
+        }
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if let Some(found) = find_pair_by_key(&child, source, key) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn extract_block_scalar_content() {
+        let yaml = "run: |\n  set -euo pipefail\n  cargo build\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+        let value = pair.child_by_field_name("value").unwrap();
+
+        let extracted = extract_block_scalar(&value, yaml).unwrap();
+        assert_eq!(extracted.text, "set -euo pipefail\ncargo build\n");
+        // The block scalar indicator is on line 0 (0-indexed), content
+        // starts on line 1.
+        assert_eq!(extracted.line_offset, 1);
+    }
+
+    #[test]
+    fn extract_block_scalar_indented() {
+        let yaml = "jobs:\n  build:\n    run: |\n      line1\n      line2\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+        let value = pair.child_by_field_name("value").unwrap();
+
+        let extracted = extract_block_scalar(&value, yaml).unwrap();
+        assert_eq!(extracted.text, "line1\nline2\n");
+        // indicator is on row 2, content starts row 3
+        assert_eq!(extracted.line_offset, 3);
+    }
+
+    #[test]
+    fn extract_flow_scalar_double_quote() {
+        let yaml = "run: \"echo hello\"\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+        let value = pair.child_by_field_name("value").unwrap();
+
+        let extracted = extract_flow_scalar(&value, yaml).unwrap();
+        assert_eq!(extracted.text, "echo hello");
+        assert_eq!(extracted.line_offset, 0);
+    }
+
+    #[test]
+    fn extract_flow_scalar_plain() {
+        let yaml = "run: cargo test\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+        let value = pair.child_by_field_name("value").unwrap();
+
+        let extracted = extract_yaml_content(&value, yaml).unwrap();
+        assert_eq!(extracted.text, "cargo test");
+        assert_eq!(extracted.line_offset, 0);
+    }
+
+    // ---- span translation ----
+
+    #[test]
+    fn span_translation_block_scalar() {
+        // Verify that inner-parser line 0 maps to the correct outer-file line.
+        let yaml =
+            "name: CI\njobs:\n  build:\n    run: |\n      setup() {\n        echo hi\n      }\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+        let value = pair.child_by_field_name("value").unwrap();
+
+        let extracted = extract_block_scalar(&value, yaml).unwrap();
+        // Content should be "setup() {\n  echo hi\n}\n"
+        assert!(extracted.text.contains("setup()"));
+
+        // The `|` indicator is on line 3 (0-indexed), so content starts at
+        // line 4 (0-indexed) = line_offset 4.
+        assert_eq!(extracted.line_offset, 4);
+
+        // Inner line 0 (the `setup()` line) should map to outer line 4
+        // (0-indexed). In 1-indexed terms: inner line 1 → outer line 5.
+        let inner_line_0 = 0;
+        let outer_line = inner_line_0 + extracted.line_offset;
+        let lines: Vec<&str> = yaml.lines().collect();
+        assert!(
+            lines[outer_line].contains("setup()"),
+            "outer line {} should contain setup(), got: {}",
+            outer_line,
+            lines[outer_line]
+        );
+    }
+
+    // ---- ancestor key collection ----
+
+    #[test]
+    fn collect_ancestor_keys_from_yaml() {
+        let yaml = "jobs:\n  build:\n    steps:\n      - run: echo\n";
+        let tree = parse_yaml(yaml);
+        let root = tree.root_node();
+        let pair = find_pair_by_key(&root, yaml, "run").unwrap();
+
+        let keys = collect_ancestor_keys(&pair, yaml);
+        // The `run` node itself is not included (we walk parent upward),
+        // and we should see steps, build, jobs from inner to outer,
+        // reversed to outermost first.
+        assert!(
+            keys.contains(&"jobs".to_string()),
+            "ancestors should contain 'jobs', got: {keys:?}"
+        );
+        assert!(
+            keys.contains(&"build".to_string()),
+            "ancestors should contain 'build', got: {keys:?}"
+        );
+    }
 }
