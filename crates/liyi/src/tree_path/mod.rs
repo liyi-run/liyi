@@ -262,48 +262,6 @@ fn make_parser(lang: Language) -> Parser {
     parser
 }
 
-/// A parsed tree_path segment: (kind_shorthand, name).
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct PathSegment {
-    kind: String,
-    name: String,
-}
-
-/// Parse a tree_path string into `(kind, name)` segments using the nom-based
-/// grammar (see `parser::TreePath`).
-///
-/// `"fn::add_money"` → `[PathSegment { kind: "fn", name: "add_money" }]`
-/// `"impl::Money::fn::new"` → `[impl/Money, fn/new]`
-/// `"test::\"add function\""` → `[test/add function]`
-fn parse_tree_path(tree_path: &str) -> Option<Vec<PathSegment>> {
-    let parsed = parser::TreePath::parse(tree_path).ok()?;
-
-    // Collect non-injection segments into a flat list of strings.
-    let flat: Vec<&str> = parsed
-        .segments
-        .iter()
-        .filter_map(|s| match s {
-            parser::Segment::Kind(k) => Some(k.as_str()),
-            parser::Segment::Name(n) => Some(n.as_str()),
-            parser::Segment::Injection(_) => None,
-        })
-        .collect();
-
-    // Must be pairs (kind, name).
-    if flat.len() % 2 != 0 || flat.is_empty() {
-        return None;
-    }
-
-    let segments: Vec<PathSegment> = flat
-        .chunks(2)
-        .map(|pair| PathSegment {
-            kind: pair[0].to_string(),
-            name: pair[1].to_string(),
-        })
-        .collect();
-    Some(segments)
-}
-
 /// Resolve a `tree_path` to a source span `[start_line, end_line]` (1-indexed,
 /// inclusive).
 ///
@@ -314,13 +272,31 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
         return None;
     }
 
+    let parsed = parser::TreePath::parse(tree_path).ok()?;
+
+    // Collect non-injection segments into (kind, name) pairs.
+    let flat: Vec<&str> = parsed
+        .segments
+        .iter()
+        .filter_map(|s| match s {
+            parser::Segment::Kind(k) => Some(k.as_str()),
+            parser::Segment::Name(n) => Some(n.as_str()),
+            parser::Segment::Injection(_) => None,
+        })
+        .collect();
+
+    if flat.len() % 2 != 0 || flat.is_empty() {
+        return None;
+    }
+
+    let pairs: Vec<(&str, &str)> = flat.chunks(2).map(|c| (c[0], c[1])).collect();
+
     let config = lang.config();
-    let segments = parse_tree_path(tree_path)?;
     let mut parser = make_parser(lang);
     let tree = parser.parse(source, None)?;
     let root = tree.root_node();
 
-    let node = resolve_segments(config, &root, &segments, source)?;
+    let node = resolve_segments(config, &root, &pairs, source)?;
 
     // Return 1-indexed inclusive line range
     let start_line = node.start_position().row + 1;
@@ -332,25 +308,25 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
 fn resolve_segments<'a>(
     config: &LanguageConfig,
     parent: &Node<'a>,
-    segments: &[PathSegment],
+    segments: &[(&str, &str)],
     source: &'a str,
 ) -> Option<Node<'a>> {
     if segments.is_empty() {
         return Some(*parent);
     }
 
-    let seg = &segments[0];
-    let ts_kind = config.shorthand_to_kind(&seg.kind)?;
+    let (kind, name) = segments[0];
+    let ts_kind = config.shorthand_to_kind(kind)?;
 
     let mut cursor = parent.walk();
     for child in parent.children(&mut cursor) {
         if child.kind() != ts_kind {
             continue;
         }
-        if let Some(name) = config.node_name(&child, source) {
-            if *name == seg.name && segments.len() == 1 {
+        if let Some(node_name) = config.node_name(&child, source) {
+            if *node_name == *name && segments.len() == 1 {
                 return Some(child);
-            } else if *name == seg.name {
+            } else if *node_name == *name {
                 // Descend — look inside this node's body
                 return resolve_in_body(config, &child, &segments[1..], source);
             }
@@ -364,7 +340,7 @@ fn resolve_segments<'a>(
 fn resolve_in_body<'a>(
     config: &LanguageConfig,
     node: &Node<'a>,
-    segments: &[PathSegment],
+    segments: &[(&str, &str)],
     source: &'a str,
 ) -> Option<Node<'a>> {
     let body = config.find_body(node)?;
