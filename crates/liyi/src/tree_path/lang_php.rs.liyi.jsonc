@@ -21,7 +21,7 @@
       "intent": "Define the PHP language configuration for tree_path resolution: register tree-sitter-php PHP-only grammar (no HTML interleaving), .php extension, kind mappings for fn/class/method/interface/enum/trait/namespace/const, wire the custom php_node_name callback, and no doc comment detector.",
       "source_span": [
         23,
-        41
+        42
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:4f25d875f190f9be44d4fc0b5d138e8b910dac3946e0e5dd7042d4c3f04abdaf",

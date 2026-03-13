@@ -9,7 +9,7 @@
       "intent": "Define the Bash language configuration for tree_path resolution: register tree-sitter-bash grammar v0.25.1, .sh/.bash extensions, kind mapping for fn (function_definition), using standard name field with no custom name extraction, body field for function body traversal, and no doc comment detector.",
       "source_span": [
         4,
-        13
+        14
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:2ccd15e507cc43776ee8258d59a1ebd204119cc73601848982ddd08af1a0b398",

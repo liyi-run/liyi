@@ -9,7 +9,7 @@
       "intent": "Define the Swift language configuration for tree_path resolution: register tree-sitter-swift grammar, .swift extension, kind mappings for fn/class/protocol/enum/property/init/typealias, using standard name field with no custom name extraction and no doc comment detector.",
       "source_span": [
         4,
-        21
+        22
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:59375aac576579b5982f258c776dc46923fa94e3f813f2b403e5ea706ab455f8",

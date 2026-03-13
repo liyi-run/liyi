@@ -9,7 +9,7 @@
       "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction, and python_has_doc_comment detector for triple-quoted docstrings.",
       "source_span": [
         35,
-        44
+        45
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:6c3dd2a80a70034d46ac916e8def8fbff87486d51e6e64cae01edfae299a1754",

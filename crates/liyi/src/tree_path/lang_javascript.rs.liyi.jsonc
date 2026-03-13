@@ -9,7 +9,7 @@
       "intent": "Define the JavaScript language configuration for tree_path resolution: register tree-sitter-javascript grammar, .js/.mjs/.cjs/.jsx extensions, kind mappings for fn/class/method, using standard name field with no custom name extraction, and js_has_doc_comment detector for /** JSDoc comments.",
       "source_span": [
         19,
-        32
+        33
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:8a66487465ff94fcd5c685ebbdb847b8fb44df16e74f6977b3bd979bb2e6fcef",

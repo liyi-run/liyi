@@ -9,7 +9,7 @@
       "intent": "Define the Java language configuration for tree_path resolution: register tree-sitter-java grammar, .java extension, kind mappings for fn/class/interface/enum/constructor/record/annotation, using standard name field with no custom name extraction, and java_has_doc_comment detector for /** Javadoc comments.",
       "source_span": [
         26,
-        43
+        44
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:9f3314bdd500c52e089eed05a87a42ef2a4d95bce109a018bcec734b09561f7d",

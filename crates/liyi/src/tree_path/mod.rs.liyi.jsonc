@@ -12,6 +12,7 @@
         69
       ],
       "tree_path": "struct::LanguageConfig",
+      "source_hash": "sha256:b0b42fad068403f34ec1530685e69a61e871990f2ffbc2eeaa4ae9fb339c8c17",
       "source_anchor": "pub struct LanguageConfig {"
     },
     {
@@ -23,9 +24,10 @@
         281
       ],
       "tree_path": "fn::detect_language",
+      "source_hash": "sha256:7273aa1df2d82a1001a2f69903d3fb23c6c5e2c6191c4ef65b9ce43c4e7b3843",
       "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {",
       "related": {
-        "graceful-degradation": null
+        "graceful-degradation": "sha256:d18b719e0bc043203b04fea2cd944eec8fecd4b998a6824f74eeade5f14343cf"
       }
     },
     {
@@ -37,28 +39,31 @@
         168
       ],
       "tree_path": "enum::Language",
+      "source_hash": "sha256:6b7798351e111b0495ac53f87d9a52b34c826cc4b141e6f1aea8a9405695704a",
       "source_anchor": "pub enum Language {"
     },
     {
       "item": "node_name",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
         93,
         113
       ],
       "tree_path": "impl::LanguageConfig::fn::node_name",
+      "source_hash": "sha256:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
       "source_anchor": "    fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<Cow<'a, str>> {"
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         297,
         332
       ],
       "tree_path": "fn::resolve_tree_path",
+      "source_hash": "sha256:810715d8eaf728b7977ac6e4759c71dd07e1db1f84c9a3a8a630b78695ba07ad",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -70,50 +75,55 @@
         368
       ],
       "tree_path": "fn::resolve_segments",
+      "source_hash": "sha256:3bdc501a0e690e516f759276fedd96d864b6ca6e422c0a14077d0f8d2c326791",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
       "item": "resolve_in_body",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
         371,
         379
       ],
       "tree_path": "fn::resolve_in_body",
+      "source_hash": "sha256:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
       "source_anchor": "fn resolve_in_body<'a>("
     },
     {
       "item": "compute_tree_path",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
         386,
         407
       ],
       "tree_path": "fn::compute_tree_path",
+      "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
       "item": "find_item_in_range",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
         415,
         461
       ],
       "tree_path": "fn::find_item_in_range",
+      "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
       "source_anchor": "fn find_item_in_range<'a>("
     },
     {
       "item": "collect_path",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
         480,
         526
       ],
       "tree_path": "fn::collect_path",
+      "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
       "source_anchor": "fn collect_path("
     }
   ]
