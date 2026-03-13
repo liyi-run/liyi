@@ -62,7 +62,7 @@ impl TreePath {
 }
 
 /// Serialize a name, quoting if necessary.
-fn serialize_name(name: &str) -> String {
+pub fn serialize_name(name: &str) -> String {
     // Check if we need quoting
     let needs_quote = name.is_empty()
         || name.contains('"')
@@ -84,15 +84,16 @@ fn serialize_name(name: &str) -> String {
 }
 
 /// Check if a string is a simple identifier (no quoting needed).
+///
+/// Must stay in sync with `parse_simple_name` — a name is simple iff the
+/// parser can round-trip it without quotes.
 fn is_simple_identifier(s: &str) -> bool {
     let mut chars = s.chars();
     match chars.next() {
         Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
         _ => return false,
     }
-    chars.all(|c| {
-        c.is_ascii_alphanumeric() || c == '_' || c == '.' || c == '(' || c == ')' || c == '*'
-    })
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 /// Parse a complete tree_path.
@@ -128,23 +129,41 @@ fn parse_segment(input: &str) -> IResult<&str, Segment> {
     .parse(input)
 }
 
-/// Common kind shorthands (for heuristic parsing).
+/// Kind shorthands from all supported language configs.
 fn is_common_kind(s: &str) -> bool {
     matches!(
         s,
-        "fn" | "class"
-            | "struct"
+        "fn"
+            | "annotation"
+            | "class"
+            | "const"
+            | "constructor"
+            | "delegate"
             | "enum"
-            | "trait"
             | "impl"
+            | "init"
+            | "interface"
+            | "macro"
+            | "method"
+            | "method_decl"
             | "mod"
             | "module"
-            | "const"
-            | "type"
-            | "test"
             | "namespace"
-            | "interface"
+            | "object"
+            | "property"
             | "protocol"
+            | "record"
+            | "singleton_method"
+            | "static"
+            | "struct"
+            | "template"
+            | "test"
+            | "trait"
+            | "type"
+            | "typealias"
+            | "typedef"
+            | "using"
+            | "var"
     )
 }
 
@@ -218,14 +237,14 @@ mod tests {
 
     #[test]
     fn parse_class_method_path() {
-        let path = TreePath::parse("class::MyClass::fn::method").unwrap();
+        let path = TreePath::parse("class::MyClass::fn::do_work").unwrap();
         assert_eq!(
             path.segments,
             vec![
                 Segment::Kind("class".to_string()),
                 Segment::Name("MyClass".to_string()),
                 Segment::Kind("fn".to_string()),
-                Segment::Name("method".to_string()),
+                Segment::Name("do_work".to_string()),
             ]
         );
     }

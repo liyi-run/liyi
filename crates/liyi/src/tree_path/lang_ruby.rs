@@ -112,7 +112,7 @@ end
     fn resolve_ruby_singleton_method() {
         let span = resolve_tree_path(
             SAMPLE_RUBY,
-            "module::Billing::class::Invoice::singleton_method::self.calculate_tax",
+            "module::Billing::class::Invoice::singleton_method::\"self.calculate_tax\"",
             Language::Ruby,
         );
         assert!(span.is_some(), "should resolve singleton method");

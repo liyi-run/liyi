@@ -269,25 +269,38 @@ struct PathSegment {
     name: String,
 }
 
-/// Parse a tree_path string into segments.
+/// Parse a tree_path string into `(kind, name)` segments using the nom-based
+/// grammar (see `parser::TreePath`).
 ///
 /// `"fn::add_money"` → `[PathSegment { kind: "fn", name: "add_money" }]`
 /// `"impl::Money::fn::new"` → `[impl/Money, fn/new]`
+/// `"test::\"add function\""` → `[test/add function]`
 fn parse_tree_path(tree_path: &str) -> Option<Vec<PathSegment>> {
-    let parts: Vec<&str> = tree_path.split("::").collect();
-    if !parts.len().is_multiple_of(2) {
-        return None; // must be pairs
+    let parsed = parser::TreePath::parse(tree_path).ok()?;
+
+    // Collect non-injection segments into a flat list of strings.
+    let flat: Vec<&str> = parsed
+        .segments
+        .iter()
+        .filter_map(|s| match s {
+            parser::Segment::Kind(k) => Some(k.as_str()),
+            parser::Segment::Name(n) => Some(n.as_str()),
+            parser::Segment::Injection(_) => None,
+        })
+        .collect();
+
+    // Must be pairs (kind, name).
+    if flat.len() % 2 != 0 || flat.is_empty() {
+        return None;
     }
-    let segments: Vec<PathSegment> = parts
+
+    let segments: Vec<PathSegment> = flat
         .chunks(2)
         .map(|pair| PathSegment {
             kind: pair[0].to_string(),
             name: pair[1].to_string(),
         })
         .collect();
-    if segments.is_empty() {
-        return None;
-    }
     Some(segments)
 }
 
@@ -469,7 +482,7 @@ fn collect_path(
             config.kind_to_shorthand(node.kind()),
             config.node_name(node, source),
         ) {
-            segments.push(format!("{short}::{name}"));
+            segments.push(format!("{short}::{}", parser::serialize_name(&name)));
             return true;
         }
         return false;
@@ -495,7 +508,7 @@ fn collect_path(
                     config.node_name(node, source),
                 )
             {
-                segments.insert(0, format!("{short}::{name}"));
+                segments.insert(0, format!("{short}::{}", parser::serialize_name(&name)));
             }
             return true;
         }

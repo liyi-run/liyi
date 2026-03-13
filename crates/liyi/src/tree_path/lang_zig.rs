@@ -141,7 +141,7 @@ test "add function" {
 
     #[test]
     fn resolve_zig_test() {
-        let span = resolve_tree_path(SAMPLE_ZIG, "test::add function", Language::Zig);
+        let span = resolve_tree_path(SAMPLE_ZIG, "test::\"add function\"", Language::Zig);
         assert!(span.is_some(), "should resolve test declaration");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
