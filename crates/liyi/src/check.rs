@@ -60,6 +60,8 @@ pub fn run_check(
             message: w.clone(),
             fix_hint: None,
             fixed: false,
+            annotation_line: None,
+            requirement_text: None,
         });
     }
 
@@ -95,6 +97,8 @@ pub fn run_check(
                         ),
                         fix_hint: None,
                         fixed: false,
+                        annotation_line: None,
+                        requirement_text: None,
                     });
                 } else {
                     requirements.insert(
@@ -234,6 +238,17 @@ pub fn run_check(
     // Untracked: requirements found in source markers but absent from any sidecar.
     for (name, rec) in &requirements {
         if !requirements_with_sidecar.contains(name) {
+            // Extract requirement block text for prompt mode.
+            let req_text = read_cached(&mut source_cache, &rec.file).and_then(|content| {
+                let markers = scan_markers(&content);
+                let spans = requirement_spans(&markers);
+                spans.get(name).map(|span| {
+                    let lines: Vec<&str> = content.lines().collect();
+                    let start = span[0].saturating_sub(1);
+                    let end = span[1].min(lines.len());
+                    lines[start..end].join("\n")
+                })
+            });
             diagnostics.push(Diagnostic {
                 file: rec.file.clone(),
                 item_or_req: name.clone(),
@@ -245,6 +260,8 @@ pub fn run_check(
                 ),
                 fix_hint: None,
                 fixed: false,
+                annotation_line: Some(rec.line),
+                requirement_text: req_text,
             });
         }
     }
@@ -264,6 +281,8 @@ pub fn run_check(
                 message: format!("requirement \"{name}\" is not referenced by any item"),
                 fix_hint: None,
                 fixed: false,
+                annotation_line: Some(rec.line),
+                requirement_text: None,
             });
         }
     }
@@ -287,6 +306,8 @@ pub fn run_check(
             message: format!("requirement cycle detected: {cycle_display}"),
             fix_hint: None,
             fixed: false,
+            annotation_line: None,
+            requirement_text: None,
         });
     }
 
@@ -338,6 +359,8 @@ fn check_sidecar(
                 message: format!("cannot read sidecar: {e}"),
                 fix_hint: None,
                 fixed: false,
+                annotation_line: None,
+                requirement_text: None,
             });
             return;
         }
@@ -354,6 +377,8 @@ fn check_sidecar(
                 message: e,
                 fix_hint: None,
                 fixed: false,
+                annotation_line: None,
+                requirement_text: None,
             });
             return;
         }
@@ -371,6 +396,8 @@ fn check_sidecar(
             message: e,
             fix_hint: Some(format!("liyi migrate {rel_sidecar}")),
             fixed: false,
+            annotation_line: None,
+            requirement_text: None,
         });
         return;
     }
@@ -391,6 +418,8 @@ fn check_sidecar(
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
                         fixed: false,
+                        annotation_line: None,
+                        requirement_text: None,
                     });
                 }
                 if let Some(ref related) = item.related {
@@ -408,6 +437,8 @@ fn check_sidecar(
                                 ),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                     }
@@ -425,6 +456,8 @@ fn check_sidecar(
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
                         fixed: false,
+                        annotation_line: None,
+                        requirement_text: None,
                     });
                 }
             }
@@ -441,6 +474,8 @@ fn check_sidecar(
             message: format!("source file {} not found", entry.source_path.display()),
             fix_hint: None,
             fixed: false,
+            annotation_line: None,
+            requirement_text: None,
         });
         return;
     }
@@ -476,6 +511,8 @@ fn check_sidecar(
                                 message: "hash matches".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         } else if item.source_hash.is_none() {
                             // No hash yet — fill it if --fix
@@ -500,6 +537,8 @@ fn check_sidecar(
                                 message: "missing source_hash".into(),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         } else {
                             // Hash mismatch — try tree_path first, then shift
@@ -565,6 +604,8 @@ fn check_sidecar(
                                         ),
                                     fix_hint: Some("liyi check --fix".into()),
                                     fixed: fix,
+                                    annotation_line: None,
+                                    requirement_text: None,
                                     });
                                 } else {
                                     // Content changed (semantic drift).
@@ -614,6 +655,8 @@ fn check_sidecar(
                                             message: msg,
                                             fix_hint: None,
                                             fixed: false,
+                                            annotation_line: None,
+                                            requirement_text: None,
                                         });
                                     } else {
                                         let msg = if new_span != old_span {
@@ -632,6 +675,8 @@ fn check_sidecar(
                                             message: msg,
                                             fix_hint: Some("liyi check --fix".into()),
                                             fixed: fix,
+                                            annotation_line: None,
+                                            requirement_text: None,
                                         });
                                     }
                                 }
@@ -670,6 +715,8 @@ fn check_sidecar(
                                             ),
                                             fix_hint: Some("liyi check --fix".into()),
                                             fixed: fix,
+                                            annotation_line: None,
+                                            requirement_text: None,
                                         });
                                     }
                                     ShiftResult::Stale => {
@@ -688,6 +735,8 @@ fn check_sidecar(
                                             message: detail,
                                             fix_hint: None,
                                             fixed: false,
+                                            annotation_line: None,
+                                            requirement_text: None,
                                         });
                                     }
                                 }
@@ -756,6 +805,8 @@ fn check_sidecar(
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                annotation_line: None,
+                                requirement_text: None,
                                 });
                             } else {
                                 // Content also changed — relocate span.
@@ -791,6 +842,8 @@ fn check_sidecar(
                                         ),
                                         fix_hint: None,
                                         fixed: false,
+                                        annotation_line: None,
+                                        requirement_text: None,
                                     });
                                 } else {
                                     diagnostics.push(Diagnostic {
@@ -804,6 +857,8 @@ fn check_sidecar(
                                         ),
                                         fix_hint: Some("liyi check --fix".into()),
                                         fixed: fix,
+                                        annotation_line: None,
+                                        requirement_text: None,
                                     });
                                 }
                             }
@@ -824,6 +879,8 @@ fn check_sidecar(
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                     }
@@ -841,6 +898,8 @@ fn check_sidecar(
                             ),
                             fix_hint: None,
                             fixed: false,
+                            annotation_line: None,
+                            requirement_text: None,
                         });
                     }
                 }
@@ -863,6 +922,8 @@ fn check_sidecar(
                         message: "not reviewed".into(),
                         fix_hint: None,
                         fixed: false,
+                        annotation_line: None,
+                        requirement_text: None,
                     });
                 }
 
@@ -882,6 +943,8 @@ fn check_sidecar(
                                 message: "marked \x40liyi:trivial".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                         SourceMarker::Ignore { line, .. }
@@ -895,6 +958,8 @@ fn check_sidecar(
                                 message: "marked \x40liyi:ignore".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                         _ => {}
@@ -918,6 +983,8 @@ fn check_sidecar(
                                     ),
                                     fix_hint: None,
                                     fixed: false,
+                                    annotation_line: None,
+                                    requirement_text: None,
                                 });
                             }
                             Some(rec) => {
@@ -944,6 +1011,8 @@ fn check_sidecar(
                                         message: format!("requirement \"{req_name}\" has changed"),
                                         fix_hint: None,
                                         fixed: false,
+                                        annotation_line: None,
+                                        requirement_text: None,
                                     });
                                 }
                             }
@@ -980,6 +1049,8 @@ fn check_sidecar(
                                     ),
                                 fix_hint: None,
                                 fixed: fix,
+                                annotation_line: Some(*line),
+                                requirement_text: None,
                                 });
                             }
                         }
@@ -1026,6 +1097,8 @@ fn check_sidecar(
                                 message: "requirement hash matches".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         } else {
                             if fix {
@@ -1041,6 +1114,8 @@ fn check_sidecar(
                                 message: "requirement hash mismatch or missing".into(),
                                 fix_hint: None,
                                 fixed: fix,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                     }
@@ -1101,6 +1176,8 @@ fn check_sidecar(
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                annotation_line: None,
+                                requirement_text: None,
                                 });
                             } else {
                                 if fix {
@@ -1122,6 +1199,8 @@ fn check_sidecar(
                                     ),
                                 fix_hint: None,
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                                 });
                             }
                         } else {
@@ -1141,6 +1220,8 @@ fn check_sidecar(
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: false,
+                                annotation_line: None,
+                                requirement_text: None,
                             });
                         }
                     }
@@ -1158,6 +1239,8 @@ fn check_sidecar(
                             ),
                             fix_hint: None,
                             fixed: false,
+                            annotation_line: None,
+                            requirement_text: None,
                         });
                     }
                 }

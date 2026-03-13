@@ -43,6 +43,10 @@ pub struct Diagnostic {
     pub fix_hint: Option<String>,
     /// Whether this diagnostic was resolved by `--fix`.
     pub fixed: bool,
+    /// 1-indexed line number of the source annotation, for `--prompt` output.
+    pub annotation_line: Option<usize>,
+    /// Full text of a requirement block, for `--prompt` output.
+    pub requirement_text: Option<String>,
 }
 
 impl Diagnostic {

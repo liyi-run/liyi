@@ -632,6 +632,7 @@ dependencies = [
  "libc",
  "liyi",
  "ratatui",
+ "serde_json",
  "similar",
  "syntect",
 ]

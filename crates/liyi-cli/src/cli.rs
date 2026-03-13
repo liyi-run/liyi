@@ -66,6 +66,10 @@ pub enum Commands {
         /// Minimum severity level for displayed diagnostics
         #[arg(long, value_enum, default_value_t = DiagnosticLevel::All)]
         level: DiagnosticLevel,
+
+        /// Emit agent-consumable JSON output for coverage gaps
+        #[arg(long)]
+        prompt: bool,
     },
 
     /// Migrate sidecar files to the current schema version

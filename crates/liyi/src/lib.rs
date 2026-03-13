@@ -6,6 +6,7 @@ pub mod git;
 pub mod hashing;
 pub mod init;
 pub mod markers;
+pub mod prompt;
 pub mod reanchor;
 pub mod schema;
 pub mod shift;
