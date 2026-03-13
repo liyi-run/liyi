@@ -17,10 +17,10 @@ The contributing guide covers project structure, content workflows, code style, 
 
 Follow Conventional Commits: `<type>(<scope>): <summary>`
 
-- Types: `feat`, `fix`, `docs`, `refactor`, `build`, `ci`. Do **not** use `chore`.
+- Types: `feat`, `fix`, `docs`, `refactor`, `build`, `ci`, `style`. Do **not** use `chore`.
 - Scopes: `linter`, `design`, `template`, `docs`, `policy`, `meta`.
 - One logical change per commit — do not combine unrelated changes.
-- AIGC trailers required: `AI-assisted-by:` and `Original prompt:` (quoted block).
+- AIGC trailers required: `Original prompt:`, blank line, Markdown block quote of user prompts verbatim, blank line, `AI-assisted-by: Your model identity (Name of client used to interact with you)`.
 - Do **not** add `Signed-off-by` on behalf of the user.
 
 See the contributing guide for full details and examples.
