@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "leaf_text",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively descend through named children of a YAML wrapper node until reaching a leaf (no named children) and return its source text. Used to unwrap flow_node → plain_scalar → string_scalar chains to extract key text.",
       "source_span": [
         10,
@@ -17,7 +17,7 @@
     },
     {
       "item": "yaml_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract names from YAML block_mapping_pair nodes: get the key field, drill down to the leaf scalar text via leaf_text, and strip surrounding quotes from quoted scalars. Return None for non-block_mapping_pair nodes.",
       "source_span": [
         28,
@@ -29,7 +29,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the YAML language configuration for tree_path resolution (without injection support): register tree-sitter-yaml grammar, .yml/.yaml extensions, kind mapping (key→block_mapping_pair), value field for body traversal, yaml_node_name custom callback for deep key extraction, and document/block_node/block_mapping/block_sequence as transparent kinds so the resolver looks through YAML's deeply nested wrapper structure.",
       "source_span": [
         53,

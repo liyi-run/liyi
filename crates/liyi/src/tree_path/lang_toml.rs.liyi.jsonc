@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "toml_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract names from TOML AST nodes: for table and table_array_element, return the first bare_key or quoted_key child text (stripping quotes from quoted keys); for pair, return the first bare_key or quoted_key child text similarly; return None for other node kinds.",
       "source_span": [
         16,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the TOML language configuration for tree_path resolution: register tree-sitter-toml-ng grammar, .toml extension, kind mappings (table→table, key→pair, array_table→table_array_element), self-as-body (\".\") sentinel so tables act as their own body containers, and toml_node_name custom callback for name extraction from bare_key/quoted_key children.",
       "source_span": [
         52,

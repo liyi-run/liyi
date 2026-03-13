@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the JSON language configuration for tree_path resolution: register tree-sitter-json grammar, .json extension, kind mapping (key→pair), value field for body traversal enabling nested object descent, json_node_name custom callback for string_content extraction, and object/array as transparent kinds so the resolver looks through them to reach pair nodes.",
       "source_span": [
         33,

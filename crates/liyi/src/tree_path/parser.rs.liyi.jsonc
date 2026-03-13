@@ -41,7 +41,7 @@
     },
     {
       "item": "parse_pair",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parses a single kind.name pair: a simple identifier for kind, a '.' separator, then a name (quoted or simple) with optional [N] index, followed by an optional //lang injection marker. Returns a Pair struct.",
       "source_span": [
         124,
