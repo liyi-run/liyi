@@ -713,3 +713,56 @@ fn prompt_multi_file() {
         "expected at least 2 gap items across files"
     );
 }
+
+// ---------------------------------------------------------------------------
+// =trivial sidecar sentinel tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn trivial_sidecar_sentinel() {
+    let (_tmp, root) = fixture_in_tmp("trivial_sidecar");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+
+    // First pass: fix to fill in source_hash / source_anchor.
+    let _ = run_check(&root, &[], true, false, &flags);
+
+    // Second pass: check diagnostics.
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    // get_count has intent "=trivial" with no source annotation → Trivial info
+    let get_count_trivial = diagnostics
+        .iter()
+        .any(|d| d.item_or_req == "get_count" && matches!(d.kind, DiagnosticKind::Trivial));
+    assert!(
+        get_count_trivial,
+        "expected Trivial diagnostic for get_count (=trivial intent), got: {diagnostics:#?}"
+    );
+
+    // get_label has both @liyi:trivial in source and =trivial in sidecar → two Trivial diagnostics, no error
+    let get_label_trivials: Vec<_> = diagnostics
+        .iter()
+        .filter(|d| d.item_or_req == "get_label" && matches!(d.kind, DiagnosticKind::Trivial))
+        .collect();
+    assert!(
+        get_label_trivials.len() >= 2,
+        "expected at least 2 Trivial diagnostics for get_label (source + sidecar), got {} in: {diagnostics:#?}",
+        get_label_trivials.len()
+    );
+
+    // compute_total has @liyi:nontrivial in source + =trivial in sidecar → ConflictingTriviality error
+    let has_conflict = diagnostics
+        .iter()
+        .any(|d| d.item_or_req == "compute_total" && matches!(d.kind, DiagnosticKind::ConflictingTriviality));
+    assert!(
+        has_conflict,
+        "expected ConflictingTriviality for compute_total, got: {diagnostics:#?}"
+    );
+
+    // ConflictingTriviality should cause check failure
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
+}

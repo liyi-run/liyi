@@ -30,6 +30,7 @@ pub enum DiagnosticKind {
     RequirementCycle { path: Vec<String> },
     AmbiguousSidecar { canonical: String, other: String },
     MissingRelatedEdge { name: String },
+    ConflictingTriviality,
 }
 
 #[derive(Debug, Clone)]
@@ -165,7 +166,8 @@ pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> Liyi
             | DiagnosticKind::InvalidSpan { .. }
             | DiagnosticKind::OrphanedSource
             | DiagnosticKind::DuplicateEntry
-            | DiagnosticKind::MissingRelatedEdge { .. } => {
+            | DiagnosticKind::MissingRelatedEdge { .. }
+            | DiagnosticKind::ConflictingTriviality => {
                 has_check_failure = true;
             }
             _ => {}

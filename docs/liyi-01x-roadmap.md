@@ -37,6 +37,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M6.5 AGENTS.md escape | ✅ Complete | Unicode escape for @ in JSON |
 | M6.6 Tests | ✅ Complete | Unit tests for NL-quoting |
 | M6.7 Contributing guides | ✅ Complete | NL-quoting documented |
+| M10.4 `=trivial` sentinel | ✅ Complete | `ConflictingTriviality` diagnostic, golden tests |
 
 ---
 
@@ -932,7 +933,9 @@ Compute line count for each discovered item's span. Small items (≤5 lines) are
 - `_hints.suggested_trivial: true` is set for items ≤5 lines and no doc comment.
 - The threshold is configurable via `--trivial-threshold <N>` (default: 5).
 
-### M10.4. `"intent": "=trivial"` sentinel support ⏳
+### M10.4. `"intent": "=trivial"` sentinel support ✅
+
+**Status:** ✅ Complete.
 
 Support `"intent": "=trivial"` as a sidecar-only triviality marker, parallel to the existing `@liyi:trivial` source annotation.
 
@@ -969,7 +972,7 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
 | ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
 | ~~10~~ | ~~M5.3 `--prompt` output~~ | ✅ Done | — | — |
-| 11 | M10.4 `=trivial` sentinel | ⏳ Planned | ~2h | Sidecar-only triviality |
+| ~~11~~ | ~~M10.4 `=trivial` sentinel~~ | ✅ Done | — | — |
 | 12 | M10.1 Tree-sitter item discovery | ⏳ Planned | ~4h | Smart scaffold |
 | 13 | M10.2 Doc comment heuristic | ⏳ Planned | ~2h | `=doc` suggestions |
 | 14 | M10.3 Item size heuristic | ⏳ Planned | ~1h | Trivial suggestions |

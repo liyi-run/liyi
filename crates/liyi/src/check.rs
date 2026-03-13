@@ -1005,6 +1005,42 @@ fn check_sidecar(
                     }
                 }
 
+                // c2. Sidecar "=trivial" sentinel
+                if item.intent == "=trivial" {
+                    // Conflict: @liyi:nontrivial in source vs =trivial in sidecar
+                    let has_nontrivial = source_markers.iter().any(|m| {
+                        matches!(m, SourceMarker::Nontrivial { line }
+                            if *line >= span_start.saturating_sub(1) && *line <= span_end)
+                    });
+                    if has_nontrivial {
+                        diagnostics.push(Diagnostic {
+                            file: entry.source_path.clone(),
+                            item_or_req: label.clone(),
+                            kind: DiagnosticKind::ConflictingTriviality,
+                            severity: Severity::Error,
+                            message: "\x40liyi:nontrivial in source conflicts with \"=trivial\" in sidecar".into(),
+                            fix_hint: None,
+                            fixed: false,
+                            span_start: Some(item.source_span[0]),
+                            annotation_line: None,
+                            requirement_text: None,
+                        });
+                    } else {
+                        diagnostics.push(Diagnostic {
+                            file: entry.source_path.clone(),
+                            item_or_req: label.clone(),
+                            kind: DiagnosticKind::Trivial,
+                            severity: Severity::Info,
+                            message: "intent \"=trivial\"".into(),
+                            fix_hint: None,
+                            fixed: false,
+                            span_start: Some(item.source_span[0]),
+                            annotation_line: None,
+                            requirement_text: None,
+                        });
+                    }
+                }
+
                 // d. Related requirements
                 if let Some(ref related) = item.related {
                     for (req_name, stored_hash) in related {
