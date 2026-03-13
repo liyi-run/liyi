@@ -11,7 +11,9 @@ use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
-use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
+use crate::tree_path::{
+    compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
+};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -634,8 +636,47 @@ fn check_sidecar(
                                     annotation_line: None,
                                     requirement_text: None,
                                     });
+                                } else if let Some(l) = lang
+                                    && let Some(sibling) = resolve_tree_path_sibling_scan(
+                                        &source_content,
+                                        &item.tree_path,
+                                        l,
+                                        old_hash,
+                                    )
+                                {
+                                    // Hash-based sibling scan found the
+                                    // element at a different array index —
+                                    // treat as a pure shift.
+                                    let delta = sibling.span[0] as i64 - old_span[0] as i64;
+                                    if fix {
+                                        item.source_span = sibling.span;
+                                        item.tree_path = sibling.updated_tree_path;
+                                        if let Ok((h, a)) = hash_span(&source_content, sibling.span)
+                                        {
+                                            item.source_hash = Some(h);
+                                            item.source_anchor = Some(a);
+                                        }
+                                        modified = true;
+                                    }
+                                    diagnostics.push(Diagnostic {
+                                        file: entry.source_path.clone(),
+                                        item_or_req: label.clone(),
+                                        kind: DiagnosticKind::Shifted {
+                                            from: old_span,
+                                            to: sibling.span,
+                                        },
+                                        severity: Severity::Warning,
+                                        message: format!(
+                                            "sibling scan matched, span shifted by {delta:+} → [{}, {}]",
+                                            sibling.span[0], sibling.span[1]
+                                        ),
+                                        fix_hint: Some("liyi check --fix".into()),
+                                        fixed: fix,
+                                        span_start: Some(item.source_span[0]),
+                                        annotation_line: None,
+                                        requirement_text: None,
+                                    });
                                 } else {
-                                    // Content changed (semantic drift).
                                     // For reviewed specs (sidecar or
                                     // @liyi:intent in source): update span
                                     // but do NOT rehash — the stale hash
@@ -709,6 +750,46 @@ fn check_sidecar(
                                         });
                                     }
                                 }
+                            } else if let Some(l) = lang
+                                && let Some(sibling) = resolve_tree_path_sibling_scan(
+                                    &source_content,
+                                    &item.tree_path,
+                                    l,
+                                    item.source_hash.as_ref().unwrap(),
+                                )
+                            {
+                                // tree_path resolution failed (e.g., index
+                                // out of bounds after array shrank) but
+                                // sibling scan found the element elsewhere.
+                                let old_span = item.source_span;
+                                let delta = sibling.span[0] as i64 - old_span[0] as i64;
+                                if fix {
+                                    item.source_span = sibling.span;
+                                    item.tree_path = sibling.updated_tree_path;
+                                    if let Ok((h, a)) = hash_span(&source_content, sibling.span) {
+                                        item.source_hash = Some(h);
+                                        item.source_anchor = Some(a);
+                                    }
+                                    modified = true;
+                                }
+                                diagnostics.push(Diagnostic {
+                                    file: entry.source_path.clone(),
+                                    item_or_req: label.clone(),
+                                    kind: DiagnosticKind::Shifted {
+                                        from: old_span,
+                                        to: sibling.span,
+                                    },
+                                    severity: Severity::Warning,
+                                    message: format!(
+                                        "sibling scan matched, span shifted by {delta:+} → [{}, {}]",
+                                        sibling.span[0], sibling.span[1]
+                                    ),
+                                    fix_hint: Some("liyi check --fix".into()),
+                                    fixed: fix,
+                                    span_start: Some(item.source_span[0]),
+                                    annotation_line: None,
+                                    requirement_text: None,
+                                });
                             } else {
                                 // Fallback to shift heuristic
                                 let expected = item.source_hash.as_ref().unwrap();

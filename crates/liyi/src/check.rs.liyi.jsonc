@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Hold the file path, line number, sidecar hash, and freshly computed source hash of a discovered @liyi:requirement. The computed_hash enables cascading staleness detection in a single check pass without needing --fix first.",
       "source_span": [
-        21,
-        28
+        23,
+        30
       ],
       "tree_path": "struct::RequirementRecord",
       "source_hash": "sha256:4a938b349644222f5387b748f99750302de0d71c7c0e528025bff26d2533497b",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide, enriches them with hashes from existing sidecars, and computes fresh hashes from current source spans so that downstream related-edge staleness is detected in a single run without requiring --fix first; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity using computed_hash, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place and their diagnostics are marked fixed. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
-        40,
-        340
+        42,
+        342
       ],
       "tree_path": "fn::run_check",
       "source_hash": "sha256:0e7bb66ac62c7f2104955a2706d12bb4bb724376a4e65d8d772486fd725f73f9",
@@ -37,8 +37,8 @@
       "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore source markers and sidecar =trivial sentinel (emitting Trivial info or ConflictingTriviality error when @liyi:nontrivial conflicts), and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (structural errors). On semantic drift (tree_path resolves but content changed): for reviewed specs, update span but leave hash stale so the spec is flagged for intent review; for unreviewed specs, also rehash at the new location since no human judgment is at stake. When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. When --fix is active, strip _hints from all item specs (hints are transient scaffold aids). Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        349,
-        1355
+        351,
+        1436
       ],
       "tree_path": "fn::check_sidecar",
       "source_hash": "sha256:4defc9f7d6439ebe4e6fcaf591c8e595123d67ca18df6cdfb1d5aeda4e0dbc9f",
@@ -57,8 +57,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1420,
-        1431
+        1501,
+        1512
       ],
       "tree_path": "fn::read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",

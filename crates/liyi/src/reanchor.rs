@@ -4,7 +4,9 @@ use crate::hashing::hash_span;
 use crate::markers::{requirement_spans, scan_markers};
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
-use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
+use crate::tree_path::{
+    compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
+};
 
 /// Re-hash source spans in a sidecar file.
 ///
@@ -73,16 +75,51 @@ pub fn run_reanchor(
                 // language is supported, locate item by structural identity.
                 // If resolution fails (item renamed/deleted), keep the
                 // existing span — hash_span below will detect the mismatch.
-                if let (false, Some(l)) = (item.tree_path.is_empty(), lang)
-                    && let Some(new_span) = resolve_tree_path(&source_content, &item.tree_path, l)
-                {
-                    item.source_span = new_span;
+                if let (false, Some(l)) = (item.tree_path.is_empty(), lang) {
+                    if let Some(new_span) = resolve_tree_path(&source_content, &item.tree_path, l) {
+                        // Check if the resolved span's hash matches the
+                        // stored hash. If not, try sibling scan (array
+                        // element may have shifted index).
+                        let use_span = if let Some(ref old_hash) = item.source_hash
+                            && hash_span(&source_content, new_span)
+                                .map(|(h, _)| h != *old_hash)
+                                .unwrap_or(false)
+                            && let Some(sibling) = resolve_tree_path_sibling_scan(
+                                &source_content,
+                                &item.tree_path,
+                                l,
+                                old_hash,
+                            ) {
+                            item.tree_path = sibling.updated_tree_path;
+                            sibling.span
+                        } else {
+                            new_span
+                        };
+                        item.source_span = use_span;
+                    } else if let Some(ref old_hash) = item.source_hash
+                        && let Some(sibling) = resolve_tree_path_sibling_scan(
+                            &source_content,
+                            &item.tree_path,
+                            l,
+                            old_hash,
+                        )
+                    {
+                        // tree_path resolution failed (e.g., index out of
+                        // bounds) but sibling scan found the element.
+                        item.source_span = sibling.span;
+                        item.tree_path = sibling.updated_tree_path;
+                    }
                 }
 
                 // Compute or update tree_path from the (possibly updated) span.
                 if let Some(l) = lang {
                     let canonical = compute_tree_path(&source_content, item.source_span, l);
-                    item.tree_path = canonical;
+                    // Only overwrite if canonical is non-empty; sibling scan
+                    // may have set an updated_tree_path that compute_tree_path
+                    // can't reproduce (data-file grammars not yet supported).
+                    if !canonical.is_empty() {
+                        item.tree_path = canonical;
+                    }
                 }
 
                 let (hash, anchor) = hash_span(&source_content, item.source_span)

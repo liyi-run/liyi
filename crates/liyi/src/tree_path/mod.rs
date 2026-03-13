@@ -33,6 +33,8 @@ use std::path::Path;
 
 use tree_sitter::{Language as TSLanguage, Node, Parser};
 
+use crate::hashing::hash_span;
+
 /// Language-specific configuration for tree_path resolution.
 ///
 /// Each supported language provides a static `LanguageConfig` that defines
@@ -339,6 +341,166 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
     let start_line = node.start_position().row + 1;
     let end_line = node.end_position().row + 1;
     Some([start_line, end_line])
+}
+
+/// Result of a hash-based sibling scan within an array.
+pub struct SiblingScanResult {
+    /// The 1-indexed inclusive span of the matched sibling element.
+    pub span: [usize; 2],
+    /// The updated tree_path with the corrected array index.
+    pub updated_tree_path: String,
+}
+
+/// Attempt to find an array element matching `expected_hash` by scanning
+/// siblings of an indexed tree_path segment.
+///
+/// When a tree_path like `key::steps[2]` resolves to an element whose hash
+/// doesn't match (e.g., because a new element was inserted before index 2),
+/// this function scans all sibling elements in the same array container to
+/// find one whose content matches `expected_hash`.
+///
+/// Returns `Some(SiblingScanResult)` if exactly one element matches.
+/// Returns `None` if the tree_path has no indexed segment, the parent array
+/// can't be resolved, or zero/multiple elements match (ambiguous).
+pub fn resolve_tree_path_sibling_scan(
+    source: &str,
+    tree_path: &str,
+    lang: Language,
+    expected_hash: &str,
+) -> Option<SiblingScanResult> {
+    if tree_path.is_empty() {
+        return None;
+    }
+
+    let parsed = parser::TreePath::parse(tree_path).ok()?;
+
+    // Flatten to (kind, name, optional_index) pairs, skipping injections.
+    let mut flat: Vec<FlatSegment<'_>> = Vec::new();
+    for s in &parsed.segments {
+        match s {
+            parser::Segment::Kind(k) => flat.push(FlatSegment::KindOrName(k.as_str(), None)),
+            parser::Segment::Name(n, idx) => flat.push(FlatSegment::KindOrName(n.as_str(), *idx)),
+            parser::Segment::Injection(_) => {}
+        }
+    }
+
+    if !flat.len().is_multiple_of(2) || flat.is_empty() {
+        return None;
+    }
+
+    let pairs: Vec<PathPair<'_>> = flat
+        .chunks(2)
+        .map(|c| {
+            let kind = c[0].text();
+            let (name, idx) = c[1].text_and_index();
+            PathPair {
+                kind,
+                name,
+                index: idx,
+            }
+        })
+        .collect();
+
+    // Find the last pair with an index — that's our array access point.
+    let indexed_pos = pairs.iter().rposition(|p| p.index.is_some())?;
+
+    let config = lang.config();
+    let mut ts_parser = make_parser(lang);
+    let tree = ts_parser.parse(source, None)?;
+    let root = tree.root_node();
+
+    // Resolve the parent context to reach the container holding the key node.
+    let container = if indexed_pos == 0 {
+        root
+    } else {
+        let parent_node = resolve_segments(config, &root, &pairs[..indexed_pos], source)?;
+        config.find_body(&parent_node)?
+    };
+
+    // Find the key node for the indexed pair within the container.
+    let indexed_pair = &pairs[indexed_pos];
+    let ts_kind = config.shorthand_to_kind(indexed_pair.kind)?;
+    let key_node = {
+        let mut cursor = container.walk();
+        container.children(&mut cursor).find(|c| {
+            c.kind() == ts_kind
+                && config
+                    .node_name(c, source)
+                    .is_some_and(|n| *n == *indexed_pair.name)
+        })?
+    };
+
+    // Get the array body (the value of this key — typically an array node).
+    let array_body = config.find_body(&key_node)?;
+
+    let suffix = &pairs[indexed_pos + 1..];
+
+    // Iterate all named children and find those matching expected_hash.
+    let mut cursor = array_body.walk();
+    let children: Vec<Node<'_>> = array_body
+        .children(&mut cursor)
+        .filter(|c| c.is_named())
+        .collect();
+
+    let mut candidates: Vec<(usize, [usize; 2])> = Vec::new();
+
+    for (i, child) in children.iter().enumerate() {
+        // If there's a suffix path, resolve it within this child.
+        let target_node = if suffix.is_empty() {
+            *child
+        } else {
+            match resolve_segments(config, child, suffix, source) {
+                Some(n) => n,
+                None => continue,
+            }
+        };
+
+        let start_line = target_node.start_position().row + 1;
+        let end_line = target_node.end_position().row + 1;
+        let span = [start_line, end_line];
+
+        if let Ok((hash, _)) = hash_span(source, span)
+            && hash == expected_hash
+        {
+            candidates.push((i, span));
+        }
+    }
+
+    // Exactly one match → unambiguous.
+    if candidates.len() != 1 {
+        return None;
+    }
+
+    let (new_index, span) = candidates[0];
+
+    // Build updated tree_path with the corrected index.
+    let mut new_segments = parsed.segments.clone();
+    // Map pair position back to segment position: the Name segment for
+    // pair[indexed_pos] is the (indexed_pos * 2 + 1)th non-injection segment.
+    let target_non_injection_idx = indexed_pos * 2 + 1;
+    let mut non_injection_count = 0;
+    for seg in &mut new_segments {
+        if matches!(seg, parser::Segment::Injection(_)) {
+            continue;
+        }
+        if non_injection_count == target_non_injection_idx {
+            if let parser::Segment::Name(_, idx) = seg {
+                *idx = Some(new_index);
+            }
+            break;
+        }
+        non_injection_count += 1;
+    }
+
+    let updated_tree_path = parser::TreePath {
+        segments: new_segments,
+    }
+    .serialize();
+
+    Some(SiblingScanResult {
+        span,
+        updated_tree_path,
+    })
 }
 
 /// Intermediate representation for flattened segments.
@@ -1028,6 +1190,152 @@ def calculate_total(items):
         assert!(
             names.contains(&"calculate_total"),
             "should discover top-level function"
+        );
+    }
+
+    // -- sibling scan tests -----------------------------------------------
+
+    /// Source with an impl block whose methods we can index positionally.
+    const SIBLING_BEFORE: &str = r#"pub struct Money { amount: i64 }
+
+impl Money {
+    fn first(&self) -> i64 { 1 }
+    fn second(&self) -> i64 { 2 }
+    fn third(&self) -> i64 { 3 }
+}
+"#;
+
+    /// Same source with a new method inserted at the beginning.
+    const SIBLING_AFTER: &str = r#"pub struct Money { amount: i64 }
+
+impl Money {
+    fn zeroth(&self) -> i64 { 0 }
+    fn first(&self) -> i64 { 1 }
+    fn second(&self) -> i64 { 2 }
+    fn third(&self) -> i64 { 3 }
+}
+"#;
+
+    #[test]
+    fn sibling_scan_finds_shifted_element() {
+        // In SIBLING_BEFORE, impl::Money[1] points to `fn second`.
+        // Compute hash of `fn second` from the original source.
+        let original_span =
+            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+        let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
+
+        // In SIBLING_AFTER, `fn zeroth` was inserted before `fn first`,
+        // so impl::Money[1] now points to `fn first` (wrong).
+        // Sibling scan should find `fn second` at index 2.
+        let result = resolve_tree_path_sibling_scan(
+            SIBLING_AFTER,
+            "impl::Money[1]",
+            Language::Rust,
+            &original_hash,
+        );
+
+        let result = result.expect("sibling scan should find shifted element");
+        assert_eq!(result.updated_tree_path, "impl::Money[2]");
+
+        // Verify the span points to `fn second` in the new source.
+        let lines: Vec<&str> = SIBLING_AFTER.lines().collect();
+        assert!(
+            lines[result.span[0] - 1].contains("fn second"),
+            "span should point to fn second, got: {}",
+            lines[result.span[0] - 1]
+        );
+    }
+
+    #[test]
+    fn sibling_scan_returns_none_when_no_index() {
+        // tree_path without index → Nothing to scan.
+        let result = resolve_tree_path_sibling_scan(
+            SIBLING_BEFORE,
+            "impl::Money",
+            Language::Rust,
+            "sha256:0000",
+        );
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn sibling_scan_returns_none_when_content_changed() {
+        // When no sibling has the expected hash, returns None.
+        let result = resolve_tree_path_sibling_scan(
+            SIBLING_AFTER,
+            "impl::Money[1]",
+            Language::Rust,
+            "sha256:no_such_hash",
+        );
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn sibling_scan_returns_none_for_empty_path() {
+        let result =
+            resolve_tree_path_sibling_scan(SIBLING_BEFORE, "", Language::Rust, "sha256:0000");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn sibling_scan_handles_deletion_before() {
+        // Source with the first method removed — `fn second` shifts from
+        // index 1 to index 0.
+        let shrunk = r#"pub struct Money { amount: i64 }
+
+impl Money {
+    fn second(&self) -> i64 { 2 }
+    fn third(&self) -> i64 { 3 }
+}
+"#;
+
+        let original_span =
+            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+        let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
+
+        let result = resolve_tree_path_sibling_scan(
+            shrunk,
+            "impl::Money[1]",
+            Language::Rust,
+            &original_hash,
+        );
+
+        let result = result.expect("sibling scan should find element at new index");
+        assert_eq!(result.updated_tree_path, "impl::Money[0]");
+        let lines: Vec<&str> = shrunk.lines().collect();
+        assert!(
+            lines[result.span[0] - 1].contains("fn second"),
+            "span should point to fn second, got: {}",
+            lines[result.span[0] - 1]
+        );
+    }
+
+    #[test]
+    fn sibling_scan_no_match_when_all_content_changed() {
+        // All methods are different from the original — no sibling matches.
+        let rewritten = r#"pub struct Money { amount: i64 }
+
+impl Money {
+    fn alpha(&self) -> i64 { 10 }
+    fn beta(&self) -> i64 { 20 }
+    fn gamma(&self) -> i64 { 30 }
+}
+"#;
+
+        // Hash from a method that doesn't exist in `rewritten` at all.
+        let original_span =
+            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+        let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
+
+        let result = resolve_tree_path_sibling_scan(
+            rewritten,
+            "impl::Money[1]",
+            Language::Rust,
+            &original_hash,
+        );
+        assert!(
+            result.is_none(),
+            "should return None when no sibling matches"
         );
     }
 }
