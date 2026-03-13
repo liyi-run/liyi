@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Bash language configuration for tree_path resolution: register tree-sitter-bash grammar v0.25.1, .sh/.bash extensions, kind mapping for fn (function_definition), using standard name field with no custom name extraction, body field for function body traversal, and no doc comment detector.",
       "source_span": [
         4,

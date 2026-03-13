@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the JavaScript language configuration for tree_path resolution: register tree-sitter-javascript grammar, .js/.mjs/.cjs/.jsx extensions, kind mappings for fn/class/method, using standard name field with no custom name extraction, and js_has_doc_comment detector for /** JSDoc comments.",
       "source_span": [
         19,

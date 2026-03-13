@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "LanguageConfig",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding), an optional doc_comment_detector callback that checks whether a doc comment is attached to an item node, and a transparent_kinds list of node kinds that resolve_segments should recurse through transparently (for grammars that wrap item nodes in intermediate containers, e.g., Dart class_member).",
       "source_span": [
         41,
@@ -17,7 +17,7 @@
     },
     {
       "item": "detect_language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         214,
@@ -32,7 +32,7 @@
     },
     {
       "item": "Language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, and Zig. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
         149,
@@ -44,7 +44,7 @@
     },
     {
       "item": "node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
         93,
@@ -56,7 +56,7 @@
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         297,
@@ -68,7 +68,7 @@
     },
     {
       "item": "resolve_segments",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[(&str, &str)] (kind, name) pairs. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member).",
       "source_span": [
         335,
@@ -80,7 +80,7 @@
     },
     {
       "item": "resolve_in_body",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
         371,
@@ -92,7 +92,7 @@
     },
     {
       "item": "compute_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         386,
@@ -104,7 +104,7 @@
     },
     {
       "item": "find_item_in_range",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
         415,
@@ -116,7 +116,7 @@
     },
     {
       "item": "collect_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
         480,

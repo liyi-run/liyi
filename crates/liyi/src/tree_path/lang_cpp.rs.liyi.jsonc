@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the C++ language configuration for tree_path resolution: register tree-sitter-cpp grammar, C++ file extensions (.cpp/.cc/.cxx/.hpp etc.), kind mappings for fn/class/struct/namespace/enum/template/typedef/using, wire the custom cpp_node_name callback, and no doc comment detector.",
       "source_span": [
         44,

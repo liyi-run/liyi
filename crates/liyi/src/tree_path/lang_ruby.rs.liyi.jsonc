@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Ruby language configuration for tree_path resolution: register tree-sitter-ruby grammar v0.23.1, .rb/.rake/.gemspec extensions, kind mappings for fn (method), class (class), module (module), and singleton_method with custom name extraction for receiver encoding, and no doc comment detector.",
       "source_span": [
         32,
