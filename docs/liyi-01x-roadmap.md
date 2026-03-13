@@ -1,6 +1,6 @@
 # 立意 (Lìyì) — 0.1.x Roadmap
 
-2026-03-06 (updated 2026-03-10)
+2026-03-06 (updated 2026-03-14)
 
 ---
 
@@ -36,7 +36,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M7.3 Dart | ✅ Complete | tree-sitter-dart v0.1.0 |
 | M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
 | M8 Data file support | ✅ Complete | TOML, JSON, YAML; key-path tree_path paradigm |
-| M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
+| M9 Injection framework | ✅ Complete | Core framework + GitHub Actions profile |
 | M10.1 Tree-sitter item discovery | ✅ Complete | `liyi init` pre-populates specs via tree-sitter |
 | M10.2 Doc comment heuristic | ✅ Complete | `_hints._has_doc` for 6 languages |
 | M10.3 Item size heuristic | ✅ Complete | `_hints._body_lines`, `_likely_trivial`, `--trivial-threshold` |
@@ -71,7 +71,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
 | ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
 | ~~22~~ | ~~M8.4 YAML (no injection)~~ | ✅ Done | — | CI/k8s (limited without M9) |
-| 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
+| ~~18~~ | ~~M9 Injection framework~~ | ✅ Done | — | Multi-language files |
 
 ---
 
@@ -939,7 +939,7 @@ The `[N]` suffix attaches to the name within the pair. The resolver, upon encoun
 
 ## M9. Language injection framework
 
-**Status:** ⏳ Design
+**Status:** ✅ Complete (core framework + GitHub Actions profile)
 
 **Goal:** Support multi-language files where one grammar hosts embedded code in another language. This is an architectural extension, not a per-language config addition.
 

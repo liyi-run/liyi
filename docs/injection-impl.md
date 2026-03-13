@@ -2,7 +2,7 @@
 
 # Language Injection Framework: Implementation Plan
 
-**Status:** Design
+**Status:** ✅ Complete (core framework + GitHub Actions profile)
 **Target:** v0.1.x (M9)
 **Design authority:** `docs/liyi-design.md` — *Quoting and injection*, tree_path Grammar v0.3
 
@@ -80,21 +80,21 @@ purpose.
 
 ### In scope
 
-- `InjectionProfile` struct — static, data-driven, one per dialect.
-- `InjectionRule` struct — key name, injected language, ancestor constraint.
-- Profile registry — static slice of `&InjectionProfile` refs.
-- `detect_injection_profiles()` — path-pattern matching, returns matching
+- ✅ `InjectionProfile` struct — static, data-driven, one per dialect.
+- ✅ `InjectionRule` struct — key name, injected language, ancestor constraint.
+- ✅ Profile registry — static slice of `&InjectionProfile` refs.
+- ✅ `detect_injection_profiles()` — path-pattern matching, returns matching
   profiles for a given repo-relative path.
-- `resolve_tree_path` extension — when a `Segment::Injection` is encountered,
+- ✅ `resolve_tree_path` extension — when a `Segment::Injection` is encountered,
   switch parser and config, apply line offset, continue resolving.
-- `compute_tree_path` extension — detect when the target node is inside an
+- ✅ `compute_tree_path` extension — detect when the target node is inside an
   injection zone, emit `//lang` in the appropriate segment.
-- Content extraction — extract the string value from a host node, strip YAML
+- ✅ Content extraction — extract the string value from a host node, strip YAML
   block-scalar indicators and indentation.
-- Span translation — map inner-parser spans back to outer-file line numbers.
-- GitHub Actions profile (P1): `.github/workflows/**/*.yml|yaml`, `run:` →
+- ✅ Span translation — map inner-parser spans back to outer-file line numbers.
+- ✅ GitHub Actions profile (P1): `.github/workflows/**/*.yml|yaml`, `run:` →
   Bash.
-- Tests: roundtrip tests for composite paths, span translation tests, profile
+- ✅ Tests: roundtrip tests for composite paths, span translation tests, profile
   detection tests.
 
 ### Out of scope (deferred)

@@ -2,7 +2,7 @@
 
 # `liyi init` Item Discovery & Hints: Implementation Plan
 
-**Status:** Implementation plan, not yet started
+**Status:** ✅ Phases 1, 2, 4 complete; Phase 3 (VCS hints) deferred
 **Target:** v0.1.x (M10)
 **Design authority:** `docs/liyi-design.md` v8.9 — *Tree-sitter item discovery in scaffold*, *`_hints` — cold-start inference aids*
 
@@ -185,17 +185,17 @@ liyi init <source-file> [--hints] [--no-discover] [--trivial-threshold N]
 
 ## Roadmap
 
-### Phase 1: Core item discovery
+### Phase 1: Core item discovery ✅
 
 Implement `discover_items()` and wire it into `liyi init`.
 
 **Deliverables:**
-- `discover_items()` in `tree_path/mod.rs`.
-- `DiscoveredItem` struct.
-- Updated `init_sidecar()` to call discovery and populate specs.
-- `--no-discover` CLI flag.
-- `_hints` field added to `ItemSpec` in `sidecar.rs`.
-- Basic golden test: multi-item Rust file → pre-populated sidecar.
+- ✅ `discover_items()` in `tree_path/mod.rs`.
+- ✅ `DiscoveredItem` struct.
+- ✅ Updated `init_sidecar()` to call discovery and populate specs.
+- ✅ `--no-discover` CLI flag.
+- ✅ `_hints` field added to `ItemSpec` in `sidecar.rs`.
+- ✅ Basic golden test: multi-item Rust file → pre-populated sidecar.
 
 **Acceptance criteria:**
 - `liyi init foo.rs` produces a sidecar with one entry per item.
@@ -204,16 +204,16 @@ Implement `discover_items()` and wire it into `liyi init`.
 - Works for all 17 supported languages.
 - `liyi init --no-discover foo.rs` produces empty `"specs": []`.
 
-### Phase 2: Tree-sitter hints
+### Phase 2: Tree-sitter hints ✅
 
 Add `_body_lines`, `_has_doc`, and `_likely_trivial` to scaffold output.
 
 **Deliverables:**
-- `doc_comment_detector` callback on `LanguageConfig`.
-- Detectors for Rust, Python, Go, JavaScript, TypeScript, Java.
-- `--trivial-threshold` CLI flag.
-- `_hints` stripping in `liyi check --fix`.
-- Golden test verifying hints content.
+- ✅ `doc_comment_detector` callback on `LanguageConfig`.
+- ✅ Detectors for Rust, Python, Go, JavaScript, TypeScript, Java (plus Dart).
+- ✅ `--trivial-threshold` CLI flag.
+- ✅ `_hints` stripping in `liyi check --fix`.
+- ✅ Golden test verifying hints content.
 
 **Acceptance criteria:**
 - Scaffold entries include `_hints._body_lines` equal to `span[1] - span[0] + 1`.
@@ -221,9 +221,9 @@ Add `_body_lines`, `_has_doc`, and `_likely_trivial` to scaffold output.
 - Items with `_body_lines ≤ threshold` and no doc comment get `_hints._likely_trivial: true`.
 - `liyi check --fix` strips all `_hints` fields from sidecars.
 
-### Phase 3: VCS hints
+### Phase 3: VCS hints (deferred)
 
-Add commit-count and related signals behind `--hints`.
+Add commit-count and related signals behind `--hints`. This phase is not yet implemented; tree-sitter-based scaffolding works without VCS signals.
 
 **Deliverables:**
 - `git_log_line_range()` in `git.rs`.
@@ -238,15 +238,15 @@ Add commit-count and related signals behind `--hints`.
 - Outside a git repo, `--hints` silently omits VCS signals but retains tree-sitter signals.
 - Performance: VCS gathering for a 50-item file completes in < 5 seconds on a typical repo.
 
-### Phase 4: `=trivial` sentinel
+### Phase 4: `=trivial` sentinel ✅
 
 Support `"intent": "=trivial"` in `liyi check` and `liyi approve`.
 
 **Deliverables:**
-- `liyi check` treats `=trivial` the same as `@liyi:trivial` source annotation.
-- `liyi approve` can transition `=trivial` items to `"reviewed": true`.
-- `ConflictingTriviality` diagnostic when `@liyi:nontrivial` in source conflicts with `=trivial` in sidecar.
-- Schema update documenting `=trivial`.
+- ✅ `liyi check` treats `=trivial` the same as `@liyi:trivial` source annotation.
+- ✅ `liyi approve` can transition `=trivial` items to `"reviewed": true`.
+- ✅ `ConflictingTriviality` diagnostic when `@liyi:nontrivial` in source conflicts with `=trivial` in sidecar.
+- ✅ Schema update documenting `=trivial`.
 
 **Acceptance criteria:**
 - `=trivial` items are excluded from coverage reports and test generation.
