@@ -10,6 +10,7 @@ use std::process::Command;
 ///
 /// Returns `None` if git is unavailable, the file doesn't exist at that
 /// revision, or the repo is not a git repository.
+// @liyi:related no-git2-dependency
 pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {
     let object = format!("{revision}:{repo_relative_path}");
     let output = Command::new("git")
@@ -32,6 +33,7 @@ pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> O
 ///
 /// Returns at most `limit` entries. Uses `git log --follow` to track renames.
 /// Returns an empty vec if git is unavailable or the file has no history.
+// @liyi:related no-git2-dependency
 pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {
     let output = Command::new("git")
         .args([

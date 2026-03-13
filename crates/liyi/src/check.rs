@@ -1077,6 +1077,8 @@ fn check_sidecar(
                                     (stored_hash.as_ref(), current_req_hash)
                                     && sh != rh
                                 {
+                                    // @liyi:related reqchanged-orthogonal-to-reviewed
+                                    // @liyi:related reqchanged-demands-human-judgment
                                     diagnostics.push(Diagnostic {
                                         file: entry.source_path.clone(),
                                         item_or_req: label.clone(),
@@ -1333,6 +1335,7 @@ fn check_sidecar(
     }
 
     // Strip _hints when --fix is active (hints are transient scaffold aids).
+    // @liyi:related hints-are-ephemeral
     if fix && !dry_run {
         for spec in &mut sidecar.specs {
             if let Spec::Item(item) = spec {

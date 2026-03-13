@@ -47,14 +47,19 @@
       "reviewed": false,
       "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). When discover is false, emit empty specs. If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
-        95,
-        170
+        100,
+        175
       ],
       "tree_path": "fn::init_sidecar",
       "source_hash": "sha256:6a5c338b6d894e17a05d579fdbd1b9f65217699dd2a7494dafc1ed472aa945ee",
       "source_anchor": "pub fn init_sidecar(",
       "related": {
-        "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
+        "exhaustive-inclusion": "sha256:5b729afeeb3162d6f07f6bd6f6a88e348cb57a06ddb0886e69df61438206bcf6",
+        "graceful-degradation": "sha256:d18b719e0bc043203b04fea2cd944eec8fecd4b998a6824f74eeade5f14343cf",
+        "hints-are-ephemeral": "sha256:61e9fdd60945144724f4f520826ca6e7d2cdc5ac9158f79cad9cc9f8042b393e",
+        "hints-intentionally-unstructured": "sha256:7ca122b4963280c7a40f4ce54f393d6aa16ef41c8bc5228dcd20bc0c9d4abac2",
+        "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38",
+        "tree-sitter-signals-always-present": "sha256:35c6ad0db1f2db0b04edfa537b08cc3476cb3245592fd82c0781fa93a246bb4a"
       }
     }
   ]

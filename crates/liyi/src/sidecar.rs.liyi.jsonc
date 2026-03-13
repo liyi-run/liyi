@@ -32,32 +32,38 @@
       "reviewed": false,
       "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, tree_path, source_hash, source_anchor, confidence, related, _hints). Enforce deny_unknown_fields and skip serializing None optionals. _hints holds transient inference aids from liyi init, stripped by check --fix.",
       "source_span": [
-        21,
-        53
+        24,
+        54
       ],
       "tree_path": "struct::ItemSpec",
-      "source_hash": "sha256:1e14c274eb4e4e3a6f9f44cd1a6441c10d2f6671d9740a3a9f47069fa01640f2",
-      "source_anchor": "/// Details of a code item (function, struct, etc.)"
+      "source_hash": "sha256:80f8873cc2af239c9aaef42578152c0c53216a348b6abfd3fa6f8b018d583c48",
+      "source_anchor": "pub struct ItemSpec {",
+      "related": {
+        "hints-intentionally-unstructured": "sha256:7ca122b4963280c7a40f4ce54f393d6aa16ef41c8bc5228dcd20bc0c9d4abac2"
+      }
     },
     {
       "item": "RequirementSpec",
       "reviewed": false,
       "intent": "Model a requirement spec entry with requirement name, source_span, and optional tree_path, source_hash, source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
       "source_span": [
-        55,
-        71
+        59,
+        72
       ],
       "tree_path": "struct::RequirementSpec",
-      "source_hash": "sha256:7542921d353941b48c443d3eea12b70a3e5dc7cf3631332e3d39611a3f9b52dc",
-      "source_anchor": "/// Details of a module requirement/invariant"
+      "source_hash": "sha256:a0024b3fdff62d6f9ab32e1af9a50175ee1ab1f79e26d0dc13557a55df93b516",
+      "source_anchor": "pub struct RequirementSpec {",
+      "related": {
+        "hints-intentionally-unstructured": "sha256:7ca122b4963280c7a40f4ce54f393d6aa16ef41c8bc5228dcd20bc0c9d4abac2"
+      }
     },
     {
       "item": "strip_jsonc_comments",
       "reviewed": true,
       "intent": "Remove // line comments and /* block comments from JSONC input while respecting JSON string boundaries and backslash escapes. Preserve newlines from line comments so downstream line numbers remain meaningful.",
       "source_span": [
-        75,
-        125
+        76,
+        126
       ],
       "tree_path": "fn::strip_jsonc_comments",
       "source_hash": "sha256:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
@@ -68,8 +74,8 @@
       "reviewed": true,
       "intent": "Parse a .liyi.jsonc string by stripping JSONC comments then deserializing into a SidecarFile. Return a human-readable error on parse failure.",
       "source_span": [
-        128,
-        132
+        129,
+        133
       ],
       "tree_path": "fn::parse_sidecar",
       "source_hash": "sha256:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
@@ -80,8 +86,8 @@
       "reviewed": true,
       "intent": "Serialize a SidecarFile to pretty-printed JSON prefixed with a '// liyi v0.1 spec file' header comment and a trailing newline.",
       "source_span": [
-        135,
-        139
+        136,
+        140
       ],
       "tree_path": "fn::write_sidecar",
       "source_hash": "sha256:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
@@ -92,8 +98,8 @@
       "reviewed": true,
       "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
-        142,
-        209
+        143,
+        210
       ],
       "tree_path": "fn::validate_sidecar",
       "source_hash": "sha256:68a500fc50f88a363118faaf0ddb9d5700d95284dfa8b94dff7c8938ac3c6308",

@@ -61,6 +61,7 @@ pub struct LanguageConfig {
 
 impl LanguageConfig {
     /// Map tree-sitter node kind → tree_path shorthand.
+    // @liyi:related reuse-kind-map-as-item-definition
     fn kind_to_shorthand(&self, ts_kind: &str) -> Option<&'static str> {
         self.kind_map
             .iter()
@@ -128,6 +129,7 @@ impl LanguageConfig {
 
     /// Detect whether a doc comment is attached to an item node.
     /// Returns `None` if the language has no doc comment detector.
+    // @liyi:related tree-sitter-signals-always-present
     pub fn has_doc_comment(&self, node: &Node, source: &str) -> Option<bool> {
         self.doc_comment_detector.map(|f| f(node, source))
     }
@@ -197,6 +199,7 @@ impl Language {
 /// the first match in the following order is returned:
 /// Bash → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
 /// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig.
+// @liyi:related graceful-degradation
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
 
@@ -439,6 +442,7 @@ fn find_item_in_range<'a>(
 }
 
 /// Check if a node is an item type we track in tree_path.
+// @liyi:related reuse-kind-map-as-item-definition
 fn is_item_node(config: &LanguageConfig, node: &Node) -> bool {
     config.kind_to_shorthand(node.kind()).is_some()
 }
@@ -522,6 +526,7 @@ pub struct DiscoveredItem {
 ///
 /// Returns one `DiscoveredItem` per item node found (functions, structs,
 /// classes, methods, etc.) as defined by the language's `kind_map`.
+// @liyi:related exhaustive-inclusion
 pub fn discover_items(source: &str, lang: Language) -> Vec<DiscoveredItem> {
     let config = lang.config();
     let mut parser = make_parser(lang);
@@ -540,6 +545,9 @@ pub fn discover_items(source: &str, lang: Language) -> Vec<DiscoveredItem> {
 ///
 /// `container_name` is `Some("ContainerName")` when inside a container
 /// item (class, impl, etc.) so nested items get qualified names.
+// @liyi:related exhaustive-inclusion
+// @liyi:related item-naming-uses-leaf-name
+// @liyi:related reuse-kind-map-as-item-definition
 fn discover_walk(
     config: &LanguageConfig,
     root: &Node,

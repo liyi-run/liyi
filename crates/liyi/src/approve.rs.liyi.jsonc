@@ -65,28 +65,33 @@
     },
     {
       "item": "collect_approval_candidates",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
       "source_span": [
         120,
-        187
+        188
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:96de9108822c9cf05a96bd09c159792fdabd86a6a3da53b2ba87a29b4baab1cd",
-      "source_anchor": "pub fn collect_approval_candidates("
+      "source_hash": "sha256:e2543ec1fc4d235c152d5e280a25dad2f6e657d0a8f5361b656e391fd2f253fe",
+      "source_anchor": "pub fn collect_approval_candidates(",
+      "related": {
+        "approve-never-approves-requirements": "sha256:c2b107468dd999e0802bd648e619c863f6769835468fe187cc49d3255168994b"
+      }
     },
     {
       "item": "apply_approval_decisions",
       "reviewed": true,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For Edit(text): update intent text, set reviewed=true, and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        194,
-        276
+        197,
+        279
       ],
       "tree_path": "fn::apply_approval_decisions",
       "source_hash": "sha256:bfbe20536ff44961025d4090626a5fc5bf3adbd58dc77a81622aac93f39106c2",
       "source_anchor": "pub fn apply_approval_decisions(",
       "related": {
+        "reqchanged-demands-human-judgment": "sha256:30ba3f1eea4b3e68d6c5b3926c643cd41d753636d9420329934d9dd43ae14de5",
+        "reqchanged-orthogonal-to-reviewed": "sha256:5c85639dd24c2cecdeb7c466e414319fdd40451d0abb896e495fcd13d63a78d8",
         "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
       }
     },
@@ -95,8 +100,8 @@
       "reviewed": true,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        279,
-        290
+        282,
+        293
       ],
       "tree_path": "fn::source_path_from_sidecar",
       "source_hash": "sha256:490ac4b91d5418e093b852a804fb0c330b1642cd99af3035d3a43fb35429bfab",

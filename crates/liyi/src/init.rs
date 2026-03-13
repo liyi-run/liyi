@@ -91,7 +91,12 @@ pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
 /// The sidecar path is `<source-file>.liyi.jsonc`.
 /// If the sidecar already exists and `force` is false, returns an error.
 ///
-/// <!-- @立意:有关 liyi-sidecar-naming-convention -->
+/// <!-- @立意:有関 liyi-sidecar-naming-convention -->
+// @liyi:related exhaustive-inclusion
+// @liyi:related graceful-degradation
+// @liyi:related hints-are-ephemeral
+// @liyi:related hints-intentionally-unstructured
+// @liyi:related tree-sitter-signals-always-present
 pub fn init_sidecar(
     source_file: &Path,
     force: bool,
