@@ -138,7 +138,7 @@
     },
     {
       "item": "extract_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present or if the name exceeds MAX_NAME_LEN bytes (security: bounds attacker-controlled text in --prompt output).",
       "source_span": [
         162,

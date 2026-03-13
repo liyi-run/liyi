@@ -29,7 +29,7 @@
     },
     {
       "item": "Commands",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --level filters diagnostic output).",
       "source_span": [
         28,

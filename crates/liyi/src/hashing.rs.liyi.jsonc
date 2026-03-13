@@ -17,7 +17,7 @@
     },
     {
       "item": "hash_span",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Compute a SHA-256 hash of the source lines in a 1-indexed inclusive [start, end] span. Join selected lines with LF (normalizing CRLF) and append a trailing LF so the digest matches `sed -n 'start,end p' file | sha256sum`. Return the hash as 'sha256:<hex>' and the first line as the anchor string. Reject empty, inverted, or past-EOF spans with SpanError.",
       "source_span": [
         38,

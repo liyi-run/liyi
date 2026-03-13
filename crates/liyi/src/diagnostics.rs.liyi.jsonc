@@ -17,7 +17,7 @@
     },
     {
       "item": "DiagnosticKind",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all distinct diagnostic conditions the linter can report: hash-current, unreviewed, stale, shifted span, requirement changed/unknown, untracked, trivial/ignored markers, span errors, malformed hashes, duplicates, orphaned sources, parse errors, unknown versions, requirement cycles, ambiguous sidecars, missing related edges, and conflicting triviality (=trivial in sidecar vs @liyi:nontrivial in source).",
       "source_span": [
         12,
@@ -29,7 +29,7 @@
     },
     {
       "item": "Diagnostic",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, an optional fix hint, a fixed flag indicating whether --fix resolved this diagnostic, an optional span_start for file:line display, an optional annotation_line for --prompt output, and an optional requirement_text carrying the full requirement block text.",
       "source_span": [
         37,
@@ -41,7 +41,7 @@
     },
     {
       "item": "impl Display for Diagnostic",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Format a diagnostic for terminal output. display_with_root shows a repo-relative file path with optional :line suffix (from span_start or annotation_line); for fixed diagnostics uses '✓ fixed' icon and suppresses fix hints, otherwise selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file:line: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
         55,
@@ -80,7 +80,7 @@
     },
     {
       "item": "compute_exit_code",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found. Skip diagnostics with fixed=true. Return CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge, ConflictingTriviality) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
         140,

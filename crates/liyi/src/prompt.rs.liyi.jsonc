@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "PromptOutput",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with version, optional root, security_notice (warning consuming agents about untrusted content), items array, and exit_code.",
       "source_span": [
         9,
@@ -17,7 +17,7 @@
     },
     {
       "item": "Instruction",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Structured instruction with template/context separation for prompt injection defense. 'template' is a trusted compile-time constant with {placeholder} tokens; 'context' carries untrusted values keyed by placeholder name. No interpolation is performed — consuming agents substitute context into template themselves.",
       "source_span": [
         25,
@@ -29,7 +29,7 @@
     },
     {
       "item": "PromptItem",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema. The instruction field is an Instruction struct (template/context separation) instead of an interpolated string.",
       "source_span": [
         32,
@@ -41,7 +41,7 @@
     },
     {
       "item": "build_prompt_output",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item structured instructions with template/context separation (no interpolation — templates are compile-time constants, context carries untrusted values). Includes a security_notice declaring trust levels. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
       "source_span": [
         82,

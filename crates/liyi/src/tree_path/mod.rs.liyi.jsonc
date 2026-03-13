@@ -53,7 +53,7 @@
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         270,
