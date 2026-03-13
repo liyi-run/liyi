@@ -143,7 +143,9 @@ pub fn run_reanchor(
 
                 if let Some(l) = lang {
                     let canonical = compute_tree_path(&source_content, req.source_span, l);
-                    req.tree_path = canonical;
+                    if !canonical.is_empty() {
+                        req.tree_path = canonical;
+                    }
                 }
 
                 let (hash, anchor) = hash_span(&source_content, req.source_span)

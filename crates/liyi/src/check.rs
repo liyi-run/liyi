@@ -524,7 +524,7 @@ fn check_sidecar(
 
                 // a. Hash the span
                 match hash_span(&source_content, item.source_span) {
-                    Ok((computed_hash, computed_anchor)) => {
+                    Ok((computed_hash, _computed_anchor)) => {
                         let is_current = item.source_hash.as_ref() == Some(&computed_hash);
 
                         if is_current {
@@ -542,14 +542,36 @@ fn check_sidecar(
                                 requirement_text: None,
                             });
                         } else if item.source_hash.is_none() {
-                            // No hash yet — fill it if --fix
+                            // No hash yet — try tree_path recovery
+                            // before falling back to hashing at the
+                            // existing (possibly stale) span.
+                            let lang = detect_language(&entry.source_path);
+                            let recovered_span = if !item.tree_path.is_empty()
+                                && let Some(l) = lang
+                                && let Some(tp_span) =
+                                    resolve_tree_path(&source_content, &item.tree_path, l)
+                            {
+                                Some(tp_span)
+                            } else {
+                                None
+                            };
+
                             if fix {
-                                item.source_hash = Some(computed_hash.clone());
-                                item.source_anchor = Some(computed_anchor.clone());
-                                let lang = detect_language(&entry.source_path);
+                                if let Some(tp_span) = recovered_span {
+                                    item.source_span = tp_span;
+                                }
+                                if let Ok((fix_hash, fix_anchor)) =
+                                    hash_span(&source_content, item.source_span)
+                                {
+                                    item.source_hash = Some(fix_hash);
+                                    item.source_anchor = Some(fix_anchor);
+                                }
                                 if let Some(l) = lang {
-                                    item.tree_path =
+                                    let canonical =
                                         compute_tree_path(&source_content, item.source_span, l);
+                                    if !canonical.is_empty() {
+                                        item.tree_path = canonical;
+                                    }
                                 }
                                 // Source changed since last review — clear
                                 // reviewed so a human re-confirms intent.
@@ -613,8 +635,11 @@ fn check_sidecar(
                                             item.source_anchor = Some(a);
                                         }
                                         if let Some(l) = lang {
-                                            item.tree_path =
+                                            let canonical =
                                                 compute_tree_path(&source_content, new_span, l);
+                                            if !canonical.is_empty() {
+                                                item.tree_path = canonical;
+                                            }
                                         }
                                         modified = true;
                                     }
@@ -691,8 +716,11 @@ fn check_sidecar(
                                         if new_span != old_span {
                                             item.source_span = new_span;
                                             if let Some(l) = lang {
-                                                item.tree_path =
+                                                let canonical =
                                                     compute_tree_path(&source_content, new_span, l);
+                                                if !canonical.is_empty() {
+                                                    item.tree_path = canonical;
+                                                }
                                             }
                                         }
                                         if !effectively_reviewed {
@@ -806,8 +834,11 @@ fn check_sidecar(
                                             }
                                             let lang = detect_language(&entry.source_path);
                                             if let Some(l) = lang {
-                                                item.tree_path =
+                                                let canonical =
                                                     compute_tree_path(&source_content, new_span, l);
+                                                if !canonical.is_empty() {
+                                                    item.tree_path = canonical;
+                                                }
                                             }
                                             modified = true;
                                         }
@@ -898,8 +929,11 @@ fn check_sidecar(
                                         item.source_anchor = Some(a);
                                     }
                                     if let Some(l) = lang {
-                                        item.tree_path =
+                                        let canonical =
                                             compute_tree_path(&source_content, new_span, l);
+                                        if !canonical.is_empty() {
+                                            item.tree_path = canonical;
+                                        }
                                     }
                                     modified = true;
                                 }
@@ -932,8 +966,11 @@ fn check_sidecar(
                                 if fix {
                                     item.source_span = new_span;
                                     if let Some(l) = lang {
-                                        item.tree_path =
+                                        let canonical =
                                             compute_tree_path(&source_content, new_span, l);
+                                        if !canonical.is_empty() {
+                                            item.tree_path = canonical;
+                                        }
                                     }
                                     if !effectively_reviewed
                                         && let Ok((h, a)) = hash_span(&source_content, new_span)
@@ -1320,8 +1357,11 @@ fn check_sidecar(
                                         req.source_anchor = Some(a);
                                     }
                                     if let Some(l) = lang {
-                                        req.tree_path =
+                                        let canonical =
                                             compute_tree_path(&source_content, new_span, l);
+                                        if !canonical.is_empty() {
+                                            req.tree_path = canonical;
+                                        }
                                     }
                                     modified = true;
                                 }
@@ -1347,8 +1387,11 @@ fn check_sidecar(
                                 if fix {
                                     req.source_span = new_span;
                                     if let Some(l) = lang {
-                                        req.tree_path =
+                                        let canonical =
                                             compute_tree_path(&source_content, new_span, l);
+                                        if !canonical.is_empty() {
+                                            req.tree_path = canonical;
+                                        }
                                     }
                                     modified = true;
                                 }
