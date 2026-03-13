@@ -35,7 +35,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
 | M7.3 Dart | ✅ Complete | tree-sitter-dart v0.1.0 |
 | M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
-| M8 Data file support | ⏳ In progress | TOML, JSON, YAML; key-path tree_path paradigm |
+| M8 Data file support | ✅ Complete | TOML, JSON, YAML; key-path tree_path paradigm |
 | M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
 | M10.1 Tree-sitter item discovery | ✅ Complete | `liyi init` pre-populates specs via tree-sitter |
 | M10.2 Doc comment heuristic | ✅ Complete | `_hints._has_doc` for 6 languages |
@@ -66,11 +66,11 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | ~~15~~ | ~~M10.5 Combined scaffold test~~ | ✅ Done | — | Regression guard |
 | ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
 | ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
-| 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
-| 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
+| 18 | M8.2 TOML | ✅ Done | — | Config-as-source (dogfooding) |
+| 19 | M8.3 JSON | ✅ Done | — | Schemas, package.json |
 | ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
 | ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
-| 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
+| 22 | M8.4 YAML (no injection) | ✅ Done | — | CI/k8s (limited without M9) |
 | 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
 
 ---
@@ -795,7 +795,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 ## M8. Data file support
 
-**Status:** ⏳ In progress (M8.1 complete, M8.2–M8.4 planned)
+**Status:** ✅ Complete — TOML, JSON, and YAML all implemented.
 
 **Goal:** Extend tree-sitter structural identity to data/config files — TOML, JSON, and YAML. These files carry crucial metadata (dependency declarations, CI definitions, Kubernetes manifests, JSON Schemas) that are legitimate intent-spec targets. Sidecars are depgraph leaves and are excluded — this targets non-sidecar config-as-source.
 
@@ -845,9 +845,9 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 
 **Hash-based sibling scan.** Positional indexing is inherently fragile for arrays whose elements are inserted or deleted. Rather than introducing schema-specific attribute selectors (e.g., matching on `name:` or `uses:` fields), the tool uses a hash-based sibling scan as a fallback when the positional index resolves to an element whose hash doesn't match `source_hash`. The scan iterates all sibling elements in the same array, hashes each, and reanchors to the unique match. If zero or multiple siblings match, it falls through to existing stale handling. See the *Hash-based sibling scan for indexed array elements* section in `liyi-design.md` for the full algorithm.
 
-### M8.2. TOML ⏳
+### M8.2. TOML ✅
 
-**Grammar:** `tree-sitter-toml` — stable, well maintained.
+**Grammar:** `tree-sitter-toml-ng` — stable, well maintained.
 
 **Kind mappings:**
 
@@ -864,7 +864,18 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 
 **Extensions:** `.toml`
 
-### M8.3. JSON ⏳
+**Design notes:**
+- Tables and table array elements act as their own body containers — pairs are direct children. The `"."` sentinel in `body_fields` tells `find_body` to return the node itself.
+- Name extraction uses a `toml_node_name` custom callback that finds the first `bare_key` or `quoted_key` child, stripping surrounding quotes from quoted keys.
+- No nesting via body — TOML tables are top-level in the document (their pairs are direct children).
+- Dotted keys (`package.name`) are represented as separate tables by tree-sitter-toml, not as nested structures.
+
+**Acceptance criteria:**
+- ✅ Tables, keys inside tables, table array elements, and keys inside table array elements all resolve.
+- ✅ Roundtrip (compute → resolve → same span) passes for tables and key-in-table paths.
+- ✅ `.toml` extension detected correctly.
+
+### M8.3. JSON ✅
 
 **Grammar:** `tree-sitter-json` — one of the oldest tree-sitter grammars.
 
@@ -883,7 +894,18 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 
 **Extensions:** `.json`
 
-### M8.4. YAML (without injection) ⏳
+**Design notes:**
+- JSON has a single item kind: `pair` mapped to the `key` shorthand. Name extraction requires a `json_node_name` custom callback that navigates from the pair's `key` field (a `string` node) to the `string_content` child for the unquoted key text.
+- Body traversal uses the `value` field — when a pair's value is an `object`, the resolver descends into it for nested pairs.
+- The root `document` wraps the top-level `object` (or `array`). Both `object` and `array` are listed as `transparent_kinds` so the resolver looks through them to reach `pair` nodes.
+- Array indexing works naturally: `key::specs[1]::key::item` resolves the second element of the `specs` array and finds the `item` key within it.
+
+**Acceptance criteria:**
+- ✅ Top-level keys, nested keys, deeply nested keys, and indexed array elements all resolve.
+- ✅ Roundtrip passes for both top-level and nested paths.
+- ✅ `.json` extension detected correctly.
+
+### M8.4. YAML (without injection) ✅
 
 **Grammar:** `tree-sitter-yaml` — exists, reasonably maintained.
 
@@ -902,9 +924,17 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 
 **Extensions:** `.yml`, `.yaml`
 
----
+**Design notes:**
+- YAML's deeply nested AST (stream → document → block_node → block_mapping → block_mapping_pair) requires extensive use of `transparent_kinds`: `document`, `block_node`, `block_mapping`, and `block_sequence` are all marked transparent so the resolver can traverse through them to find `block_mapping_pair` items.
+- Key extraction uses a `yaml_node_name` custom callback that navigates from the `key` field down through the wrapper chain (flow_node → plain_scalar → string_scalar) to extract the leaf text. Quoted scalars have their surrounding quotes stripped.
+- Body traversal uses the `value` field. The `resolve_indexed_child` function was enhanced to walk through transparent wrapper nodes (block_node → block_sequence) to reach the actual array elements (block_sequence_item).
+- Keys with special characters (e.g., `runs-on`) are automatically quoted by `serialize_name` since they aren't valid simple identifiers: `key::"runs-on"`.
+- **Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key::jobs::key::build::key::steps[N]::key::run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
 
-## M9. Language injection framework
+**Acceptance criteria:**
+- ✅ Top-level keys, nested keys (jobs → build → runs-on), and indexed sequence items (steps[N]) all resolve.
+- ✅ Roundtrip passes for top-level and nested paths.
+- ✅ `.yml` and `.yaml` extensions detected correctly.
 
 **Status:** ⏳ Design
 
