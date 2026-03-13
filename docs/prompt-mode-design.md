@@ -6,13 +6,15 @@
 **Target:** v0.1.x (M5.3)  
 **Design authority:** `docs/liyi-design.md` v8.10
 
-**Scope note (v8.10):** This document covers the initial `--prompt` scope: coverage gaps (Untracked, MissingRelatedEdge). The cognitive load inversion principle (design doc v8.10, *The cognitive load inversion: tool-guided agents*) calls for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. The generalized `--prompt` design is deferred to a future revision of this document.
+**Scope note (v8.10):** This document covers the initial `--prompt` scope: coverage gaps (Untracked, MissingRelatedEdge, ReqNoRelated). The cognitive load inversion principle (design doc v8.10, *The cognitive load inversion: tool-guided agents*) calls for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. The generalized `--prompt` design is deferred to a future revision of this document.
 
 ---
 
 ## Overview
 
 The `--prompt` flag for `liyi check` emits structured JSON listing every coverage gap with resolution instructions. Unlike the default human-readable output or the planned `--json` mode (machine-readable for CI/dashboards), `--prompt` is specifically designed for agent consumption — it includes natural-language instructions for resolving each gap.
+
+The formal schema is at `schema/prompt.schema.json`.
 
 ## Goals
 
@@ -30,8 +32,10 @@ The `--prompt` flag for `liyi check` emits structured JSON listing every coverag
 
 ```jsonc
 {
+  "$schema": "https://liyi.run/schema/0.1/prompt.schema.json",
   "version": "0.1",
-  "gaps": [
+  "root": ".",
+  "items": [
     {
       "type": "missing_requirement_spec",
       "requirement": "auth-check",
@@ -48,6 +52,14 @@ The `--prompt` flag for `liyi check` emits structured JSON listing every coverag
       "enclosing_item": "verify_session",
       "expected_sidecar": "src/auth/middleware.rs.liyi.jsonc",
       "instruction": "In the itemSpec for \"verify_session\", add \"related\": {\"auth-check\": null}."
+    },
+    {
+      "type": "req_no_related",
+      "requirement": "auth-check",
+      "source_file": "src/auth/middleware.rs",
+      "annotation_line": 15,
+      "expected_sidecar": "src/auth/middleware.rs.liyi.jsonc",
+      "instruction": "Requirement \"auth-check\" has no items referencing it via \"related\". Add a \"related\": {\"auth-check\": null} edge to at least one itemSpec that depends on this requirement."
     }
   ],
   "exit_code": 1
@@ -58,16 +70,20 @@ The `--prompt` flag for `liyi check` emits structured JSON listing every coverag
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `version` | string | Yes | Schema version, always "0.1" |
-| `gaps` | array | Yes | List of coverage gaps |
-| `gaps[].type` | string | Yes | `"missing_requirement_spec"` or `"missing_related_edge"` |
-| `gaps[].requirement` | string | Yes | Name of the requirement |
-| `gaps[].source_file` | string | Yes | Repo-relative path to source file containing the annotation |
-| `gaps[].annotation_line` | number | Yes | 1-indexed line number of the `@liyi:requirement` or `@liyi:related` marker |
-| `gaps[].expected_sidecar` | string | Yes | Repo-relative path to the sidecar file that should contain the spec/edge |
-| `gaps[].enclosing_item` | string | Yes for `missing_related_edge` | The name of the item whose spec should contain the edge; required when `type` is `missing_related_edge` |
-| `gaps[].instruction` | string | Yes | Natural-language instruction for resolving the gap |
-| `exit_code` | number | Yes | Exit code that `liyi check` would return (0, 1, or 2) |
+| `version` | string | Yes | Schema version, always `"0.1"` |
+| `root` | string | No | Repository root relative to working directory (default: `"."`) |
+| `items` | array | Yes | List of coverage gap diagnostics |
+| `items[].type` | string | Yes | One of `"missing_requirement_spec"`, `"missing_related_edge"`, or `"req_no_related"` |
+| `items[].requirement` | string | Yes | Name of the requirement |
+| `items[].source_file` | string | Yes | Repo-relative path to source file containing the annotation |
+| `items[].annotation_line` | integer | Yes | 1-indexed line number of the `@liyi:requirement` or `@liyi:related` marker |
+| `items[].expected_sidecar` | string | Yes | Repo-relative path to the sidecar file that should contain the spec/edge |
+| `items[].enclosing_item` | string | `missing_related_edge` only | The name of the item whose spec should contain the edge; present only when `type` is `"missing_related_edge"` |
+| `items[].requirement_text` | string | No | The full text of the `@liyi:requirement` block, when available. Included so agents need not re-read the source file. |
+| `items[].instruction` | string | Yes | Natural-language instruction for resolving the gap |
+| `exit_code` | integer | Yes | Exit code that `liyi check` would return (0, 1, or 2) |
+
+**Note on non-coverage diagnostics:** Error-class diagnostics (`ParseError`, `OrphanedSource`, `SpanPastEof`, etc.) are not included in `items`. They affect the process exit code (which is reflected in `exit_code`) but are not actionable coverage gaps. Agents encountering `exit_code: 2` should fall back to default output mode for error details.
 
 ## Implementation Plan
 
@@ -77,11 +93,11 @@ In `crates/liyi-cli/src/cli.rs`, add to the `Check` variant:
 
 ```rust
 /// Emit agent-consumable JSON output for coverage gaps
-#[arg(long, conflicts_with = "json")]
+#[arg(long)]
 prompt: bool,
 ```
 
-Note: `--prompt` and `--json` (future) are mutually exclusive.
+Note: `--prompt` and `--json` (future) will be mutually exclusive. Add `conflicts_with = "json"` when `--json` is implemented.
 
 ### 2. Update `CheckFlags`
 
@@ -105,19 +121,23 @@ In `crates/liyi/src/` (new file `prompt.rs` or in `diagnostics.rs`):
 #[derive(Serialize)]
 pub struct PromptOutput {
     pub version: String,
-    pub gaps: Vec<PromptGap>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root: Option<String>,
+    pub items: Vec<PromptItem>,
     pub exit_code: u8,
 }
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
-pub enum PromptGap {
+pub enum PromptItem {
     #[serde(rename = "missing_requirement_spec")]
     MissingRequirementSpec {
         requirement: String,
         source_file: String,
         annotation_line: usize,
         expected_sidecar: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        requirement_text: Option<String>,
         instruction: String,
     },
     #[serde(rename = "missing_related_edge")]
@@ -126,6 +146,14 @@ pub enum PromptGap {
         source_file: String,
         annotation_line: usize,
         enclosing_item: String,
+        expected_sidecar: String,
+        instruction: String,
+    },
+    #[serde(rename = "req_no_related")]
+    ReqNoRelated {
+        requirement: String,
+        source_file: String,
+        annotation_line: usize,
         expected_sidecar: String,
         instruction: String,
     },
@@ -144,6 +172,11 @@ Add a requirementSpec with "requirement": "{name}" and "source_span" covering th
 **Missing related edge:**
 ```
 In the itemSpec for "{item}", add "related": {"{name}": null}.
+```
+
+**Requirement with no related items:**
+```
+Requirement "{name}" has no items referencing it via "related". Add a "related": {"{name}": null} edge to at least one itemSpec that depends on this requirement.
 ```
 
 ### 5. Modify `run_check` to support prompt mode
@@ -165,7 +198,7 @@ Option B: Handle formatting at CLI layer
 let (diagnostics, exit_code) = liyi::check::run_check(...);
 
 if prompt {
-    let prompt_output = build_prompt_output(&diagnostics, exit_code);
+    let prompt_output = build_prompt_output(&diagnostics, exit_code, root);
     println!("{}", serde_json::to_string_pretty(&prompt_output).unwrap());
 } else {
     // Default human-readable output
@@ -177,11 +210,12 @@ Option B is cleaner — keeps formatting concerns out of the core check logic.
 
 ### 6. Build prompt output from diagnostics
 
-The CLI layer iterates over diagnostics and builds `PromptGap` entries for:
+The CLI layer iterates over diagnostics and builds `PromptItem` entries for:
 - `DiagnosticKind::Untracked` → `MissingRequirementSpec`
 - `DiagnosticKind::MissingRelatedEdge` → `MissingRelatedEdge`
+- `DiagnosticKind::ReqNoRelated` → `ReqNoRelated`
 
-Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear in `--prompt` output.
+Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear in `--prompt` output in this scope. Error-class diagnostics (`ParseError`, `OrphanedSource`, etc.) are not emitted as items but still affect `exit_code`.
 
 ### 7. Exit code handling
 
@@ -189,31 +223,46 @@ Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear 
 
 ## Acceptance Criteria
 
-1. `liyi check --prompt` on a fixture with gaps produces valid JSON matching the schema.
-2. `liyi check --prompt` on a clean repo produces `{"version": "0.1", "gaps": [], "exit_code": 0}`.
-3. The JSON includes both `missing_requirement_spec` and `missing_related_edge` gap types.
-4. `--prompt` is mutually exclusive with `--json` (when implemented).
+1. `liyi check --prompt` on a fixture with gaps produces valid JSON matching `schema/prompt.schema.json`.
+2. `liyi check --prompt` on a clean repo produces `{"version": "0.1", "items": [], "exit_code": 0}`.
+3. The JSON includes all three gap types: `missing_requirement_spec`, `missing_related_edge`, and `req_no_related`.
+4. `--prompt` will be mutually exclusive with `--json` (when implemented).
 5. Exit code behavior is identical to default mode (respects all `--fail-on-*` flags).
+6. When error-class diagnostics are present, `exit_code` is `2` even if the `items` array is empty.
 
 ## Testing Strategy
 
-1. **Golden-file fixture:** `prompt_output/` with mixed gaps.
-2. **Unit tests:** Verify instruction generation for each gap type.
-3. **Integration test:** Parse `--prompt` output and verify schema compliance.
+1. **Golden-file fixtures:**
+   - `prompt_output/mixed_gaps/` — fixture with all three gap types present.
+   - `prompt_output/clean/` — fixture with no gaps (empty `items` array).
+   - `prompt_output/errors_only/` — fixture with `ParseError` or `OrphanedSource` but no coverage gaps (verifies `exit_code: 2` with empty `items`).
+   - `prompt_output/multi_file/` — gaps spread across multiple files.
+2. **Unit tests:** Verify instruction generation for each of the three gap types.
+3. **Integration test:** Parse `--prompt` output and validate against `schema/prompt.schema.json`.
+4. **Instruction accuracy test:** For each instruction template, apply the described mutation and verify that a follow-up `liyi check` no longer reports the gap.
 
-## Open Questions
+## Resolved Questions
 
-1. **Should `--prompt` include non-coverage diagnostics?** Currently no — only Untracked and MissingRelatedEdge. Stale/Shifted/Unreviewed are not "coverage gaps" in the same sense.
+1. **Should `--prompt` include non-coverage diagnostics?** No — only Untracked, MissingRelatedEdge, and ReqNoRelated. Stale/Shifted/Unreviewed will be added when `--prompt` is generalized to all diagnostics (deferred). Error-class diagnostics are not emitted as items but affect `exit_code`.
 
-2. **Should we include the actual requirement text in `missing_requirement_spec`?** Could help agents understand context without re-reading the file. Trade-off: larger output vs. more context.
+2. **Should we include the actual requirement text in `missing_requirement_spec`?** Yes. The cognitive load inversion principle argues for including all context the tool already has, so agents need not re-read files. Added as optional `requirement_text` field.
 
-3. **What about multiple gaps for the same requirement?** The current design lists each gap separately. This is fine — agents can deduplicate if needed.
+3. **What about multiple gaps for the same requirement?** Each gap is listed separately. Agents can deduplicate if needed.
 
 ## Future Extensions
 
-- Include `suggested_intent` field (agent-generated) for missing requirement specs
-- Include `related_items` count for requirements with no edges (ReqNoRelated)
-- Support for `--prompt` consuming a triage report instead of running check
+When `--prompt` is generalized to all diagnostics, the `items` array will include additional types. Sketched here for schema compatibility planning (exact fields TBD):
+
+| Future `type` value | Source diagnostic | Example instruction |
+|---|---|---|
+| `stale_spec` | `Stale` | Re-read `{source_file}` lines {start}–{end} and update the intent for "{item}" in `{sidecar}`. |
+| `shifted_span` | `Shifted` | Run `liyi check --fix` to auto-correct the span for "{item}" from [{old}] to [{new}]. |
+| `unreviewed_spec` | `Unreviewed` | Run `liyi approve {sidecar} {item}` after verifying the intent is correct. |
+
+Other planned extensions:
+
+- Include `suggested_intent` field (agent-generated) for missing requirement specs.
+- Support for `--prompt` consuming a triage report instead of running check.
 
 ---
 
@@ -224,4 +273,4 @@ This document contains content from the following AI agents:
 * Claude Opus 4.6
 * Kimi K2.5
 
-The document is primarily authored by Kimi K2.5 with the human designer's input.
+The initial draft was primarily authored by Kimi K2.5 with the human designer's input. Design review and revisions (schema rename, ReqNoRelated coverage, resolved open questions, future extension stubs, formal JSON Schema) by Claude Opus 4.6.

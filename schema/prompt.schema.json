@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://liyi.run/schema/0.1/prompt.schema.json",
+  "title": "立意 prompt output",
+  "description": "Agent-consumable output from liyi check --prompt, listing coverage gaps with resolution instructions.",
+  "type": "object",
+  "required": ["version", "items", "exit_code"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Schema version. Must match the version understood by the liyi binary."
+    },
+    "root": {
+      "type": "string",
+      "default": ".",
+      "description": "Repository root relative to the working directory. Usually '.'."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/missingRequirementSpec" },
+          { "$ref": "#/$defs/missingRelatedEdge" },
+          { "$ref": "#/$defs/reqNoRelated" }
+        ],
+        "discriminator": {
+          "propertyName": "type"
+        }
+      }
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "Exit code that liyi check would return. 0 = clean, 1 = check failure, 2 = internal error."
+    }
+  },
+  "$defs": {
+    "baseFields": {
+      "type": "object",
+      "properties": {
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "Repo-relative path to the source file containing the annotation."
+        },
+        "annotation_line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed line number of the marker in the source file."
+        },
+        "expected_sidecar": {
+          "type": "string",
+          "description": "Repo-relative path to the sidecar file that should contain the spec or edge."
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Natural-language instruction for resolving the gap."
+        }
+      },
+      "required": ["requirement", "source_file", "annotation_line", "expected_sidecar", "instruction"]
+    },
+    "missingRequirementSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "requirement", "source_file", "annotation_line", "expected_sidecar", "instruction"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "missing_requirement_spec"
+        },
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "Repo-relative path to the source file containing the @liyi:requirement annotation."
+        },
+        "annotation_line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed line number of the @liyi:requirement marker."
+        },
+        "expected_sidecar": {
+          "type": "string",
+          "description": "Repo-relative path to the sidecar file that should contain the requirementSpec."
+        },
+        "requirement_text": {
+          "type": "string",
+          "description": "Full text of the @liyi:requirement block, when available. Included so agents need not re-read the source file."
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Natural-language instruction for resolving the gap."
+        }
+      }
+    },
+    "missingRelatedEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "requirement", "source_file", "annotation_line", "enclosing_item", "expected_sidecar", "instruction"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "missing_related_edge"
+        },
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement that should be referenced."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "Repo-relative path to the source file containing the @liyi:related annotation."
+        },
+        "annotation_line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed line number of the @liyi:related marker."
+        },
+        "enclosing_item": {
+          "type": "string",
+          "description": "Name of the item whose spec should contain the related edge."
+        },
+        "expected_sidecar": {
+          "type": "string",
+          "description": "Repo-relative path to the sidecar file that should contain the edge."
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Natural-language instruction for resolving the gap."
+        }
+      }
+    },
+    "reqNoRelated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "requirement", "source_file", "annotation_line", "expected_sidecar", "instruction"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "req_no_related"
+        },
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement that has no items referencing it."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "Repo-relative path to the source file containing the @liyi:requirement annotation."
+        },
+        "annotation_line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed line number of the @liyi:requirement marker."
+        },
+        "expected_sidecar": {
+          "type": "string",
+          "description": "Repo-relative path to the sidecar file for the source containing the requirement."
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Natural-language instruction for resolving the gap."
+        }
+      }
+    }
+  }
+}
