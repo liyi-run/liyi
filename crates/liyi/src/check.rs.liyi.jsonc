@@ -27,9 +27,9 @@
       "source_hash": "sha256:2b89bdcba5972b0bbe246c6d59a13948f03aa418a6d8edfa4001fe5367b78c9b",
       "source_anchor": "pub fn run_check(",
       "related": {
-        "cycle-detection": "sha256:925289a107cb255f3c48f0b5395395038278f56f7006dab3522e511cc8d7699f",
-        "requirement-discovery-global": "sha256:d01ce1382642d6ad05162bbba79d4cd35dc7715294f8cc3d6c54de9e743fa38c",
-        "requirement-name-uniqueness": "sha256:bf5fcadbb09429fc0b9a6f55b6b1ac685d5a88f134b3e89f2861dc20bc0e9928"
+        "cycle-detection": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
+        "requirement-discovery-global": "sha256:8fdcf5001d02d4622dd7c8a5bd89090119e35cd2aedf7b8d9d7243d5f4cff359",
+        "requirement-name-uniqueness": "sha256:fc329b7eb4016b20e9baa89b14470f2953aa6bad5311aa5d4867702994d94f32"
       }
     },
     {
@@ -44,9 +44,9 @@
       "source_hash": "sha256:395c68b7d15588bc04f91a4d53965878e71f48b0499b568006705779dcd76f39",
       "source_anchor": "fn check_sidecar(",
       "related": {
-        "fix-never-modifies-human-fields": "sha256:8748cbe52efb4e6633262ea5db42e9f33fdd83ab3cc5a7576c27689d58ee9ef8",
-        "fix-semantic-drift-protection": "sha256:87f70b0fa07c386eb7478b420f8edc70f7b7bb709c416e2aaf17a1a913fa0ce5",
-        "reviewed-semantics": "sha256:40020571498ef149fe7a67ebd78bc430320921aae1faac8b7be1c830f35ae636"
+        "fix-never-modifies-human-fields": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
+        "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
+        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
       }
     },
     {

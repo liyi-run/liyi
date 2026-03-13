@@ -27,7 +27,7 @@
       "source_hash": "sha256:66e85005cf7bcb453cd8b19001f4a33767305b3e98881e6b86321a37597904c7",
       "source_anchor": "pub fn detect_shift(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {",
       "related": {
-        "span-shift-heuristic": "sha256:6c9f4b6a6cdb20ca339372b8776bc96c8819c12168f0f881679bd44d1542fc25"
+        "span-shift-heuristic": "sha256:cc7a9a7504471c3fd6c59b59b6b1d0acd61afc5de1052b03b5859fa36d37dcd1"
       }
     },
     {
@@ -54,7 +54,7 @@
       "source_hash": "sha256:d5e1e06845a640f10028f628737bfee515e05330aaa8f03c5363f7d933128e33",
       "source_anchor": "fn scan(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {",
       "related": {
-        "span-shift-heuristic": "sha256:6c9f4b6a6cdb20ca339372b8776bc96c8819c12168f0f881679bd44d1542fc25"
+        "span-shift-heuristic": "sha256:cc7a9a7504471c3fd6c59b59b6b1d0acd61afc5de1052b03b5859fa36d37dcd1"
       }
     },
     {

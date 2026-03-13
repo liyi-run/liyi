@@ -36,7 +36,7 @@
       "source_hash": "sha256:1ea7f63b592c761a4b6cb04cf97dbe501928bb7e4b985e98e7a37241968db2c3",
       "source_anchor": "pub fn normalize_line(line: &str) -> String {",
       "related": {
-        "marker-normalization": "sha256:7d9e05684eeaf175288fbd0629a2352dbe3353416172691de4ab3dcbe435b7d3"
+        "marker-normalization": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306"
       }
     },
     {
@@ -51,7 +51,7 @@
       "source_hash": "sha256:e16ba6384d0a3fc7e12e6f29f735b00e7dcbf9867f4a85a15d43d225137a4340",
       "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &[",
       "related": {
-        "marker-normalization": "sha256:7d9e05684eeaf175288fbd0629a2352dbe3353416172691de4ab3dcbe435b7d3"
+        "marker-normalization": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306"
       }
     },
     {
@@ -66,7 +66,7 @@
       "source_hash": "sha256:211721ddd702aba9aea74f65715b955688442e6b315cdc4ef841fe3ecd904de4",
       "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {",
       "related": {
-        "marker-normalization": "sha256:7d9e05684eeaf175288fbd0629a2352dbe3353416172691de4ab3dcbe435b7d3"
+        "marker-normalization": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306"
       }
     },
     {
@@ -121,7 +121,7 @@
       "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
       "confidence": 0.95,
       "related": {
-        "markdown-fenced-block-skip": "sha256:8160197ac9ec02de2896ceac8e8edf334a43efe294ccaf976b2909a629689ceb"
+        "markdown-fenced-block-skip": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc"
       }
     },
     {
@@ -148,8 +148,8 @@
       "source_hash": "sha256:407964abfa8381c7931bcf3b27187f0a179789e77be7f4097c5a8b451ca2935b",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
       "related": {
-        "markdown-fenced-block-skip": "sha256:8160197ac9ec02de2896ceac8e8edf334a43efe294ccaf976b2909a629689ceb",
-        "quine-escape-in-source": "sha256:7bb4de54441a4fadbd4204d8e950cedff7874181b111f2b6789f693ac22b982b"
+        "markdown-fenced-block-skip": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
+        "quine-escape-in-source": "sha256:90808714d1e072184b7e0bcac6f7f1cc70658a0b40855919a51e74fb584ccaa6"
       }
     }
   ]
