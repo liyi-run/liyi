@@ -26,21 +26,21 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
 | M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
 | M5.3 `--prompt` mode | ✅ Complete | `docs/prompt-mode-design.md` |
+| M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
+| M6.4 `.liyiignore` cleanup | ✅ Complete | docs/ removed from ignore |
+| M6.5 AGENTS.md escape | ✅ Complete | Unicode escape for @ in JSON |
+| M6.6 Tests | ✅ Complete | Unit tests for NL-quoting |
+| M6.7 Contributing guides | ✅ Complete | NL-quoting documented |
 | M7.1 Ruby | ✅ Complete | tree-sitter-ruby v0.23.1 |
 | M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
 | M7.3 Dart | ✅ Complete | tree-sitter-dart v0.1.0 |
 | M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
 | M8 Data file support | ⏳ In progress | TOML, JSON, YAML; key-path tree_path paradigm |
 | M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
-| M6.1–M6.3 NL-quoting core | ✅ Complete | Fenced blocks, inline backticks, quote chars |
-| M6.4 `.liyiignore` cleanup | ✅ Complete | docs/ removed from ignore |
-| M6.5 AGENTS.md escape | ✅ Complete | Unicode escape for @ in JSON |
-| M6.6 Tests | ✅ Complete | Unit tests for NL-quoting |
-| M6.7 Contributing guides | ✅ Complete | NL-quoting documented |
-| M10.4 `=trivial` sentinel | ✅ Complete | `ConflictingTriviality` diagnostic, golden tests |
 | M10.1 Tree-sitter item discovery | ✅ Complete | `liyi init` pre-populates specs via tree-sitter |
 | M10.2 Doc comment heuristic | ✅ Complete | `_hints._has_doc` for 6 languages |
 | M10.3 Item size heuristic | ✅ Complete | `_hints._body_lines`, `_likely_trivial`, `--trivial-threshold` |
+| M10.4 `=trivial` sentinel | ✅ Complete | `ConflictingTriviality` diagnostic, golden tests |
 | M10.5 Combined scaffold test | ✅ Complete | End-to-end golden test: `init_scaffold_combined` |
 
 ---
@@ -842,6 +842,8 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - ✅ Serialization roundtrips: `parse(serialize(path)) == path` for indexed paths.
 - ✅ Proptest `roundtrip_serialize_parse_indexed` passes.
 - ✅ All existing code-language tests unaffected.
+
+**Hash-based sibling scan.** Positional indexing is inherently fragile for arrays whose elements are inserted or deleted. Rather than introducing schema-specific attribute selectors (e.g., matching on `name:` or `uses:` fields), the tool uses a hash-based sibling scan as a fallback when the positional index resolves to an element whose hash doesn't match `source_hash`. The scan iterates all sibling elements in the same array, hashes each, and reanchors to the unique match. If zero or multiple siblings match, it falls through to existing stale handling. See the *Hash-based sibling scan for indexed array elements* section in `liyi-design.md` for the full algorithm.
 
 ### M8.2. TOML ⏳
 

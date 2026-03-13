@@ -476,9 +476,34 @@ The path identifies the item by node kind and name, not by position. The tool co
 **Behavior during check.**
 
 <!-- @liyi:requirement tree-path-fix-behavior -->
-1. `liyi check --fix`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found and the content is unchanged (pure positional shift), update `source_span`, `source_hash`, and `source_anchor`. If found but the content also changed (semantic drift), update `source_span` to track the item's location but leave `source_hash` unchanged — the spec remains stale for review. If the `tree_path` doesn't resolve, fall back to span-shift heuristic.
+1. `liyi check --fix`: Parse the source file with tree-sitter. For each spec with a non-empty `tree_path`, query the parse tree for a node matching the path. If found and the content is unchanged (pure positional shift), update `source_span`, `source_hash`, and `source_anchor`. If found but the content also changed (semantic drift), try hash-based sibling scan (see below) before treating as drift — if the sibling scan finds a unique match, treat as a pure shift with updated index. Otherwise, update `source_span` to track the item's location but leave `source_hash` unchanged — the spec remains stale for review. If the `tree_path` doesn't resolve at all (e.g., index out of bounds after array shrank), try hash-based sibling scan before falling back to the span-shift heuristic.
 2. `liyi check` (without `--fix`): Use `tree_path` to verify the span points to the correct item. If it doesn't (span drifted, but `tree_path` still resolves), report `SHIFTED` with the correct target position.
 <!-- @liyi:end-requirement tree-path-fix-behavior -->
+
+<!-- @liyi:requirement sibling-scan-recovery -->
+**Hash-based sibling scan for indexed array elements.** Positional array indexing (`steps[2]`) is fragile when elements are inserted or deleted before the tracked index. The sibling scan mechanism addresses this without requiring schema knowledge or content-based attribute matching.
+
+Algorithm:
+1. Parse the `tree_path` and identify the last segment with an index (e.g., `steps[2]` in `key::jobs::key::build::key::steps[2]`).
+2. Resolve the parent path (everything before the indexed segment) to reach the array container node.
+3. Iterate all named children (sibling elements) of the array. For each sibling, if there are path segments after the indexed one, resolve them within the sibling.
+4. Hash the resulting span of each candidate and compare against the stored `source_hash`.
+5. If exactly one sibling matches, reanchor to that sibling's span and update the index in `tree_path` (e.g., `steps[2]` → `steps[3]`). Report as `SHIFTED`.
+6. If zero or multiple siblings match, return no result — fall through to existing stale/shift handling.
+
+The exactly-one-match invariant prevents silent misidentification: duplicate array elements (identical content at multiple indices) produce no match rather than a wrong one. The mechanism is schema-independent — it uses the same `source_hash` already stored in the sidecar, requiring no knowledge of whether the array contains GHA steps, K8s containers, or arbitrary config entries.
+
+**When sibling scan is tried:**
+- After `tree_path` resolves but the hash at the resolved span doesn't match `source_hash` (element shifted within the array).
+- After `tree_path` resolution fails entirely (index out of bounds because elements were removed).
+
+**When sibling scan is not available:**
+- The `tree_path` has no indexed segment (code-language items use named identity, not positional).
+- No tree-sitter grammar is available for the source language.
+- The `source_hash` is not populated (new spec without a hash — nothing to match against).
+
+**Limitation:** The sibling scan cannot help when the element's content changed *and* its position shifted in the same commit — the old hash won't match any sibling. This is genuinely ambiguous, and stale-marking is the correct behavior.
+<!-- @liyi:end-requirement sibling-scan-recovery -->
 
 **Diagnostic clarity.** When a spec has no `tree_path` and the shift heuristic also fails, the diagnostic indicates why tree-path recovery was skipped — e.g., "no tree_path set, falling back to shift heuristic" — so that users can run `liyi check --fix` to auto-populate it. Diagnostics distinguish "no tree_path available" from "tree_path resolution failed (item may have been renamed or deleted)."
 

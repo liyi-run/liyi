@@ -362,6 +362,7 @@ pub struct SiblingScanResult {
 /// Returns `Some(SiblingScanResult)` if exactly one element matches.
 /// Returns `None` if the tree_path has no indexed segment, the parent array
 /// can't be resolved, or zero/multiple elements match (ambiguous).
+// @liyi:related sibling-scan-recovery
 pub fn resolve_tree_path_sibling_scan(
     source: &str,
     tree_path: &str,

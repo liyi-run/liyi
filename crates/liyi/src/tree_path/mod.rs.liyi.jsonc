@@ -87,15 +87,18 @@
         496
       ],
       "source_hash": "sha256:ce86200651a3e1e1992af8e5c55efc36318c1ab80a6bf38624b847012d28292b",
-      "source_anchor": "/// siblings of an indexed tree_path segment."
+      "source_anchor": "/// siblings of an indexed tree_path segment.",
+      "related": {
+        "sibling-scan-recovery": "sha256:ab84a6af68e2eee484f755a26625fa314c238fd5a7131944e9a55b614e4d06ba"
+      }
     },
     {
       "item": "resolve_segments",
       "reviewed": true,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[(&str, &str)] (kind, name) pairs. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member).",
       "source_span": [
-        531,
-        572
+        532,
+        573
       ],
       "tree_path": "fn::resolve_segments",
       "source_hash": "sha256:3bdc501a0e690e516f759276fedd96d864b6ca6e422c0a14077d0f8d2c326791",
@@ -106,8 +109,8 @@
       "reviewed": true,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
-        603,
-        611
+        604,
+        612
       ],
       "tree_path": "fn::resolve_in_body",
       "source_hash": "sha256:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
@@ -118,8 +121,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        618,
-        639
+        619,
+        640
       ],
       "tree_path": "fn::compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
@@ -130,8 +133,8 @@
       "reviewed": true,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        647,
-        693
+        648,
+        694
       ],
       "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
@@ -142,8 +145,8 @@
       "reviewed": true,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        712,
-        758
+        713,
+        759
       ],
       "tree_path": "fn::collect_path",
       "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
