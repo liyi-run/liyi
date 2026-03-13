@@ -84,14 +84,14 @@
     },
     {
       "item": "resolve_tree_path_sibling_scan",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path into Pairs, find the last pair with an index, resolve the parent array container, iterate all named children (resolving any suffix pairs within each), hash each candidate's span, and return the unique match. Returns None when no pair has an index, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
         514,
         618
       ],
       "tree_path": "fn.resolve_tree_path_sibling_scan",
-      "source_hash": "sha256:da012019e6266a0dffd8863794e6e4208d51061fe1a2fac790fb181d55a4432e",
+      "source_hash": "sha256:072feb4d7d0c496e47ccb3b17eb41af6bfe7bc25807fe5839d916c496799f5df",
       "source_anchor": "pub fn resolve_tree_path_sibling_scan(",
       "related": {
         "sibling-scan-recovery": "sha256:9f3c1ac03a88188f97c3ea850988d5f55f7a2f78c34b28104f47da67ba0f64e7"

@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "Pair",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Represents a single kind.name pair in a parsed tree_path: bundles a kind shorthand, item name, optional 0-based positional index for data-file arrays, and optional injection language marker.",
       "source_span": [
         28,
         37
       ],
       "tree_path": "struct.Pair",
-      "source_hash": "sha256:a00028d410f62b561758b83503387d187ec80860152fa296525bbb49639e250b",
+      "source_hash": "sha256:1fd16209d7a9b86c2289ea667da91500d984ec5e3bc78e43afddf592ae62a319",
       "source_anchor": "pub struct Pair {"
     },
     {
