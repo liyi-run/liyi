@@ -323,6 +323,13 @@ fn make_parser(lang: Language) -> Parser {
 ///
 /// Returns `None` if the tree_path cannot be resolved (item renamed, deleted,
 /// grammar unavailable, or language not supported).
+///
+/// When the tree_path contains an injection marker (e.g., `key.run//bash`),
+/// the resolver extracts the injected content from the host node, sub-parses
+/// it with the injected language, and resolves remaining segments against the
+/// inner tree. Spans are translated back to outer-file coordinates.
+// @liyi:related injection-pair-attachment
+// @liyi:related content-offset-correctness
 pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {
     if tree_path.is_empty() {
         return None;
@@ -332,6 +339,13 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
 
     if parsed.pairs.is_empty() {
         return None;
+    }
+
+    // Check for an injection marker in the parsed pairs.
+    let injection_idx = parsed.pairs.iter().position(|p| p.injection.is_some());
+
+    if let Some(idx) = injection_idx {
+        return resolve_with_injection(source, &parsed, idx, lang);
     }
 
     let pairs: Vec<PathPair<'_>> = parsed
@@ -355,6 +369,110 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
     let start_line = node.start_position().row + 1;
     let end_line = node.end_position().row + 1;
     Some([start_line, end_line])
+}
+
+/// Resolve a tree_path that contains an injection marker.
+///
+/// 1. Resolve host-side segments up to (and including) the injection pair.
+/// 2. Extract the injected content from the host node's value.
+/// 3. Sub-parse the content with the injected language.
+/// 4. Resolve remaining segments against the inner parse tree.
+/// 5. Translate inner spans back to outer-file coordinates.
+fn resolve_with_injection(
+    source: &str,
+    parsed: &parser::TreePath,
+    injection_idx: usize,
+    host_lang: Language,
+) -> Option<[usize; 2]> {
+    // Build host-side pairs (up to and including the injection pair, but
+    // without the injection marker — we need the host node).
+    let host_pairs: Vec<PathPair<'_>> = parsed.pairs[..=injection_idx]
+        .iter()
+        .map(|p| PathPair {
+            kind: &p.kind,
+            name: &p.name,
+            index: p.index,
+        })
+        .collect();
+
+    let config = host_lang.config();
+    let mut ts_parser = make_parser(host_lang);
+    let tree = ts_parser.parse(source, None)?;
+    let root = tree.root_node();
+
+    // Resolve to the host node (e.g., the `run:` block_mapping_pair).
+    let host_node = resolve_segments(config, &root, &host_pairs, source)?;
+
+    // Get the value child of the host node for content extraction.
+    let value_node = host_node.child_by_field_name("value")?;
+
+    // Extract the content to sub-parse.
+    let extracted = inject::extract_yaml_content(&value_node, source)?;
+
+    // Determine the injected language from the marker.
+    let injection_lang_str = parsed.pairs[injection_idx].injection.as_deref()?;
+    let injection_lang = language_from_name(injection_lang_str)?;
+
+    // If there are no remaining segments after the injection, return the
+    // span of the entire injected content in outer-file coordinates.
+    if injection_idx + 1 >= parsed.pairs.len() {
+        let start = extracted.line_offset + 1; // 1-indexed
+        let num_lines = extracted.text.lines().count().max(1);
+        let end = extracted.line_offset + num_lines;
+        return Some([start, end]);
+    }
+
+    // Build inner-side pairs from segments after the injection marker.
+    let inner_pairs: Vec<PathPair<'_>> = parsed.pairs[injection_idx + 1..]
+        .iter()
+        .map(|p| PathPair {
+            kind: &p.kind,
+            name: &p.name,
+            index: p.index,
+        })
+        .collect();
+
+    // Sub-parse the extracted content with the injected language.
+    let inner_config = injection_lang.config();
+    let mut inner_parser = make_parser(injection_lang);
+    let inner_tree = inner_parser.parse(&extracted.text, None)?;
+    let inner_root = inner_tree.root_node();
+
+    // Resolve the remaining segments in the inner tree.
+    let inner_node = resolve_segments(inner_config, &inner_root, &inner_pairs, &extracted.text)?;
+
+    // Translate inner spans back to outer-file coordinates.
+    let start_line = inner_node.start_position().row + extracted.line_offset + 1;
+    let end_line = inner_node.end_position().row + extracted.line_offset + 1;
+    Some([start_line, end_line])
+}
+
+/// Map a language name string (from `//lang` injection markers) to a `Language`.
+fn language_from_name(name: &str) -> Option<Language> {
+    match name {
+        "bash" | "sh" => Some(Language::Bash),
+        "rust" | "rs" => Some(Language::Rust),
+        "python" | "py" => Some(Language::Python),
+        "javascript" | "js" => Some(Language::JavaScript),
+        "typescript" | "ts" => Some(Language::TypeScript),
+        "tsx" => Some(Language::Tsx),
+        "go" => Some(Language::Go),
+        "ruby" | "rb" => Some(Language::Ruby),
+        "c" => Some(Language::C),
+        "cpp" | "cxx" => Some(Language::Cpp),
+        "java" => Some(Language::Java),
+        "csharp" | "cs" => Some(Language::CSharp),
+        "php" => Some(Language::Php),
+        "objc" => Some(Language::ObjectiveC),
+        "kotlin" | "kt" => Some(Language::Kotlin),
+        "swift" => Some(Language::Swift),
+        "dart" => Some(Language::Dart),
+        "zig" => Some(Language::Zig),
+        "toml" => Some(Language::Toml),
+        "json" => Some(Language::Json),
+        "yaml" | "yml" => Some(Language::Yaml),
+        _ => None,
+    }
 }
 
 /// Result of a hash-based sibling scan within an array.
@@ -1309,6 +1427,106 @@ impl Money {
         assert!(
             result.is_none(),
             "should return None when no sibling matches"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Injection resolver tests
+    // -----------------------------------------------------------------------
+
+    const SAMPLE_GHA: &str = r#"name: CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          set -euo pipefail
+          cargo build --release
+      - name: Test
+        run: cargo test
+"#;
+
+    const SAMPLE_GHA_FUNC: &str = r#"name: CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup
+        run: |
+          setup() {
+            echo "setting up"
+          }
+          setup
+"#;
+
+    #[test]
+    fn resolve_injection_bash_function() {
+        let span = resolve_tree_path(
+            SAMPLE_GHA_FUNC,
+            "key.jobs::key.build::key.steps[0]::key.run//bash::fn.setup",
+            Language::Yaml,
+        );
+        assert!(span.is_some(), "should resolve injected bash function");
+        let [start, end] = span.unwrap();
+        let lines: Vec<&str> = SAMPLE_GHA_FUNC.lines().collect();
+        assert!(
+            lines[start - 1].contains("setup()"),
+            "span start should point to setup function, got: {}",
+            lines[start - 1]
+        );
+        assert!(end >= start, "span end should be >= start");
+    }
+
+    #[test]
+    fn resolve_injection_no_inner_segments() {
+        // When the path ends at the injection marker (no inner segments),
+        // the resolver should return the span of the injected content.
+        // Step 1 (0-indexed) is the "Build" step with `run: |` block.
+        let span = resolve_tree_path(
+            SAMPLE_GHA,
+            "key.jobs::key.build::key.steps[1]::key.run//bash",
+            Language::Yaml,
+        );
+        assert!(
+            span.is_some(),
+            "should resolve injection without inner path"
+        );
+        let [start, end] = span.unwrap();
+        assert!(start > 0);
+        assert!(end >= start);
+    }
+
+    #[test]
+    fn resolve_injection_returns_none_for_bad_inner_path() {
+        let span = resolve_tree_path(
+            SAMPLE_GHA_FUNC,
+            "key.jobs::key.build::key.steps[0]::key.run//bash::fn.nonexistent",
+            Language::Yaml,
+        );
+        assert!(
+            span.is_none(),
+            "should return None for nonexistent inner function"
+        );
+    }
+
+    #[test]
+    fn resolve_injection_returns_none_for_unknown_language() {
+        let span = resolve_tree_path(
+            SAMPLE_GHA,
+            "key.jobs::key.build::key.steps[0]::key.run//unknown_lang",
+            Language::Yaml,
+        );
+        assert!(
+            span.is_none(),
+            "should return None for unknown injected language"
         );
     }
 }
