@@ -109,7 +109,7 @@ void helper(void) {
 
     #[test]
     fn resolve_objc_function() {
-        let span = resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC);
+        let span = resolve_tree_path(SAMPLE_OBJC, "fn.helper", Language::ObjectiveC);
         assert!(span.is_some(), "should resolve fn::helper");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_OBJC.lines().collect();
@@ -121,15 +121,15 @@ void helper(void) {
 
     #[test]
     fn resolve_objc_struct() {
-        let span = resolve_tree_path(SAMPLE_OBJC, "struct::CGPoint", Language::ObjectiveC);
+        let span = resolve_tree_path(SAMPLE_OBJC, "struct.CGPoint", Language::ObjectiveC);
         assert!(span.is_some(), "should resolve struct::CGPoint");
     }
 
     #[test]
     fn roundtrip_objc() {
-        let span = resolve_tree_path(SAMPLE_OBJC, "fn::helper", Language::ObjectiveC).unwrap();
+        let span = resolve_tree_path(SAMPLE_OBJC, "fn.helper", Language::ObjectiveC).unwrap();
         let path = compute_tree_path(SAMPLE_OBJC, span, Language::ObjectiveC);
-        assert_eq!(path, "fn::helper");
+        assert_eq!(path, "fn.helper");
     }
 
     #[test]

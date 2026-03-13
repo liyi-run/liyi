@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn resolve_json_top_level_key() {
-        let span = resolve_tree_path(SAMPLE_JSON, "key::name", Language::Json);
+        let span = resolve_tree_path(SAMPLE_JSON, "key.name", Language::Json);
         assert!(span.is_some(), "should resolve key::name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
@@ -76,8 +76,8 @@ mod tests {
 
     #[test]
     fn resolve_json_nested_key() {
-        let span = resolve_tree_path(SAMPLE_JSON, "key::nested::key::deep", Language::Json);
-        assert!(span.is_some(), "should resolve key::nested::key::deep");
+        let span = resolve_tree_path(SAMPLE_JSON, "key.nested::key.deep", Language::Json);
+        assert!(span.is_some(), "should resolve key::nested::key.deep");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
         assert!(
@@ -91,12 +91,12 @@ mod tests {
     fn resolve_json_deeply_nested_key() {
         let span = resolve_tree_path(
             SAMPLE_JSON,
-            "key::nested::key::deep::key::value",
+            "key.nested::key.deep::key.value",
             Language::Json,
         );
         assert!(
             span.is_some(),
-            "should resolve key::nested::key::deep::key::value"
+            "should resolve key::nested::key.deep::key.value"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
@@ -110,8 +110,8 @@ mod tests {
     #[test]
     fn resolve_json_indexed_array_element() {
         // specs[1] → second element → {"item": "bar", ...}
-        let span = resolve_tree_path(SAMPLE_JSON, "key::specs[1]::key::item", Language::Json);
-        assert!(span.is_some(), "should resolve key::specs[1]::key::item");
+        let span = resolve_tree_path(SAMPLE_JSON, "key.specs[1]::key.item", Language::Json);
+        assert!(span.is_some(), "should resolve key::specs[1]::key.item");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JSON.lines().collect();
         assert!(
@@ -123,38 +123,37 @@ mod tests {
 
     #[test]
     fn compute_json_top_level_key() {
-        let span = resolve_tree_path(SAMPLE_JSON, "key::name", Language::Json).unwrap();
+        let span = resolve_tree_path(SAMPLE_JSON, "key.name", Language::Json).unwrap();
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
-        assert_eq!(path, "key::name");
+        assert_eq!(path, "key.name");
     }
 
     #[test]
     fn compute_json_nested_key() {
         let span = resolve_tree_path(
             SAMPLE_JSON,
-            "key::nested::key::deep::key::value",
+            "key.nested::key.deep::key.value",
             Language::Json,
         )
         .unwrap();
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
-        assert_eq!(path, "key::nested::key::deep::key::value");
+        assert_eq!(path, "key.nested::key.deep::key.value");
     }
 
     #[test]
     fn roundtrip_json_top_level() {
-        let span = resolve_tree_path(SAMPLE_JSON, "key::name", Language::Json).unwrap();
+        let span = resolve_tree_path(SAMPLE_JSON, "key.name", Language::Json).unwrap();
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
-        assert_eq!(path, "key::name");
+        assert_eq!(path, "key.name");
         let re_resolved = resolve_tree_path(SAMPLE_JSON, &path, Language::Json).unwrap();
         assert_eq!(re_resolved, span);
     }
 
     #[test]
     fn roundtrip_json_nested() {
-        let span =
-            resolve_tree_path(SAMPLE_JSON, "key::nested::key::deep", Language::Json).unwrap();
+        let span = resolve_tree_path(SAMPLE_JSON, "key.nested::key.deep", Language::Json).unwrap();
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
-        assert_eq!(path, "key::nested::key::deep");
+        assert_eq!(path, "key.nested::key.deep");
         let re_resolved = resolve_tree_path(SAMPLE_JSON, &path, Language::Json).unwrap();
         assert_eq!(re_resolved, span);
     }

@@ -134,7 +134,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_function() {
-        let span = resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "fn.Add", Language::Go);
         assert!(span.is_some(), "should resolve fn::Add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -147,7 +147,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_pointer_method() {
-        let span = resolve_tree_path(SAMPLE_GO, "method::\"(*Calculator).Add\"", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "method.\"(*Calculator).Add\"", Language::Go);
         assert!(
             span.is_some(),
             "should resolve method::\"(*Calculator).Add\""
@@ -163,7 +163,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_value_method() {
-        let span = resolve_tree_path(SAMPLE_GO, "method::\"Calculator.Value\"", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "method.\"Calculator.Value\"", Language::Go);
         assert!(
             span.is_some(),
             "should resolve method::\"Calculator.Value\""
@@ -179,7 +179,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_type_struct() {
-        let span = resolve_tree_path(SAMPLE_GO, "type::Calculator", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "type.Calculator", Language::Go);
         assert!(span.is_some(), "should resolve type::Calculator");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -192,7 +192,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_type_interface() {
-        let span = resolve_tree_path(SAMPLE_GO, "type::Reader", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "type.Reader", Language::Go);
         assert!(span.is_some(), "should resolve type::Reader");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -205,7 +205,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_const() {
-        let span = resolve_tree_path(SAMPLE_GO, "const::MaxRetries", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "const.MaxRetries", Language::Go);
         assert!(span.is_some(), "should resolve const::MaxRetries");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -218,7 +218,7 @@ func Add(a, b int) int {
 
     #[test]
     fn resolve_go_var() {
-        let span = resolve_tree_path(SAMPLE_GO, "var::DefaultTimeout", Language::Go);
+        let span = resolve_tree_path(SAMPLE_GO, "var.DefaultTimeout", Language::Go);
         assert!(span.is_some(), "should resolve var::DefaultTimeout");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_GO.lines().collect();
@@ -243,7 +243,7 @@ func Add(a, b int) int {
         let end = lines.len();
 
         let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
-        assert_eq!(path, "fn::Add");
+        assert_eq!(path, "fn.Add");
     }
 
     #[test]
@@ -263,7 +263,7 @@ func Add(a, b int) int {
             .unwrap_or(lines.len());
 
         let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
-        assert_eq!(path, "method::\"(*Calculator).Add\"");
+        assert_eq!(path, "method.\"(*Calculator).Add\"");
     }
 
     #[test]
@@ -283,7 +283,7 @@ func Add(a, b int) int {
             .unwrap_or(lines.len());
 
         let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
-        assert_eq!(path, "method::\"Calculator.Value\"");
+        assert_eq!(path, "method.\"Calculator.Value\"");
     }
 
     #[test]
@@ -303,15 +303,15 @@ func Add(a, b int) int {
             .unwrap_or(lines.len());
 
         let path = compute_tree_path(SAMPLE_GO, [start, end], Language::Go);
-        assert_eq!(path, "type::Calculator");
+        assert_eq!(path, "type.Calculator");
     }
 
     #[test]
     fn roundtrip_go() {
-        let resolved_span = resolve_tree_path(SAMPLE_GO, "fn::Add", Language::Go).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_GO, "fn.Add", Language::Go).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
-        assert_eq!(computed_path, "fn::Add");
+        assert_eq!(computed_path, "fn.Add");
 
         let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
         assert_eq!(re_resolved, resolved_span);
@@ -320,10 +320,10 @@ func Add(a, b int) int {
     #[test]
     fn roundtrip_go_method() {
         let resolved_span =
-            resolve_tree_path(SAMPLE_GO, "method::\"(*Calculator).Add\"", Language::Go).unwrap();
+            resolve_tree_path(SAMPLE_GO, "method.\"(*Calculator).Add\"", Language::Go).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_GO, resolved_span, Language::Go);
-        assert_eq!(computed_path, "method::\"(*Calculator).Add\"");
+        assert_eq!(computed_path, "method.\"(*Calculator).Add\"");
 
         let re_resolved = resolve_tree_path(SAMPLE_GO, &computed_path, Language::Go).unwrap();
         assert_eq!(re_resolved, resolved_span);

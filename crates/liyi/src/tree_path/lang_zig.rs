@@ -36,7 +36,7 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
 
             if has_struct {
                 // This is `const Name = struct { ... }` — extract just the name
-                // (the "struct::" prefix is added by compute_tree_path)
+                // (the "struct." prefix is added by compute_tree_path)
                 find_child_by_kind(node, "identifier").map(|n| source[n.byte_range()].to_string())
             } else {
                 None
@@ -106,7 +106,7 @@ test "add function" {
 
     #[test]
     fn resolve_zig_function() {
-        let span = resolve_tree_path(SAMPLE_ZIG, "fn::add", Language::Zig);
+        let span = resolve_tree_path(SAMPLE_ZIG, "fn.add", Language::Zig);
         assert!(span.is_some(), "should resolve fn::add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
@@ -119,7 +119,7 @@ test "add function" {
 
     #[test]
     fn resolve_zig_struct_as_namespace() {
-        let span = resolve_tree_path(SAMPLE_ZIG, "struct::Point", Language::Zig);
+        let span = resolve_tree_path(SAMPLE_ZIG, "struct.Point", Language::Zig);
         assert!(span.is_some(), "should resolve struct::Point");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
@@ -131,7 +131,7 @@ test "add function" {
 
     #[test]
     fn resolve_zig_method_in_struct() {
-        let span = resolve_tree_path(SAMPLE_ZIG, "struct::Point::fn::new", Language::Zig);
+        let span = resolve_tree_path(SAMPLE_ZIG, "struct.Point::fn.new", Language::Zig);
         assert!(span.is_some(), "should resolve method in struct");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
@@ -143,7 +143,7 @@ test "add function" {
 
     #[test]
     fn resolve_zig_test() {
-        let span = resolve_tree_path(SAMPLE_ZIG, "test::\"add function\"", Language::Zig);
+        let span = resolve_tree_path(SAMPLE_ZIG, "test.\"add function\"", Language::Zig);
         assert!(span.is_some(), "should resolve test declaration");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_ZIG.lines().collect();
@@ -155,24 +155,24 @@ test "add function" {
 
     #[test]
     fn compute_zig_function_path() {
-        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "fn::add", Language::Zig).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "fn.add", Language::Zig).unwrap();
         let path = compute_tree_path(SAMPLE_ZIG, resolved_span, Language::Zig);
-        assert_eq!(path, "fn::add");
+        assert_eq!(path, "fn.add");
     }
 
     #[test]
     fn compute_zig_struct_namespace_path() {
-        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "struct::Point", Language::Zig).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "struct.Point", Language::Zig).unwrap();
         let path = compute_tree_path(SAMPLE_ZIG, resolved_span, Language::Zig);
-        assert_eq!(path, "struct::Point");
+        assert_eq!(path, "struct.Point");
     }
 
     #[test]
     fn roundtrip_zig() {
-        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "fn::add", Language::Zig).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_ZIG, "fn.add", Language::Zig).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_ZIG, resolved_span, Language::Zig);
-        assert_eq!(computed_path, "fn::add");
+        assert_eq!(computed_path, "fn.add");
 
         let re_resolved = resolve_tree_path(SAMPLE_ZIG, &computed_path, Language::Zig).unwrap();
         assert_eq!(re_resolved, resolved_span);
@@ -181,10 +181,10 @@ test "add function" {
     #[test]
     fn roundtrip_zig_struct_namespace() {
         let resolved_span =
-            resolve_tree_path(SAMPLE_ZIG, "struct::Point::fn::new", Language::Zig).unwrap();
+            resolve_tree_path(SAMPLE_ZIG, "struct.Point::fn.new", Language::Zig).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_ZIG, resolved_span, Language::Zig);
-        assert_eq!(computed_path, "struct::Point::fn::new");
+        assert_eq!(computed_path, "struct.Point::fn.new");
 
         let re_resolved = resolve_tree_path(SAMPLE_ZIG, &computed_path, Language::Zig).unwrap();
         assert_eq!(re_resolved, resolved_span);

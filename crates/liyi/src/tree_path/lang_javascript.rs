@@ -63,7 +63,7 @@ const utils = {
 
     #[test]
     fn resolve_js_function() {
-        let span = resolve_tree_path(SAMPLE_JS, "fn::createCounter", Language::JavaScript);
+        let span = resolve_tree_path(SAMPLE_JS, "fn.createCounter", Language::JavaScript);
         assert!(span.is_some(), "should resolve fn::createCounter");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();
@@ -75,7 +75,7 @@ const utils = {
 
     #[test]
     fn resolve_js_class() {
-        let span = resolve_tree_path(SAMPLE_JS, "class::Counter", Language::JavaScript);
+        let span = resolve_tree_path(SAMPLE_JS, "class.Counter", Language::JavaScript);
         assert!(span.is_some(), "should resolve class::Counter");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();
@@ -89,12 +89,12 @@ const utils = {
     fn resolve_js_method() {
         let span = resolve_tree_path(
             SAMPLE_JS,
-            "class::Counter::method::increment",
+            "class.Counter::method.increment",
             Language::JavaScript,
         );
         assert!(
             span.is_some(),
-            "should resolve class::Counter::method::increment"
+            "should resolve class::Counter::method.increment"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_JS.lines().collect();
@@ -115,20 +115,20 @@ const utils = {
         let end = lines.len() - 3; // Rough end
 
         let path = compute_tree_path(SAMPLE_JS, [start, end], Language::JavaScript);
-        assert_eq!(path, "fn::createCounter");
+        assert_eq!(path, "fn.createCounter");
     }
 
     #[test]
     fn roundtrip_js() {
         let resolved_span = resolve_tree_path(
             SAMPLE_JS,
-            "class::Counter::method::getValue",
+            "class.Counter::method.getValue",
             Language::JavaScript,
         )
         .unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_JS, resolved_span, Language::JavaScript);
-        assert_eq!(computed_path, "class::Counter::method::getValue");
+        assert_eq!(computed_path, "class.Counter::method.getValue");
 
         let re_resolved =
             resolve_tree_path(SAMPLE_JS, &computed_path, Language::JavaScript).unwrap();

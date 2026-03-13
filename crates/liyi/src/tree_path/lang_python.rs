@@ -63,7 +63,7 @@ def calculate_total(items):
 
     #[test]
     fn resolve_python_function() {
-        let span = resolve_tree_path(SAMPLE_PYTHON, "fn::calculate_total", Language::Python);
+        let span = resolve_tree_path(SAMPLE_PYTHON, "fn.calculate_total", Language::Python);
         assert!(span.is_some(), "should resolve fn::calculate_total");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
@@ -75,7 +75,7 @@ def calculate_total(items):
 
     #[test]
     fn resolve_python_class() {
-        let span = resolve_tree_path(SAMPLE_PYTHON, "class::Order", Language::Python);
+        let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order", Language::Python);
         assert!(span.is_some(), "should resolve class::Order");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
@@ -87,8 +87,8 @@ def calculate_total(items):
 
     #[test]
     fn resolve_python_class_method() {
-        let span = resolve_tree_path(SAMPLE_PYTHON, "class::Order::fn::process", Language::Python);
-        assert!(span.is_some(), "should resolve class::Order::fn::process");
+        let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order::fn.process", Language::Python);
+        assert!(span.is_some(), "should resolve class::Order::fn.process");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(
@@ -99,12 +99,8 @@ def calculate_total(items):
 
     #[test]
     fn resolve_python_init_method() {
-        let span = resolve_tree_path(
-            SAMPLE_PYTHON,
-            "class::Order::fn::__init__",
-            Language::Python,
-        );
-        assert!(span.is_some(), "should resolve class::Order::fn::__init__");
+        let span = resolve_tree_path(SAMPLE_PYTHON, "class.Order::fn.__init__", Language::Python);
+        assert!(span.is_some(), "should resolve class::Order::fn.__init__");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_PYTHON.lines().collect();
         assert!(
@@ -124,7 +120,7 @@ def calculate_total(items):
         let end = lines.len();
 
         let path = compute_tree_path(SAMPLE_PYTHON, [start, end], Language::Python);
-        assert_eq!(path, "fn::calculate_total");
+        assert_eq!(path, "fn.calculate_total");
     }
 
     #[test]
@@ -139,17 +135,17 @@ def calculate_total(items):
         let end = start + 1; // Single-line body for this test
 
         let path = compute_tree_path(SAMPLE_PYTHON, [start, end], Language::Python);
-        assert_eq!(path, "class::Order::fn::process");
+        assert_eq!(path, "class.Order::fn.process");
     }
 
     #[test]
     fn roundtrip_python() {
         // Compute path for fn::calculate_total, then resolve it
         let resolved_span =
-            resolve_tree_path(SAMPLE_PYTHON, "fn::calculate_total", Language::Python).unwrap();
+            resolve_tree_path(SAMPLE_PYTHON, "fn.calculate_total", Language::Python).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_PYTHON, resolved_span, Language::Python);
-        assert_eq!(computed_path, "fn::calculate_total");
+        assert_eq!(computed_path, "fn.calculate_total");
 
         let re_resolved =
             resolve_tree_path(SAMPLE_PYTHON, &computed_path, Language::Python).unwrap();

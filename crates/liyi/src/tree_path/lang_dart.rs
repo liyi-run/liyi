@@ -145,7 +145,7 @@ int get globalCount => 42;
 
     #[test]
     fn resolve_dart_class() {
-        let span = resolve_tree_path(SAMPLE_DART, "class::Point", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "class.Point", Language::Dart);
         assert!(span.is_some(), "should resolve class::Point");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_DART.lines().collect();
@@ -158,45 +158,45 @@ int get globalCount => 42;
 
     #[test]
     fn resolve_dart_method() {
-        let span = resolve_tree_path(SAMPLE_DART, "class::Point::fn::move", Language::Dart);
-        assert!(span.is_some(), "should resolve class::Point::fn::move");
+        let span = resolve_tree_path(SAMPLE_DART, "class.Point::fn.move", Language::Dart);
+        assert!(span.is_some(), "should resolve class::Point::fn.move");
     }
 
     #[test]
     fn resolve_dart_getter() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "class::Point::getter::distanceFromOrigin",
+            "class.Point::getter.distanceFromOrigin",
             Language::Dart,
         );
         assert!(
             span.is_some(),
-            "should resolve class::Point::getter::distanceFromOrigin"
+            "should resolve class::Point::getter.distanceFromOrigin"
         );
     }
 
     #[test]
     fn resolve_dart_setter() {
-        let span = resolve_tree_path(SAMPLE_DART, "class::Point::setter::label", Language::Dart);
-        assert!(span.is_some(), "should resolve class::Point::setter::label");
+        let span = resolve_tree_path(SAMPLE_DART, "class.Point::setter.label", Language::Dart);
+        assert!(span.is_some(), "should resolve class::Point::setter.label");
     }
 
     #[test]
     fn resolve_dart_constructor() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "class::Point::constructor::Point",
+            "class.Point::constructor.Point",
             Language::Dart,
         );
         assert!(
             span.is_some(),
-            "should resolve class::Point::constructor::Point"
+            "should resolve class::Point::constructor.Point"
         );
     }
 
     #[test]
     fn resolve_dart_mixin() {
-        let span = resolve_tree_path(SAMPLE_DART, "mixin::Serializable", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "mixin.Serializable", Language::Dart);
         assert!(span.is_some(), "should resolve mixin::Serializable");
     }
 
@@ -204,18 +204,18 @@ int get globalCount => 42;
     fn resolve_dart_mixin_method() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "mixin::Serializable::fn::serialize",
+            "mixin.Serializable::fn.serialize",
             Language::Dart,
         );
         assert!(
             span.is_some(),
-            "should resolve mixin::Serializable::fn::serialize"
+            "should resolve mixin::Serializable::fn.serialize"
         );
     }
 
     #[test]
     fn resolve_dart_extension() {
-        let span = resolve_tree_path(SAMPLE_DART, "extension::StringExt", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "extension.StringExt", Language::Dart);
         assert!(span.is_some(), "should resolve extension::StringExt");
     }
 
@@ -223,12 +223,12 @@ int get globalCount => 42;
     fn resolve_dart_extension_method() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "extension::StringExt::fn::reverse",
+            "extension.StringExt::fn.reverse",
             Language::Dart,
         );
         assert!(
             span.is_some(),
-            "should resolve extension::StringExt::fn::reverse"
+            "should resolve extension::StringExt::fn.reverse"
         );
     }
 
@@ -236,36 +236,36 @@ int get globalCount => 42;
     fn resolve_dart_extension_getter() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "extension::StringExt::getter::isBlank",
+            "extension.StringExt::getter.isBlank",
             Language::Dart,
         );
         assert!(
             span.is_some(),
-            "should resolve extension::StringExt::getter::isBlank"
+            "should resolve extension::StringExt::getter.isBlank"
         );
     }
 
     #[test]
     fn resolve_dart_extension_type() {
-        let span = resolve_tree_path(SAMPLE_DART, "extension_type::Meters", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "extension_type.Meters", Language::Dart);
         assert!(span.is_some(), "should resolve extension_type::Meters");
     }
 
     #[test]
     fn resolve_dart_enum() {
-        let span = resolve_tree_path(SAMPLE_DART, "enum::Color", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "enum.Color", Language::Dart);
         assert!(span.is_some(), "should resolve enum::Color");
     }
 
     #[test]
     fn resolve_dart_enum_method() {
-        let span = resolve_tree_path(SAMPLE_DART, "enum::Color::getter::label", Language::Dart);
-        assert!(span.is_some(), "should resolve enum::Color::getter::label");
+        let span = resolve_tree_path(SAMPLE_DART, "enum.Color::getter.label", Language::Dart);
+        assert!(span.is_some(), "should resolve enum::Color::getter.label");
     }
 
     #[test]
     fn resolve_dart_top_level_function() {
-        let span = resolve_tree_path(SAMPLE_DART, "fn::main", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "fn.main", Language::Dart);
         assert!(span.is_some(), "should resolve fn::main");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_DART.lines().collect();
@@ -278,15 +278,15 @@ int get globalCount => 42;
 
     #[test]
     fn resolve_dart_top_level_getter() {
-        let span = resolve_tree_path(SAMPLE_DART, "getter::globalCount", Language::Dart);
+        let span = resolve_tree_path(SAMPLE_DART, "getter.globalCount", Language::Dart);
         assert!(span.is_some(), "should resolve getter::globalCount");
     }
 
     #[test]
     fn roundtrip_dart_class() {
-        let span = resolve_tree_path(SAMPLE_DART, "class::Point", Language::Dart).unwrap();
+        let span = resolve_tree_path(SAMPLE_DART, "class.Point", Language::Dart).unwrap();
         let path = compute_tree_path(SAMPLE_DART, span, Language::Dart);
-        assert_eq!(path, "class::Point");
+        assert_eq!(path, "class.Point");
 
         let re_resolved = resolve_tree_path(SAMPLE_DART, &path, Language::Dart).unwrap();
         assert_eq!(re_resolved, span);
@@ -294,10 +294,9 @@ int get globalCount => 42;
 
     #[test]
     fn roundtrip_dart_method() {
-        let span =
-            resolve_tree_path(SAMPLE_DART, "class::Point::fn::move", Language::Dart).unwrap();
+        let span = resolve_tree_path(SAMPLE_DART, "class.Point::fn.move", Language::Dart).unwrap();
         let path = compute_tree_path(SAMPLE_DART, span, Language::Dart);
-        assert_eq!(path, "class::Point::fn::move");
+        assert_eq!(path, "class.Point::fn.move");
 
         let re_resolved = resolve_tree_path(SAMPLE_DART, &path, Language::Dart).unwrap();
         assert_eq!(re_resolved, span);
@@ -305,9 +304,9 @@ int get globalCount => 42;
 
     #[test]
     fn roundtrip_dart_top_level_fn() {
-        let span = resolve_tree_path(SAMPLE_DART, "fn::main", Language::Dart).unwrap();
+        let span = resolve_tree_path(SAMPLE_DART, "fn.main", Language::Dart).unwrap();
         let path = compute_tree_path(SAMPLE_DART, span, Language::Dart);
-        assert_eq!(path, "fn::main");
+        assert_eq!(path, "fn.main");
 
         let re_resolved = resolve_tree_path(SAMPLE_DART, &path, Language::Dart).unwrap();
         assert_eq!(re_resolved, span);
@@ -317,12 +316,12 @@ int get globalCount => 42;
     fn roundtrip_dart_extension_method() {
         let span = resolve_tree_path(
             SAMPLE_DART,
-            "extension::StringExt::fn::reverse",
+            "extension.StringExt::fn.reverse",
             Language::Dart,
         )
         .unwrap();
         let path = compute_tree_path(SAMPLE_DART, span, Language::Dart);
-        assert_eq!(path, "extension::StringExt::fn::reverse");
+        assert_eq!(path, "extension.StringExt::fn.reverse");
 
         let re_resolved = resolve_tree_path(SAMPLE_DART, &path, Language::Dart).unwrap();
         assert_eq!(re_resolved, span);

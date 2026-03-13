@@ -81,37 +81,33 @@ typealias StringList = List<String>
 
     #[test]
     fn resolve_kotlin_class() {
-        let span = resolve_tree_path(SAMPLE_KOTLIN, "class::Calculator", Language::Kotlin);
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "class.Calculator", Language::Kotlin);
         assert!(span.is_some(), "should resolve class::Calculator");
     }
 
     #[test]
     fn resolve_kotlin_method() {
-        let span = resolve_tree_path(
-            SAMPLE_KOTLIN,
-            "class::Calculator::fn::add",
-            Language::Kotlin,
-        );
-        assert!(span.is_some(), "should resolve class::Calculator::fn::add");
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "class.Calculator::fn.add", Language::Kotlin);
+        assert!(span.is_some(), "should resolve class::Calculator::fn.add");
     }
 
     #[test]
     fn resolve_kotlin_object() {
-        let span = resolve_tree_path(SAMPLE_KOTLIN, "object::Singleton", Language::Kotlin);
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "object.Singleton", Language::Kotlin);
         assert!(span.is_some(), "should resolve object::Singleton");
     }
 
     #[test]
     fn resolve_kotlin_function() {
-        let span = resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin);
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "fn.standalone", Language::Kotlin);
         assert!(span.is_some(), "should resolve fn::standalone");
     }
 
     #[test]
     fn roundtrip_kotlin() {
-        let span = resolve_tree_path(SAMPLE_KOTLIN, "fn::standalone", Language::Kotlin).unwrap();
+        let span = resolve_tree_path(SAMPLE_KOTLIN, "fn.standalone", Language::Kotlin).unwrap();
         let path = compute_tree_path(SAMPLE_KOTLIN, span, Language::Kotlin);
-        assert_eq!(path, "fn::standalone");
+        assert_eq!(path, "fn.standalone");
     }
 
     #[test]

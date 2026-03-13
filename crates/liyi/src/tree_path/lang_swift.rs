@@ -47,33 +47,33 @@ typealias Callback = () -> Void
 
     #[test]
     fn resolve_swift_protocol() {
-        let span = resolve_tree_path(SAMPLE_SWIFT, "protocol::Drawable", Language::Swift);
+        let span = resolve_tree_path(SAMPLE_SWIFT, "protocol.Drawable", Language::Swift);
         assert!(span.is_some(), "should resolve protocol::Drawable");
     }
 
     #[test]
     fn resolve_swift_class() {
-        let span = resolve_tree_path(SAMPLE_SWIFT, "class::Shape", Language::Swift);
+        let span = resolve_tree_path(SAMPLE_SWIFT, "class.Shape", Language::Swift);
         assert!(span.is_some(), "should resolve class::Shape");
     }
 
     #[test]
     fn resolve_swift_method() {
-        let span = resolve_tree_path(SAMPLE_SWIFT, "class::Shape::fn::area", Language::Swift);
-        assert!(span.is_some(), "should resolve class::Shape::fn::area");
+        let span = resolve_tree_path(SAMPLE_SWIFT, "class.Shape::fn.area", Language::Swift);
+        assert!(span.is_some(), "should resolve class::Shape::fn.area");
     }
 
     #[test]
     fn resolve_swift_function() {
-        let span = resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift);
+        let span = resolve_tree_path(SAMPLE_SWIFT, "fn.standalone", Language::Swift);
         assert!(span.is_some(), "should resolve fn::standalone");
     }
 
     #[test]
     fn roundtrip_swift() {
-        let span = resolve_tree_path(SAMPLE_SWIFT, "fn::standalone", Language::Swift).unwrap();
+        let span = resolve_tree_path(SAMPLE_SWIFT, "fn.standalone", Language::Swift).unwrap();
         let path = compute_tree_path(SAMPLE_SWIFT, span, Language::Swift);
-        assert_eq!(path, "fn::standalone");
+        assert_eq!(path, "fn.standalone");
     }
 
     #[test]

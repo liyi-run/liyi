@@ -63,12 +63,12 @@ record Person(string Name, int Age);
     fn resolve_csharp_class() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::class::Calculator",
+            "namespace.MyApp::class.Calculator",
             Language::CSharp,
         );
         assert!(
             span.is_some(),
-            "should resolve namespace::MyApp::class::Calculator"
+            "should resolve namespace::MyApp::class.Calculator"
         );
     }
 
@@ -76,7 +76,7 @@ record Person(string Name, int Age);
     fn resolve_csharp_method() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::class::Calculator::fn::Add",
+            "namespace.MyApp::class.Calculator::fn.Add",
             Language::CSharp,
         );
         assert!(
@@ -89,7 +89,7 @@ record Person(string Name, int Age);
     fn resolve_csharp_property() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::class::Calculator::property::Name",
+            "namespace.MyApp::class.Calculator::property.Name",
             Language::CSharp,
         );
         assert!(span.is_some(), "should resolve property::Name");
@@ -99,7 +99,7 @@ record Person(string Name, int Age);
     fn resolve_csharp_interface() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::interface::IComputable",
+            "namespace.MyApp::interface.IComputable",
             Language::CSharp,
         );
         assert!(span.is_some(), "should resolve interface::IComputable");
@@ -109,7 +109,7 @@ record Person(string Name, int Age);
     fn resolve_csharp_struct() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::struct::Vector",
+            "namespace.MyApp::struct.Vector",
             Language::CSharp,
         );
         assert!(span.is_some(), "should resolve struct::Vector");
@@ -119,7 +119,7 @@ record Person(string Name, int Age);
     fn resolve_csharp_enum() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::enum::Direction",
+            "namespace.MyApp::enum.Direction",
             Language::CSharp,
         );
         assert!(span.is_some(), "should resolve enum::Direction");
@@ -129,12 +129,12 @@ record Person(string Name, int Age);
     fn roundtrip_csharp() {
         let span = resolve_tree_path(
             SAMPLE_CSHARP,
-            "namespace::MyApp::class::Calculator::fn::Add",
+            "namespace.MyApp::class.Calculator::fn.Add",
             Language::CSharp,
         )
         .unwrap();
         let path = compute_tree_path(SAMPLE_CSHARP, span, Language::CSharp);
-        assert_eq!(path, "namespace::MyApp::class::Calculator::fn::Add");
+        assert_eq!(path, "namespace.MyApp::class.Calculator::fn.Add");
     }
 
     #[test]

@@ -90,7 +90,7 @@ static int helper(void) {
 
     #[test]
     fn resolve_c_function() {
-        let span = resolve_tree_path(SAMPLE_C, "fn::process", Language::C);
+        let span = resolve_tree_path(SAMPLE_C, "fn.process", Language::C);
         assert!(span.is_some(), "should resolve fn::process");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_C.lines().collect();
@@ -103,7 +103,7 @@ static int helper(void) {
 
     #[test]
     fn resolve_c_struct() {
-        let span = resolve_tree_path(SAMPLE_C, "struct::Point", Language::C);
+        let span = resolve_tree_path(SAMPLE_C, "struct.Point", Language::C);
         assert!(span.is_some(), "should resolve struct::Point");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_C.lines().collect();
@@ -115,7 +115,7 @@ static int helper(void) {
 
     #[test]
     fn resolve_c_enum() {
-        let span = resolve_tree_path(SAMPLE_C, "enum::Color", Language::C);
+        let span = resolve_tree_path(SAMPLE_C, "enum.Color", Language::C);
         assert!(span.is_some(), "should resolve enum::Color");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_C.lines().collect();
@@ -127,7 +127,7 @@ static int helper(void) {
 
     #[test]
     fn resolve_c_typedef() {
-        let span = resolve_tree_path(SAMPLE_C, "typedef::Point_t", Language::C);
+        let span = resolve_tree_path(SAMPLE_C, "typedef.Point_t", Language::C);
         assert!(span.is_some(), "should resolve typedef::Point_t");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_C.lines().collect();
@@ -139,14 +139,14 @@ static int helper(void) {
 
     #[test]
     fn compute_c_function_path() {
-        let span = resolve_tree_path(SAMPLE_C, "fn::process", Language::C).unwrap();
+        let span = resolve_tree_path(SAMPLE_C, "fn.process", Language::C).unwrap();
         let path = compute_tree_path(SAMPLE_C, span, Language::C);
-        assert_eq!(path, "fn::process");
+        assert_eq!(path, "fn.process");
     }
 
     #[test]
     fn roundtrip_c() {
-        for tp in &["fn::process", "fn::helper", "struct::Point", "enum::Color"] {
+        for tp in &["fn.process", "fn.helper", "struct.Point", "enum.Color"] {
             let span = resolve_tree_path(SAMPLE_C, tp, Language::C).unwrap();
             let path = compute_tree_path(SAMPLE_C, span, Language::C);
             assert_eq!(&path, tp, "roundtrip failed for {tp}");

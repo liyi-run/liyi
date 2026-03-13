@@ -367,14 +367,14 @@ The `source` path is relative to the repository root — the same path you'd pas
       "item": "add_money",
       "intent": "Add two monetary amounts of the same currency. Must be commutative. Must reject mismatched currencies with an error, not a panic. Must not overflow silently.",
       "source_span": [42, 58],
-      "tree_path": "fn::add_money",
+      "tree_path": "fn.add_money",
       "confidence": 0.94
     },
     {
       "item": "convert_currency",
       "intent": "=doc",
       "source_span": [60, 85],
-      "tree_path": "fn::convert_currency",
+      "tree_path": "fn.convert_currency",
       "confidence": 0.87
     }
   ]
@@ -401,7 +401,7 @@ After human review — either the human adds `@liyi:intent` in the source file (
       "reviewed": true,
       "intent": "Add two monetary amounts of the same currency. Must be commutative. Must reject mismatched currencies with an error, not a panic. Must not overflow silently.",
       "source_span": [42, 58],
-      "tree_path": "fn::add_money",
+      "tree_path": "fn.add_money",
       "source_hash": "sha256:a1b2c3...",
       "source_anchor": "pub fn add_money(a: Money, b: Money) -> Result<Money, CurrencyError> {"
     }
@@ -457,21 +457,21 @@ Without a `tree_path`, the fallback is: batch false positives on any line-shifti
 
 `tree_path` is an optional field on both `itemSpec` and `requirementSpec` that provides **structural identity** — matching a spec to its source item by AST node path rather than line number. When present and non-empty, `liyi check --fix` uses tree-sitter to locate the item by its structural position in the parse tree, then update `source_span` to the item's current line range. This makes span recovery deterministic across formatting changes, import additions, line reflows, and any other edit that moves lines without changing the item's identity.
 
-**Format.** A `tree_path` is a `::` delimited path of tree-sitter node kinds and name tokens that uniquely identifies an item within a file. Examples:
+**Format.** A `tree_path` is a structured path where kind–name pairs are joined by `.` and pairs are separated by `::`, uniquely identifying an item within a file. Examples:
 
 | Source item | `tree_path` |
 |---|---|
-| `pub fn add_money(…)` | `fn::add_money` |
-| `impl Money { fn new(…) }` | `impl::Money::fn::new` |
-| `struct Money { … }` | `struct::Money` |
-| `mod billing { fn charge(…) }` | `mod::billing::fn::charge` |
-| `#[test] fn test_add()` | `fn::test_add` |
-| Zig `test "add function" { … }` | `test::"add function"` |
-| YAML `run:` with embedded Bash `setup_env()` | `key::run//bash::fn::setup_env` |
+| `pub fn add_money(…)` | `fn.add_money` |
+| `impl Money { fn new(…) }` | `impl.Money::fn.new` |
+| `struct Money { … }` | `struct.Money` |
+| `mod billing { fn charge(…) }` | `mod.billing::fn.charge` |
+| `#[test] fn test_add()` | `fn.test_add` |
+| Zig `test "add function" { … }` | `test."add function"` |
+| YAML `run:` with embedded Bash `setup_env()` | `key.run//bash::fn.setup_env` |
 
 The path identifies the item by node kind and name, not by position. The tool constructs the path by walking the tree-sitter CST from root to the node that covers `source_span`, recording each named ancestor. This is deterministic — the same source item always produces the same path regardless of where it appears in the file.
 
-**Quoting and injection.** Names containing spaces, `::`, or quotes are double-quoted with backslash escaping (`test::"add function"`). For multi-language files (M9), an injection marker `//lang` attaches to the preceding segment to cross a language boundary (`key::run//bash::fn::setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.2).
+**Quoting and injection.** Names containing spaces, `::`, `.`, or quotes are double-quoted with backslash escaping (`test."add function"`, `key."abc.kubernetes.io"`). For multi-language files (M9), an injection marker `//lang` attaches to the name within a pair to cross a language boundary (`key.run//bash::fn.setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in the roadmap appendix (tree_path Grammar v0.3).
 
 **Behavior during check.**
 
@@ -484,7 +484,7 @@ The path identifies the item by node kind and name, not by position. The tool co
 **Hash-based sibling scan for indexed array elements.** Positional array indexing (`steps[2]`) is fragile when elements are inserted or deleted before the tracked index. The sibling scan mechanism addresses this without requiring schema knowledge or content-based attribute matching.
 
 Algorithm:
-1. Parse the `tree_path` and identify the last segment with an index (e.g., `steps[2]` in `key::jobs::key::build::key::steps[2]`).
+1. Parse the `tree_path` and identify the last segment with an index (e.g., `steps[2]` in `key.jobs::key.build::key.steps[2]`).
 2. Resolve the parent path (everything before the indexed segment) to reach the array container node.
 3. Iterate all named children (sibling elements) of the array. For each sibling, if there are path segments after the indexed one, resolve them within the sibling.
 4. Hash the resulting span of each candidate and compare against the stored `source_hash`.
@@ -530,7 +530,7 @@ The agent MAY set `tree_path` to `""` explicitly to signal "I considered structu
 | `name_overrides` | Per-kind overrides for name extraction | `impl_item → "type"` | — |
 | `body_fields` | Field names for nested item containers | `["body", "declaration_list"]` | `["body"]` |
 
-The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum`, `const`, `static`, `type`, `macro`, `interface`, `method`) is shared across languages — `fn` always means "function-like item" regardless of whether the underlying node kind is `function_item` (Rust), `function_definition` (Python/Go), or `function_declaration` (JS/TS). The `tree_path` format remains the same: `fn::add_money`, `class::Order::fn::process`.
+The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum`, `const`, `static`, `type`, `macro`, `interface`, `method`) is shared across languages — `fn` always means "function-like item" regardless of whether the underlying node kind is `function_item` (Rust), `function_definition` (Python/Go), or `function_declaration` (JS/TS). The `tree_path` format remains the same: `fn.add_money`, `class.Order::fn.process`.
 
 All languages are built-in — the binary ships with every supported tree-sitter grammar. The binary-size cost is modest relative to the universality benefit; Python, Go, JavaScript, and TypeScript codebases vastly outnumber Rust codebases, and requiring users to opt in per language would hinder adoption of a tool whose value proposition is universality.
 
@@ -539,8 +539,8 @@ All languages are built-in — the binary ships with every supported tree-sitter
 | Language | Grammar crate | Notes |
 |---|---|---|
 | Python | `tree-sitter-python` | Flat AST; methods are `function_definition` inside `class_definition` body. No `impl`-block equivalent. |
-| Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method::"(*MyType).DoThing"` (pointer) or `method::"MyType.DoThing"` (value) — names with parens/dots are quoted per the tree_path grammar. |
-| JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn::foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
+| Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method."(*MyType).DoThing"` (pointer) or `method."MyType.DoThing"` (value) — names with parens/dots are quoted per the tree_path grammar. |
+| JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn.foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
 | Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods use `custom_name` callback for receiver encoding. |
 | Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
@@ -973,7 +973,7 @@ The `@liyi:trivial` source annotation tells agents and the linter to skip an ite
   "item": "get_name",
   "intent": "=trivial",
   "source_span": [12, 14],
-  "tree_path": "impl::User::fn::get_name"
+  "tree_path": "impl.User::fn.get_name"
 }
 ```
 
@@ -1830,34 +1830,34 @@ This is an **exhaustive inclusion** strategy: every item discovered by tree-sitt
       "item": "Money",
       "intent": "",
       "source_span": [4, 7],
-      "tree_path": "struct::Money",
+      "tree_path": "struct.Money",
       "_hints": { "_has_doc": true, "_body_lines": 4 }
     },
     {
       "item": "Money",
       "intent": "",
       "source_span": [9, 50],
-      "tree_path": "impl::Money"
+      "tree_path": "impl.Money"
     },
     {
       "item": "Money::new",
       "intent": "",
       "source_span": [11, 15],
-      "tree_path": "impl::Money::fn::new",
+      "tree_path": "impl.Money::fn.new",
       "_hints": { "_has_doc": true, "_body_lines": 5 }
     },
     {
       "item": "Money::name",
       "intent": "",
       "source_span": [17, 19],
-      "tree_path": "impl::Money::fn::name",
+      "tree_path": "impl.Money::fn.name",
       "_hints": { "_body_lines": 3, "_likely_trivial": true }
     },
     {
       "item": "add_money",
       "intent": "",
       "source_span": [52, 75],
-      "tree_path": "fn::add_money",
+      "tree_path": "fn.add_money",
       "_hints": { "_body_lines": 24 }
     }
   ]
@@ -1875,31 +1875,31 @@ After the agent processes this scaffold, the sidecar might look like:
       "item": "Money",
       "intent": "=doc",
       "source_span": [4, 7],
-      "tree_path": "struct::Money"
+      "tree_path": "struct.Money"
     },
     {
       "item": "Money::new",
       "intent": "Construct a Money value. Currency must be a valid ISO 4217 code. Amount is in minor units (cents).",
       "source_span": [11, 15],
-      "tree_path": "impl::Money::fn::new"
+      "tree_path": "impl.Money::fn.new"
     },
     {
       "item": "Money::name",
       "intent": "=trivial",
       "source_span": [17, 19],
-      "tree_path": "impl::Money::fn::name"
+      "tree_path": "impl.Money::fn.name"
     },
     {
       "item": "add_money",
       "intent": "Add two monetary amounts. Must reject mismatched currencies with an error. Must be commutative. Must not overflow silently.",
       "source_span": [52, 75],
-      "tree_path": "fn::add_money"
+      "tree_path": "fn.add_money"
     }
   ]
 }
 ```
 
-Note: the agent removed the `impl::Money` container entry (containers are often not worth speccing independently), used `=doc` for the well-documented struct, `=trivial` for the getter, and wrote explicit intent for the rest. The `_hints` fields are gone — `liyi check --fix` strips them.
+Note: the agent removed the `impl.Money` container entry (containers are often not worth speccing independently), used `=doc` for the well-documented struct, `=trivial` for the getter, and wrote explicit intent for the rest. The `_hints` fields are gone — `liyi check --fix` strips them.
 
 #### `_hints` — cold-start inference aids
 
@@ -1938,7 +1938,7 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
       "item": "add_money",
       "intent": "",
       "source_span": [15, 42],
-      "tree_path": "fn::add_money",
+      "tree_path": "fn.add_money",
       "_hints": {
         "_body_lines": 28,
         "_has_doc": false,
@@ -1952,7 +1952,7 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
       "item": "Money::new",
       "intent": "",
       "source_span": [5, 13],
-      "tree_path": "impl::Money::fn::new",
+      "tree_path": "impl.Money::fn.new",
       "_hints": {
         "_body_lines": 9,
         "_has_doc": true,
@@ -1965,7 +1965,7 @@ When `liyi init <source-file>` creates a skeleton sidecar for an existing file u
       "item": "Money::name",
       "intent": "",
       "source_span": [14, 16],
-      "tree_path": "impl::Money::fn::name",
+      "tree_path": "impl.Money::fn.name",
       "_hints": {
         "_body_lines": 3,
         "_likely_trivial": true,
@@ -2610,7 +2610,7 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
         "tree_path": {
           "type": "string",
           "default": "",
-          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn::add_money', 'impl::Money::fn::new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn.add_money', 'impl.Money::fn.new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",

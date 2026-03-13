@@ -1,8 +1,8 @@
 //! Tree-sitter structural identity for span recovery.
 //!
 //! `tree_path` provides format-invariant item identity by encoding an item's
-//! position in the AST as a `::` delimited path of (kind, name) segments.
-//! For example, `fn::add_money` or `impl::Money::fn::new`.
+//! position in the AST as a `::` delimited path of (kind, name) pairs.
+//! For example, `fn.add_money` or `impl.Money::fn.new`.
 //!
 //! When `tree_path` is populated and a tree-sitter grammar is available for
 //! the source language, `liyi check --fix` uses it to
@@ -329,30 +329,17 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
 
     let parsed = parser::TreePath::parse(tree_path).ok()?;
 
-    // Collect non-injection segments into (kind, name, optional_index) triples.
-    let mut flat: Vec<FlatSegment<'_>> = Vec::new();
-    for s in &parsed.segments {
-        match s {
-            parser::Segment::Kind(k) => flat.push(FlatSegment::KindOrName(k.as_str(), None)),
-            parser::Segment::Name(n, idx) => flat.push(FlatSegment::KindOrName(n.as_str(), *idx)),
-            parser::Segment::Injection(_) => {}
-        }
-    }
-
-    if !flat.len().is_multiple_of(2) || flat.is_empty() {
+    if parsed.pairs.is_empty() {
         return None;
     }
 
-    let pairs: Vec<PathPair<'_>> = flat
-        .chunks(2)
-        .map(|c| {
-            let kind = c[0].text();
-            let (name, idx) = c[1].text_and_index();
-            PathPair {
-                kind,
-                name,
-                index: idx,
-            }
+    let pairs: Vec<PathPair<'_>> = parsed
+        .pairs
+        .iter()
+        .map(|p| PathPair {
+            kind: &p.kind,
+            name: &p.name,
+            index: p.index,
         })
         .collect();
 
@@ -380,7 +367,7 @@ pub struct SiblingScanResult {
 /// Attempt to find an array element matching `expected_hash` by scanning
 /// siblings of an indexed tree_path segment.
 ///
-/// When a tree_path like `key::steps[2]` resolves to an element whose hash
+/// When a tree_path like `key.steps[2]` resolves to an element whose hash
 /// doesn't match (e.g., because a new element was inserted before index 2),
 /// this function scans all sibling elements in the same array container to
 /// find one whose content matches `expected_hash`.
@@ -401,30 +388,13 @@ pub fn resolve_tree_path_sibling_scan(
 
     let parsed = parser::TreePath::parse(tree_path).ok()?;
 
-    // Flatten to (kind, name, optional_index) pairs, skipping injections.
-    let mut flat: Vec<FlatSegment<'_>> = Vec::new();
-    for s in &parsed.segments {
-        match s {
-            parser::Segment::Kind(k) => flat.push(FlatSegment::KindOrName(k.as_str(), None)),
-            parser::Segment::Name(n, idx) => flat.push(FlatSegment::KindOrName(n.as_str(), *idx)),
-            parser::Segment::Injection(_) => {}
-        }
-    }
-
-    if !flat.len().is_multiple_of(2) || flat.is_empty() {
-        return None;
-    }
-
-    let pairs: Vec<PathPair<'_>> = flat
-        .chunks(2)
-        .map(|c| {
-            let kind = c[0].text();
-            let (name, idx) = c[1].text_and_index();
-            PathPair {
-                kind,
-                name,
-                index: idx,
-            }
+    let pairs: Vec<PathPair<'_>> = parsed
+        .pairs
+        .iter()
+        .map(|p| PathPair {
+            kind: &p.kind,
+            name: &p.name,
+            index: p.index,
         })
         .collect();
 
@@ -501,50 +471,15 @@ pub fn resolve_tree_path_sibling_scan(
     let (new_index, span) = candidates[0];
 
     // Build updated tree_path with the corrected index.
-    let mut new_segments = parsed.segments.clone();
-    // Map pair position back to segment position: the Name segment for
-    // pair[indexed_pos] is the (indexed_pos * 2 + 1)th non-injection segment.
-    let target_non_injection_idx = indexed_pos * 2 + 1;
-    let mut non_injection_count = 0;
-    for seg in &mut new_segments {
-        if matches!(seg, parser::Segment::Injection(_)) {
-            continue;
-        }
-        if non_injection_count == target_non_injection_idx {
-            if let parser::Segment::Name(_, idx) = seg {
-                *idx = Some(new_index);
-            }
-            break;
-        }
-        non_injection_count += 1;
-    }
+    let mut new_pairs = parsed.pairs.clone();
+    new_pairs[indexed_pos].index = Some(new_index);
 
-    let updated_tree_path = parser::TreePath {
-        segments: new_segments,
-    }
-    .serialize();
+    let updated_tree_path = parser::TreePath { pairs: new_pairs }.serialize();
 
     Some(SiblingScanResult {
         span,
         updated_tree_path,
     })
-}
-
-/// Intermediate representation for flattened segments.
-enum FlatSegment<'a> {
-    KindOrName(&'a str, Option<usize>),
-}
-
-impl<'a> FlatSegment<'a> {
-    fn text(&self) -> &'a str {
-        let FlatSegment::KindOrName(s, _) = self;
-        s
-    }
-
-    fn text_and_index(&self) -> (&'a str, Option<usize>) {
-        let FlatSegment::KindOrName(s, idx) = self;
-        (s, *idx)
-    }
 }
 
 /// A (kind, name, optional_index) triple for resolution.
@@ -763,7 +698,7 @@ fn collect_path(
             config.kind_to_shorthand(node.kind()),
             config.node_name(node, source),
         ) {
-            segments.push(format!("{short}::{}", parser::serialize_name(&name)));
+            segments.push(format!("{short}.{}", parser::serialize_name(&name)));
             return true;
         }
         return false;
@@ -789,7 +724,7 @@ fn collect_path(
                     config.node_name(node, source),
                 )
             {
-                segments.insert(0, format!("{short}::{}", parser::serialize_name(&name)));
+                segments.insert(0, format!("{short}.{}", parser::serialize_name(&name)));
             }
             return true;
         }
@@ -808,7 +743,7 @@ pub struct DiscoveredItem {
     pub name: String,
     /// 1-indexed inclusive span [start, end].
     pub span: [usize; 2],
-    /// Canonical tree_path (e.g., "impl::Money::fn::new").
+    /// Canonical tree_path (e.g., "impl.Money::fn.new").
     pub tree_path: String,
     /// Whether a doc comment was detected (None if detector unavailable).
     pub has_doc_comment: Option<bool>,
@@ -932,8 +867,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_top_level_fn() {
-        let span = resolve_tree_path(SAMPLE_RUST, "fn::standalone", Language::Rust);
-        assert!(span.is_some(), "should resolve fn::standalone");
+        let span = resolve_tree_path(SAMPLE_RUST, "fn.standalone", Language::Rust);
+        assert!(span.is_some(), "should resolve fn.standalone");
         let [start, end] = span.unwrap();
         assert!(start > 0);
         assert!(end >= start);
@@ -948,8 +883,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_struct() {
-        let span = resolve_tree_path(SAMPLE_RUST, "struct::Money", Language::Rust);
-        assert!(span.is_some(), "should resolve struct::Money");
+        let span = resolve_tree_path(SAMPLE_RUST, "struct.Money", Language::Rust);
+        assert!(span.is_some(), "should resolve struct.Money");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
         assert!(
@@ -961,8 +896,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_impl_method() {
-        let span = resolve_tree_path(SAMPLE_RUST, "impl::Money::fn::new", Language::Rust);
-        assert!(span.is_some(), "should resolve impl::Money::fn::new");
+        let span = resolve_tree_path(SAMPLE_RUST, "impl.Money::fn.new", Language::Rust);
+        assert!(span.is_some(), "should resolve impl.Money::fn.new");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
         assert!(
@@ -974,8 +909,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_impl_method_add() {
-        let span = resolve_tree_path(SAMPLE_RUST, "impl::Money::fn::add", Language::Rust);
-        assert!(span.is_some(), "should resolve impl::Money::fn::add");
+        let span = resolve_tree_path(SAMPLE_RUST, "impl.Money::fn.add", Language::Rust);
+        assert!(span.is_some(), "should resolve impl.Money::fn.add");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
         assert!(
@@ -987,8 +922,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_mod_fn() {
-        let span = resolve_tree_path(SAMPLE_RUST, "mod::billing::fn::charge", Language::Rust);
-        assert!(span.is_some(), "should resolve mod::billing::fn::charge");
+        let span = resolve_tree_path(SAMPLE_RUST, "mod.billing::fn.charge", Language::Rust);
+        assert!(span.is_some(), "should resolve mod.billing::fn.charge");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
         assert!(
@@ -1000,8 +935,8 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_impl_block() {
-        let span = resolve_tree_path(SAMPLE_RUST, "impl::Money", Language::Rust);
-        assert!(span.is_some(), "should resolve impl::Money");
+        let span = resolve_tree_path(SAMPLE_RUST, "impl.Money", Language::Rust);
+        assert!(span.is_some(), "should resolve impl.Money");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_RUST.lines().collect();
         assert!(
@@ -1013,7 +948,7 @@ fn standalone() -> i32 {
 
     #[test]
     fn resolve_nonexistent_returns_none() {
-        let span = resolve_tree_path(SAMPLE_RUST, "fn::nonexistent", Language::Rust);
+        let span = resolve_tree_path(SAMPLE_RUST, "fn.nonexistent", Language::Rust);
         assert!(span.is_none());
     }
 
@@ -1042,7 +977,7 @@ fn standalone() -> i32 {
             + 1;
 
         let path = compute_tree_path(SAMPLE_RUST, [start, end], Language::Rust);
-        assert_eq!(path, "fn::standalone");
+        assert_eq!(path, "fn.standalone");
     }
 
     #[test]
@@ -1068,7 +1003,7 @@ fn standalone() -> i32 {
         }
 
         let path = compute_tree_path(SAMPLE_RUST, [start, end], Language::Rust);
-        assert_eq!(path, "impl::Money::fn::new");
+        assert_eq!(path, "impl.Money::fn.new");
     }
 
     #[test]
@@ -1089,18 +1024,18 @@ fn standalone() -> i32 {
             + 1;
 
         let path = compute_tree_path(SAMPLE_RUST, [start, end], Language::Rust);
-        assert_eq!(path, "struct::Money");
+        assert_eq!(path, "struct.Money");
     }
 
     #[test]
     fn roundtrip_resolve_compute() {
-        // Compute path for fn::standalone, then resolve it — spans should match
+        // Compute path for fn.standalone, then resolve it — spans should match
         // Use tree-sitter to find exact span
         let resolved_span =
-            resolve_tree_path(SAMPLE_RUST, "fn::standalone", Language::Rust).unwrap();
+            resolve_tree_path(SAMPLE_RUST, "fn.standalone", Language::Rust).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_RUST, resolved_span, Language::Rust);
-        assert_eq!(computed_path, "fn::standalone");
+        assert_eq!(computed_path, "fn.standalone");
 
         let re_resolved = resolve_tree_path(SAMPLE_RUST, &computed_path, Language::Rust).unwrap();
         assert_eq!(re_resolved, resolved_span);
@@ -1141,12 +1076,12 @@ fn standalone() -> i32 { 42 }
 
         // All tree_paths from the original should resolve in the reformatted version
         for tp in &[
-            "fn::standalone",
-            "struct::Money",
-            "impl::Money",
-            "impl::Money::fn::new",
-            "impl::Money::fn::add",
-            "mod::billing::fn::charge",
+            "fn.standalone",
+            "struct.Money",
+            "impl.Money",
+            "impl.Money::fn.new",
+            "impl.Money::fn.add",
+            "mod.billing::fn.charge",
         ] {
             let span = resolve_tree_path(reformatted, tp, Language::Rust);
             assert!(span.is_some(), "should resolve {tp} in reformatted code");
@@ -1259,24 +1194,24 @@ impl Money {
 
     #[test]
     fn sibling_scan_finds_shifted_element() {
-        // In SIBLING_BEFORE, impl::Money[1] points to `fn second`.
+        // In SIBLING_BEFORE, impl.Money[1] points to `fn second`.
         // Compute hash of `fn second` from the original source.
         let original_span =
-            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+            resolve_tree_path(SIBLING_BEFORE, "impl.Money[1]", Language::Rust).unwrap();
         let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
 
         // In SIBLING_AFTER, `fn zeroth` was inserted before `fn first`,
-        // so impl::Money[1] now points to `fn first` (wrong).
+        // so impl.Money[1] now points to `fn first` (wrong).
         // Sibling scan should find `fn second` at index 2.
         let result = resolve_tree_path_sibling_scan(
             SIBLING_AFTER,
-            "impl::Money[1]",
+            "impl.Money[1]",
             Language::Rust,
             &original_hash,
         );
 
         let result = result.expect("sibling scan should find shifted element");
-        assert_eq!(result.updated_tree_path, "impl::Money[2]");
+        assert_eq!(result.updated_tree_path, "impl.Money[2]");
 
         // Verify the span points to `fn second` in the new source.
         let lines: Vec<&str> = SIBLING_AFTER.lines().collect();
@@ -1292,7 +1227,7 @@ impl Money {
         // tree_path without index → Nothing to scan.
         let result = resolve_tree_path_sibling_scan(
             SIBLING_BEFORE,
-            "impl::Money",
+            "impl.Money",
             Language::Rust,
             "sha256:0000",
         );
@@ -1304,7 +1239,7 @@ impl Money {
         // When no sibling has the expected hash, returns None.
         let result = resolve_tree_path_sibling_scan(
             SIBLING_AFTER,
-            "impl::Money[1]",
+            "impl.Money[1]",
             Language::Rust,
             "sha256:no_such_hash",
         );
@@ -1331,18 +1266,14 @@ impl Money {
 "#;
 
         let original_span =
-            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+            resolve_tree_path(SIBLING_BEFORE, "impl.Money[1]", Language::Rust).unwrap();
         let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
 
-        let result = resolve_tree_path_sibling_scan(
-            shrunk,
-            "impl::Money[1]",
-            Language::Rust,
-            &original_hash,
-        );
+        let result =
+            resolve_tree_path_sibling_scan(shrunk, "impl.Money[1]", Language::Rust, &original_hash);
 
         let result = result.expect("sibling scan should find element at new index");
-        assert_eq!(result.updated_tree_path, "impl::Money[0]");
+        assert_eq!(result.updated_tree_path, "impl.Money[0]");
         let lines: Vec<&str> = shrunk.lines().collect();
         assert!(
             lines[result.span[0] - 1].contains("fn second"),
@@ -1365,12 +1296,12 @@ impl Money {
 
         // Hash from a method that doesn't exist in `rewritten` at all.
         let original_span =
-            resolve_tree_path(SIBLING_BEFORE, "impl::Money[1]", Language::Rust).unwrap();
+            resolve_tree_path(SIBLING_BEFORE, "impl.Money[1]", Language::Rust).unwrap();
         let (original_hash, _) = hash_span(SIBLING_BEFORE, original_span).unwrap();
 
         let result = resolve_tree_path_sibling_scan(
             rewritten,
-            "impl::Money[1]",
+            "impl.Money[1]",
             Language::Rust,
             &original_hash,
         );

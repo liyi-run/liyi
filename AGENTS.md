@@ -133,7 +133,7 @@ Sidecar files must conform to the following JSON Schema. The top-level object ha
         "tree_path": {
           "type": "string",
           "default": "",
-          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn::add_money', 'impl::Money::fn::new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
+          "description": "Optional. Structural AST path for tree-sitter-based span recovery (e.g., 'fn.add_money', 'impl.Money::fn.new'). When non-empty, the tool uses tree-sitter to locate the item by structural identity. When empty or absent, falls back to line-number-based span matching. Tool-managed — agents MAY write this but the tool overwrites with the canonical form."
         },
         "source_hash": {
           "$ref": "#/$defs/sourceHash",

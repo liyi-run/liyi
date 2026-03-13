@@ -89,7 +89,7 @@ void standalone() {}
 
     #[test]
     fn resolve_cpp_namespace() {
-        let span = resolve_tree_path(SAMPLE_CPP, "namespace::math", Language::Cpp);
+        let span = resolve_tree_path(SAMPLE_CPP, "namespace.math", Language::Cpp);
         assert!(span.is_some(), "should resolve namespace::math");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_CPP.lines().collect();
@@ -104,12 +104,12 @@ void standalone() {}
     fn resolve_cpp_class_in_namespace() {
         let span = resolve_tree_path(
             SAMPLE_CPP,
-            "namespace::math::class::Calculator",
+            "namespace.math::class.Calculator",
             Language::Cpp,
         );
         assert!(
             span.is_some(),
-            "should resolve namespace::math::class::Calculator"
+            "should resolve namespace::math::class.Calculator"
         );
     }
 
@@ -117,7 +117,7 @@ void standalone() {}
     fn resolve_cpp_method_in_class() {
         let span = resolve_tree_path(
             SAMPLE_CPP,
-            "namespace::math::class::Calculator::fn::add",
+            "namespace.math::class.Calculator::fn.add",
             Language::Cpp,
         );
         assert!(span.is_some(), "should resolve nested method");
@@ -131,21 +131,21 @@ void standalone() {}
 
     #[test]
     fn resolve_cpp_standalone() {
-        let span = resolve_tree_path(SAMPLE_CPP, "fn::standalone", Language::Cpp);
+        let span = resolve_tree_path(SAMPLE_CPP, "fn.standalone", Language::Cpp);
         assert!(span.is_some(), "should resolve fn::standalone");
     }
 
     #[test]
     fn resolve_cpp_enum() {
-        let span = resolve_tree_path(SAMPLE_CPP, "namespace::math::enum::Color", Language::Cpp);
+        let span = resolve_tree_path(SAMPLE_CPP, "namespace.math::enum.Color", Language::Cpp);
         assert!(span.is_some(), "should resolve enum in namespace");
     }
 
     #[test]
     fn roundtrip_cpp() {
-        let span = resolve_tree_path(SAMPLE_CPP, "fn::standalone", Language::Cpp).unwrap();
+        let span = resolve_tree_path(SAMPLE_CPP, "fn.standalone", Language::Cpp).unwrap();
         let path = compute_tree_path(SAMPLE_CPP, span, Language::Cpp);
-        assert_eq!(path, "fn::standalone");
+        assert_eq!(path, "fn.standalone");
     }
 
     #[test]

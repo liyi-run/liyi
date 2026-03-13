@@ -88,7 +88,7 @@ metadata:
 
     #[test]
     fn resolve_yaml_top_level_key() {
-        let span = resolve_tree_path(SAMPLE_YAML, "key::name", Language::Yaml);
+        let span = resolve_tree_path(SAMPLE_YAML, "key.name", Language::Yaml);
         assert!(span.is_some(), "should resolve key::name");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -101,8 +101,8 @@ metadata:
 
     #[test]
     fn resolve_yaml_nested_key() {
-        let span = resolve_tree_path(SAMPLE_YAML, "key::jobs::key::build", Language::Yaml);
-        assert!(span.is_some(), "should resolve key::jobs::key::build");
+        let span = resolve_tree_path(SAMPLE_YAML, "key.jobs::key.build", Language::Yaml);
+        assert!(span.is_some(), "should resolve key::jobs::key.build");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
         assert!(
@@ -116,12 +116,12 @@ metadata:
     fn resolve_yaml_deeply_nested_key() {
         let span = resolve_tree_path(
             SAMPLE_YAML,
-            "key::jobs::key::build::key::\"runs-on\"",
+            "key.jobs::key.build::key.\"runs-on\"",
             Language::Yaml,
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key::build::key::\"runs-on\""
+            "should resolve key::jobs::key.build::key.\"runs-on\""
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -137,12 +137,12 @@ metadata:
         // steps[1] → second step → {name: Build, run: cargo build}
         let span = resolve_tree_path(
             SAMPLE_YAML,
-            "key::jobs::key::build::key::steps[1]::key::name",
+            "key.jobs::key.build::key.steps[1]::key.name",
             Language::Yaml,
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key::build::key::steps[1]::key::name"
+            "should resolve key::jobs::key.build::key.steps[1]::key.name"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -157,12 +157,12 @@ metadata:
     fn resolve_yaml_indexed_step_run() {
         let span = resolve_tree_path(
             SAMPLE_YAML,
-            "key::jobs::key::build::key::steps[2]::key::run",
+            "key.jobs::key.build::key.steps[2]::key.run",
             Language::Yaml,
         );
         assert!(
             span.is_some(),
-            "should resolve key::jobs::key::build::key::steps[2]::key::run"
+            "should resolve key::jobs::key.build::key.steps[2]::key.run"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_YAML.lines().collect();
@@ -175,37 +175,37 @@ metadata:
 
     #[test]
     fn compute_yaml_top_level_key() {
-        let span = resolve_tree_path(SAMPLE_YAML, "key::name", Language::Yaml).unwrap();
+        let span = resolve_tree_path(SAMPLE_YAML, "key.name", Language::Yaml).unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
-        assert_eq!(path, "key::name");
+        assert_eq!(path, "key.name");
     }
 
     #[test]
     fn compute_yaml_nested_key() {
         let span = resolve_tree_path(
             SAMPLE_YAML,
-            "key::jobs::key::build::key::\"runs-on\"",
+            "key.jobs::key.build::key.\"runs-on\"",
             Language::Yaml,
         )
         .unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
-        assert_eq!(path, "key::jobs::key::build::key::\"runs-on\"");
+        assert_eq!(path, "key.jobs::key.build::key.\"runs-on\"");
     }
 
     #[test]
     fn roundtrip_yaml_top_level() {
-        let span = resolve_tree_path(SAMPLE_YAML, "key::name", Language::Yaml).unwrap();
+        let span = resolve_tree_path(SAMPLE_YAML, "key.name", Language::Yaml).unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
-        assert_eq!(path, "key::name");
+        assert_eq!(path, "key.name");
         let re_resolved = resolve_tree_path(SAMPLE_YAML, &path, Language::Yaml).unwrap();
         assert_eq!(re_resolved, span);
     }
 
     #[test]
     fn roundtrip_yaml_nested() {
-        let span = resolve_tree_path(SAMPLE_YAML, "key::jobs::key::build", Language::Yaml).unwrap();
+        let span = resolve_tree_path(SAMPLE_YAML, "key.jobs::key.build", Language::Yaml).unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
-        assert_eq!(path, "key::jobs::key::build");
+        assert_eq!(path, "key.jobs::key.build");
         let re_resolved = resolve_tree_path(SAMPLE_YAML, &path, Language::Yaml).unwrap();
         assert_eq!(re_resolved, span);
     }

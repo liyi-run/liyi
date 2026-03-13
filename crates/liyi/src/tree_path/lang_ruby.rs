@@ -77,20 +77,16 @@ end
 
     #[test]
     fn resolve_ruby_module() {
-        let span = resolve_tree_path(SAMPLE_RUBY, "module::Billing", Language::Ruby);
+        let span = resolve_tree_path(SAMPLE_RUBY, "module.Billing", Language::Ruby);
         assert!(span.is_some(), "should resolve module::Billing");
     }
 
     #[test]
     fn resolve_ruby_class_in_module() {
-        let span = resolve_tree_path(
-            SAMPLE_RUBY,
-            "module::Billing::class::Invoice",
-            Language::Ruby,
-        );
+        let span = resolve_tree_path(SAMPLE_RUBY, "module.Billing::class.Invoice", Language::Ruby);
         assert!(
             span.is_some(),
-            "should resolve module::Billing::class::Invoice"
+            "should resolve module::Billing::class.Invoice"
         );
     }
 
@@ -98,7 +94,7 @@ end
     fn resolve_ruby_method_in_class() {
         let span = resolve_tree_path(
             SAMPLE_RUBY,
-            "module::Billing::class::Invoice::fn::total",
+            "module.Billing::class.Invoice::fn.total",
             Language::Ruby,
         );
         assert!(span.is_some(), "should resolve nested method");
@@ -114,7 +110,7 @@ end
     fn resolve_ruby_singleton_method() {
         let span = resolve_tree_path(
             SAMPLE_RUBY,
-            "module::Billing::class::Invoice::singleton_method::\"self.calculate_tax\"",
+            "module.Billing::class.Invoice::singleton_method.\"self.calculate_tax\"",
             Language::Ruby,
         );
         assert!(span.is_some(), "should resolve singleton method");
@@ -131,7 +127,7 @@ end
         // standalone_helper is defined directly in the module body
         let span = resolve_tree_path(
             SAMPLE_RUBY,
-            "module::Billing::fn::standalone_helper",
+            "module.Billing::fn.standalone_helper",
             Language::Ruby,
         );
         assert!(span.is_some(), "should resolve module-level function");
@@ -139,13 +135,13 @@ end
 
     #[test]
     fn resolve_ruby_top_level_class() {
-        let span = resolve_tree_path(SAMPLE_RUBY, "class::Order", Language::Ruby);
+        let span = resolve_tree_path(SAMPLE_RUBY, "class.Order", Language::Ruby);
         assert!(span.is_some(), "should resolve top-level class");
     }
 
     #[test]
     fn resolve_ruby_method_in_top_level_class() {
-        let span = resolve_tree_path(SAMPLE_RUBY, "class::Order::fn::process", Language::Ruby);
+        let span = resolve_tree_path(SAMPLE_RUBY, "class.Order::fn.process", Language::Ruby);
         assert!(span.is_some(), "should resolve method in top-level class");
     }
 
@@ -153,21 +149,21 @@ end
     fn compute_ruby_method_path() {
         let resolved_span = resolve_tree_path(
             SAMPLE_RUBY,
-            "module::Billing::class::Invoice::fn::total",
+            "module.Billing::class.Invoice::fn.total",
             Language::Ruby,
         )
         .unwrap();
         let path = compute_tree_path(SAMPLE_RUBY, resolved_span, Language::Ruby);
-        assert_eq!(path, "module::Billing::class::Invoice::fn::total");
+        assert_eq!(path, "module.Billing::class.Invoice::fn.total");
     }
 
     #[test]
     fn roundtrip_ruby() {
         let resolved_span =
-            resolve_tree_path(SAMPLE_RUBY, "class::Order::fn::process", Language::Ruby).unwrap();
+            resolve_tree_path(SAMPLE_RUBY, "class.Order::fn.process", Language::Ruby).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_RUBY, resolved_span, Language::Ruby);
-        assert_eq!(computed_path, "class::Order::fn::process");
+        assert_eq!(computed_path, "class.Order::fn.process");
 
         let re_resolved = resolve_tree_path(SAMPLE_RUBY, &computed_path, Language::Ruby).unwrap();
         assert_eq!(re_resolved, resolved_span);

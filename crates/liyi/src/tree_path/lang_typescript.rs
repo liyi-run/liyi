@@ -80,7 +80,7 @@ function createUser(name: string): User {
 
     #[test]
     fn resolve_ts_interface() {
-        let span = resolve_tree_path(SAMPLE_TS, "interface::User", Language::TypeScript);
+        let span = resolve_tree_path(SAMPLE_TS, "interface.User", Language::TypeScript);
         assert!(span.is_some(), "should resolve interface::User");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
@@ -92,7 +92,7 @@ function createUser(name: string): User {
 
     #[test]
     fn resolve_ts_type_alias() {
-        let span = resolve_tree_path(SAMPLE_TS, "type::UserId", Language::TypeScript);
+        let span = resolve_tree_path(SAMPLE_TS, "type.UserId", Language::TypeScript);
         assert!(span.is_some(), "should resolve type::UserId");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
@@ -104,7 +104,7 @@ function createUser(name: string): User {
 
     #[test]
     fn resolve_ts_enum() {
-        let span = resolve_tree_path(SAMPLE_TS, "enum::UserRole", Language::TypeScript);
+        let span = resolve_tree_path(SAMPLE_TS, "enum.UserRole", Language::TypeScript);
         assert!(span.is_some(), "should resolve enum::UserRole");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
@@ -118,12 +118,12 @@ function createUser(name: string): User {
     fn resolve_ts_class_method() {
         let span = resolve_tree_path(
             SAMPLE_TS,
-            "class::UserService::method::findById",
+            "class.UserService::method.findById",
             Language::TypeScript,
         );
         assert!(
             span.is_some(),
-            "should resolve class::UserService::method::findById"
+            "should resolve class::UserService::method.findById"
         );
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TS.lines().collect();
@@ -144,16 +144,16 @@ function createUser(name: string): User {
         let end = start + 3;
 
         let path = compute_tree_path(SAMPLE_TS, [start, end], Language::TypeScript);
-        assert_eq!(path, "interface::User");
+        assert_eq!(path, "interface.User");
     }
 
     #[test]
     fn roundtrip_ts() {
         let resolved_span =
-            resolve_tree_path(SAMPLE_TS, "enum::UserRole", Language::TypeScript).unwrap();
+            resolve_tree_path(SAMPLE_TS, "enum.UserRole", Language::TypeScript).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_TS, resolved_span, Language::TypeScript);
-        assert_eq!(computed_path, "enum::UserRole");
+        assert_eq!(computed_path, "enum.UserRole");
 
         let re_resolved =
             resolve_tree_path(SAMPLE_TS, &computed_path, Language::TypeScript).unwrap();
@@ -185,7 +185,7 @@ class Container extends React.Component<Props> {
 
     #[test]
     fn resolve_tsx_function() {
-        let span = resolve_tree_path(SAMPLE_TSX, "fn::Counter", Language::Tsx);
+        let span = resolve_tree_path(SAMPLE_TSX, "fn.Counter", Language::Tsx);
         assert!(span.is_some(), "should resolve fn::Counter in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
@@ -197,7 +197,7 @@ class Container extends React.Component<Props> {
 
     #[test]
     fn resolve_tsx_class() {
-        let span = resolve_tree_path(SAMPLE_TSX, "class::Container", Language::Tsx);
+        let span = resolve_tree_path(SAMPLE_TSX, "class.Container", Language::Tsx);
         assert!(span.is_some(), "should resolve class::Container in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();
@@ -209,7 +209,7 @@ class Container extends React.Component<Props> {
 
     #[test]
     fn resolve_tsx_interface() {
-        let span = resolve_tree_path(SAMPLE_TSX, "interface::Props", Language::Tsx);
+        let span = resolve_tree_path(SAMPLE_TSX, "interface.Props", Language::Tsx);
         assert!(span.is_some(), "should resolve interface::Props in TSX");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_TSX.lines().collect();

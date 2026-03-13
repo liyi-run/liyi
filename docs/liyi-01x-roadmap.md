@@ -125,7 +125,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 | `class` | `class_definition` |
 
 **Design notes:**
-- Methods are `function_definition` inside `class_definition` body. Tree_path: `class::MyClass::fn::my_method`.
+- Methods are `function_definition` inside `class_definition` body. Tree_path: `class.MyClass::fn.my_method`.
 - No `impl` blocks — methods are direct children of the class body.
 - Decorators (`@staticmethod`, `@app.route`) are siblings, same as Rust attributes — existing `find_item_in_range` logic handles this.
 - Name extraction: always `name` field, simpler than Rust.
@@ -133,7 +133,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 **Extensions:** `.py`, `.pyi`
 
 **Acceptance criteria:**
-- `resolve_tree_path("class::Order::fn::process", Language::Python)` returns correct span.
+- `resolve_tree_path("class.Order::fn.process", Language::Python)` returns correct span.
 - `compute_tree_path` produces correct path for top-level functions, class methods, nested classes.
 - Roundtrip (compute → resolve → same span) passes for representative Python code.
 
@@ -152,7 +152,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 | `var` | `var_declaration` (name extracted from inner `var_spec`) |
 
 **Design notes:**
-- Go methods encode the receiver type in tree_path: `method::"(*MyType).DoThing"` (pointer receiver) or `method::"MyType.DoThing"` (value receiver). Names containing parens or dots are quoted per the tree_path grammar (Appendix A). This disambiguates methods with the same name on different types.
+- Go methods encode the receiver type in tree_path: `method."(*MyType).DoThing"` (pointer receiver) or `method."MyType.DoThing"` (value receiver). Names containing parens or dots are quoted per the tree_path grammar (Appendix A). This disambiguates methods with the same name on different types.
 - `type_declaration` wraps `type_spec` which has the actual name. A `custom_name` callback navigates the indirection. A single `type` shorthand covers structs, interfaces, and type aliases — Go type names are unique per package, so no disambiguation is needed.
 - No nesting equivalent to Rust's `impl` or Python's class body — all functions/methods are top-level.
 
@@ -176,15 +176,15 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 | `const` / `var` / `let` | `variable_declaration` → `variable_declarator` |
 
 **Design notes:**
-- Arrow functions assigned to variables (`const foo = () => ...`) are extremely common. These are `variable_declarator` with an `arrow_function` value, not `function_declaration`. The tool tracks them as `fn::foo` when the value is an `arrow_function` or `function` — detecting the pattern in `variable_declarator` and mapping it to the `fn` shorthand.
-- Class methods use `method_definition` inside `class_body`. Tree_path: `class::MyClass::method::handleClick`.
+- Arrow functions assigned to variables (`const foo = () => ...`) are extremely common. These are `variable_declarator` with an `arrow_function` value, not `function_declaration`. The tool tracks them as `fn.foo` when the value is an `arrow_function` or `function` — detecting the pattern in `variable_declarator` and mapping it to the `fn` shorthand.
+- Class methods use `method_definition` inside `class_body`. Tree_path: `class.MyClass::method.handleClick`.
 - Named vs default exports: export wrappers are transparent — the tool looks through `export_statement` to the inner declaration.
 
 **Extensions:** `.js`, `.mjs`, `.cjs`, `.jsx`
 
 **Acceptance criteria:**
 - `function_declaration`, `class_declaration`, `method_definition` all resolve.
-- Arrow functions in const declarations map to `fn::name`.
+- Arrow functions in const declarations map to `fn.name`.
 - Export-wrapped declarations resolve correctly.
 
 ### M1.5. TypeScript ✅
@@ -291,7 +291,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 
 **Design notes:**
 - All node types have a standard `name` field — no custom callback needed.
-- Methods are `method_declaration` inside `class_body`. Tree_path: `class::Calculator::fn::add`.
+- Methods are `method_declaration` inside `class_body`. Tree_path: `class.Calculator::fn.add`.
 - Records (Java 14+) and annotation types are included for completeness.
 
 **Extensions:** `.java`
@@ -321,7 +321,7 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 
 **Design notes:**
 - All node types have a standard `name` field — no custom callback needed.
-- Namespaces use `body` field for descent, enabling `namespace::MyApp::class::Foo::fn::Bar` paths.
+- Namespaces use `body` field for descent, enabling `namespace.MyApp::class.Foo::fn.Bar` paths.
 - Properties are tracked as named items (important for C#'s property-centric design).
 - File-scoped namespace declarations (`namespace Foo;`) are not tracked as container items since they have no body to descend into.
 
@@ -700,8 +700,8 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 | `singleton_method` | `singleton_method` |
 
 **Design notes:**
-- Methods are `method` inside `class` body. Tree_path: `class::Order::fn::process`.
-- `module` nesting is natural: `module::Billing::class::Invoice::fn::total`.
+- Methods are `method` inside `class` body. Tree_path: `class.Order::fn.process`.
+- `module` nesting is natural: `module.Billing::class.Invoice::fn.total`.
 - Class methods (`def self.method_name`) parse as `singleton_method` — needs a `custom_name` callback similar to Go's receiver encoding to extract the method name.
 - Blocks (`do..end`, `{ }`) are not tracked as items — they are anonymous and not meaningful for structural identity.
 
@@ -781,7 +781,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 | `test` | `test_decl` |
 
 **Design notes:**
-- Zig's struct-as-namespace pattern (`const Foo = struct { ... }`) means a `const` holding a struct literal is both a const and a container. A `custom_name` callback detects "const that holds a struct literal" and emits `struct::Foo` rather than `const::Foo`.
+- Zig's struct-as-namespace pattern (`const Foo = struct { ... }`) means a `const` holding a struct literal is both a const and a container. A `custom_name` callback detects "const that holds a struct literal" and emits `struct.Foo` rather than `const.Foo`.
 - Test declarations (`test "name" {}`) are named by string literal, not identifier — requires custom extraction to strip the quotes.
 - Moderate complexity from the struct-as-namespace pattern.
 
@@ -789,7 +789,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 **Acceptance criteria:**
 - Functions, consts, tests, struct-as-namespace all resolve.
-- `const Foo = struct { fn bar() void {} }` produces tree_path `struct::Foo::fn::bar`.
+- `const Foo = struct { fn bar() void {} }` produces tree_path `struct.Foo::fn.bar`.
 
 ---
 
@@ -807,9 +807,9 @@ Data files are fundamentally different from code languages. The tree_path concep
 
 | Format | "Item" concept | Example tree_path |
 |--------|---------------|-------------------|
-| TOML | Table, key | `table::package::key::name` |
-| JSON | Object key | `key::specs[2]::key::item` |
-| YAML | Mapping key | `key::jobs::key::build::key::steps[0]` |
+| TOML | Table, key | `table.package::key.name` |
+| JSON | Object key | `key.specs[2]::key.item` |
+| YAML | Mapping key | `key.jobs::key.build::key.steps[0]` |
 
 The `LanguageConfig` abstraction assumes items have (kind, name) pairs where kind maps to an AST node type. Data files have a uniform node type (key-value pair) with identity carried entirely by the key path. Arrays require positional indexing.
 
@@ -820,11 +820,10 @@ name := (simple_name | quoted_string) index?
 index := '[' number ']'
 ```
 
-The `[N]` suffix attaches to the name segment, preserving the even-pair invariant (no extra segments injected). The resolver, upon encountering an indexed name, navigates to the named key node, finds its value (array) body, and selects the Nth named child.
+The `[N]` suffix attaches to the name within the pair. The resolver, upon encountering an indexed name, navigates to the named key node, finds its value (array) body, and selects the Nth named child.
 
-**Why attached syntax (`key::specs[2]`) over separated (`key::specs::[2]`):**
-1. Preserves the even-pair invariant that the resolver and injection framework (M9) depend on.
-2. One navigation operation per pair — "find key `specs`, index element 2" is a single step.
+**Why attached syntax (`key.specs[2]`) over separated (`key.specs::[2]`):**
+1. One navigation operation per pair — "find key `specs`, index element 2" is a single step.
 3. Matches array indexing syntax in every major programming language.
 4. No shell escaping needed (`[N]` is safe in all shells).
 5. Minimal parser change — one new production, one new field.
@@ -838,7 +837,7 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - Proptest roundtrip strategy generates paths with arbitrary indices.
 
 **Acceptance criteria:**
-- ✅ `key::specs[2]::key::item` parses to two (kind, name) pairs with index on first.
+- ✅ `key.specs[2]::key.item` parses to two (kind, name) pairs with index on first.
 - ✅ Serialization roundtrips: `parse(serialize(path)) == path` for indexed paths.
 - ✅ Proptest `roundtrip_serialize_parse_indexed` passes.
 - ✅ All existing code-language tests unaffected.
@@ -898,7 +897,7 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - JSON has a single item kind: `pair` mapped to the `key` shorthand. Name extraction requires a `json_node_name` custom callback that navigates from the pair's `key` field (a `string` node) to the `string_content` child for the unquoted key text.
 - Body traversal uses the `value` field — when a pair's value is an `object`, the resolver descends into it for nested pairs.
 - The root `document` wraps the top-level `object` (or `array`). Both `object` and `array` are listed as `transparent_kinds` so the resolver looks through them to reach `pair` nodes.
-- Array indexing works naturally: `key::specs[1]::key::item` resolves the second element of the `specs` array and finds the `item` key within it.
+- Array indexing works naturally: `key.specs[1]::key.item` resolves the second element of the `specs` array and finds the `item` key within it.
 
 **Acceptance criteria:**
 - ✅ Top-level keys, nested keys, deeply nested keys, and indexed array elements all resolve.
@@ -920,7 +919,7 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - Kubernetes manifests: `metadata.name`, container specs.
 - Docker Compose, Helm charts.
 
-**Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key::jobs::key::build::key::steps[N]::key::run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
+**Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key.jobs::key.build::key.steps[N]::key.run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
 
 **Extensions:** `.yml`, `.yaml`
 
@@ -928,8 +927,8 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - YAML's deeply nested AST (stream → document → block_node → block_mapping → block_mapping_pair) requires extensive use of `transparent_kinds`: `document`, `block_node`, `block_mapping`, and `block_sequence` are all marked transparent so the resolver can traverse through them to find `block_mapping_pair` items.
 - Key extraction uses a `yaml_node_name` custom callback that navigates from the `key` field down through the wrapper chain (flow_node → plain_scalar → string_scalar) to extract the leaf text. Quoted scalars have their surrounding quotes stripped.
 - Body traversal uses the `value` field. The `resolve_indexed_child` function was enhanced to walk through transparent wrapper nodes (block_node → block_sequence) to reach the actual array elements (block_sequence_item).
-- Keys with special characters (e.g., `runs-on`) are automatically quoted by `serialize_name` since they aren't valid simple identifiers: `key::"runs-on"`.
-- **Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key::jobs::key::build::key::steps[N]::key::run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
+- Keys with special characters (e.g., `runs-on`) are automatically quoted by `serialize_name` since they aren't valid simple identifiers: `key."runs-on"`.
+- **Limitation:** Without the injection framework (M9), YAML tree_path can identify structural positions but cannot descend into embedded shell in `run:` blocks. The YAML config identifies `key.jobs::key.build::key.steps[N]::key.run` as a terminal node; injection support (M9) would later teach it to descend into the string value.
 
 **Acceptance criteria:**
 - ✅ Top-level keys, nested keys (jobs → build → runs-on), and indexed sequence items (steps[N]) all resolve.
@@ -960,7 +959,7 @@ The current `LanguageConfig` architecture assumes one grammar per file. Several 
 1. **Injection detection** — identifying which nodes contain embedded code and what language. This is host-language-specific: YAML `run:` blocks, Vue `<script lang="ts">` tags, etc.
 2. **Sub-parsing** — running a second parser on the injected content (extracted from the host node's text).
 3. **Span translation** — mapping inner parser spans back to outer file line numbers (offset by the host node's start position).
-4. **Composite tree_paths** — paths that cross language boundaries need a delimiter. Proposed format: `key::jobs::key::build::key::run//bash::fn::setup_env` (using `//lang` to mark injection boundaries). The `//` delimiter was chosen over alternatives (`>lang`, `>>lang`, `@lang`, `::(lang)::`) because it is the only option that requires **zero shell escaping** — `>` and `>>` are redirect operators, `@` and `()` expand in some shells. `//` has no special meaning in any shell, so composite tree_paths can be passed to CLI flags without quoting: `liyi check --item key::run//bash::fn::setup`. In the `::` split, `//lang` appears within a segment (e.g., `run//bash`), preserving the even-pairs invariant. The double slash visually connotes path descent (cf. URL schemes), which maps naturally to "descend into embedded language."
+4. **Composite tree_paths** — paths that cross language boundaries need a delimiter. Proposed format: `key.jobs::key.build::key.run//bash::fn.setup_env` (using `//lang` to mark injection boundaries). The `//` delimiter was chosen over alternatives (`>lang`, `>>lang`, `@lang`, `::(lang)::`) because it is the only option that requires **zero shell escaping** — `>` and `>>` are redirect operators, `@` and `()` expand in some shells. `//` has no special meaning in any shell, so composite tree_paths can be passed to CLI flags without quoting: `liyi check --item key.run//bash::fn.setup`. In the `::` split, `//lang` appears within a segment (e.g., `run//bash`), keeping the injection within the pair. The double slash visually connotes path descent (cf. URL schemes), which maps naturally to "descend into embedded language."
 
 ### M9.3. Implementation sketch
 
@@ -1020,7 +1019,7 @@ Extend `liyi init <source-file>` to use tree-sitter to enumerate items (function
 - `liyi init foo.rs` produces a sidecar with one entry per top-level item (functions, structs, impls, trait decls) with `item`, `source_span`, and `tree_path` populated; `intent` left as `""` (empty — to be filled by agent).
 - Works for all 14 currently supported languages (Rust, Python, Go, JS, TS, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift).
 - `--no-discover` flag to opt out and get the old empty-skeleton behavior.
-- Items inside `impl` blocks produce nested `tree_path` (e.g., `impl::Money::fn::new`).
+- Items inside `impl` blocks produce nested `tree_path` (e.g., `impl.Money::fn.new`).
 
 ### M10.2. Doc comment detection heuristic ✅
 
@@ -1070,63 +1069,54 @@ End-to-end golden test demonstrating the full scaffold workflow:
 
 ---
 
-## Appendix: tree_path Grammar Specification (v0.2)
+## Appendix: tree_path Grammar Specification (v0.3)
 
 **Status:** ✅ Complete — nom parser implemented and integrated into `resolve_tree_path`/`compute_tree_path`. Roundtrip property tests passing.
 
-The original `split("::")` parser was ambiguous when names contained `::` or spaces (as seen in Zig `test "add function"`). This appendix defines the formal grammar used for unambiguous tree_path parsing.
+The v0.2 grammar used `::` as a uniform segment separator with an even-pair invariant (alternating kind–name segments). This was ambiguous when names contained `::` and required a heuristic (`is_common_kind`) to distinguish kind from name segments. v0.3 eliminates the ambiguity by binding kind to name with `.` within a pair, and using `::` only as a descent separator between pairs.
 
 ### A.1 Grammar (EBNF)
 
 ```ebnf
-tree_path    := segment ("::" segment)*
-segment      := kind | name
+tree_path    := pair ("::" pair)*
+pair         := kind "." name
 kind         := identifier
-name         := (simple_name | quoted_string) index?
+name         := (simple_name | quoted_string) index? injection?
 index        := '[' number ']'
+injection    := "//" language
+language     := identifier
 simple_name  := identifier | "self" | number
 quoted_string:= '"' (escaped_char | any_unicode_except_quote)* '"'
 identifier   := [A-Za-z_][A-Za-z0-9_]*
 number       := [0-9]+
-escaped_char := '\\' ( '"' | '\\' | 'n' | ':' )
+escaped_char := '\\' ( '"' | '\\' | 'n' | ':' | '.' )
 ```
 
 ### A.2 Design decisions
 
-1. **Quoted strings for complex names:** Any name containing spaces, `::`, quotes, or Unicode control characters must be quoted. Example: `test::"add function"`.
+1. **Dot as kind–name binder:** `.` binds a kind shorthand to its name within a single pair. This makes pairing explicit and eliminates the `is_common_kind` heuristic and the even-pair invariant. Example: `fn.add_money`, `impl.Money::fn.new`.
 
-2. **Backslash escaping:** Inside quoted strings, `"` and `\` must be escaped. `\:` is provided as a convenience for names containing colons (though `::` is the delimiter).
+2. **Double-colon as descent separator:** `::` separates pairs (descent into nested items). This is unambiguous because `.` always appears within a pair: `class.Order::fn.process` is three tokens — pair, separator, pair.
 
-3. **Unquoted shorthand:** Simple identifiers (alphanumeric + underscore) can remain unquoted for ergonomics. This preserves backward compatibility with existing tree_paths like `fn::add` or `class::MyClass`.
+3. **Quoted strings for complex names:** Any name containing spaces, `::`, `.`, quotes, or Unicode control characters must be quoted. Example: `test."add function"`. Names containing `.` must be quoted to avoid ambiguity with the kind–name binder: `key."abc.kubernetes.io"`.
 
-4. **Kind disambiguation:** The parser doesn't validate that a segment is a "kind" vs "name" — that happens at resolution time using the `LanguageConfig::kind_map`. The grammar treats both uniformly at the syntactic level.
+4. **Backslash escaping:** Inside quoted strings, `"` and `\` must be escaped. `\.` is provided as a convenience for names containing dots (since `.` is the kind–name binder). `\:` is available for names containing colons.
 
-5. **Array index syntax:** Data-file arrays (JSON arrays, YAML sequences, TOML array-of-tables) use a `[N]` suffix on the name segment for 0-based positional selection: `key::specs[2]::key::item`. The index attaches to the name rather than occupying a separate segment, preserving the even-pair invariant. `[N]` requires no shell escaping and reads naturally as "element N of this key's value." Considered and rejected: `key::specs::[2]::key::item` (breaks even-pair invariant, orphans the index segment).
+5. **Array index syntax:** Data-file arrays use a `[N]` suffix on the name for 0-based positional selection: `key.specs[2]::key.item`. The index attaches to the name within the pair.
 
-### A.3 Injection syntax (future)
+6. **Injection syntax:** The `//lang` marker attaches to the name within a pair, crossing a language boundary: `key.run//bash::fn.setup_env`. The `//` delimiter requires no shell escaping. Injection is always part of the pair, not a standalone segment.
 
-When M9 (injection framework) is implemented, the grammar will extend to:
-
-```ebnf
-tree_path    := segment (":" segment)*
-segment      := (kind | name) injection_marker? | injection_marker
-injection_marker := "//" language
-language     := identifier
-```
-
-The injection marker `//lang` attaches to the preceding name segment (`run//bash`), preserving the even-pair invariant for shell-safe paths. The standalone form (`:://lang`) is also accepted for parsing but the canonical serialization always uses the appended form.
-
-### A.4 Implementation plan
+### A.3 Implementation plan
 
 1. Add `nom = "8"` to `crates/liyi/Cargo.toml` ✅
 2. Create `tree_path/parser.rs` with nom combinators ✅
 3. Update `resolve_tree_path` to use the new parser ✅
-4. Update `compute_tree_path` to escape names containing `::`, quotes, or spaces ✅
+4. Update `compute_tree_path` to escape names containing `::`, `.`, quotes, or spaces ✅
 5. Add roundtrip property tests: `parse(serialize(path)) == path` ✅
 
-### A.5 Migration path
+### A.4 Migration from v0.2
 
-No phased migration was needed — the old `split("::")` parser was replaced outright before any external users existed. The nom parser is the sole parser; `compute_tree_path` always quotes names that require it.
+No phased migration was needed — the v0.2 parser was replaced outright before any external users existed. The `Segment` enum and `FlatSegment` even-pair chunking were deleted. The `is_common_kind` heuristic was deleted. Existing sidecar `tree_path` values were mechanically converted (`kind::name` → `kind.name` within pairs).
 
 ---
 

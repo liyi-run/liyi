@@ -38,7 +38,7 @@ another_func {
 
     #[test]
     fn resolve_bash_function_with_function_keyword() {
-        let span = resolve_tree_path(SAMPLE_BASH, "fn::helper", Language::Bash);
+        let span = resolve_tree_path(SAMPLE_BASH, "fn.helper", Language::Bash);
         assert!(span.is_some(), "should resolve fn::helper");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_BASH.lines().collect();
@@ -51,7 +51,7 @@ another_func {
 
     #[test]
     fn resolve_bash_function_with_parens_syntax() {
-        let span = resolve_tree_path(SAMPLE_BASH, "fn::main_func", Language::Bash);
+        let span = resolve_tree_path(SAMPLE_BASH, "fn.main_func", Language::Bash);
         assert!(span.is_some(), "should resolve fn::main_func");
         let [start, _end] = span.unwrap();
         let lines: Vec<&str> = SAMPLE_BASH.lines().collect();
@@ -65,17 +65,17 @@ another_func {
     #[test]
     fn compute_bash_function_path() {
         // Use resolve to get the span, then verify compute produces the same path
-        let resolved_span = resolve_tree_path(SAMPLE_BASH, "fn::helper", Language::Bash).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_BASH, "fn.helper", Language::Bash).unwrap();
         let path = compute_tree_path(SAMPLE_BASH, resolved_span, Language::Bash);
-        assert_eq!(path, "fn::helper");
+        assert_eq!(path, "fn.helper");
     }
 
     #[test]
     fn roundtrip_bash() {
-        let resolved_span = resolve_tree_path(SAMPLE_BASH, "fn::helper", Language::Bash).unwrap();
+        let resolved_span = resolve_tree_path(SAMPLE_BASH, "fn.helper", Language::Bash).unwrap();
 
         let computed_path = compute_tree_path(SAMPLE_BASH, resolved_span, Language::Bash);
-        assert_eq!(computed_path, "fn::helper");
+        assert_eq!(computed_path, "fn.helper");
 
         let re_resolved = resolve_tree_path(SAMPLE_BASH, &computed_path, Language::Bash).unwrap();
         assert_eq!(re_resolved, resolved_span);

@@ -4,7 +4,7 @@
 
 **Status:** Design
 **Target:** v0.1.x (M9)
-**Design authority:** `docs/liyi-design.md` — *Quoting and injection*, tree_path Grammar v0.2 Appendix A.3
+**Design authority:** `docs/liyi-design.md` — *Quoting and injection*, tree_path Grammar v0.3
 
 ---
 
@@ -15,7 +15,7 @@ important file types violate this: GitHub Actions YAML embeds shell in `run:`
 blocks, Vue SFCs embed TypeScript and CSS, HTML embeds JavaScript and CSS.
 
 The M8 data-file work (TOML, JSON, YAML) brought config files under structural
-identity, but YAML `key::jobs::key::build::key::steps[1]::key::run` is a
+identity, but YAML `key.jobs::key.build::key.steps[1]::key.run` is a
 terminal node — the Bash code inside the string is invisible to the resolver.
 The injection framework makes it visible.
 
@@ -49,13 +49,13 @@ grammar only — exactly the current behavior. Injection is strictly additive;
 files without a matching profile are never degraded.
 <!-- @liyi:end-requirement no-injection-without-profile -->
 
-<!-- @liyi:requirement even-pair-invariant -->
-**The `//lang` marker preserves the even-pair invariant.** Injection markers
-attach to the preceding name segment (`run//bash`), not as standalone segments.
-The segment count stays even (alternating kind–name pairs), which means existing
-resolver, serializer, and sibling-scan logic continues to work on the host
-portion of the path. The parser already supports `Segment::Injection(String)`.
-<!-- @liyi:end-requirement even-pair-invariant -->
+<!-- @liyi:requirement injection-pair-attachment -->
+**The `//lang` marker attaches within a pair.** Injection markers attach to
+the name within a pair (`run//bash`), not as standalone segments. This means
+existing resolver, serializer, and sibling-scan logic continues to work on the
+host portion of the path. The `Pair` struct carries an optional `injection`
+field.
+<!-- @liyi:end-requirement injection-pair-attachment -->
 
 <!-- @liyi:requirement content-offset-correctness -->
 **Span translation must account for content offset.** When sub-parsing injected
@@ -364,7 +364,7 @@ This is deferred until the first non-YAML host is implemented.
 Each profile file carries its own `#[cfg(test)]` module with dialect-specific
 fixtures. For GitHub Actions:
 
-- Resolve `key::jobs::key::build::key::steps[1]::key::run//bash::fn::setup`
+- Resolve `key.jobs::key.build::key.steps[1]::key.run//bash::fn.setup`
   → correct span within the `run:` block.
 - Compute tree_path for a Bash function inside a `run:` block → includes
   `//bash` marker.

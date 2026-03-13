@@ -90,7 +90,7 @@ pub struct DiscoveredItem {
     pub name: String,
     /// 1-indexed inclusive span [start, end].
     pub span: [usize; 2],
-    /// Canonical tree_path (e.g., "impl::Money::fn::new").
+    /// Canonical tree_path (e.g., "impl.Money::fn.new").
     pub tree_path: String,
 }
 
@@ -257,7 +257,7 @@ Support `"intent": "=trivial"` in `liyi check` and `liyi approve`.
 
 ## Open questions
 
-1. **Should containers (e.g., `impl::Money` with no methods of its own) be emitted?** The design doc example shows them emitted but the agent removing them. Emitting is consistent with exhaustive inclusion, but creates noise. Current plan: emit them, let agents prune.
+1. **Should containers (e.g., `impl.Money` with no methods of its own) be emitted?** The design doc example shows them emitted but the agent removing them. Emitting is consistent with exhaustive inclusion, but creates noise. Current plan: emit them, let agents prune.
 
 2. **`git log -L` performance.** Per-item line-range log queries can be slow on large repos. Possible mitigation: batch all items into a single `git log` call per file and distribute results, or use `git log --format` on the whole file and post-filter by line ranges via `git blame`.
 

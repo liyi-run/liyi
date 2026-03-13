@@ -875,10 +875,10 @@ fn init_discover_detects_doc_comments() {
 
     // The struct Money has a doc comment (/// A monetary amount)
     let money_struct = sidecar.specs.iter().find_map(|s| match s {
-        liyi::sidecar::Spec::Item(i) if i.tree_path == "struct::Money" => Some(i),
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "struct.Money" => Some(i),
         _ => None,
     });
-    assert!(money_struct.is_some(), "should find struct::Money");
+    assert!(money_struct.is_some(), "should find struct.Money");
     let hints = money_struct
         .unwrap()
         ._hints
@@ -892,10 +892,10 @@ fn init_discover_detects_doc_comments() {
 
     // standalone function has no doc comment
     let standalone = sidecar.specs.iter().find_map(|s| match s {
-        liyi::sidecar::Spec::Item(i) if i.tree_path == "fn::standalone" => Some(i),
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "fn.standalone" => Some(i),
         _ => None,
     });
-    assert!(standalone.is_some(), "should find fn::standalone");
+    assert!(standalone.is_some(), "should find fn.standalone");
     let hints = standalone
         .unwrap()
         ._hints
@@ -928,10 +928,10 @@ fn init_discover_body_lines_and_likely_trivial() {
         .specs
         .iter()
         .find_map(|s| match s {
-            liyi::sidecar::Spec::Item(i) if i.tree_path == "fn::standalone" => Some(i),
+            liyi::sidecar::Spec::Item(i) if i.tree_path == "fn.standalone" => Some(i),
             _ => None,
         })
-        .expect("should find fn::standalone");
+        .expect("should find fn.standalone");
     let hints = standalone._hints.as_ref().expect("should have _hints");
     assert_eq!(hints["_body_lines"], 3);
     assert_eq!(hints["_likely_trivial"], true);
@@ -941,10 +941,10 @@ fn init_discover_body_lines_and_likely_trivial() {
         .specs
         .iter()
         .find_map(|s| match s {
-            liyi::sidecar::Spec::Item(i) if i.tree_path == "struct::Money" => Some(i),
+            liyi::sidecar::Spec::Item(i) if i.tree_path == "struct.Money" => Some(i),
             _ => None,
         })
-        .expect("should find struct::Money");
+        .expect("should find struct.Money");
     let money_hints = money._hints.as_ref().expect("should have _hints");
     assert!(money_hints["_body_lines"].is_number());
     assert!(
@@ -957,10 +957,10 @@ fn init_discover_body_lines_and_likely_trivial() {
         .specs
         .iter()
         .find_map(|s| match s {
-            liyi::sidecar::Spec::Item(i) if i.tree_path == "impl::Money::fn::add" => Some(i),
+            liyi::sidecar::Spec::Item(i) if i.tree_path == "impl.Money::fn.add" => Some(i),
             _ => None,
         })
-        .expect("should find impl::Money::fn::add");
+        .expect("should find impl.Money::fn.add");
     let add_hints = add_fn._hints.as_ref().expect("should have _hints");
     let add_lines = add_hints["_body_lines"].as_u64().unwrap();
     assert!(
@@ -992,10 +992,10 @@ fn init_discover_custom_trivial_threshold() {
         .specs
         .iter()
         .find_map(|s| match s {
-            liyi::sidecar::Spec::Item(i) if i.tree_path == "impl::Money::fn::add" => Some(i),
+            liyi::sidecar::Spec::Item(i) if i.tree_path == "impl.Money::fn.add" => Some(i),
             _ => None,
         })
-        .expect("should find impl::Money::fn::add");
+        .expect("should find impl.Money::fn.add");
     let hints = add_fn._hints.as_ref().expect("should have _hints");
     assert_eq!(hints["_likely_trivial"], true);
 }
@@ -1100,7 +1100,7 @@ fn init_scaffold_combined() {
     }
     let expected: &[Expected] = &[
         Expected {
-            tp: "struct::Point",
+            tp: "struct.Point",
             name: "Point",
             span: [2, 5],
             body: 4,
@@ -1108,7 +1108,7 @@ fn init_scaffold_combined() {
             trivial: false,
         },
         Expected {
-            tp: "struct::Internal",
+            tp: "struct.Internal",
             name: "Internal",
             span: [7, 7],
             body: 1,
@@ -1116,7 +1116,7 @@ fn init_scaffold_combined() {
             trivial: true,
         },
         Expected {
-            tp: "impl::Point",
+            tp: "impl.Point",
             name: "Point",
             span: [9, 28],
             body: 20,
@@ -1124,7 +1124,7 @@ fn init_scaffold_combined() {
             trivial: false,
         },
         Expected {
-            tp: "impl::Point::fn::origin",
+            tp: "impl.Point::fn.origin",
             name: "Point::origin",
             span: [11, 13],
             body: 3,
@@ -1132,7 +1132,7 @@ fn init_scaffold_combined() {
             trivial: false,
         },
         Expected {
-            tp: "impl::Point::fn::distance_to",
+            tp: "impl.Point::fn.distance_to",
             name: "Point::distance_to",
             span: [18, 22],
             body: 5,
@@ -1140,7 +1140,7 @@ fn init_scaffold_combined() {
             trivial: false,
         },
         Expected {
-            tp: "impl::Point::fn::translate",
+            tp: "impl.Point::fn.translate",
             name: "Point::translate",
             span: [24, 27],
             body: 4,
@@ -1148,7 +1148,7 @@ fn init_scaffold_combined() {
             trivial: true,
         },
         Expected {
-            tp: "fn::scale_all",
+            tp: "fn.scale_all",
             name: "scale_all",
             span: [31, 36],
             body: 6,
@@ -1156,7 +1156,7 @@ fn init_scaffold_combined() {
             trivial: false,
         },
         Expected {
-            tp: "fn::identity",
+            tp: "fn.identity",
             name: "identity",
             span: [38, 40],
             body: 3,
