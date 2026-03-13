@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "beta.rs",
+  "specs": [
+    {
+      "item": "process_data",
+      "intent": "Process data with logging",
+      "source_span": [6, 8]
+    }
+  ]
+}

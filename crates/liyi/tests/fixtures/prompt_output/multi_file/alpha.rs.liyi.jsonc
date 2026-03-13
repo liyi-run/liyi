@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "alpha.rs",
+  "specs": [
+    {
+      "item": "validate_input",
+      "intent": "Validates all inputs",
+      "source_span": [5, 7]
+    }
+  ]
+}

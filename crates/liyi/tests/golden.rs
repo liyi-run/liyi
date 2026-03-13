@@ -568,3 +568,137 @@ fn missing_related_pass() {
     );
     assert_eq!(exit_code, LiyiExitCode::Clean);
 }
+
+// ---------------------------------------------------------------------------
+// --prompt mode tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn prompt_mixed_gaps() {
+    let (_tmp, root) = fixture_in_tmp("prompt_output/mixed_gaps");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: true,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    assert_eq!(output.version, "0.1");
+    assert_eq!(output.exit_code, 1);
+
+    // Should have all three gap types.
+    let types: Vec<&str> = output
+        .items
+        .iter()
+        .map(|item| match item {
+            liyi::prompt::PromptItem::MissingRequirementSpec { .. } => "missing_requirement_spec",
+            liyi::prompt::PromptItem::MissingRelatedEdge { .. } => "missing_related_edge",
+            liyi::prompt::PromptItem::ReqNoRelated { .. } => "req_no_related",
+        })
+        .collect();
+
+    assert!(
+        types.contains(&"missing_requirement_spec"),
+        "expected missing_requirement_spec in prompt items, got: {types:?}"
+    );
+    assert!(
+        types.contains(&"missing_related_edge"),
+        "expected missing_related_edge in prompt items, got: {types:?}"
+    );
+    assert!(
+        types.contains(&"req_no_related"),
+        "expected req_no_related in prompt items, got: {types:?}"
+    );
+
+    // Verify requirement_text is populated for missing_requirement_spec.
+    for item in &output.items {
+        if let liyi::prompt::PromptItem::MissingRequirementSpec {
+            requirement_text, ..
+        } = item
+        {
+            assert!(
+                requirement_text.is_some(),
+                "expected requirement_text to be populated"
+            );
+        }
+    }
+
+    // Verify output serializes to valid JSON.
+    let json = serde_json::to_string_pretty(&output).expect("failed to serialize");
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("invalid JSON");
+    assert_eq!(parsed["version"], "0.1");
+    assert!(parsed["items"].is_array());
+}
+
+#[test]
+fn prompt_clean() {
+    let (_tmp, root) = fixture_in_tmp("prompt_output/clean");
+    let flags = default_flags();
+
+    // Fix hashes first.
+    let _ = run_check(&root, &[], true, false, &flags);
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    assert_eq!(output.version, "0.1");
+    assert!(output.items.is_empty(), "expected no items, got: {:?}", output.items);
+    assert_eq!(output.exit_code, 0);
+}
+
+#[test]
+fn prompt_errors_only() {
+    let (_tmp, root) = fixture_in_tmp("prompt_output/errors_only");
+    let flags = default_flags();
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    // Error-class diagnostics produce exit_code 2 but no coverage-gap items.
+    assert!(output.items.is_empty(), "expected no items for error-only, got: {:?}", output.items);
+    assert_eq!(output.exit_code, 2);
+}
+
+#[test]
+fn prompt_multi_file() {
+    let (_tmp, root) = fixture_in_tmp("prompt_output/multi_file");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: true,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    assert_eq!(output.exit_code, 1);
+
+    // Should have gaps from both files.
+    let source_files: Vec<&str> = output
+        .items
+        .iter()
+        .map(|item| match item {
+            liyi::prompt::PromptItem::MissingRequirementSpec { source_file, .. } => {
+                source_file.as_str()
+            }
+            liyi::prompt::PromptItem::MissingRelatedEdge { source_file, .. } => {
+                source_file.as_str()
+            }
+            liyi::prompt::PromptItem::ReqNoRelated { source_file, .. } => source_file.as_str(),
+        })
+        .collect();
+
+    assert!(
+        source_files.contains(&"alpha.rs"),
+        "expected gaps from alpha.rs, got: {source_files:?}"
+    );
+    assert!(
+        source_files.contains(&"beta.rs"),
+        "expected gaps from beta.rs, got: {source_files:?}"
+    );
+    assert!(output.items.len() >= 2, "expected at least 2 gap items across files");
+}

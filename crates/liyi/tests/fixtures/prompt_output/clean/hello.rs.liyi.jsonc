@@ -1,0 +1,11 @@
+{
+  "version": "0.1",
+  "source": "hello.rs",
+  "specs": [
+    {
+      "item": "greet",
+      "intent": "Print a greeting",
+      "source_span": [1, 3]
+    }
+  ]
+}

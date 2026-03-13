@@ -1,0 +1,20 @@
+{
+  "version": "0.1",
+  "source": "middleware.rs",
+  "specs": [
+    {
+      "requirement": "rate-limit",
+      "source_span": [5, 7]
+    },
+    {
+      "item": "verify_session",
+      "intent": "Verify user session authentication",
+      "source_span": [10, 12]
+    },
+    {
+      "item": "unrelated_helper",
+      "intent": "A helper with no requirement references",
+      "source_span": [17, 19]
+    }
+  ]
+}
