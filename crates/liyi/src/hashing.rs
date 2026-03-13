@@ -31,41 +31,11 @@ impl std::error::Error for SpanError {}
 /// Hash the source lines in `span` and return `("sha256:{hex}", anchor)`.
 ///
 /// `span` is a 1-indexed, inclusive `[start, end]` interval.
-/// Line endings are normalized to LF before hashing.
+/// Line endings are normalized to LF before hashing.  A trailing LF is
+/// appended so the digest matches `sed -n 'start,end p' file | sha256sum`.
 /// The anchor is the literal text of the first line (after CR stripping, untrimmed).
 // @liyi:related source-span-semantics
 pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {
-    let [start, end] = span;
-    if start == 0 || end == 0 {
-        return Err(SpanError::Empty);
-    }
-    if start > end {
-        return Err(SpanError::Inverted { start, end });
-    }
-
-    let lines: Vec<&str> = source_content.lines().collect();
-    let total = lines.len();
-    if end > total {
-        return Err(SpanError::PastEof { end, total });
-    }
-
-    let selected = &lines[start - 1..end];
-    let joined = selected.join("\n");
-
-    let hash = Sha256::digest(joined.as_bytes());
-    let hex = format!("sha256:{hash:x}");
-    let anchor = selected[0].to_owned();
-
-    Ok((hex, anchor))
-}
-
-/// Hash with trailing LF per line (UNIX-standard behavior).
-///
-/// Each selected line gets a `\n` appended before hashing, so the digest
-/// matches what `sed -n 'start,end p' file | sha256sum` produces.
-/// Returns `("sha256t:{hex}", anchor)` during the migration period.
-// @liyi:related source-span-semantics
-pub fn hash_span_t(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {
     let [start, end] = span;
     if start == 0 || end == 0 {
         return Err(SpanError::Empty);
@@ -85,7 +55,7 @@ pub fn hash_span_t(source_content: &str, span: [usize; 2]) -> Result<(String, St
     joined.push('\n');
 
     let hash = Sha256::digest(joined.as_bytes());
-    let hex = format!("sha256t:{hash:x}");
+    let hex = format!("sha256:{hash:x}");
     let anchor = selected[0].to_owned();
 
     Ok((hex, anchor))

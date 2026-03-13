@@ -5,17 +5,17 @@
     {
       "requirement": "req-alpha",
       "source_span": [1, 2],
-      "source_hash": "sha256:c02968b5169719510a748b6c73e2b20466f98c7469219540c106e0e8ae512337"
+      "source_hash": "sha256:abd10597d9fdd73d867f14371964ee3c6213f9bc3cb1ccb6bf050c3ee8721c3b"
     },
     {
       "item": "alpha_impl",
       "reviewed": true,
       "intent": "Implements alpha logic",
       "source_span": [4, 5],
-      "source_hash": "sha256:be8fe584be68d01125dfcb44dcc21262daa8581e42eec440bca508ef46e33376",
+      "source_hash": "sha256:4113c76d4928bae6780b25dd8ebb21d1a8ae98a5f152603a324fe66904003f01b",
       "source_anchor": "// @liyi:related req-beta",
       "related": {
-        "req-beta": "sha256:51c723a205354cbb4f6bf3d235c8fb9bb6027223a07322ad8bd08c9137b7ad38"
+        "req-beta": "sha256:c11c3405b0e03eb835021b6a9c640a6ff42a741b744e854e13bbb62b52e08845"
       }
     }
   ]

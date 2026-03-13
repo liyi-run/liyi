@@ -11,7 +11,7 @@
         1,
         3
       ],
-      "source_hash": "sha256:83d70615895244c6b4d64ad79cfaae320eded89c2ac585bc9afcd26e9049710f",
+      "source_hash": "sha256:59975e288d87df38afa3b412eb00ea0d7a1db05e7a956d4f27cf0058c641a820",
       "source_anchor": "fn multiply(a: i32, b: i32) -> i32 {"
     }
   ]

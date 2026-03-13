@@ -12,7 +12,7 @@
         39
       ],
       "tree_path": "fn::kotlin_node_name",
-      "source_hash": "sha256t:2a28e86d5bade7386e754061a6091f9c355ae41fb2c204ac4a1665bd1758db36",
+      "source_hash": "sha256:2a28e86d5bade7386e754061a6091f9c355ae41fb2c204ac4a1665bd1758db36",
       "source_anchor": "fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -24,7 +24,7 @@
         56
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256t:819461f607150d4ef9bf4d7e7ad4356ad706e6ed7458cf290b67bb36bfd2ab93",
+      "source_hash": "sha256:819461f607150d4ef9bf4d7e7ad4356ad706e6ed7458cf290b67bb36bfd2ab93",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

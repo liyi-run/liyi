@@ -7,7 +7,7 @@
       "reviewed": true,
       "intent": "Compute 2x+1",
       "source_span": [1, 3],
-      "source_hash": "sha256:0139bc3850bff10574bb6f68d05850648ee3a76c233814a649c4df578a91ecd4",
+      "source_hash": "sha256:a9fc3f7354e940269aafe32731cef16b5d04eac62820efa1c2760193b6272fb8",
       "source_anchor": "fn compute(x: i32) -> i32 {"
     }
   ]

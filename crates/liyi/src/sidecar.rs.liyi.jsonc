@@ -12,7 +12,7 @@
         11
       ],
       "tree_path": "struct::SidecarFile",
-      "source_hash": "sha256t:5092aa1dcd60cb05a77ab22347886da5abc71c66ddafe8456ec9196cd3082beb",
+      "source_hash": "sha256:5092aa1dcd60cb05a77ab22347886da5abc71c66ddafe8456ec9196cd3082beb",
       "source_anchor": "pub struct SidecarFile {"
     },
     {
@@ -24,7 +24,7 @@
         19
       ],
       "tree_path": "enum::Spec",
-      "source_hash": "sha256t:08fc4ad94021a75631e7a296aad438888725e367f52162f17d52f18ff40ed843",
+      "source_hash": "sha256:08fc4ad94021a75631e7a296aad438888725e367f52162f17d52f18ff40ed843",
       "source_anchor": "pub enum Spec {"
     },
     {
@@ -35,7 +35,7 @@
         21,
         45
       ],
-      "source_hash": "sha256t:dcf30bdadc0c1e1dd9fd22f13ec361c57824197b47df767d6e6bdec1327cbb1f",
+      "source_hash": "sha256:dcf30bdadc0c1e1dd9fd22f13ec361c57824197b47df767d6e6bdec1327cbb1f",
       "source_anchor": "/// Details of a code item (function, struct, etc.)"
     },
     {
@@ -46,7 +46,7 @@
         47,
         60
       ],
-      "source_hash": "sha256t:d22f4b4cafceb6733aaf3112c7a167f499e4cd3fb6967ec622d92942d951c78a",
+      "source_hash": "sha256:d22f4b4cafceb6733aaf3112c7a167f499e4cd3fb6967ec622d92942d951c78a",
       "source_anchor": "    pub related: Option<BTreeMap<String, Option<String>>>,"
     },
     {
@@ -58,7 +58,7 @@
         120
       ],
       "tree_path": "fn::strip_jsonc_comments",
-      "source_hash": "sha256t:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
+      "source_hash": "sha256:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
       "source_anchor": "pub fn strip_jsonc_comments(input: &str) -> String {"
     },
     {
@@ -70,7 +70,7 @@
         127
       ],
       "tree_path": "fn::parse_sidecar",
-      "source_hash": "sha256t:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
+      "source_hash": "sha256:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
       "source_anchor": "pub fn parse_sidecar(content: &str) -> Result<SidecarFile, String> {"
     },
     {
@@ -82,7 +82,7 @@
         134
       ],
       "tree_path": "fn::write_sidecar",
-      "source_hash": "sha256t:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
+      "source_hash": "sha256:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
       "source_anchor": "pub fn write_sidecar(sidecar: &SidecarFile) -> String {"
     },
     {
@@ -94,7 +94,7 @@
         204
       ],
       "tree_path": "fn::validate_sidecar",
-      "source_hash": "sha256t:d6663613634fc89ca409dc417ee1bb43c12d874cde0ccf24cf22b5e711b77e0f",
+      "source_hash": "sha256:d6663613634fc89ca409dc417ee1bb43c12d874cde0ccf24cf22b5e711b77e0f",
       "source_anchor": "pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {"
     }
   ]

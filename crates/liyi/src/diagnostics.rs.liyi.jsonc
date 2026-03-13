@@ -12,7 +12,7 @@
         9
       ],
       "tree_path": "enum::Severity",
-      "source_hash": "sha256t:f8063cf209d5ce262ccff6306b87872a5877fb8a6cc9a9d406050f07c9a3c9e5",
+      "source_hash": "sha256:f8063cf209d5ce262ccff6306b87872a5877fb8a6cc9a9d406050f07c9a3c9e5",
       "source_anchor": "pub enum Severity {"
     },
     {
@@ -24,7 +24,7 @@
         33
       ],
       "tree_path": "enum::DiagnosticKind",
-      "source_hash": "sha256t:d48a3ed41da2eb8d2f6be6ab56b765e183e65d55691a1846430d93aca3e29ac1",
+      "source_hash": "sha256:d48a3ed41da2eb8d2f6be6ab56b765e183e65d55691a1846430d93aca3e29ac1",
       "source_anchor": "pub enum DiagnosticKind {"
     },
     {
@@ -36,7 +36,7 @@
         46
       ],
       "tree_path": "struct::Diagnostic",
-      "source_hash": "sha256t:b4becfd3901494064eb43e215d9e28e0c7d0f327fb3ee964891fd6e81103353c",
+      "source_hash": "sha256:b4becfd3901494064eb43e215d9e28e0c7d0f327fb3ee964891fd6e81103353c",
       "source_anchor": "pub struct Diagnostic {"
     },
     {
@@ -48,7 +48,7 @@
         91
       ],
       "tree_path": "impl::Diagnostic",
-      "source_hash": "sha256t:2f726d798b9bb24182546960f0eacfabd8fd58e122813e643980aa8e0678d140",
+      "source_hash": "sha256:2f726d798b9bb24182546960f0eacfabd8fd58e122813e643980aa8e0678d140",
       "source_anchor": "impl Diagnostic {"
     },
     {
@@ -60,7 +60,7 @@
         121
       ],
       "tree_path": "struct::CheckFlags",
-      "source_hash": "sha256t:7db1a400401611d2d83f2c98a9258920cd81a040e2237804b1a46e5530411fa9",
+      "source_hash": "sha256:7db1a400401611d2d83f2c98a9258920cd81a040e2237804b1a46e5530411fa9",
       "source_anchor": "pub struct CheckFlags {"
     },
     {
@@ -72,7 +72,7 @@
         131
       ],
       "tree_path": "enum::LiyiExitCode",
-      "source_hash": "sha256t:065e327cb7a385b508af79995f55c2ab18bb0fcb3aeda9c5cf9d2cd0368401c5",
+      "source_hash": "sha256:065e327cb7a385b508af79995f55c2ab18bb0fcb3aeda9c5cf9d2cd0368401c5",
       "source_anchor": "pub enum LiyiExitCode {",
       "related": {
         "liyi-check-exit-code": "sha256:d7c4ad4bd1d1abe361598373a376aacda6bc0d948bd611f9b8bdea0b23a74c7a"
@@ -87,7 +87,7 @@
         171
       ],
       "tree_path": "fn::compute_exit_code",
-      "source_hash": "sha256t:ee306ec1a8f602223a88a0c33db8dd471740008fbc799d25482dccc3272f5a4d",
+      "source_hash": "sha256:ee306ec1a8f602223a88a0c33db8dd471740008fbc799d25482dccc3272f5a4d",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {",
       "related": {
         "liyi-check-exit-code": "sha256:d7c4ad4bd1d1abe361598373a376aacda6bc0d948bd611f9b8bdea0b23a74c7a"

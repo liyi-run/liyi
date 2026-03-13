@@ -12,7 +12,7 @@
         25
       ],
       "tree_path": "enum::Segment",
-      "source_hash": "sha256t:f03e58f7d39bc6afc57714a20d7dd2f0ae7df5b41984ddc73a03cdceeeaf8eb3",
+      "source_hash": "sha256:f03e58f7d39bc6afc57714a20d7dd2f0ae7df5b41984ddc73a03cdceeeaf8eb3",
       "source_anchor": "pub enum Segment {"
     },
     {
@@ -24,7 +24,7 @@
         31
       ],
       "tree_path": "struct::TreePath",
-      "source_hash": "sha256t:5d1af2aa90dd466d122b375cd4965a2af46251cc09cba1db82aaab13feaaeeae",
+      "source_hash": "sha256:5d1af2aa90dd466d122b375cd4965a2af46251cc09cba1db82aaab13feaaeeae",
       "source_anchor": "pub struct TreePath {"
     },
     {
@@ -36,7 +36,7 @@
         112
       ],
       "tree_path": "fn::parse_tree_path",
-      "source_hash": "sha256t:2be8584a996ee2a96a8ef64a574b380d98698b3e2628c46545c52f85217a5acd",
+      "source_hash": "sha256:2be8584a996ee2a96a8ef64a574b380d98698b3e2628c46545c52f85217a5acd",
       "source_anchor": "fn parse_tree_path(input: &str) -> IResult<&str, TreePath> {"
     },
     {
@@ -48,7 +48,7 @@
         130
       ],
       "tree_path": "fn::parse_segment",
-      "source_hash": "sha256t:a3a88773a8c9efa33fc7a9f095cc355918d27fbe0e7bc9d2953224b6a3153e52",
+      "source_hash": "sha256:a3a88773a8c9efa33fc7a9f095cc355918d27fbe0e7bc9d2953224b6a3153e52",
       "source_anchor": "fn parse_segment(input: &str) -> IResult<&str, Segment> {"
     },
     {
@@ -60,7 +60,7 @@
         84
       ],
       "tree_path": "fn::serialize_name",
-      "source_hash": "sha256t:b8dd81d8073ea0e32e85b41124e93cf98b211bf62c50d273767890f344498530",
+      "source_hash": "sha256:b8dd81d8073ea0e32e85b41124e93cf98b211bf62c50d273767890f344498530",
       "source_anchor": "pub fn serialize_name(name: &str) -> String {"
     }
   ]

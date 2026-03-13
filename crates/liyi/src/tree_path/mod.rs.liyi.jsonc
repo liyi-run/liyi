@@ -12,7 +12,7 @@
         57
       ],
       "tree_path": "struct::LanguageConfig",
-      "source_hash": "sha256t:54ab729f8a8e1c41d1a0869add8dfebd72b9c96f9e7a6390d5717534368229c5",
+      "source_hash": "sha256:54ab729f8a8e1c41d1a0869add8dfebd72b9c96f9e7a6390d5717534368229c5",
       "source_anchor": "pub struct LanguageConfig {"
     },
     {
@@ -24,7 +24,7 @@
         254
       ],
       "tree_path": "fn::detect_language",
-      "source_hash": "sha256t:96c68ee23e863a0dfa399bb9ed373f14a749d34b5ada5e33f8017c04c0583fab",
+      "source_hash": "sha256:96c68ee23e863a0dfa399bb9ed373f14a749d34b5ada5e33f8017c04c0583fab",
       "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {"
     },
     {
@@ -36,7 +36,7 @@
         147
       ],
       "tree_path": "enum::Language",
-      "source_hash": "sha256t:9ce8c69e8347fd24cae35b300852873103b7fe37384c005438460a088d00788b",
+      "source_hash": "sha256:9ce8c69e8347fd24cae35b300852873103b7fe37384c005438460a088d00788b",
       "source_anchor": "pub enum Language {"
     },
     {
@@ -48,7 +48,7 @@
         100
       ],
       "tree_path": "impl::LanguageConfig::fn::node_name",
-      "source_hash": "sha256t:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
+      "source_hash": "sha256:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
       "source_anchor": "    fn node_name<'a>(&self, node: &Node<'a>, source: &'a str) -> Option<Cow<'a, str>> {"
     },
     {
@@ -60,7 +60,7 @@
         305
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256t:e1480e8143e28f8b57c54b4b922da6f8eee969907fcbf49e6ab77f98944e682f",
+      "source_hash": "sha256:e1480e8143e28f8b57c54b4b922da6f8eee969907fcbf49e6ab77f98944e682f",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -72,7 +72,7 @@
         337
       ],
       "tree_path": "fn::resolve_segments",
-      "source_hash": "sha256t:c5535331db3d0bfc328b1fffe834fc1fa470fca0509b949036b555cd78bb2e77",
+      "source_hash": "sha256:c5535331db3d0bfc328b1fffe834fc1fa470fca0509b949036b555cd78bb2e77",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
@@ -84,7 +84,7 @@
         348
       ],
       "tree_path": "fn::resolve_in_body",
-      "source_hash": "sha256t:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
+      "source_hash": "sha256:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
       "source_anchor": "fn resolve_in_body<'a>("
     },
     {
@@ -96,7 +96,7 @@
         376
       ],
       "tree_path": "fn::compute_tree_path",
-      "source_hash": "sha256t:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
+      "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
     {
@@ -108,7 +108,7 @@
         430
       ],
       "tree_path": "fn::find_item_in_range",
-      "source_hash": "sha256t:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
+      "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
       "source_anchor": "fn find_item_in_range<'a>("
     },
     {
@@ -120,7 +120,7 @@
         494
       ],
       "tree_path": "fn::collect_path",
-      "source_hash": "sha256t:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
+      "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
       "source_anchor": "fn collect_path("
     }
   ]

@@ -7,7 +7,7 @@
       "reviewed": true,
       "intent": "Add two integers, rejecting overflow per no-overflow requirement",
       "source_span": [2, 4],
-      "source_hash": "sha256:21b3ad6b0689a685d082a047acb608ad67749293d1d98cab524a8cd4e9c8fa06",
+      "source_hash": "sha256:f8f74171fdc0c0bb69c86e93904d4f78e45d3a473e54018966d47dbbb022fbb2",
       "source_anchor": "fn add(a: i32, b: i32) -> i32 {",
       "related": {
         "no-overflow": "sha256:0000000000000000000000000000000000000000000000000000000000000000"

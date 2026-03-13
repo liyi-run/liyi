@@ -12,7 +12,7 @@
         19
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256t:b14e44717b2e5b3e103ee38acb764059528732c469bcfa6dacebd373fd6dc4f5",
+      "source_hash": "sha256:b14e44717b2e5b3e103ee38acb764059528732c469bcfa6dacebd373fd6dc4f5",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
     {
@@ -24,7 +24,7 @@
         37
       ],
       "tree_path": "static::TSX_CONFIG",
-      "source_hash": "sha256t:84e715a9711fe8241f18bdb7dd4b84bc1dafe314a6bfca48696f2a3ba04ab798",
+      "source_hash": "sha256:84e715a9711fe8241f18bdb7dd4b84bc1dafe314a6bfca48696f2a3ba04ab798",
       "source_anchor": "pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

@@ -12,7 +12,7 @@
         29
       ],
       "tree_path": "fn::git_show",
-      "source_hash": "sha256t:fd5366581f45d1d743884aab56b234ac70802901570874b2dfb8867d7df74c8c",
+      "source_hash": "sha256:fd5366581f45d1d743884aab56b234ac70802901570874b2dfb8867d7df74c8c",
       "source_anchor": "pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {"
     },
     {
@@ -24,7 +24,7 @@
         62
       ],
       "tree_path": "fn::git_log_revisions",
-      "source_hash": "sha256t:d58af00dd6a5df7e9b5e7031b7c644e4fb57c80a5c9cf232627ab728de76e139",
+      "source_hash": "sha256:d58af00dd6a5df7e9b5e7031b7c644e4fb57c80a5c9cf232627ab728de76e139",
       "source_anchor": "pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {"
     }
   ]

@@ -12,7 +12,7 @@
         76
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256t:4695b494ff4e317407d355a71ddc3ee18d082dee01ae47d1d3539b7707afa872",
+      "source_hash": "sha256:4695b494ff4e317407d355a71ddc3ee18d082dee01ae47d1d3539b7707afa872",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
     {
@@ -24,7 +24,7 @@
         59
       ],
       "tree_path": "fn::zig_node_name",
-      "source_hash": "sha256t:eb05acba8328fb121ac202a2b124c0ea630f4b5b556ba40a844fe42f84d49a03",
+      "source_hash": "sha256:eb05acba8328fb121ac202a2b124c0ea630f4b5b556ba40a844fe42f84d49a03",
       "source_anchor": "fn zig_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -36,7 +36,7 @@
         9
       ],
       "tree_path": "fn::find_child_by_kind",
-      "source_hash": "sha256t:475743b87d4a326bcc3cb1c34dc3166766e545b996c93e2af4434fe0ec1d8be8",
+      "source_hash": "sha256:475743b87d4a326bcc3cb1c34dc3166766e545b996c93e2af4434fe0ec1d8be8",
       "source_anchor": "fn find_child_by_kind<'a>(node: &Node<'a>, kind: &str) -> Option<Node<'a>> {"
     }
   ]

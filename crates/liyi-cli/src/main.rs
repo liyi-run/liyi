@@ -224,48 +224,6 @@ fn main() {
                 }
             }
         }
-        Commands::Rehash { paths } => {
-            let targets = if paths.is_empty() {
-                vec![std::env::current_dir().unwrap_or_default()]
-            } else {
-                paths
-            };
-
-            let targets = match liyi::discovery::resolve_sidecar_targets(&targets) {
-                Ok(t) => t,
-                Err(e) => {
-                    eprintln!("Error: {e}");
-                    process::exit(2);
-                }
-            };
-
-            if targets.is_empty() {
-                eprintln!("no .liyi.jsonc files found");
-                process::exit(2);
-            }
-
-            let mut total_rehashed = 0usize;
-            let mut errors = 0usize;
-            for sidecar_path in &targets {
-                match rehash_sidecar(sidecar_path) {
-                    Ok(n) => {
-                        if n > 0 {
-                            println!("{}: {n} hashes updated", sidecar_path.display());
-                        }
-                        total_rehashed += n;
-                    }
-                    Err(e) => {
-                        eprintln!("Error ({}): {e}", sidecar_path.display());
-                        errors += 1;
-                    }
-                }
-            }
-
-            println!("\n{total_rehashed} hashes rehashed across {} files", targets.len());
-            if errors > 0 {
-                process::exit(2);
-            }
-        }
     }
 }
 
@@ -277,57 +235,4 @@ fn is_tty() -> bool {
     io::stderr().is_terminal()
 }
 
-/// Re-hash a single sidecar file: read source, recompute all hashes with
-/// `hash_span_t`, write back.  Returns the number of hashes updated.
-fn rehash_sidecar(sidecar_path: &std::path::Path) -> Result<usize, String> {
-    let raw = std::fs::read_to_string(sidecar_path)
-        .map_err(|e| format!("read sidecar: {e}"))?;
-    let mut sidecar = liyi::sidecar::parse_sidecar(&raw)?;
 
-    // Derive source path from sidecar location (strip .liyi.jsonc suffix).
-    let source_path = {
-        let name = sidecar_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .ok_or("bad sidecar filename")?;
-        let source_name = name.strip_suffix(".liyi.jsonc")
-            .ok_or("sidecar does not end in .liyi.jsonc")?;
-        sidecar_path.parent().unwrap().join(source_name)
-    };
-
-    let source_content = std::fs::read_to_string(&source_path)
-        .map_err(|e| format!("read source {}: {e}", source_path.display()))?;
-
-    let mut count = 0usize;
-    for spec in &mut sidecar.specs {
-        match spec {
-            liyi::sidecar::Spec::Item(item) => {
-                if let Ok((h, _a)) = liyi::hashing::hash_span_t(&source_content, item.source_span) {
-                    if item.source_hash.as_deref() != Some(&h) {
-                        item.source_hash = Some(h);
-                        count += 1;
-                    }
-                }
-                // Rehash related requirement edges — these point to
-                // requirement source, not rehashable here.  Leave as-is;
-                // `liyi check --fix` will update them.
-            }
-            liyi::sidecar::Spec::Requirement(req) => {
-                if let Ok((h, _a)) = liyi::hashing::hash_span_t(&source_content, req.source_span) {
-                    if req.source_hash.as_deref() != Some(&h) {
-                        req.source_hash = Some(h);
-                        count += 1;
-                    }
-                }
-            }
-        }
-    }
-
-    if count > 0 {
-        let output = liyi::sidecar::write_sidecar(&sidecar);
-        std::fs::write(sidecar_path, output)
-            .map_err(|e| format!("write sidecar: {e}"))?;
-    }
-
-    Ok(count)
-}

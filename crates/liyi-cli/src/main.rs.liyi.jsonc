@@ -12,7 +12,7 @@
         19
       ],
       "tree_path": "fn::reset_sigpipe",
-      "source_hash": "sha256t:88c175f1caa9ce830cd8d1f4e54d8942fa5f709dbc2589d8291a7dbe3dcffbd0",
+      "source_hash": "sha256:88c175f1caa9ce830cd8d1f4e54d8942fa5f709dbc2589d8291a7dbe3dcffbd0",
       "source_anchor": "fn reset_sigpipe() {"
     },
     {
@@ -24,7 +24,7 @@
         228
       ],
       "tree_path": "fn::main",
-      "source_hash": "sha256t:3449f176e53c17da24bb972b225f73f0ed0c1279c0caece721a824f60c6185f6",
+      "source_hash": "sha256:3449f176e53c17da24bb972b225f73f0ed0c1279c0caece721a824f60c6185f6",
       "source_anchor": "fn main() {"
     },
     {
@@ -36,7 +36,7 @@
         236
       ],
       "tree_path": "fn::is_tty",
-      "source_hash": "sha256t:0deecf78d6e0c4a3e4fe895219abccb2f1ca541152466e5949b6e638cfbad457",
+      "source_hash": "sha256:0deecf78d6e0c4a3e4fe895219abccb2f1ca541152466e5949b6e638cfbad457",
       "source_anchor": "fn is_tty() -> bool {"
     }
   ]

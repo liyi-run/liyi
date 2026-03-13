@@ -11,7 +11,7 @@
         2,
         4
       ],
-      "source_hash": "sha256:7834d8e398d42127bf7250ed277c47d99d44fb58229f31cdf747c786e81bb475",
+      "source_hash": "sha256:156f1a5ef1292106608615bcc2d14c2af269f930acf2c818422438926a60cc3d",
       "source_anchor": "fn get_name() -> &'static str {"
     },
     {
@@ -22,7 +22,7 @@
         7,
         9
       ],
-      "source_hash": "sha256:5af3088e2d93bb7fe19180e240fdcb3b5d6b8379be0b24a0d6192abf9baefe04",
+      "source_hash": "sha256:dd82ef3e90e5e0a54568d2fb4983bae952140f5cc5e6f7925705ed3211b782c5",
       "source_anchor": "fn old_function() {"
     }
   ]

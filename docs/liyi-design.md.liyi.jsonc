@@ -9,7 +9,7 @@
         352,
         354
       ],
-      "source_hash": "sha256t:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38",
+      "source_hash": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38",
       "source_anchor": "<!-- @liyi:requirement liyi-sidecar-naming-convention -->"
     },
     {
@@ -18,7 +18,7 @@
         386,
         388
       ],
-      "source_hash": "sha256t:dff782ba62e3c427a203eedcef593a038eebc2e45692977eb4750d7fb52e4ec6",
+      "source_hash": "sha256:dff782ba62e3c427a203eedcef593a038eebc2e45692977eb4750d7fb52e4ec6",
       "source_anchor": "<!-- @liyi:requirement version-field-required -->"
     },
     {
@@ -27,7 +27,7 @@
         412,
         414
       ],
-      "source_hash": "sha256t:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0",
+      "source_hash": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0",
       "source_anchor": "<!-- @liyi:requirement reviewed-semantics -->"
     },
     {
@@ -36,7 +36,7 @@
         436,
         438
       ],
-      "source_hash": "sha256t:5cbcfafbe90d047f23789e8787504189558a3c08c789552cfa8c860e2f5a5919",
+      "source_hash": "sha256:e2f20ce6bab4d5fc48b49fe8cdd63498258c65fd419ae15983ca532579bc0a58",
       "source_anchor": "<!-- @liyi:requirement source-span-semantics -->"
     },
     {
@@ -45,7 +45,7 @@
         440,
         442
       ],
-      "source_hash": "sha256t:b1b5caaebc89ce62a3b2e59f7468b813a67caf784a6fe03209c46ab67a2f7dbc",
+      "source_hash": "sha256:b1b5caaebc89ce62a3b2e59f7468b813a67caf784a6fe03209c46ab67a2f7dbc",
       "source_anchor": "<!-- @liyi:requirement tool-managed-fields -->"
     },
     {
@@ -54,7 +54,7 @@
         452,
         454
       ],
-      "source_hash": "sha256t:cc7a9a7504471c3fd6c59b59b6b1d0acd61afc5de1052b03b5859fa36d37dcd1",
+      "source_hash": "sha256:cc7a9a7504471c3fd6c59b59b6b1d0acd61afc5de1052b03b5859fa36d37dcd1",
       "source_anchor": "<!-- @liyi:requirement span-shift-heuristic -->"
     },
     {
@@ -63,7 +63,7 @@
         478,
         481
       ],
-      "source_hash": "sha256t:12dad455865dc90e76def7bdd7366b34bdd89134b22e217d6d0077e59dab413f",
+      "source_hash": "sha256:12dad455865dc90e76def7bdd7366b34bdd89134b22e217d6d0077e59dab413f",
       "source_anchor": "<!-- @liyi:requirement tree-path-fix-behavior -->"
     },
     {
@@ -72,7 +72,7 @@
         485,
         493
       ],
-      "source_hash": "sha256t:93c0520e982193e67ecef00b351b6967775bfcb9d989290fe51795b747decceb",
+      "source_hash": "sha256:93c0520e982193e67ecef00b351b6967775bfcb9d989290fe51795b747decceb",
       "source_anchor": "<!-- @liyi:requirement tree-path-empty-fallback -->"
     },
     {
@@ -81,7 +81,7 @@
         641,
         643
       ],
-      "source_hash": "sha256t:fc329b7eb4016b20e9baa89b14470f2953aa6bad5311aa5d4867702994d94f32",
+      "source_hash": "sha256:fc329b7eb4016b20e9baa89b14470f2953aa6bad5311aa5d4867702994d94f32",
       "source_anchor": "<!-- @liyi:requirement requirement-name-uniqueness -->"
     },
     {
@@ -90,7 +90,7 @@
         780,
         782
       ],
-      "source_hash": "sha256t:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
+      "source_hash": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
       "source_anchor": "<!-- @liyi:requirement cycle-detection -->"
     },
     {
@@ -99,7 +99,7 @@
         1111,
         1113
       ],
-      "source_hash": "sha256t:8fdcf5001d02d4622dd7c8a5bd89090119e35cd2aedf7b8d9d7243d5f4cff359",
+      "source_hash": "sha256:8fdcf5001d02d4622dd7c8a5bd89090119e35cd2aedf7b8d9d7243d5f4cff359",
       "source_anchor": "<!-- @liyi:requirement requirement-discovery-global -->"
     },
     {
@@ -108,7 +108,7 @@
         1236,
         1242
       ],
-      "source_hash": "sha256t:2cb6ab36efd4724e3f7e7021bf36233633357e9fddbd1a231bc7b7ed07137d65",
+      "source_hash": "sha256:2cb6ab36efd4724e3f7e7021bf36233633357e9fddbd1a231bc7b7ed07137d65",
       "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
     },
     {
@@ -117,7 +117,7 @@
         1269,
         1271
       ],
-      "source_hash": "sha256t:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306",
+      "source_hash": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306",
       "source_anchor": "<!-- @liyi:requirement marker-normalization -->"
     },
     {
@@ -126,7 +126,7 @@
         1283,
         1285
       ],
-      "source_hash": "sha256t:90808714d1e072184b7e0bcac6f7f1cc70658a0b40855919a51e74fb584ccaa6",
+      "source_hash": "sha256:90808714d1e072184b7e0bcac6f7f1cc70658a0b40855919a51e74fb584ccaa6",
       "source_anchor": "<!-- @liyi:requirement quine-escape-in-source -->"
     },
     {
@@ -135,7 +135,7 @@
         1289,
         1295
       ],
-      "source_hash": "sha256t:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
+      "source_hash": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
       "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
     },
     {
@@ -144,7 +144,7 @@
         1504,
         1506
       ],
-      "source_hash": "sha256t:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
+      "source_hash": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
       "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
     },
     {
@@ -153,7 +153,7 @@
         1508,
         1510
       ],
-      "source_hash": "sha256t:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
+      "source_hash": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
       "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
     }
   ]

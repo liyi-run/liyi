@@ -11,7 +11,7 @@
         2,
         4
       ],
-      "source_hash": "sha256:683340b9dd8c8c6d0e21f126e071c4b175728bead5f3af28143fa7510e0c5b9d",
+      "source_hash": "sha256:48595aea1330e23d3b32ad537364e396e7aa79f14f7f0b91747a013ccb83565c",
       "source_anchor": "fn simple() -> bool {"
     }
   ]

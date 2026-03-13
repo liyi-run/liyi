@@ -9,7 +9,7 @@
         23,
         25
       ],
-      "source_hash": "sha256t:5b729afeeb3162d6f07f6bd6f6a88e348cb57a06ddb0886e69df61438206bcf6",
+      "source_hash": "sha256:5b729afeeb3162d6f07f6bd6f6a88e348cb57a06ddb0886e69df61438206bcf6",
       "source_anchor": "<!-- @liyi:requirement exhaustive-inclusion -->"
     },
     {
@@ -18,7 +18,7 @@
         27,
         29
       ],
-      "source_hash": "sha256t:61e9fdd60945144724f4f520826ca6e7d2cdc5ac9158f79cad9cc9f8042b393e",
+      "source_hash": "sha256:61e9fdd60945144724f4f520826ca6e7d2cdc5ac9158f79cad9cc9f8042b393e",
       "source_anchor": "<!-- @liyi:requirement hints-are-ephemeral -->"
     },
     {
@@ -27,7 +27,7 @@
         31,
         33
       ],
-      "source_hash": "sha256t:7ca122b4963280c7a40f4ce54f393d6aa16ef41c8bc5228dcd20bc0c9d4abac2",
+      "source_hash": "sha256:7ca122b4963280c7a40f4ce54f393d6aa16ef41c8bc5228dcd20bc0c9d4abac2",
       "source_anchor": "<!-- @liyi:requirement hints-intentionally-unstructured -->"
     },
     {
@@ -36,7 +36,7 @@
         35,
         37
       ],
-      "source_hash": "sha256t:35c6ad0db1f2db0b04edfa537b08cc3476cb3245592fd82c0781fa93a246bb4a",
+      "source_hash": "sha256:35c6ad0db1f2db0b04edfa537b08cc3476cb3245592fd82c0781fa93a246bb4a",
       "source_anchor": "<!-- @liyi:requirement tree-sitter-signals-always-present -->"
     },
     {
@@ -45,7 +45,7 @@
         39,
         41
       ],
-      "source_hash": "sha256t:d18b719e0bc043203b04fea2cd944eec8fecd4b998a6824f74eeade5f14343cf",
+      "source_hash": "sha256:d18b719e0bc043203b04fea2cd944eec8fecd4b998a6824f74eeade5f14343cf",
       "source_anchor": "<!-- @liyi:requirement graceful-degradation -->"
     },
     {
@@ -54,7 +54,7 @@
         43,
         45
       ],
-      "source_hash": "sha256t:1d416fbf16511c6f1261d72c79ebd8bfb78e5840f33e6fb84ee4b85ed59ab3f1",
+      "source_hash": "sha256:1d416fbf16511c6f1261d72c79ebd8bfb78e5840f33e6fb84ee4b85ed59ab3f1",
       "source_anchor": "<!-- @liyi:requirement no-git2-dependency -->"
     },
     {
@@ -63,7 +63,7 @@
         47,
         49
       ],
-      "source_hash": "sha256t:6000a7d3bec019e78e75a8f54f7a28bb1d70f8f147ed3e58f07eb748331df91c",
+      "source_hash": "sha256:6000a7d3bec019e78e75a8f54f7a28bb1d70f8f147ed3e58f07eb748331df91c",
       "source_anchor": "<!-- @liyi:requirement item-naming-uses-leaf-name -->"
     },
     {
@@ -72,7 +72,7 @@
         51,
         53
       ],
-      "source_hash": "sha256t:38de7a67a83d4cd205ed88cb67d1c91962fbe585291ccaa153a723dd04c8e2cc",
+      "source_hash": "sha256:38de7a67a83d4cd205ed88cb67d1c91962fbe585291ccaa153a723dd04c8e2cc",
       "source_anchor": "<!-- @liyi:requirement reuse-kind-map-as-item-definition -->"
     }
   ]
