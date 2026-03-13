@@ -53,14 +53,14 @@
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         270,
         305
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:e1480e8143e28f8b57c54b4b922da6f8eee969907fcbf49e6ab77f98944e682f",
+      "source_hash": "sha256:810715d8eaf728b7977ac6e4759c71dd07e1db1f84c9a3a8a630b78695ba07ad",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {

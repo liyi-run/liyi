@@ -285,7 +285,7 @@ pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Optio
         })
         .collect();
 
-    if flat.len() % 2 != 0 || flat.is_empty() {
+    if !flat.len().is_multiple_of(2) || flat.is_empty() {
         return None;
     }
 
