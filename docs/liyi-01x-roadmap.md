@@ -771,9 +771,9 @@ The existing `Untracked` diagnostic (requirements in source but absent from side
 - Update `compute_exit_code` in `diagnostics.rs` so that `Untracked` respects this flag; `MissingRelatedEdge` remains an unconditional error (exit 1).
 - Update existing `untracked` golden fixture expected output if exit code changes.
 
-### M5.3. `--prompt` output mode ⏳
+### M5.3. `--prompt` output mode ✅
 
-**Status:** Design complete, implementation pending. See `docs/prompt-mode-design.md`.
+**Status:** ✅ Complete. See `docs/prompt-mode-design.md`.
 
 Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
 
@@ -811,11 +811,11 @@ Add a `--prompt` flag to `liyi check` that emits structured JSON listing every c
 
 ### M5.4. Golden-file fixtures ✅
 
-**Status:** Partially implemented.
+**Status:** ✅ Complete.
 
 1. ✅ **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
 2. ✅ **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
-3. ⏳ **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot. (Pending M5.3)
+3. ✅ **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
 
 ### M5.5. AGENTS.md rule 11 ✅
 
@@ -968,7 +968,7 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | ~~7~~ | ~~M6.4–M6.5 `.liyiignore` + AGENTS.md~~ | ✅ Done | — | Self-hosting docs |
 | ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
 | ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
-| 10 | M5.3 `--prompt` output | ⏳ Design | ~3h | Agent-consumable gaps |
+| ~~10~~ | ~~M5.3 `--prompt` output~~ | ✅ Done | — | — |
 | 11 | M10.4 `=trivial` sentinel | ⏳ Planned | ~2h | Sidecar-only triviality |
 | 12 | M10.1 Tree-sitter item discovery | ⏳ Planned | ~4h | Smart scaffold |
 | 13 | M10.2 Doc comment heuristic | ⏳ Planned | ~2h | `=doc` suggestions |
