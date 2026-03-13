@@ -1,0 +1,43 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": ".github/workflows/ci.yml",
+  "specs": [
+    {
+      "item": "on",
+      "intent": "=trivial",
+      "source_span": [5, 8],
+      "tree_path": "key.on"
+    },
+    {
+      "item": "permissions",
+      "intent": "Restrict the GITHUB_TOKEN to read-only content access (principle of least privilege). No job in this workflow needs write permissions.",
+      "source_span": [10, 11],
+      "tree_path": "key.permissions"
+    },
+    {
+      "item": "jobs::test",
+      "intent": "Run the full workspace test suite (`cargo test --workspace`). Must fail the PR if any test fails.",
+      "source_span": [17, 24],
+      "tree_path": "key.jobs::key.test"
+    },
+    {
+      "item": "jobs::clippy",
+      "intent": "Run Clippy on the full workspace with `-D warnings` so that any lint fires a hard failure. Must install the clippy component before running.",
+      "source_span": [26, 35],
+      "tree_path": "key.jobs::key.clippy"
+    },
+    {
+      "item": "jobs::fmt",
+      "intent": "Verify that all code is formatted with `cargo fmt --check`. Must install the rustfmt component before running. Must not reformat in place — only check.",
+      "source_span": [37, 45],
+      "tree_path": "key.jobs::key.fmt"
+    },
+    {
+      "item": "jobs::liyi-check",
+      "intent": "Run `liyi check` against the repository root to verify that all sidecar specs are current (no stale hashes, no coverage gaps). Must fail the PR if liyi check exits non-zero.",
+      "source_span": [47, 55],
+      "tree_path": "key.jobs::key.\"liyi-check\""
+    }
+  ]
+}
