@@ -17,26 +17,26 @@
     },
     {
       "item": "main",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
         26,
         228
       ],
       "tree_path": "fn::main",
-      "source_hash": "sha256:3449f176e53c17da24bb972b225f73f0ed0c1279c0caece721a824f60c6185f6",
+      "source_hash": "sha256:c7810151270ec30040187255e71368e80b25c988b8247e847959cb3169de3df7",
       "source_anchor": "fn main() {"
     },
     {
       "item": "is_tty",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
         234,
         236
       ],
       "tree_path": "fn::is_tty",
-      "source_hash": "sha256:0deecf78d6e0c4a3e4fe895219abccb2f1ca541152466e5949b6e638cfbad457",
+      "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",
       "source_anchor": "fn is_tty() -> bool {"
     }
   ]

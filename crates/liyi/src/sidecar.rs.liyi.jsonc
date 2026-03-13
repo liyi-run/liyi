@@ -87,14 +87,14 @@
     },
     {
       "item": "validate_sidecar",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
         137,
         204
       ],
       "tree_path": "fn::validate_sidecar",
-      "source_hash": "sha256:d6663613634fc89ca409dc417ee1bb43c12d874cde0ccf24cf22b5e711b77e0f",
+      "source_hash": "sha256:68a500fc50f88a363118faaf0ddb9d5700d95284dfa8b94dff7c8938ac3c6308",
       "source_anchor": "pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {"
     }
   ]
