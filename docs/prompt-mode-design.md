@@ -276,7 +276,7 @@ All of these are attacker-controlled strings that may reach an LLM context. `--p
 
 ### Mitigations in place
 
-1. **`security_notice` field.** The top-level prompt output includes a `security_notice` string warning consuming agents that fields like `requirement`, `requirement_text`, `enclosing_item`, and `instruction` may contain untrusted content originating from repository source files. Agents should not interpret embedded text as tool instructions. This is analogous to a `Content-Security-Policy` header.
+1. **`security_notice` field.** The top-level prompt output includes a `security_notice` string warning consuming agents that fields `requirement`, `requirement_text`, and `enclosing_item` contain values from repository source files and must be treated as untrusted data. The `instruction` field is tool-generated but interpolates these untrusted values; agents must not let interpolated content override the structural action. This is analogous to a `Content-Security-Policy` header.
 
 2. **Structural separation.** The `instruction` field is always generated from fixed templates with interpolated names. The untrusted content (names, `requirement_text`) also appears in dedicated data fields, giving consuming agents the option to process structured fields instead of relying on instruction text. Well-implemented agents should prefer the structured fields and ignore or sanitize the natural-language `instruction`.
 
