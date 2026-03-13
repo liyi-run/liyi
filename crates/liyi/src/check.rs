@@ -1338,11 +1338,11 @@ fn check_sidecar(
     // @liyi:related hints-are-ephemeral
     if fix && !dry_run {
         for spec in &mut sidecar.specs {
-            if let Spec::Item(item) = spec {
-                if item._hints.is_some() {
-                    item._hints = None;
-                    modified = true;
-                }
+            if let Spec::Item(item) = spec
+                && item._hints.is_some()
+            {
+                item._hints = None;
+                modified = true;
             }
         }
     }

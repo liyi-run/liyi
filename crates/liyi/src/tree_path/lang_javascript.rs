@@ -4,15 +4,13 @@ use tree_sitter::Node;
 
 /// Detect JSDoc comments (`/** ... */` before a declaration).
 pub(super) fn js_has_doc_comment(node: &Node, source: &str) -> bool {
-    let sibling = node.prev_sibling();
-    while let Some(s) = sibling {
-        if s.kind() == "comment" {
-            let text = &source[s.byte_range()];
-            if text.starts_with("/**") {
-                return true;
-            }
+    if let Some(s) = node.prev_sibling()
+        && s.kind() == "comment"
+    {
+        let text = &source[s.byte_range()];
+        if text.starts_with("/**") {
+            return true;
         }
-        break;
     }
     false
 }

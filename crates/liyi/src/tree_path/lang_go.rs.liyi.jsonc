@@ -20,8 +20,8 @@
       "reviewed": false,
       "intent": "Define the Go language configuration for tree_path resolution: register tree-sitter-go grammar, .go extension, kind mappings for fn/method/type/const/var, wire the custom go_node_name callback for receiver-encoded method names, and go_has_doc_comment detector for preceding // comments.",
       "source_span": [
-        79,
-        94
+        77,
+        92
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:90b17a8264e71efb3d6a04755c93373846d57ab3faea8a9c7d941034369ff0a4",

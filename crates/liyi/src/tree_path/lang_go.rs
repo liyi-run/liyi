@@ -65,12 +65,10 @@ fn go_node_name(node: &Node, source: &str) -> Option<String> {
 /// Detect Go doc comments (`// Comment` before a declaration).
 fn go_has_doc_comment(node: &Node, source: &str) -> bool {
     let _ = source;
-    let sibling = node.prev_sibling();
-    while let Some(s) = sibling {
-        if s.kind() == "comment" {
-            return true;
-        }
-        break;
+    if let Some(s) = node.prev_sibling()
+        && s.kind() == "comment"
+    {
+        return true;
     }
     false
 }
