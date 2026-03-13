@@ -9,7 +9,7 @@
       "intent": "Define the Zig language configuration for tree_path resolution: register tree-sitter-zig grammar v1.1.2, .zig extension, kind mappings for fn (function_declaration), struct (variable_declaration for const Name = struct { ... }), and test (test_declaration). Uses custom name extraction and struct_declaration as body container for struct-as-namespace pattern.",
       "source_span": [
         62,
-        76
+        77
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:4695b494ff4e317407d355a71ddc3ee18d082dee01ae47d1d3539b7707afa872",

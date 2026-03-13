@@ -33,7 +33,7 @@
       "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --level filters diagnostic output).",
       "source_span": [
         28,
-        109
+        117
       ],
       "tree_path": "enum::Commands",
       "source_hash": "sha256:87c74b7b1082b94ed7a5fcd56e64de8cdc6f939c7341b46d08c5cd28fc3dee38",

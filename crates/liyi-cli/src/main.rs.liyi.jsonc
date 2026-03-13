@@ -21,7 +21,7 @@
       "intent": "=doc",
       "source_span": [
         26,
-        239
+        244
       ],
       "tree_path": "fn::main",
       "source_hash": "sha256:56762cfb87434b9e1b222c2d9c44e60addd1b5a4685bb7ce8e733710d8c2e89f",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        245,
-        247
+        250,
+        252
       ],
       "tree_path": "fn::is_tty",
       "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",

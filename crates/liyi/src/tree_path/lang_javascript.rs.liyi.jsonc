@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Define the JavaScript language configuration for tree_path resolution: register tree-sitter-javascript grammar, .js/.mjs/.cjs/.jsx extensions, kind mappings for fn/class/method, using standard name field with no custom name extraction.",
       "source_span": [
-        4,
-        16
+        21,
+        34
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:2af55cf35e6f23eb3d267c85272a25b5832664d7e15f9e4952edb8b44f8451b5",

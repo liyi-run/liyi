@@ -45,7 +45,7 @@
       "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c extension only, kind mappings for fn/struct/enum/typedef, and wire the custom c_node_name callback for name extraction.",
       "source_span": [
         49,
-        62
+        63
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:bf7e49b7e39a45826b9bfaf2e53bc18327da3613cca20a33a141d0e52424c2c9",

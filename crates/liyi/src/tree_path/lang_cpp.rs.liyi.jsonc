@@ -21,7 +21,7 @@
       "intent": "Define the C++ language configuration for tree_path resolution: register tree-sitter-cpp grammar, C++ file extensions (.cpp/.cc/.cxx/.hpp etc.), kind mappings for fn/class/struct/namespace/enum/template/typedef/using, and wire the custom cpp_node_name callback.",
       "source_span": [
         44,
-        61
+        62
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:ac7e92b3467ae19c51555f4da3a453489d05d1550714092a10b6483771c53e4b",

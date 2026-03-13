@@ -54,8 +54,8 @@
       "reviewed": true,
       "intent": "Remove // line comments and /* block comments from JSONC input while respecting JSON string boundaries and backslash escapes. Preserve newlines from line comments so downstream line numbers remain meaningful.",
       "source_span": [
-        70,
-        120
+        75,
+        125
       ],
       "tree_path": "fn::strip_jsonc_comments",
       "source_hash": "sha256:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
@@ -66,8 +66,8 @@
       "reviewed": true,
       "intent": "Parse a .liyi.jsonc string by stripping JSONC comments then deserializing into a SidecarFile. Return a human-readable error on parse failure.",
       "source_span": [
-        123,
-        127
+        128,
+        132
       ],
       "tree_path": "fn::parse_sidecar",
       "source_hash": "sha256:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
@@ -78,8 +78,8 @@
       "reviewed": true,
       "intent": "Serialize a SidecarFile to pretty-printed JSON prefixed with a '// liyi v0.1 spec file' header comment and a trailing newline.",
       "source_span": [
-        130,
-        134
+        135,
+        139
       ],
       "tree_path": "fn::write_sidecar",
       "source_hash": "sha256:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
@@ -90,8 +90,8 @@
       "reviewed": true,
       "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
-        137,
-        204
+        142,
+        209
       ],
       "tree_path": "fn::validate_sidecar",
       "source_hash": "sha256:68a500fc50f88a363118faaf0ddb9d5700d95284dfa8b94dff7c8938ac3c6308",

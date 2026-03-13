@@ -9,7 +9,7 @@
       "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, and an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding).",
       "source_span": [
         40,
-        57
+        60
       ],
       "tree_path": "struct::LanguageConfig",
       "source_hash": "sha256:54ab729f8a8e1c41d1a0869add8dfebd72b9c96f9e7a6390d5717534368229c5",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        191,
-        254
+        200,
+        263
       ],
       "tree_path": "fn::detect_language",
       "source_hash": "sha256:96c68ee23e863a0dfa399bb9ed373f14a749d34b5ada5e33f8017c04c0583fab",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Rust, Python, Go, JavaScript, TypeScript, and TSX. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
-        129,
-        147
+        138,
+        156
       ],
       "tree_path": "enum::Language",
       "source_hash": "sha256:9ce8c69e8347fd24cae35b300852873103b7fe37384c005438460a088d00788b",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
-        80,
-        100
+        83,
+        103
       ],
       "tree_path": "impl::LanguageConfig::fn::node_name",
       "source_hash": "sha256:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
@@ -56,8 +56,8 @@
       "reviewed": true,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
-        270,
-        305
+        279,
+        314
       ],
       "tree_path": "fn::resolve_tree_path",
       "source_hash": "sha256:810715d8eaf728b7977ac6e4759c71dd07e1db1f84c9a3a8a630b78695ba07ad",
@@ -68,8 +68,8 @@
       "reviewed": true,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[(&str, &str)] (kind, name) pairs. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments.",
       "source_span": [
-        308,
-        337
+        317,
+        346
       ],
       "tree_path": "fn::resolve_segments",
       "source_hash": "sha256:c5535331db3d0bfc328b1fffe834fc1fa470fca0509b949036b555cd78bb2e77",
@@ -80,8 +80,8 @@
       "reviewed": true,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
-        340,
-        348
+        349,
+        357
       ],
       "tree_path": "fn::resolve_in_body",
       "source_hash": "sha256:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
@@ -92,8 +92,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        355,
-        376
+        364,
+        385
       ],
       "tree_path": "fn::compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
@@ -104,8 +104,8 @@
       "reviewed": true,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        384,
-        430
+        393,
+        439
       ],
       "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
@@ -116,8 +116,8 @@
       "reviewed": true,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        448,
-        494
+        457,
+        503
       ],
       "tree_path": "fn::collect_path",
       "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",

@@ -9,7 +9,7 @@
       "intent": "Define the Ruby language configuration for tree_path resolution: register tree-sitter-ruby grammar v0.23.1, .rb/.rake/.gemspec extensions, kind mappings for fn (method), class (class), module (module), and singleton_method with custom name extraction for receiver encoding.",
       "source_span": [
         32,
-        45
+        46
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:ebb361dcacde779349d5d7e0826ac37e74c5650ea2655e15836565a11316e357",
