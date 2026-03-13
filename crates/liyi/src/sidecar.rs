@@ -45,6 +45,11 @@ pub struct ItemSpec {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub related: Option<BTreeMap<String, Option<String>>>,
+
+    /// Transient inference aids emitted by `liyi init` for cold-start scenarios.
+    /// Stripped by `liyi check --fix`. Tools MUST NOT rely on any specific shape.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub _hints: Option<serde_json::Value>,
 }
 
 /// Details of a module requirement/invariant

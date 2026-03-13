@@ -494,6 +494,88 @@ fn collect_path(
 }
 
 // ---------------------------------------------------------------------------
+// Item discovery for `liyi init` scaffold
+// ---------------------------------------------------------------------------
+
+/// A discovered item from tree-sitter AST traversal.
+pub struct DiscoveredItem {
+    /// Display name: leaf name for top-level items, container-qualified for nested.
+    pub name: String,
+    /// 1-indexed inclusive span [start, end].
+    pub span: [usize; 2],
+    /// Canonical tree_path (e.g., "impl::Money::fn::new").
+    pub tree_path: String,
+}
+
+/// Discover all items in a source file using tree-sitter AST traversal.
+///
+/// Returns one `DiscoveredItem` per item node found (functions, structs,
+/// classes, methods, etc.) as defined by the language's `kind_map`.
+pub fn discover_items(source: &str, lang: Language) -> Vec<DiscoveredItem> {
+    let config = lang.config();
+    let mut parser = make_parser(lang);
+    let tree = match parser.parse(source, None) {
+        Some(t) => t,
+        None => return Vec::new(),
+    };
+
+    let root = tree.root_node();
+    let mut items = Vec::new();
+    discover_walk(config, &root, &root, source, &mut items, None);
+    items
+}
+
+/// Recursive depth-first walk collecting discovered items.
+///
+/// `container_name` is `Some("ContainerName")` when inside a container
+/// item (class, impl, etc.) so nested items get qualified names.
+fn discover_walk(
+    config: &LanguageConfig,
+    root: &Node,
+    node: &Node,
+    source: &str,
+    items: &mut Vec<DiscoveredItem>,
+    container_name: Option<&str>,
+) {
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if !is_item_node(config, &child) {
+            // Not an item — still recurse in case there are items deeper
+            discover_walk(config, root, &child, source, items, container_name);
+            continue;
+        }
+
+        let name = match config.node_name(&child, source) {
+            Some(n) => n.into_owned(),
+            None => continue,
+        };
+
+        let start_line = child.start_position().row + 1;
+        let end_line = child.end_position().row + 1;
+        let span = [start_line, end_line];
+
+        let tree_path = build_path_to_node(config, root, &child, source);
+
+        // Display name: qualified if nested, leaf if top-level
+        let display_name = match container_name {
+            Some(container) => format!("{container}::{name}"),
+            None => name.clone(),
+        };
+
+        items.push(DiscoveredItem {
+            name: display_name,
+            span,
+            tree_path,
+        });
+
+        // If this item has a body, recurse into it for nested items
+        if let Some(body) = config.find_body(&child) {
+            discover_walk(config, root, &body, source, items, Some(&name));
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -757,5 +839,74 @@ fn standalone() -> i32 { 42 }
             let span = resolve_tree_path(reformatted, tp, Language::Rust);
             assert!(span.is_some(), "should resolve {tp} in reformatted code");
         }
+    }
+
+    #[test]
+    fn discover_items_rust() {
+        let items = discover_items(SAMPLE_RUST, Language::Rust);
+        let names: Vec<&str> = items.iter().map(|i| i.name.as_str()).collect();
+
+        // Should find all top-level and nested items
+        assert!(names.contains(&"Money"), "should discover struct Money");
+        assert!(names.contains(&"Money"), "should discover impl Money");
+        assert!(
+            names.contains(&"Money::new"),
+            "should discover nested method new as Money::new"
+        );
+        assert!(
+            names.contains(&"Money::add"),
+            "should discover nested method add as Money::add"
+        );
+        assert!(names.contains(&"billing"), "should discover mod billing");
+        assert!(
+            names.contains(&"billing::charge"),
+            "should discover nested fn charge as billing::charge"
+        );
+        assert!(
+            names.contains(&"standalone"),
+            "should discover fn standalone"
+        );
+
+        // Verify tree_paths are populated
+        for item in &items {
+            assert!(!item.tree_path.is_empty(), "tree_path should be populated for {}", item.name);
+        }
+
+        // Verify spans are valid
+        for item in &items {
+            assert!(item.span[0] >= 1, "span start should be >= 1 for {}", item.name);
+            assert!(item.span[1] >= item.span[0], "span end should be >= start for {}", item.name);
+        }
+    }
+
+    #[test]
+    fn discover_items_python() {
+        let source = r#"class Order:
+    def __init__(self, amount):
+        self.amount = amount
+
+    def process(self):
+        return self.amount > 0
+
+def calculate_total(items):
+    return sum(items)
+"#;
+
+        let items = discover_items(source, Language::Python);
+        let names: Vec<&str> = items.iter().map(|i| i.name.as_str()).collect();
+
+        assert!(names.contains(&"Order"), "should discover class Order");
+        assert!(
+            names.contains(&"Order::__init__"),
+            "should discover nested __init__"
+        );
+        assert!(
+            names.contains(&"Order::process"),
+            "should discover nested process"
+        );
+        assert!(
+            names.contains(&"calculate_total"),
+            "should discover top-level function"
+        );
     }
 }

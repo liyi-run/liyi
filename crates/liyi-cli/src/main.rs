@@ -136,8 +136,12 @@ fn main() {
                 process::exit(2);
             }
         }
-        Commands::Init { source_file, force } => match source_file {
-            Some(src) => match liyi::init::init_sidecar(&src, force) {
+        Commands::Init {
+            source_file,
+            force,
+            no_discover,
+        } => match source_file {
+            Some(src) => match liyi::init::init_sidecar(&src, force, !no_discover) {
                 Ok(path) => println!("Created: {}", path.display()),
                 Err(e) => {
                     eprintln!("Error: {e}");

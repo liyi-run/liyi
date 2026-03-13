@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::sidecar::{ItemSpec, SidecarFile, Spec, write_sidecar};
+use crate::tree_path::{detect_language, discover_items};
+
 /// The agent instruction block appended to AGENTS.md by `liyi init`.
 /// Note that 立意 directives in the string must be quine-escaped to
 /// avoid mis-identification.
@@ -20,19 +23,6 @@ or use `\"intent\": \"=trivial\"` in the sidecar.\n\
 4. For each `\x40liyi:requirement <name>` block, ensure it has a sidecar entry.\n\
 5. Only generate adversarial tests from items with `\x40liyi:intent` or `\"reviewed\": true`.\n\
 6. Skip items annotated with `\x40liyi:ignore` or `\x40liyi:trivial`, and files matched by `.liyiignore`.\n";
-
-/// Skeleton sidecar content for a source file.
-fn skeleton_sidecar(source_relative: &str) -> String {
-    format!(
-        r#"// liyi v0.1 spec file
-{{
-  "version": "0.1",
-  "source": "{source_relative}",
-  "specs": []
-}}
-"#
-    )
-}
 
 /// Error type for init operations.
 #[derive(Debug)]
@@ -88,13 +78,17 @@ pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
     Ok(agents_path)
 }
 
-/// `liyi init <source-file>` — create a skeleton `.liyi.jsonc` sidecar.
+/// `liyi init <source-file>` — create a `.liyi.jsonc` sidecar.
+///
+/// When `discover` is true and the language is supported, pre-populates the
+/// sidecar `specs` array with items discovered via tree-sitter. Otherwise
+/// emits an empty `"specs": []` skeleton.
 ///
 /// The sidecar path is `<source-file>.liyi.jsonc`.
 /// If the sidecar already exists and `force` is false, returns an error.
 ///
 /// <!-- @立意:有关 liyi-sidecar-naming-convention -->
-pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {
+pub fn init_sidecar(source_file: &Path, force: bool, discover: bool) -> Result<PathBuf, InitError> {
     let sidecar_name = format!(
         "{}.liyi.jsonc",
         source_file
@@ -114,7 +108,41 @@ pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitErro
         .to_string_lossy()
         .to_string();
 
-    let content = skeleton_sidecar(&source_name);
+    let specs = if discover {
+        if let Some(lang) = detect_language(source_file) {
+            let source_content = fs::read_to_string(source_file)?;
+            let discovered = discover_items(&source_content, lang);
+            discovered
+                .into_iter()
+                .map(|d| {
+                    Spec::Item(ItemSpec {
+                        item: d.name,
+                        reviewed: false,
+                        intent: String::new(),
+                        source_span: d.span,
+                        tree_path: d.tree_path,
+                        source_hash: None,
+                        source_anchor: None,
+                        confidence: None,
+                        related: None,
+                        _hints: None,
+                    })
+                })
+                .collect()
+        } else {
+            Vec::new()
+        }
+    } else {
+        Vec::new()
+    };
+
+    let sidecar = SidecarFile {
+        version: "0.1".to_string(),
+        source: source_name,
+        specs,
+    };
+
+    let content = write_sidecar(&sidecar);
     fs::write(&sidecar_path, content)?;
 
     Ok(sidecar_path)

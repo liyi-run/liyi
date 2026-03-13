@@ -87,6 +87,10 @@ pub enum Commands {
         /// Overwrite existing files
         #[arg(long)]
         force: bool,
+
+        /// Skip tree-sitter item discovery (emit empty specs array)
+        #[arg(long)]
+        no_discover: bool,
     },
 
     /// Mark specs as reviewed by a human

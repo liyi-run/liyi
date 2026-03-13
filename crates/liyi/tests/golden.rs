@@ -766,3 +766,89 @@ fn trivial_sidecar_sentinel() {
     // ConflictingTriviality should cause check failure
     assert_eq!(exit_code, LiyiExitCode::CheckFailure);
 }
+
+// ---------------------------------------------------------------------------
+// Init discovery tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn init_discover_populates_specs() {
+    let fixture = fixture_path("init_discover");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    let sidecar_path =
+        liyi::init::init_sidecar(&tmp_source, false, true).expect("init_sidecar should succeed");
+
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    // Should have discovered multiple items
+    assert!(
+        sidecar.specs.len() >= 5,
+        "expected at least 5 items (struct, impl, 2 methods, standalone fn), got {}",
+        sidecar.specs.len()
+    );
+
+    // Check that each spec has the expected fields populated
+    for spec in &sidecar.specs {
+        if let liyi::sidecar::Spec::Item(item) = spec {
+            assert!(!item.item.is_empty(), "item name should be non-empty");
+            assert!(!item.tree_path.is_empty(), "tree_path should be populated");
+            assert!(item.source_span[0] >= 1, "span start should be >= 1");
+            assert!(
+                item.source_span[1] >= item.source_span[0],
+                "span end should be >= start"
+            );
+            assert!(item.intent.is_empty(), "intent should be empty (agent fills it)");
+            assert!(!item.reviewed, "reviewed should be false");
+        }
+    }
+
+    // Verify specific items are present
+    let names: Vec<String> = sidecar
+        .specs
+        .iter()
+        .filter_map(|s| match s {
+            liyi::sidecar::Spec::Item(i) => Some(i.item.clone()),
+            _ => None,
+        })
+        .collect();
+
+    assert!(names.contains(&"Money".to_string()), "should discover struct Money");
+    assert!(
+        names.contains(&"Money::new".to_string()),
+        "should discover Money::new"
+    );
+    assert!(
+        names.contains(&"Money::add".to_string()),
+        "should discover Money::add"
+    );
+    assert!(
+        names.contains(&"standalone".to_string()),
+        "should discover standalone fn"
+    );
+}
+
+#[test]
+fn init_no_discover_produces_empty_specs() {
+    let fixture = fixture_path("init_discover");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    let sidecar_path =
+        liyi::init::init_sidecar(&tmp_source, false, false).expect("init_sidecar should succeed");
+
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    assert!(
+        sidecar.specs.is_empty(),
+        "should have empty specs with --no-discover, got {}",
+        sidecar.specs.len()
+    );
+}
