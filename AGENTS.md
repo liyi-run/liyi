@@ -29,6 +29,11 @@ See the contributing guide for full details.
 
 ## Commit conventions (quick reference)
 
+If you are told to commit: one logical change per commit, please split large
+diffs into several commits if atomicity doesn't break. Please break down big
+refactors to several steps, and big changes to (refactor first, then feat/fix),
+if at all possible.
+
 Follow Conventional Commits: `<type>(<scope>): <summary>`
 
 - Types: `feat`, `fix`, `docs`, `refactor`, `build`, `ci`, `style`. Do **not** use `chore`.

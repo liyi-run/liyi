@@ -110,6 +110,15 @@ Examples:
 | Markdown 文件使用 ATX 风格标题 | 为 Markdown 文件使用 ATX 风格标题 |
 | 所有文件均须提供双语言版本 | 必须为所有文件提供双语言版本 |
 
+## One logical change per commit
+
+This project prefers smaller atomic commits: build system / refactor first,
+feature / fix follows. If a refactor can be split into several steps, do split:
+e.g. first mass-rename several types, then adding an argument to a trait method
+globally.
+Please split large diffs into several commits if at all possible: as long as
+atomicity doesn't break.
+
 ## Commit message style
 
 Follow Conventional Commits:
