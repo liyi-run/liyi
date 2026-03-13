@@ -29,7 +29,7 @@
     },
     {
       "item": "SKIP_DIRS",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         38,
@@ -44,7 +44,7 @@
     },
     {
       "item": "find_repo_root",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk up the directory tree from the given path to locate the nearest .git/ directory and return its parent as the repository root. Return None if no .git/ is found. On Unix, respect GIT_DISCOVERY_ACROSS_FILESYSTEM: when unset or \"0\", stop at filesystem boundaries (different st_dev); when \"1\" or \"true\", allow crossing mount points.",
       "source_span": [
         51,
@@ -59,7 +59,7 @@
     },
     {
       "item": "discover",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, including hidden directories (e.g. .github/) but skipping VCS internal directories listed in SKIP_DIRS. Collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
         94,
