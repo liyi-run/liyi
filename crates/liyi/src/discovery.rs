@@ -91,7 +91,10 @@ pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {
     let mut warnings: Vec<String> = Vec::new();
 
     // Build walker: respects .gitignore cascading, add .liyiignore support.
+    // Walk hidden directories (e.g. .github/) — the ignore crate skips them
+    // by default, but sidecars and source markers can live there.
     let walker = WalkBuilder::new(root)
+        .hidden(false)
         .add_custom_ignore_filename(".liyiignore")
         .build();
 
@@ -211,6 +214,7 @@ pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String
     for p in paths {
         if p.is_dir() {
             let walker = WalkBuilder::new(p)
+                .hidden(false)
                 .add_custom_ignore_filename(".liyiignore")
                 .build();
             for entry in walker {

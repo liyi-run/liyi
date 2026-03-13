@@ -44,14 +44,14 @@
     },
     {
       "item": "discover",
-      "reviewed": true,
-      "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
+      "reviewed": false,
+      "intent": "Walk the file tree from root respecting .gitignore and .liyiignore, including hidden directories (e.g. .github/). Collect all non-ignored files and all .liyi.jsonc sidecars. Detect ambiguous sidecars (bare stem vs qualified stem in the same directory). If scope_paths is non-empty, filter sidecars to only those whose source falls under one of the given paths. Return a DiscoveryResult with sidecars, all_files, and warnings.",
       "source_span": [
         88,
-        192
+        195
       ],
       "tree_path": "fn.discover",
-      "source_hash": "sha256:cd2cbc7f415706b1f69eee237216915cee40e50e8bb59d19573fff145a158bcf",
+      "source_hash": "sha256:a1cdf6cc26d1279f45a03c19053a63904a6c1072f157fee97d5fef77de60b514",
       "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"

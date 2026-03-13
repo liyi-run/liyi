@@ -5,38 +5,72 @@
   "specs": [
     {
       "item": "on",
+      "reviewed": false,
       "intent": "=trivial",
-      "source_span": [5, 8],
-      "tree_path": "key.on"
+      "source_span": [
+        5,
+        8
+      ],
+      "tree_path": "key.on",
+      "source_hash": "sha256:fbfecf2304feab27170e285408645582d4b51b96a2a8bd73072a96c8628ec8a4",
+      "source_anchor": "on:"
     },
     {
       "item": "permissions",
+      "reviewed": false,
       "intent": "Restrict the GITHUB_TOKEN to read-only content access (principle of least privilege). No job in this workflow needs write permissions.",
-      "source_span": [10, 11],
-      "tree_path": "key.permissions"
+      "source_span": [
+        10,
+        11
+      ],
+      "tree_path": "key.permissions",
+      "source_hash": "sha256:e8f2263b0413f25128aa11d16dd3ae0ef6b0c660fb5b1dc08fe71e0a7daabb4b",
+      "source_anchor": "permissions:"
     },
     {
       "item": "jobs::test",
+      "reviewed": false,
       "intent": "Run the full workspace test suite (`cargo test --workspace`). Must fail the PR if any test fails.",
-      "source_span": [17, 24],
-      "tree_path": "key.jobs::key.test"
+      "source_span": [
+        17,
+        24
+      ],
+      "tree_path": "key.jobs::key.test",
+      "source_hash": "sha256:b06cc28bb71ff28745b168d087ddf31edf6c05d6180c6dfa7752d1ffc119fbf3",
+      "source_anchor": "  test:"
     },
     {
       "item": "jobs::clippy",
+      "reviewed": false,
       "intent": "Run Clippy on the full workspace with `-D warnings` so that any lint fires a hard failure. Must install the clippy component before running.",
-      "source_span": [26, 35],
-      "tree_path": "key.jobs::key.clippy"
+      "source_span": [
+        26,
+        35
+      ],
+      "tree_path": "key.jobs::key.clippy",
+      "source_hash": "sha256:cbb637404c867645892e30ba0b342e8410538f89abc936f9d4e9bb84dea28948",
+      "source_anchor": "  clippy:"
     },
     {
       "item": "jobs::fmt",
+      "reviewed": false,
       "intent": "Verify that all code is formatted with `cargo fmt --check`. Must install the rustfmt component before running. Must not reformat in place — only check.",
-      "source_span": [37, 45],
-      "tree_path": "key.jobs::key.fmt"
+      "source_span": [
+        37,
+        45
+      ],
+      "tree_path": "key.jobs::key.fmt",
+      "source_hash": "sha256:1021efd4819e9a7b7a7d1b686bae8279b7b37964020d628edffd1861909b90f3",
+      "source_anchor": "  fmt:"
     },
     {
       "item": "jobs::liyi-check",
+      "reviewed": false,
       "intent": "Run `liyi check` against the repository root to verify that all sidecar specs are current (no stale hashes, no coverage gaps). Must fail the PR if liyi check exits non-zero.",
-      "source_span": [47, 55],
+      "source_span": [
+        47,
+        55
+      ],
       "tree_path": "key.jobs::key.\"liyi-check\""
     }
   ]
