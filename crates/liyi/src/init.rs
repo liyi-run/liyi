@@ -84,11 +84,20 @@ pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
 /// sidecar `specs` array with items discovered via tree-sitter. Otherwise
 /// emits an empty `"specs": []` skeleton.
 ///
+/// `trivial_threshold` controls the line-count cutoff for `_likely_trivial`:
+/// items with `_body_lines <= trivial_threshold` and no doc comment are
+/// marked `_likely_trivial: true`.
+///
 /// The sidecar path is `<source-file>.liyi.jsonc`.
 /// If the sidecar already exists and `force` is false, returns an error.
 ///
 /// <!-- @立意:有关 liyi-sidecar-naming-convention -->
-pub fn init_sidecar(source_file: &Path, force: bool, discover: bool) -> Result<PathBuf, InitError> {
+pub fn init_sidecar(
+    source_file: &Path,
+    force: bool,
+    discover: bool,
+    trivial_threshold: usize,
+) -> Result<PathBuf, InitError> {
     let sidecar_name = format!(
         "{}.liyi.jsonc",
         source_file
@@ -122,11 +131,21 @@ pub fn init_sidecar(source_file: &Path, force: bool, discover: bool) -> Result<P
                             serde_json::Value::Bool(has_doc),
                         );
                     }
-                    let _hints = if hints.is_empty() {
-                        None
-                    } else {
-                        Some(serde_json::Value::Object(hints))
-                    };
+                    let body_lines = d.span[1] - d.span[0] + 1;
+                    hints.insert(
+                        "_body_lines".to_string(),
+                        serde_json::json!(body_lines),
+                    );
+                    let likely_trivial =
+                        body_lines <= trivial_threshold
+                            && d.has_doc_comment != Some(true);
+                    if likely_trivial {
+                        hints.insert(
+                            "_likely_trivial".to_string(),
+                            serde_json::Value::Bool(true),
+                        );
+                    }
+                    let _hints = Some(serde_json::Value::Object(hints));
                     Spec::Item(ItemSpec {
                         item: d.name,
                         reviewed: false,

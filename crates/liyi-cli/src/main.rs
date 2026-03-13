@@ -140,8 +140,9 @@ fn main() {
             source_file,
             force,
             no_discover,
+            trivial_threshold,
         } => match source_file {
-            Some(src) => match liyi::init::init_sidecar(&src, force, !no_discover) {
+            Some(src) => match liyi::init::init_sidecar(&src, force, !no_discover, trivial_threshold) {
                 Ok(path) => println!("Created: {}", path.display()),
                 Err(e) => {
                     eprintln!("Error: {e}");

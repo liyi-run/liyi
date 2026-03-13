@@ -91,6 +91,10 @@ pub enum Commands {
         /// Skip tree-sitter item discovery (emit empty specs array)
         #[arg(long)]
         no_discover: bool,
+
+        /// Line-count threshold for suggesting trivial items (default: 5)
+        #[arg(long, default_value_t = 5)]
+        trivial_threshold: usize,
     },
 
     /// Mark specs as reviewed by a human

@@ -1332,6 +1332,18 @@ fn check_sidecar(
         }
     }
 
+    // Strip _hints when --fix is active (hints are transient scaffold aids).
+    if fix && !dry_run {
+        for spec in &mut sidecar.specs {
+            if let Spec::Item(item) = spec {
+                if item._hints.is_some() {
+                    item._hints = None;
+                    modified = true;
+                }
+            }
+        }
+    }
+
     // Write back if --fix produced changes (skip if --dry-run).
     if fix && modified && !dry_run {
         let output = write_sidecar(&sidecar);

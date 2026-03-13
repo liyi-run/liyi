@@ -780,7 +780,7 @@ fn init_discover_populates_specs() {
     fs::copy(&source, &tmp_source).unwrap();
 
     let sidecar_path =
-        liyi::init::init_sidecar(&tmp_source, false, true).expect("init_sidecar should succeed");
+        liyi::init::init_sidecar(&tmp_source, false, true, 5).expect("init_sidecar should succeed");
 
     let content = fs::read_to_string(&sidecar_path).unwrap();
     let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
@@ -841,7 +841,7 @@ fn init_no_discover_produces_empty_specs() {
     fs::copy(&source, &tmp_source).unwrap();
 
     let sidecar_path =
-        liyi::init::init_sidecar(&tmp_source, false, false).expect("init_sidecar should succeed");
+        liyi::init::init_sidecar(&tmp_source, false, false, 5).expect("init_sidecar should succeed");
 
     let content = fs::read_to_string(&sidecar_path).unwrap();
     let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
@@ -862,7 +862,7 @@ fn init_discover_detects_doc_comments() {
     fs::copy(&source, &tmp_source).unwrap();
 
     let sidecar_path =
-        liyi::init::init_sidecar(&tmp_source, false, true).expect("init_sidecar should succeed");
+        liyi::init::init_sidecar(&tmp_source, false, true, 5).expect("init_sidecar should succeed");
 
     let content = fs::read_to_string(&sidecar_path).unwrap();
     let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
@@ -892,4 +892,121 @@ fn init_discover_detects_doc_comments() {
         Some(&serde_json::Value::Bool(false)),
         "standalone should have _has_doc: false"
     );
+}
+
+#[test]
+fn init_discover_body_lines_and_likely_trivial() {
+    let fixture = fixture_path("init_discover");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    // Use threshold of 5
+    liyi::init::init_sidecar(&tmp_source, false, true, 5).expect("init_sidecar should succeed");
+
+    let sidecar_path = tmp_source.with_file_name("example.rs.liyi.jsonc");
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    // fn standalone (lines 24-26, 3 lines, no doc) => _likely_trivial: true
+    let standalone = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "fn::standalone" => Some(i),
+        _ => None,
+    }).expect("should find fn::standalone");
+    let hints = standalone._hints.as_ref().expect("should have _hints");
+    assert_eq!(hints["_body_lines"], 3);
+    assert_eq!(hints["_likely_trivial"], true);
+
+    // struct Money has a doc comment => not _likely_trivial even though small
+    let money = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "struct::Money" => Some(i),
+        _ => None,
+    }).expect("should find struct::Money");
+    let money_hints = money._hints.as_ref().expect("should have _hints");
+    assert!(money_hints["_body_lines"].is_number());
+    assert!(
+        money_hints.get("_likely_trivial").is_none(),
+        "struct Money has doc comment so should not be _likely_trivial"
+    );
+
+    // impl Money::add — multi-line function, not _likely_trivial with threshold 5
+    let add_fn = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "impl::Money::fn::add" => Some(i),
+        _ => None,
+    }).expect("should find impl::Money::fn::add");
+    let add_hints = add_fn._hints.as_ref().expect("should have _hints");
+    let add_lines = add_hints["_body_lines"].as_u64().unwrap();
+    assert!(add_lines > 5, "fn add should have more than 5 lines, got {add_lines}");
+    assert!(
+        add_hints.get("_likely_trivial").is_none(),
+        "fn add should not be _likely_trivial with threshold 5"
+    );
+}
+
+#[test]
+fn init_discover_custom_trivial_threshold() {
+    let fixture = fixture_path("init_discover");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    // With threshold 15, fn add (multi-line, no doc) should be _likely_trivial
+    liyi::init::init_sidecar(&tmp_source, false, true, 15).expect("init_sidecar should succeed");
+
+    let sidecar_path = tmp_source.with_file_name("example.rs.liyi.jsonc");
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    let add_fn = sidecar.specs.iter().find_map(|s| match s {
+        liyi::sidecar::Spec::Item(i) if i.tree_path == "impl::Money::fn::add" => Some(i),
+        _ => None,
+    }).expect("should find impl::Money::fn::add");
+    let hints = add_fn._hints.as_ref().expect("should have _hints");
+    assert_eq!(hints["_likely_trivial"], true);
+}
+
+#[test]
+fn check_fix_strips_hints() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let source_path = tmp.path().join("example.rs");
+    fs::write(&source_path, "fn hello() -> i32 { 42 }\n").unwrap();
+
+    // Create a sidecar with _hints
+    liyi::init::init_sidecar(&source_path, false, true, 5).expect("init should succeed");
+
+    let sidecar_path = source_path.with_file_name("example.rs.liyi.jsonc");
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    // Verify hints are present before check --fix
+    assert!(!sidecar.specs.is_empty(), "should have at least one discovered item");
+    match &sidecar.specs[0] {
+        liyi::sidecar::Spec::Item(item) => {
+            assert!(item._hints.is_some(), "_hints should be present before check --fix");
+        }
+        _ => panic!("expected item spec"),
+    }
+
+    // Run check with fix=true
+    let flags = liyi::diagnostics::CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+    liyi::check::run_check(tmp.path(), &[], true, false, &flags);
+
+    // Re-read and verify _hints are stripped
+    let after_content = fs::read_to_string(&sidecar_path).unwrap();
+    let after = liyi::sidecar::parse_sidecar(&after_content).expect("sidecar should parse after fix");
+    for spec in &after.specs {
+        if let liyi::sidecar::Spec::Item(item) = spec {
+            assert!(
+                item._hints.is_none(),
+                "_hints should be stripped after check --fix"
+            );
+        }
+    }
 }
