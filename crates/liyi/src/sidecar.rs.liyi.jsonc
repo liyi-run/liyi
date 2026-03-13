@@ -29,25 +29,27 @@
     },
     {
       "item": "ItemSpec",
-      "reviewed": true,
-      "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, source_hash, source_anchor, confidence, related). Enforce deny_unknown_fields and skip serializing None optionals.",
+      "reviewed": false,
+      "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, tree_path, source_hash, source_anchor, confidence, related, _hints). Enforce deny_unknown_fields and skip serializing None optionals. _hints holds transient inference aids from liyi init, stripped by check --fix.",
       "source_span": [
         21,
-        45
+        53
       ],
-      "source_hash": "sha256:dcf30bdadc0c1e1dd9fd22f13ec361c57824197b47df767d6e6bdec1327cbb1f",
+      "tree_path": "struct::ItemSpec",
+      "source_hash": "sha256:1e14c274eb4e4e3a6f9f44cd1a6441c10d2f6671d9740a3a9f47069fa01640f2",
       "source_anchor": "/// Details of a code item (function, struct, etc.)"
     },
     {
       "item": "RequirementSpec",
-      "reviewed": true,
-      "intent": "Model a requirement spec entry with requirement name, source_span, and optional source_hash/source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
+      "reviewed": false,
+      "intent": "Model a requirement spec entry with requirement name, source_span, and optional tree_path, source_hash, source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
       "source_span": [
-        47,
-        60
+        55,
+        71
       ],
-      "source_hash": "sha256:d22f4b4cafceb6733aaf3112c7a167f499e4cd3fb6967ec622d92942d951c78a",
-      "source_anchor": "    pub related: Option<BTreeMap<String, Option<String>>>,"
+      "tree_path": "struct::RequirementSpec",
+      "source_hash": "sha256:7542921d353941b48c443d3eea12b70a3e5dc7cf3631332e3d39611a3f9b52dc",
+      "source_anchor": "/// Details of a module requirement/invariant"
     },
     {
       "item": "strip_jsonc_comments",

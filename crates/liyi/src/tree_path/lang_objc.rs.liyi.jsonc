@@ -17,14 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Objective-C language configuration for tree_path resolution: register tree-sitter-objc grammar, .m/.mm extensions, kind mappings for fn/class/impl/protocol/method/method_decl/struct/enum/typedef, and wire the custom objc_node_name callback.",
+      "reviewed": false,
+      "intent": "Define the Objective-C language configuration for tree_path resolution: register tree-sitter-objc grammar, .m/.mm extensions, kind mappings for fn/class/impl/protocol/method/method_decl/struct/enum/typedef, wire the custom objc_node_name callback, and no doc comment detector.",
       "source_span": [
         71,
         90
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:a7ad7ba7a2b7e4a0d0557a2f91ba30af86a99334f0bd1c0973e9b96931973a61",
+      "source_hash": "sha256:4f5c95ba929278eefa2f4100217b009fd68c63e9b5f2e56d2fe703abe23bf705",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

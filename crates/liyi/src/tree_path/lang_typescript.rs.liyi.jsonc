@@ -5,26 +5,26 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the TypeScript language configuration for tree_path resolution: register tree-sitter-typescript grammar (LANGUAGE_TYPESCRIPT), .ts/.mts/.cts extensions, kind mappings for fn/class/method/interface/type/enum, using standard name field with no custom name extraction.",
+      "reviewed": false,
+      "intent": "Define the TypeScript language configuration for tree_path resolution: register tree-sitter-typescript grammar (LANGUAGE_TYPESCRIPT), .ts/.mts/.cts extensions, kind mappings for fn/class/method/interface/type/enum, using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         5,
         21
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:b14e44717b2e5b3e103ee38acb764059528732c469bcfa6dacebd373fd6dc4f5",
+      "source_hash": "sha256:ed2876f9edfe504e2a920509110d808da7bc6510e9ed11dd6fc687d83efd2715",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
     {
       "item": "TSX_CONFIG",
-      "reviewed": true,
-      "intent": "Define the TSX language configuration for tree_path resolution: register tree-sitter-typescript TSX grammar (LANGUAGE_TSX), .tsx extension, same kind mappings as TypeScript (fn/class/method/interface/type/enum), using standard name field with no custom name extraction.",
+      "reviewed": false,
+      "intent": "Define the TSX language configuration for tree_path resolution: register tree-sitter-typescript TSX grammar (LANGUAGE_TSX), .tsx extension, same kind mappings as TypeScript (fn/class/method/interface/type/enum), using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         24,
         40
       ],
       "tree_path": "static::TSX_CONFIG",
-      "source_hash": "sha256:84e715a9711fe8241f18bdb7dd4b84bc1dafe314a6bfca48696f2a3ba04ab798",
+      "source_hash": "sha256:9545924341b1e577d12cd0a21d0b7e9c424a3775c8f3c3a0185dabf87999c69c",
       "source_anchor": "pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

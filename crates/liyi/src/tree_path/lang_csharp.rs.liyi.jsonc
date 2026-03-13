@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the C# language configuration for tree_path resolution: register tree-sitter-c-sharp grammar, .cs extension, kind mappings for fn/class/interface/enum/struct/namespace/constructor/property/record/delegate, using standard name field with no custom name extraction.",
+      "reviewed": false,
+      "intent": "Define the C# language configuration for tree_path resolution: register tree-sitter-c-sharp grammar, .cs extension, kind mappings for fn/class/interface/enum/struct/namespace/constructor/property/record/delegate, using standard name field with no custom name extraction and no doc comment detector.",
       "source_span": [
         4,
         24
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:9dca4d519db71f034c817a5c2c6c49b218c9751c62369a175a0d6195e836f0df",
+      "source_hash": "sha256:5f4f15948594d32980bf753b76f08ab0538dda01f30d39117c70a0319c452077",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

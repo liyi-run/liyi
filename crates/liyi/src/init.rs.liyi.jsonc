@@ -19,18 +19,6 @@
       }
     },
     {
-      "item": "skeleton_sidecar",
-      "reviewed": true,
-      "intent": "Generate a valid v0.1 skeleton .liyi.jsonc sidecar string with an empty specs array, using the given repo-relative source path.",
-      "source_span": [
-        25,
-        35
-      ],
-      "tree_path": "fn::skeleton_sidecar",
-      "source_hash": "sha256:c3701c57a4c8046dfc3b154fcc492778b7a9bc75018cd0e8bee4b04fcb0e7e80",
-      "source_anchor": "fn skeleton_sidecar(source_relative: &str) -> String {"
-    },
-    {
       "item": "InitError",
       "reviewed": true,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
@@ -56,15 +44,15 @@
     },
     {
       "item": "init_sidecar",
-      "reviewed": true,
-      "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
+      "reviewed": false,
+      "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). When discover is false, emit empty specs. If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
         95,
         170
       ],
       "tree_path": "fn::init_sidecar",
-      "source_hash": "sha256:59f2a9632a3302cac88f3a5a4061f7ef4f5d558eaf1b8154abfa7f4b23a6a949",
-      "source_anchor": "pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {",
+      "source_hash": "sha256:6a5c338b6d894e17a05d579fdbd1b9f65217699dd2a7494dafc1ed472aa945ee",
+      "source_anchor": "pub fn init_sidecar(",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
       }

@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "LanguageConfig",
-      "reviewed": true,
-      "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, and an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding).",
+      "reviewed": false,
+      "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding), and an optional doc_comment_detector callback that checks whether a doc comment is attached to an item node.",
       "source_span": [
         40,
         60
       ],
       "tree_path": "struct::LanguageConfig",
-      "source_hash": "sha256:54ab729f8a8e1c41d1a0869add8dfebd72b9c96f9e7a6390d5717534368229c5",
+      "source_hash": "sha256:d4a8bff28ab50c69a1e56d2073c4816df23fae20b3ca2da8df9faf939a82d1f1",
       "source_anchor": "pub struct LanguageConfig {"
     },
     {

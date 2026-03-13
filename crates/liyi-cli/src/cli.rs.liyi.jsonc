@@ -29,14 +29,14 @@
     },
     {
       "item": "Commands",
-      "reviewed": true,
-      "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --level filters diagnostic output).",
+      "reviewed": false,
+      "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Approve) with their full set of flags and arguments, providing defaults and mutual constraints (e.g. --level filters diagnostic output). Init includes --no-discover to skip tree-sitter item discovery and --trivial-threshold to configure the line-count cutoff for suggested trivial items.",
       "source_span": [
         28,
         117
       ],
       "tree_path": "enum::Commands",
-      "source_hash": "sha256:87c74b7b1082b94ed7a5fcd56e64de8cdc6f939c7341b46d08c5cd28fc3dee38",
+      "source_hash": "sha256:bc8e82f094939279c1359d7f376e0b199fbb8a535468e6d27777188532b68689",
       "source_anchor": "pub enum Commands {"
     }
   ]

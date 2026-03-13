@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Swift language configuration for tree_path resolution: register tree-sitter-swift grammar, .swift extension, kind mappings for fn/class/protocol/enum/property/init/typealias, using standard name field with no custom name extraction.",
+      "reviewed": false,
+      "intent": "Define the Swift language configuration for tree_path resolution: register tree-sitter-swift grammar, .swift extension, kind mappings for fn/class/protocol/enum/property/init/typealias, using standard name field with no custom name extraction and no doc comment detector.",
       "source_span": [
         4,
         21
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:6008fc2fe422359011d956521eeedde4abedba77a47586940805a914b43f3ab0",
+      "source_hash": "sha256:59375aac576579b5982f258c776dc46923fa94e3f813f2b403e5ea706ab455f8",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
