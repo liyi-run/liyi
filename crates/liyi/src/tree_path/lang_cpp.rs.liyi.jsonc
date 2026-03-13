@@ -12,7 +12,7 @@
         41
       ],
       "tree_path": "fn::cpp_node_name",
-      "source_hash": "sha256:4f9ebbcef1c9124312eed3f03d46f02bc63f85b5d9fd2e6a3ac44d5e3b5f9c08",
+      "source_hash": "sha256t:d5e8630c1158a96e9ee4477fd29a8045a263cde5a6f1db34d4de2bd921911d17",
       "source_anchor": "fn cpp_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -24,7 +24,7 @@
         61
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:8cac0782daa7534d6cc52d7382f1254bee24b0c3ad387d88792325a1460302bf",
+      "source_hash": "sha256t:ac7e92b3467ae19c51555f4da3a453489d05d1550714092a10b6483771c53e4b",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

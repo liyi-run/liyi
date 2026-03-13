@@ -12,7 +12,7 @@
         22
       ],
       "tree_path": "const::AGENTS_MD_BLOCK",
-      "source_hash": "sha256:923b4c2bbfddf3e664f660556e189605719de2096a227a78fb87943fcf7e5d2c",
+      "source_hash": "sha256t:09e12b925d998b7cf1283e022ff44e7d15a471fe03a34bdd06a9a53827b8167a",
       "source_anchor": "const AGENTS_MD_BLOCK: &str = \"\\n\\",
       "related": {
         "quine-escape": "sha256:53824f6af56160b7bd65c7b0783b5e1ffb90516088d408e8b0c9b01c648bcadb"
@@ -27,7 +27,7 @@
         35
       ],
       "tree_path": "fn::skeleton_sidecar",
-      "source_hash": "sha256:87868ce0d94d5c7a2882aa88cb35188b6433f7b4018dc0038803f90c38968749",
+      "source_hash": "sha256t:c3701c57a4c8046dfc3b154fcc492778b7a9bc75018cd0e8bee4b04fcb0e7e80",
       "source_anchor": "fn skeleton_sidecar(source_relative: &str) -> String {"
     },
     {
@@ -39,7 +39,7 @@
         44
       ],
       "tree_path": "enum::InitError",
-      "source_hash": "sha256:96d1108fe3d9dc1dcd640eb6ce16270d2656b106073ea4f06e2aee06f858e51b",
+      "source_hash": "sha256t:90a3bd7254f7d5a74ce2d55135699a5d8a0caedb42a3866f1ab9d5629676210e",
       "source_anchor": "pub enum InitError {"
     },
     {
@@ -51,7 +51,7 @@
         89
       ],
       "tree_path": "fn::init_agents_md",
-      "source_hash": "sha256:6ce5efe1370ea6c3e1d5ad786c83c2bdc85eddc041577949af01a58bdec86f68",
+      "source_hash": "sha256t:7e668c93658d46630ba4331d6a0424e03f4971d64024f798eda390eb24c19d90",
       "source_anchor": "pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {"
     },
     {
@@ -63,7 +63,7 @@
         121
       ],
       "tree_path": "fn::init_sidecar",
-      "source_hash": "sha256:c48941b60c40308ca5c1913be1b0561aafd83ef93a56eeb19a7088bfd0db405a",
+      "source_hash": "sha256t:59f2a9632a3302cac88f3a5a4061f7ef4f5d558eaf1b8154abfa7f4b23a6a949",
       "source_anchor": "pub fn init_sidecar(source_file: &Path, force: bool) -> Result<PathBuf, InitError> {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"

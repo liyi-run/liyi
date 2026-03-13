@@ -12,7 +12,7 @@
         17
       ],
       "tree_path": "fn::c_extract_declarator_name",
-      "source_hash": "sha256:b770215018f35c818e0fe450fcee058c8407d827f8fb2bfc2026bfd925b981e4",
+      "source_hash": "sha256t:557dd283043051a8ecd06b764fcb2dbd427336ea901def53233e6c5d3f17dd9a",
       "source_anchor": "pub(super) fn c_extract_declarator_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -24,7 +24,7 @@
         30
       ],
       "tree_path": "fn::unwrap_to_function_declarator",
-      "source_hash": "sha256:4e203fab2d264c4f02df280f88a191ae9344828e17bb91dd98c357c327baf7a0",
+      "source_hash": "sha256t:7deb95767257a9673219fc33409d41ed5acc25171e544a185fef48bf2ba36a24",
       "source_anchor": "fn unwrap_to_function_declarator<'a>(node: &Node<'a>) -> Option<Node<'a>> {"
     },
     {
@@ -36,7 +36,7 @@
         46
       ],
       "tree_path": "fn::c_node_name",
-      "source_hash": "sha256:6c373de50a8b2dee1ca251498a38f9e0397d1061554089e7bc2425434e0fac67",
+      "source_hash": "sha256t:b307bbb1f46aacfeca84ae3de1021ac8754377403638fa435d2dab598f92d237",
       "source_anchor": "fn c_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -48,7 +48,7 @@
         62
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:a00043fab0a5a5d1ed26542c92376dc4c590426266602182f24fdd7cb20e7b84",
+      "source_hash": "sha256t:bf7e49b7e39a45826b9bfaf2e53bc18327da3613cca20a33a141d0e52424c2c9",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

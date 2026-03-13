@@ -12,7 +12,7 @@
         25
       ],
       "tree_path": "struct::Highlighter",
-      "source_hash": "sha256:6f587bdd27e8479b8d1da76b5a04e96990e65a23b22737b1c93175f8585e9b00",
+      "source_hash": "sha256t:651f1e27d096d2f23ab0f407acb9988ed1118c235800c8b32e0956d50595166a",
       "source_anchor": "struct Highlighter {"
     },
     {
@@ -24,7 +24,7 @@
         36
       ],
       "tree_path": "struct::ApproveTui",
-      "source_hash": "sha256:2b3c0b9d640826313723410910daa03ae18e8f98035e928627be44313fada02e",
+      "source_hash": "sha256t:a3aaf1fc8bab7bef7d05dcd8903de12aa678a1bde1eeba45ddce01983b7ae966",
       "source_anchor": "struct ApproveTui<'a> {"
     },
     {
@@ -36,7 +36,7 @@
         247
       ],
       "tree_path": "fn::run_tui",
-      "source_hash": "sha256:73c7ee7fce82fbb79c2fe0e0573e658e2b22390c6c417d1d97e0bf94b877ed0a",
+      "source_hash": "sha256t:b5d2b469ff3c37403da5902d5187f4c6bd2675abe2eefb7cde0875b052d5d6e2",
       "source_anchor": "pub fn run_tui(candidates: &[ApprovalCandidate]) -> io::Result<Vec<Decision>> {"
     },
     {
@@ -48,7 +48,7 @@
         271
       ],
       "tree_path": "fn::draw",
-      "source_hash": "sha256:6650e4e5f3c9a926b94ca1fced17ebb189572e68e04611b39b6dadd944d64a84",
+      "source_hash": "sha256t:2d5de9dfd08ce60b1df40e5488a9e527055025afe98fee47c3b057b79b404ad4",
       "source_anchor": "fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {"
     },
     {
@@ -60,7 +60,7 @@
         449
       ],
       "tree_path": "fn::draw_intent",
-      "source_hash": "sha256:a2a98d2d895dcc6e43520e3649d9188761fbf9a915614c708fff11fc069ea58d",
+      "source_hash": "sha256t:cda79be63c0fb3e2ff96301ed56e017cf585386242d4bee29dbddbc3ec5cb691",
       "source_anchor": "fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {"
     },
     {
@@ -72,7 +72,7 @@
         91
       ],
       "tree_path": "impl::ApproveTui<'a>::fn::go_forward",
-      "source_hash": "sha256:b5e65bd9e59d5b7e696781d0b39d8e6d37efd4c6ee78e6ff82c40cb3f059107f",
+      "source_hash": "sha256t:ba432e4daf3750616b1508cb2800eab09841b75a55ceb3eb5da4398bb9a46745",
       "source_anchor": "    fn go_forward(&mut self) {"
     },
     {
@@ -84,7 +84,7 @@
         468
       ],
       "tree_path": "fn::file_highlight_enabled",
-      "source_hash": "sha256:821830209cdb75e5eb3b1150ee23a4d64f85784dbe745ca74e452e1bc824ad94",
+      "source_hash": "sha256t:cfb2581067ccece845cd39e6edb2eacb5ee99fa8d2ffe3f1c8fbab7e96c3d159",
       "source_anchor": "fn file_highlight_enabled(candidate: &ApprovalCandidate) -> bool {"
     },
     {
@@ -96,7 +96,7 @@
         474
       ],
       "tree_path": "fn::line_highlight_enabled",
-      "source_hash": "sha256:4d7b4288503aacc75636635972c3155aa6a58a175264395d9f79d8b10947fa86",
+      "source_hash": "sha256t:fda70f9cb32977604fcf8ba20bf16348d61c4447e270d30ddaba859eaa8eba8d",
       "source_anchor": "fn line_highlight_enabled(line: &str) -> bool {"
     },
     {
@@ -108,7 +108,7 @@
         570
       ],
       "tree_path": "fn::draw_source",
-      "source_hash": "sha256:5ea7fd49aaa4f40cb48ed4292b8474f55b11b20de125aa3a95e28f2af673a0c7",
+      "source_hash": "sha256t:ddd044516e2725481f30bb2f70008933076c589ef4b5cc21d567de3ae279e321",
       "source_anchor": "fn draw_source("
     },
     {
@@ -120,7 +120,7 @@
         165
       ],
       "tree_path": "fn::edit_intent_in_editor",
-      "source_hash": "sha256:495cd3750e82d0a11c3a0a256cbf49b25f356df77a9da9cf72b1919e5cb7c311",
+      "source_hash": "sha256t:ccd97544ce0adbee4e805e4e81d23b1b1fa7a6c21f34b50f439f6e437b2c927d",
       "source_anchor": "fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {"
     },
     {
@@ -132,7 +132,7 @@
         326
       ],
       "tree_path": "fn::diff_spans",
-      "source_hash": "sha256:e3f1fb033acd0e19d9608efee056d2f366c94fe812c5a95088d89577a53790f9",
+      "source_hash": "sha256t:2dd68fc75281f00363cb33ef6931f6330e51e37e554a819450ea2e22badd5d90",
       "source_anchor": "fn diff_spans<'a>("
     },
     {
@@ -143,7 +143,7 @@
         330,
         353
       ],
-      "source_hash": "sha256:665fa116220a8f209a92f6bfcbe97cffcb8d2e529a06186a5da1de91892929ba",
+      "source_hash": "sha256t:9a84687e73c1fd72b0f754e1cc2cba35cdb4a04791b6825cc1a0ffa9de1ffea7",
       "source_anchor": "fn push_span_lines<'a>(spans: Vec<Span<'a>>, lines: &mut Vec<Line<'a>>) {"
     },
     {
@@ -155,7 +155,7 @@
         614
       ],
       "tree_path": "fn::draw_keys",
-      "source_hash": "sha256:8431e999e2119b33f02465b01787d7cb6502308f4d68dc41039043d16fc6f229",
+      "source_hash": "sha256t:32ce63aeded8af2046caa055e103f2ea680bba3d22013ece6b58caf4f7db4a3f",
       "source_anchor": "fn draw_keys(f: &mut ratatui::Frame, area: Rect) {"
     }
   ]

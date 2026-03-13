@@ -12,7 +12,7 @@
         63
       ],
       "tree_path": "fn::go_node_name",
-      "source_hash": "sha256:5198217ac70bb06963c30ee0f9f0daa9972cdb47834ed82cf99b800f8b043620",
+      "source_hash": "sha256t:25f5ae7eaaf98c7b77298c61c8f0ced58b3109094bf3e5ae52e92f6a1a0d7f9b",
       "source_anchor": "fn go_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -24,7 +24,7 @@
         80
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:da63d7b2578d2dfaef76a198b5ce9258f3f0fd5e50ae7a2f5b67ad3bbabc972c",
+      "source_hash": "sha256t:3a1da75b9bae104eebdceec7758d15d5d16cd37cb67ed1860e6ce2cd73d94f40",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

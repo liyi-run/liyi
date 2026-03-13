@@ -12,7 +12,7 @@
         18
       ],
       "tree_path": "struct::SidecarEntry",
-      "source_hash": "sha256:3851a121c0b57a706cce72bdeed0299b99bdf9652be59bf55bd4b1e82456923f",
+      "source_hash": "sha256t:f99595684bf9b1858f74e98b23821a27133dee56b9d05d48961018b3c4a5d54c",
       "source_anchor": "pub struct SidecarEntry {"
     },
     {
@@ -24,7 +24,7 @@
         27
       ],
       "tree_path": "struct::DiscoveryResult",
-      "source_hash": "sha256:7ee0d9fc7aba40c9d92c4f135bd070963f71df094a771de00332c34cac790c96",
+      "source_hash": "sha256t:ab9f57e754d9e49d7b4e171e705244343fa26b8bdb4a0df9353f79a7903690a4",
       "source_anchor": "pub struct DiscoveryResult {"
     },
     {
@@ -36,7 +36,7 @@
         78
       ],
       "tree_path": "fn::find_repo_root",
-      "source_hash": "sha256:7ecd55269ab7598f9bfff4c957b74ac0646bc96072ffaec9a7a330ad9adb30d2",
+      "source_hash": "sha256t:775db6e004689f050f36c2e92557c6c3c5f23eab256a2ef1eff8f4a2e94191c8",
       "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"
@@ -51,7 +51,7 @@
         192
       ],
       "tree_path": "fn::discover",
-      "source_hash": "sha256:bbf8f0dbae10a6ccccac3e288b8bc72b6c5563678e4584556920135e205ff1a1",
+      "source_hash": "sha256t:cd2cbc7f415706b1f69eee237216915cee40e50e8bb59d19573fff145a158bcf",
       "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
       "related": {
         "liyi-sidecar-naming-convention": "sha256:e6619cfe8d91cfefa6b099e10a71bc40db7624e1a973783815f04d18d69ff470"

@@ -12,7 +12,7 @@
         13
       ],
       "tree_path": "enum::SpanError",
-      "source_hash": "sha256:522692e8b374d0099e5b3bc1b3cf0c296687db147466da9ccbe7599f6fd74034",
+      "source_hash": "sha256t:ea37356cb7bad13dd1834c4031b0bb3206dcc5b94893afa3e7521faaeaba5f1b",
       "source_anchor": "pub enum SpanError {"
     },
     {
@@ -24,7 +24,7 @@
         60
       ],
       "tree_path": "fn::hash_span",
-      "source_hash": "sha256:25f017e0659e036f84cde56d738ec09d73a4c9bcb6f4f713d69fea684ad2a85b",
+      "source_hash": "sha256t:0cf33a9ffa94c5734be3b30ea0bf49bae17514a3a20147258ce492c961cf2aa3",
       "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {",
       "related": {
         "source-span-semantics": "sha256:867bdee2970960b1cad64d2c07d813bdd6c0e0a8c0fae52cec7ed398fc2b9402"

@@ -12,7 +12,7 @@
         17
       ],
       "tree_path": "struct::ApproveResult",
-      "source_hash": "sha256:c508a96f425f3db28dbead37eafe6c7dc6c16d95fce87747cbd36bc60b62812c",
+      "source_hash": "sha256t:3913960707101bc0724d6635156fa7d8cf607b34d8e21400cb445969b1a862a6",
       "source_anchor": "pub struct ApproveResult {"
     },
     {
@@ -24,7 +24,7 @@
         25
       ],
       "tree_path": "enum::ApproveError",
-      "source_hash": "sha256:173a61b1f98538798224266b4af28015e5332da0463f5c4b360c60d0f784f801",
+      "source_hash": "sha256t:79c540f91ede3129e555d35665d456f2311ce1523f309d9e2fb0c8a25b8fafd5",
       "source_anchor": "pub enum ApproveError {"
     },
     {
@@ -36,7 +36,7 @@
         51
       ],
       "tree_path": "enum::Decision",
-      "source_hash": "sha256:7ef0f139b48b1ba38b41a76619f77ac2d7a2997177de5bf1b1bf7788a16edaea",
+      "source_hash": "sha256t:4d2e7d98844f6022c103a3acc72977b14f29c16d236c40f55b68f635c98e6dd6",
       "source_anchor": "pub enum Decision {"
     },
     {
@@ -48,7 +48,7 @@
         76
       ],
       "tree_path": "struct::ApprovalCandidate",
-      "source_hash": "sha256:44c6930ed728452604482bb5e1801d63ea6c827ea6703b337642bfe4731d68e0",
+      "source_hash": "sha256t:0650288d78027156ced022abc60b6d992e9f4c212664451dcb36302d61075702",
       "source_anchor": "pub struct ApprovalCandidate {"
     },
     {
@@ -60,7 +60,7 @@
         117
       ],
       "tree_path": "fn::lookup_prev_intent",
-      "source_hash": "sha256:b5ce613c5c51a99342f0509fa1a1eb3a3368e1a86d38d734cf5a1bc0ace1e342",
+      "source_hash": "sha256t:7e641a17f160781026ef2afe2999343e9b5b60d6609ba13fb1348ceaded0fd13",
       "source_anchor": "fn lookup_prev_intent("
     },
     {
@@ -72,7 +72,7 @@
         187
       ],
       "tree_path": "fn::collect_approval_candidates",
-      "source_hash": "sha256:e87ea63a0590c5b196a5f0f067a2f6cf11ed97a2d34b6c2b8eaebde2df532cdb",
+      "source_hash": "sha256t:96de9108822c9cf05a96bd09c159792fdabd86a6a3da53b2ba87a29b4baab1cd",
       "source_anchor": "pub fn collect_approval_candidates("
     },
     {
@@ -84,7 +84,7 @@
         276
       ],
       "tree_path": "fn::apply_approval_decisions",
-      "source_hash": "sha256:b197034db3a78599e9dd253fa045ba35bc6308a411e89f7d3ed4e7e56e395752",
+      "source_hash": "sha256t:bfbe20536ff44961025d4090626a5fc5bf3adbd58dc77a81622aac93f39106c2",
       "source_anchor": "pub fn apply_approval_decisions(",
       "related": {
         "reviewed-semantics": "sha256:40020571498ef149fe7a67ebd78bc430320921aae1faac8b7be1c830f35ae636"
@@ -99,7 +99,7 @@
         290
       ],
       "tree_path": "fn::source_path_from_sidecar",
-      "source_hash": "sha256:4d7747800419761b80819b2fe3ba692b4e98a72ad1d15da3e8be2e22e14dcef2",
+      "source_hash": "sha256t:490ac4b91d5418e093b852a804fb0c330b1642cd99af3035d3a43fb35429bfab",
       "source_anchor": "fn source_path_from_sidecar(sidecar_path: &Path) -> Result<PathBuf, ApproveError> {"
     }
   ]
