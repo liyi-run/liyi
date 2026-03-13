@@ -15,16 +15,17 @@ name = "liyi"
 path = "src/main.rs"
 
 [dependencies]
-liyi = { path = "../liyi" }
 clap = { version = "4.5.60", features = ["derive"] }
-libc = "0.2"
-serde_json = "1.0"
-ratatui = "0.29"
 crossterm = "0.28"
+libc = "0.2"
+ratatui = "0.29"
+serde_json = "1.0"
+similar = "2.7.0"
 syntect = { version = "5", default-features = false, features = [
 	"default-syntaxes",
 	"default-themes",
 	"parsing",
 	"regex-fancy",
 ] }
-similar = "2.7.0"
+
+liyi = { path = "../liyi" }
