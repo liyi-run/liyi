@@ -66,7 +66,10 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
         ("constructor", "constructor_signature"),
         ("const_constructor", "constant_constructor_signature"),
         ("factory", "factory_constructor_signature"),
-        ("factory_redirect", "redirecting_factory_constructor_signature"),
+        (
+            "factory_redirect",
+            "redirecting_factory_constructor_signature",
+        ),
     ],
     name_field: "name",
     name_overrides: &[],
@@ -174,11 +177,7 @@ int get globalCount => 42;
 
     #[test]
     fn resolve_dart_setter() {
-        let span = resolve_tree_path(
-            SAMPLE_DART,
-            "class::Point::setter::label",
-            Language::Dart,
-        );
+        let span = resolve_tree_path(SAMPLE_DART, "class::Point::setter::label", Language::Dart);
         assert!(span.is_some(), "should resolve class::Point::setter::label");
     }
 
@@ -260,15 +259,8 @@ int get globalCount => 42;
 
     #[test]
     fn resolve_dart_enum_method() {
-        let span = resolve_tree_path(
-            SAMPLE_DART,
-            "enum::Color::getter::label",
-            Language::Dart,
-        );
-        assert!(
-            span.is_some(),
-            "should resolve enum::Color::getter::label"
-        );
+        let span = resolve_tree_path(SAMPLE_DART, "enum::Color::getter::label", Language::Dart);
+        assert!(span.is_some(), "should resolve enum::Color::getter::label");
     }
 
     #[test]
