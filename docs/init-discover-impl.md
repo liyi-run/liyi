@@ -3,7 +3,7 @@
 # `liyi init` Item Discovery & Hints: Implementation Plan
 
 **Status:** ✅ Phases 1, 2, 4 complete; Phase 3 (VCS hints) deferred
-**Target:** v0.1.x (M10)
+**Target:** v0.1.x
 **Design authority:** `docs/liyi-design.md` v8.9 — *Tree-sitter item discovery in scaffold*, *`_hints` — cold-start inference aids*
 
 ---
@@ -74,7 +74,7 @@ The following constraints are normative for the implementation.
 - Doc comment detection for remaining languages (C, C++, C#, PHP, Objective-C, Kotlin, Swift, Bash, Ruby, Zig) — deferred; `_has_doc` is simply absent for these until implemented.
 - Content extraction from doc comments (the tool detects *presence*, not *text*).
 - `liyi init <directory>` batch mode — deferred; the current CLI accepts one file.
-- `_hints` in `liyi check --prompt` output — deferred to M5.3.
+- `_hints` in `liyi check --prompt` output — deferred.
 
 ---
 

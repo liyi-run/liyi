@@ -471,7 +471,7 @@ Without a `tree_path`, the fallback is: batch false positives on any line-shifti
 
 The path identifies the item by node kind and name, not by position. The tool constructs the path by walking the tree-sitter CST from root to the node that covers `source_span`, recording each named ancestor. This is deterministic — the same source item always produces the same path regardless of where it appears in the file.
 
-**Quoting and injection.** Names containing spaces, `::`, `.`, or quotes are double-quoted with backslash escaping (`test."add function"`, `key."abc.kubernetes.io"`). For multi-language files (M9), an injection marker `//lang` attaches to the name within a pair to cross a language boundary (`key.run//bash::fn.setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in *Appendix: tree_path Grammar Specification (v0.3)* below.
+**Quoting and injection.** Names containing spaces, `::`, `.`, or quotes are double-quoted with backslash escaping (`test."add function"`, `key."abc.kubernetes.io"`). For multi-language files, an injection marker `//lang` attaches to the name within a pair to cross a language boundary (`key.run//bash::fn.setup_env`); the `//` delimiter requires no shell escaping. The full grammar is specified in *Appendix: tree_path Grammar Specification (v0.3)* below.
 
 **Behavior during check.**
 
@@ -562,7 +562,7 @@ All languages are built-in — the binary ships with every supported tree-sitter
 
 | Language | Reason |
 |---|---|
-| Vue | SFCs require the language injection framework (M9). `tree-sitter-vue` (v0.0.3) is low-maturity. Vue users can still use liyi — `tree_path` is empty, shift heuristic applies. |
+| Vue | SFCs require the language injection framework. `tree-sitter-vue` (v0.0.3) is low-maturity. Vue users can still use liyi — `tree_path` is empty, shift heuristic applies. |
 | Markdown | Heading-based tree_path is a conceptual extension — the item vocabulary (`fn`, `struct`) doesn't apply, requiring a Markdown-specific vocabulary (`heading`, `code_block`). Deferred as a distinct design note. |
 | Scala | Grammar less actively maintained. Rich item vocabulary but incremental coverage over Java + Kotlin is modest. Revisit on demand. |
 | JSONC/JSON5 | JSONC files are almost exclusively liyi sidecars (depgraph leaves, excluded by design) or VS Code settings. JSON5 is rare. Neither justifies a grammar dependency. |

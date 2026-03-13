@@ -3,7 +3,7 @@
 # Language Injection Framework: Implementation Plan
 
 **Status:** ✅ Complete (core framework + GitHub Actions profile)
-**Target:** v0.1.x (M9)
+**Target:** v0.1.x
 **Design authority:** `docs/liyi-design.md` — *Quoting and injection*, *Appendix: tree_path Grammar Specification (v0.3)*
 
 ---
@@ -14,7 +14,7 @@ The current `LanguageConfig` architecture assumes one grammar per file. Several
 important file types violate this: GitHub Actions YAML embeds shell in `run:`
 blocks, Vue SFCs embed TypeScript and CSS, HTML embeds JavaScript and CSS.
 
-The M8 data-file work (TOML, JSON, YAML) brought config files under structural
+The data-file work (TOML, JSON, YAML) brought config files under structural
 identity, but YAML `key.jobs::key.build::key.steps[1]::key.run` is a
 terminal node — the Bash code inside the string is invisible to the resolver.
 The injection framework makes it visible.

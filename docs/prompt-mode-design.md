@@ -3,7 +3,7 @@
 # `--prompt` Mode Design
 
 **Status:** Implemented  
-**Target:** v0.1.x (M5.3)  
+**Target:** v0.1.x  
 **Design authority:** `docs/liyi-design.md` v8.10
 
 **Scope note (v8.10):** This document covers the initial `--prompt` scope: coverage gaps (Untracked, MissingRelatedEdge, ReqNoRelated). The cognitive load inversion principle (design doc v8.10, *The cognitive load inversion: tool-guided agents*) calls for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. The generalized `--prompt` design is deferred to a future revision of this document.

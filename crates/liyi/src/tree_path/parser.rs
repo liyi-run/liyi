@@ -32,7 +32,7 @@ pub struct Pair {
     pub name: String,
     /// Optional 0-based positional child selector for data-file arrays.
     pub index: Option<usize>,
-    /// Optional injection marker (e.g., "bash") for M9 language injection.
+    /// Optional injection marker (e.g., "bash") for language injection.
     pub injection: Option<String>,
 }
 

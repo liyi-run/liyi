@@ -1052,7 +1052,7 @@ fn check_fix_strips_hints() {
 }
 
 // ---------------------------------------------------------------------------
-// M10.5 — Combined scaffold golden test
+// Combined scaffold golden test
 // ---------------------------------------------------------------------------
 
 /// End-to-end golden test for the full `liyi init` scaffold workflow.
