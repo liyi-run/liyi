@@ -36,8 +36,8 @@
         52,
         58
       ],
-      "source_hash": "sha256:c53ca81cd6f18dff94a9a771c610adcf1f50f6149682152bae03948632405831",
-      "source_anchor": "<!-- @liyi:requirement even-pair-invariant -->"
+      "source_hash": "sha256:1acfbdf7d5a6272774346b2951f7692a016b02542b100b412b11bb948d58ec97",
+      "source_anchor": "<!-- @liyi:requirement injection-pair-attachment -->"
     },
     {
       "requirement": "content-offset-correctness",

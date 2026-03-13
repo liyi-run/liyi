@@ -71,10 +71,10 @@
       "reviewed": false,
       "intent": "Hold the result of a hash-based sibling scan: the 1-indexed inclusive span of the matched sibling element and the updated tree_path with the corrected array index.",
       "source_span": [
-        373,
-        378
+        360,
+        365
       ],
-      "tree_path": "struct.SiblingScanResult",
+      "tree_path": "struct::SiblingScanResult",
       "source_hash": "sha256:16f08b111123e54dffb3cbdba88814476eea4ff857aaf1941bebd85157e8180c",
       "source_anchor": "pub struct SiblingScanResult {"
     },
@@ -97,10 +97,10 @@
       "reviewed": false,
       "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[PathPair] (kind, name, optional index) triples. For segments with an index, delegate to resolve_indexed_child for positional array access. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member, YAML block_node/block_mapping).",
       "source_span": [
-        558,
-        600
+        493,
+        535
       ],
-      "tree_path": "fn.resolve_segments",
+      "tree_path": "fn::resolve_segments",
       "source_hash": "sha256:b6c9bfada9e73a1b9b27a416f5b0bb11365f05486e4666d45efc604f1822a919",
       "source_anchor": "fn resolve_segments<'a>("
     },
@@ -109,8 +109,8 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
-        645,
-        653
+        580,
+        588
       ],
       "source_hash": "sha256:4ffa3be8bfaca11f717008cc4cf643abad5bb71145c5352ae68e69e82c3a79d3",
       "source_anchor": "    config: &LanguageConfig,"
@@ -120,10 +120,10 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        659,
-        680
+        594,
+        615
       ],
-      "tree_path": "fn.compute_tree_path",
+      "tree_path": "fn::compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
@@ -132,10 +132,10 @@
       "reviewed": true,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        688,
-        734
+        623,
+        669
       ],
-      "tree_path": "fn.find_item_in_range",
+      "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
       "source_anchor": "fn find_item_in_range<'a>("
     },
@@ -149,7 +149,12 @@
       ],
       "tree_path": "fn.collect_path",
       "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
-      "source_anchor": "fn collect_path("
+      "source_anchor": "fn collect_path(",
+      "related": {
+        "exhaustive-inclusion": "sha256:5b729afeeb3162d6f07f6bd6f6a88e348cb57a06ddb0886e69df61438206bcf6",
+        "item-naming-uses-leaf-name": "sha256:6000a7d3bec019e78e75a8f54f7a28bb1d70f8f147ed3e58f07eb748331df91c",
+        "reuse-kind-map-as-item-definition": "sha256:38de7a67a83d4cd205ed88cb67d1c91962fbe585291ccaa153a723dd04c8e2cc"
+      }
     }
   ]
 }
