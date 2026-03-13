@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the Ruby language configuration for tree_path resolution: register tree-sitter-ruby grammar v0.23.1, .rb/.rake/.gemspec extensions, kind mappings for fn (method), class (class), module (module), and singleton_method with custom name extraction for receiver encoding, and no doc comment detector.",
       "source_span": [
         32,
         47
       ],
       "tree_path": "static::CONFIG",
-      "source_hash": "sha256:450e22a999005a7ac3cee725a02ea257bf7120b9645c668331c4fb6bc2296950",
+      "source_hash": "sha256:520db256bfdfb89f4df208bbaa19df3743066e07e1e00165fa3e85344a4ae20a",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
     {
