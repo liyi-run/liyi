@@ -8,7 +8,7 @@
 
 This document covers post-MVP work that ships as 0.1.x patch releases. Everything here is additive — no schema changes, no CLI breaking changes, no behavioral regressions.
 
-The MVP roadmap (`docs/liyi-mvp-roadmap.md`) covers the 0.1.0 release. This document picks up where it leaves off.
+The MVP roadmap covered the 0.1.0 release (removed; see git history). This document picks up where it left off.
 
 **Design authority:** `docs/liyi-design.md` v8.9 — see *Structural identity via `tree_path`*, *Multi-language architecture (`LanguageConfig`)*, and *Annotation coverage*.
 
