@@ -20,12 +20,12 @@
       "reviewed": false,
       "intent": "Define the JSON language configuration for tree_path resolution: register tree-sitter-json grammar, .json extension, kind mapping (key→pair), value field for body traversal enabling nested object descent, json_node_name custom callback for string_content extraction, and object/array as transparent kinds so the resolver looks through them to reach pair nodes.",
       "source_span": [
-        32,
-        44
+        33,
+        43
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:02486b0bee8a16ef95c4a4495896a80f18bbb09067413c48a0d65fb0163b0e5b",
-      "source_anchor": "/// looks through them to reach `pair` nodes."
+      "source_hash": "sha256:60f561f8d7d873a09b1e1e406fe88edf19d1db6534a2ff366a70adf196b8748d",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

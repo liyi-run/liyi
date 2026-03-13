@@ -80,15 +80,15 @@
     },
     {
       "item": "resolve_tree_path_sibling_scan",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path into Pairs, find the last pair with an index, resolve the parent array container, iterate all named children (resolving any suffix pairs within each), hash each candidate's span, and return the unique match. Returns None when no pair has an index, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
-        367,
+        379,
         483
       ],
       "tree_path": "fn.resolve_tree_path_sibling_scan",
-      "source_hash": "sha256:dad39e0c1d70b51a4c5176d2f612c657e4591a20164f94e203f79f6dfbb5a2e6",
-      "source_anchor": "/// Attempt to find an array element matching `expected_hash` by scanning",
+      "source_hash": "sha256:da012019e6266a0dffd8863794e6e4208d51061fe1a2fac790fb181d55a4432e",
+      "source_anchor": "pub fn resolve_tree_path_sibling_scan(",
       "related": {
         "sibling-scan-recovery": "sha256:9f3c1ac03a88188f97c3ea850988d5f55f7a2f78c34b28104f47da67ba0f64e7"
       }
@@ -110,12 +110,12 @@
       "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[PathPair] (kind, name, optional index) triples.",
       "source_span": [
-        580,
-        588
+        579,
+        587
       ],
       "tree_path": "fn.resolve_in_body",
-      "source_hash": "sha256:4ffa3be8bfaca11f717008cc4cf643abad5bb71145c5352ae68e69e82c3a79d3",
-      "source_anchor": "    config: &LanguageConfig,"
+      "source_hash": "sha256:aa2789a394092d4abffef26e10ea466447c79cd3733487aac172732344b82524",
+      "source_anchor": "fn resolve_in_body<'a>("
     },
     {
       "item": "compute_tree_path",
