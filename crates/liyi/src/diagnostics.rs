@@ -43,6 +43,8 @@ pub struct Diagnostic {
     pub fix_hint: Option<String>,
     /// Whether this diagnostic was resolved by `--fix`.
     pub fixed: bool,
+    /// 1-indexed start line of the source span, for `file:line` display.
+    pub span_start: Option<usize>,
     /// 1-indexed line number of the source annotation, for `--prompt` output.
     pub annotation_line: Option<usize>,
     /// Full text of a requirement block, for `--prompt` output.
@@ -54,19 +56,22 @@ impl Diagnostic {
     /// file path so that output shows repo-relative paths.
     pub fn display_with_root(&self, root: &std::path::Path) -> String {
         let rel = self.file.strip_prefix(root).unwrap_or(&self.file);
+        let display_line = self.span_start.or(self.annotation_line);
+        let file_loc = match display_line {
+            Some(line) => format!("{}:{}", rel.display(), line),
+            None => format!("{}", rel.display()),
+        };
         let icon = if self.fixed {
             "✓ fixed"
         } else {
             Self::icon(&self.kind, self.severity)
         };
         let main_line = if self.item_or_req.is_empty() {
-            format!("{}: {} {}", rel.display(), icon, self.message)
+            format!("{file_loc}: {icon} {}", self.message)
         } else {
             format!(
-                "{}: {}: {} {}",
-                rel.display(),
+                "{file_loc}: {}: {icon} {}",
                 self.item_or_req,
-                icon,
                 self.message
             )
         };

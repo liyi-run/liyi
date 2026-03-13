@@ -60,6 +60,7 @@ pub fn run_check(
             message: w.clone(),
             fix_hint: None,
             fixed: false,
+            span_start: None,
             annotation_line: None,
             requirement_text: None,
         });
@@ -97,6 +98,7 @@ pub fn run_check(
                         ),
                         fix_hint: None,
                         fixed: false,
+                        span_start: None,
                         annotation_line: None,
                         requirement_text: None,
                     });
@@ -260,6 +262,7 @@ pub fn run_check(
                 ),
                 fix_hint: None,
                 fixed: false,
+                span_start: None,
                 annotation_line: Some(rec.line),
                 requirement_text: req_text,
             });
@@ -281,6 +284,7 @@ pub fn run_check(
                 message: format!("requirement \"{name}\" is not referenced by any item"),
                 fix_hint: None,
                 fixed: false,
+                span_start: None,
                 annotation_line: Some(rec.line),
                 requirement_text: None,
             });
@@ -306,6 +310,7 @@ pub fn run_check(
             message: format!("requirement cycle detected: {cycle_display}"),
             fix_hint: None,
             fixed: false,
+            span_start: None,
             annotation_line: None,
             requirement_text: None,
         });
@@ -359,6 +364,7 @@ fn check_sidecar(
                 message: format!("cannot read sidecar: {e}"),
                 fix_hint: None,
                 fixed: false,
+                span_start: None,
                 annotation_line: None,
                 requirement_text: None,
             });
@@ -377,6 +383,7 @@ fn check_sidecar(
                 message: e,
                 fix_hint: None,
                 fixed: false,
+                span_start: None,
                 annotation_line: None,
                 requirement_text: None,
             });
@@ -396,6 +403,7 @@ fn check_sidecar(
             message: e,
             fix_hint: Some(format!("liyi migrate {rel_sidecar}")),
             fixed: false,
+            span_start: None,
             annotation_line: None,
             requirement_text: None,
         });
@@ -418,6 +426,7 @@ fn check_sidecar(
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
                         fixed: false,
+                        span_start: Some(item.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
                     });
@@ -437,6 +446,7 @@ fn check_sidecar(
                                 ),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -456,6 +466,7 @@ fn check_sidecar(
                         message: format!("source_hash \"{h}\" does not match sha256:<hex>"),
                         fix_hint: None,
                         fixed: false,
+                        span_start: Some(req.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
                     });
@@ -474,6 +485,7 @@ fn check_sidecar(
             message: format!("source file {} not found", entry.source_path.display()),
             fix_hint: None,
             fixed: false,
+            span_start: None,
             annotation_line: None,
             requirement_text: None,
         });
@@ -511,6 +523,7 @@ fn check_sidecar(
                                 message: "hash matches".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -537,6 +550,7 @@ fn check_sidecar(
                                 message: "missing source_hash".into(),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -604,6 +618,7 @@ fn check_sidecar(
                                         ),
                                     fix_hint: Some("liyi check --fix".into()),
                                     fixed: fix,
+                                    span_start: Some(item.source_span[0]),
                                     annotation_line: None,
                                     requirement_text: None,
                                     });
@@ -655,6 +670,7 @@ fn check_sidecar(
                                             message: msg,
                                             fix_hint: None,
                                             fixed: false,
+                                            span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
                                         });
@@ -675,6 +691,7 @@ fn check_sidecar(
                                             message: msg,
                                             fix_hint: Some("liyi check --fix".into()),
                                             fixed: fix,
+                                            span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
                                         });
@@ -715,6 +732,7 @@ fn check_sidecar(
                                             ),
                                             fix_hint: Some("liyi check --fix".into()),
                                             fixed: fix,
+                                            span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
                                         });
@@ -735,6 +753,7 @@ fn check_sidecar(
                                             message: detail,
                                             fix_hint: None,
                                             fixed: false,
+                                            span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
                                         });
@@ -805,6 +824,7 @@ fn check_sidecar(
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                                 });
@@ -842,6 +862,7 @@ fn check_sidecar(
                                         ),
                                         fix_hint: None,
                                         fixed: false,
+                                        span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
                                     });
@@ -857,6 +878,7 @@ fn check_sidecar(
                                         ),
                                         fix_hint: Some("liyi check --fix".into()),
                                         fixed: fix,
+                                        span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
                                     });
@@ -879,6 +901,7 @@ fn check_sidecar(
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: false,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -898,6 +921,7 @@ fn check_sidecar(
                             ),
                             fix_hint: None,
                             fixed: false,
+                            span_start: None,
                             annotation_line: None,
                             requirement_text: None,
                         });
@@ -922,6 +946,7 @@ fn check_sidecar(
                         message: "not reviewed".into(),
                         fix_hint: None,
                         fixed: false,
+                        span_start: Some(item.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
                     });
@@ -943,6 +968,7 @@ fn check_sidecar(
                                 message: "marked \x40liyi:trivial".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -958,6 +984,7 @@ fn check_sidecar(
                                 message: "marked \x40liyi:ignore".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -983,6 +1010,7 @@ fn check_sidecar(
                                     ),
                                     fix_hint: None,
                                     fixed: false,
+                                    span_start: Some(item.source_span[0]),
                                     annotation_line: None,
                                     requirement_text: None,
                                 });
@@ -1011,6 +1039,7 @@ fn check_sidecar(
                                         message: format!("requirement \"{req_name}\" has changed"),
                                         fix_hint: None,
                                         fixed: false,
+                                        span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
                                     });
@@ -1049,6 +1078,7 @@ fn check_sidecar(
                                     ),
                                 fix_hint: None,
                                 fixed: fix,
+                                span_start: Some(item.source_span[0]),
                                 annotation_line: Some(*line),
                                 requirement_text: None,
                                 });
@@ -1097,6 +1127,7 @@ fn check_sidecar(
                                 message: "requirement hash matches".into(),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -1114,6 +1145,7 @@ fn check_sidecar(
                                 message: "requirement hash mismatch or missing".into(),
                                 fix_hint: None,
                                 fixed: fix,
+                                span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -1176,6 +1208,7 @@ fn check_sidecar(
                                     ),
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: fix,
+                                span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                                 });
@@ -1199,6 +1232,7 @@ fn check_sidecar(
                                     ),
                                 fix_hint: None,
                                 fixed: false,
+                                span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                                 });
@@ -1220,6 +1254,7 @@ fn check_sidecar(
                                 message: detail,
                                 fix_hint: Some("liyi check --fix".into()),
                                 fixed: false,
+                                span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
                             });
@@ -1239,6 +1274,7 @@ fn check_sidecar(
                             ),
                             fix_hint: None,
                             fixed: false,
+                            span_start: None,
                             annotation_line: None,
                             requirement_text: None,
                         });
