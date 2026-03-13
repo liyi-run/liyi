@@ -74,7 +74,7 @@
         360,
         365
       ],
-      "tree_path": "struct::SiblingScanResult",
+      "tree_path": "struct.SiblingScanResult",
       "source_hash": "sha256:16f08b111123e54dffb3cbdba88814476eea4ff857aaf1941bebd85157e8180c",
       "source_anchor": "pub struct SiblingScanResult {"
     },
@@ -101,18 +101,19 @@
         493,
         535
       ],
-      "tree_path": "fn::resolve_segments",
+      "tree_path": "fn.resolve_segments",
       "source_hash": "sha256:b6c9bfada9e73a1b9b27a416f5b0bb11365f05486e4666d45efc604f1822a919",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
       "item": "resolve_in_body",
       "reviewed": false,
-      "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
+      "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[PathPair] (kind, name, optional index) triples.",
       "source_span": [
         580,
         588
       ],
+      "tree_path": "fn.resolve_in_body",
       "source_hash": "sha256:4ffa3be8bfaca11f717008cc4cf643abad5bb71145c5352ae68e69e82c3a79d3",
       "source_anchor": "    config: &LanguageConfig,"
     },
@@ -124,7 +125,7 @@
         594,
         615
       ],
-      "tree_path": "fn::compute_tree_path",
+      "tree_path": "fn.compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
       "source_anchor": "pub fn compute_tree_path(source: &str, span: [usize; 2], lang: Language) -> String {"
     },
@@ -136,7 +137,7 @@
         623,
         669
       ],
-      "tree_path": "fn::find_item_in_range",
+      "tree_path": "fn.find_item_in_range",
       "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
       "source_anchor": "fn find_item_in_range<'a>("
     },

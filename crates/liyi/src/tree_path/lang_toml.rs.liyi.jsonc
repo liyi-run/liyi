@@ -11,6 +11,7 @@
         17,
         46
       ],
+      "tree_path": "fn.toml_node_name",
       "source_hash": "sha256:2f4448486173c3caf2b4fd7b150c00690daa24c1ce4da333641b7194cb9f19f8",
       "source_anchor": "    match node.kind() {"
     },

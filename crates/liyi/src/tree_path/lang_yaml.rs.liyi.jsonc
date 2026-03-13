@@ -11,6 +11,7 @@
         11,
         20
       ],
+      "tree_path": "fn.leaf_text",
       "source_hash": "sha256:14a4f3b9030a3f21cdf9a1f40205d3eaa23c4a951f175d6867a7760fc51cfcc8",
       "source_anchor": "    if node.named_child_count() == 0 {"
     },
@@ -22,6 +23,7 @@
         28,
         42
       ],
+      "tree_path": "fn.yaml_node_name",
       "source_hash": "sha256:e09d34683575b18581f7cc5e227e241729ca852758d1ebadea7d6de510cd69fe",
       "source_anchor": "fn yaml_node_name(node: &Node, source: &str) -> Option<String> {"
     },
