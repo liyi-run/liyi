@@ -11,7 +11,7 @@
         5,
         22
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:9dce29dec94e3accad76966aa0fa9d9dece08830b6f2c07e27390613d199d6e8",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
@@ -23,7 +23,7 @@
         25,
         42
       ],
-      "tree_path": "static::TSX_CONFIG",
+      "tree_path": "static.TSX_CONFIG",
       "source_hash": "sha256:2c76bd01bf64b6332386c1269d287ed29ae2e1d0985ee2d4396989dec0ec019c",
       "source_anchor": "pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {"
     }

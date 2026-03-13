@@ -11,7 +11,7 @@
         8,
         20
       ],
-      "tree_path": "fn::php_node_name",
+      "tree_path": "fn.php_node_name",
       "source_hash": "sha256:000b0989e6a231a3110b351589333e338f71cda03213dbe747c83271a52f460a",
       "source_anchor": "fn php_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -23,7 +23,7 @@
         23,
         42
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:834be3bf9acb078c50e1628c4053e5bb63c524b36ca61a0fadee5ddbd2e75bc4",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }

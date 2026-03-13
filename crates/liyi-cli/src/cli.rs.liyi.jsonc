@@ -11,7 +11,7 @@
         10,
         13
       ],
-      "tree_path": "struct::Cli",
+      "tree_path": "struct.Cli",
       "source_hash": "sha256:4953fe13f91425c3e01a74a6f62df1fac3d7c7e6f599c2d5b2c257e8686e9257",
       "source_anchor": "pub struct Cli {"
     },
@@ -23,7 +23,7 @@
         17,
         25
       ],
-      "tree_path": "enum::DiagnosticLevel",
+      "tree_path": "enum.DiagnosticLevel",
       "source_hash": "sha256:004211a7f049e4af4e12d01fb25a3bb9eba16c68d2641472e01fc0dd6d2ee910",
       "source_anchor": "pub enum DiagnosticLevel {"
     },
@@ -35,7 +35,7 @@
         28,
         117
       ],
-      "tree_path": "enum::Commands",
+      "tree_path": "enum.Commands",
       "source_hash": "sha256:bc8e82f094939279c1359d7f376e0b199fbb8a535468e6d27777188532b68689",
       "source_anchor": "pub enum Commands {"
     }

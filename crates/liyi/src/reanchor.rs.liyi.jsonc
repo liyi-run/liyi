@@ -11,7 +11,7 @@
         24,
         160
       ],
-      "tree_path": "fn::run_reanchor",
+      "tree_path": "fn.run_reanchor",
       "source_hash": "sha256:f8eedde8633dc2323afbe7737c10237ee42dea3af3d9164a91f33b15eb5655a8",
       "source_anchor": "pub fn run_reanchor(",
       "related": {

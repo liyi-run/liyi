@@ -11,7 +11,7 @@
         7,
         11
       ],
-      "tree_path": "struct::SidecarFile",
+      "tree_path": "struct.SidecarFile",
       "source_hash": "sha256:5092aa1dcd60cb05a77ab22347886da5abc71c66ddafe8456ec9196cd3082beb",
       "source_anchor": "pub struct SidecarFile {"
     },
@@ -23,7 +23,7 @@
         16,
         19
       ],
-      "tree_path": "enum::Spec",
+      "tree_path": "enum.Spec",
       "source_hash": "sha256:08fc4ad94021a75631e7a296aad438888725e367f52162f17d52f18ff40ed843",
       "source_anchor": "pub enum Spec {"
     },
@@ -35,7 +35,7 @@
         24,
         54
       ],
-      "tree_path": "struct::ItemSpec",
+      "tree_path": "struct.ItemSpec",
       "source_hash": "sha256:80f8873cc2af239c9aaef42578152c0c53216a348b6abfd3fa6f8b018d583c48",
       "source_anchor": "pub struct ItemSpec {",
       "related": {
@@ -50,7 +50,7 @@
         59,
         72
       ],
-      "tree_path": "struct::RequirementSpec",
+      "tree_path": "struct.RequirementSpec",
       "source_hash": "sha256:a0024b3fdff62d6f9ab32e1af9a50175ee1ab1f79e26d0dc13557a55df93b516",
       "source_anchor": "pub struct RequirementSpec {",
       "related": {
@@ -65,7 +65,7 @@
         76,
         126
       ],
-      "tree_path": "fn::strip_jsonc_comments",
+      "tree_path": "fn.strip_jsonc_comments",
       "source_hash": "sha256:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
       "source_anchor": "pub fn strip_jsonc_comments(input: &str) -> String {"
     },
@@ -77,7 +77,7 @@
         129,
         133
       ],
-      "tree_path": "fn::parse_sidecar",
+      "tree_path": "fn.parse_sidecar",
       "source_hash": "sha256:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
       "source_anchor": "pub fn parse_sidecar(content: &str) -> Result<SidecarFile, String> {"
     },
@@ -89,7 +89,7 @@
         136,
         140
       ],
-      "tree_path": "fn::write_sidecar",
+      "tree_path": "fn.write_sidecar",
       "source_hash": "sha256:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
       "source_anchor": "pub fn write_sidecar(sidecar: &SidecarFile) -> String {"
     },
@@ -101,7 +101,7 @@
         143,
         210
       ],
-      "tree_path": "fn::validate_sidecar",
+      "tree_path": "fn.validate_sidecar",
       "source_hash": "sha256:68a500fc50f88a363118faaf0ddb9d5700d95284dfa8b94dff7c8938ac3c6308",
       "source_anchor": "pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {"
     }

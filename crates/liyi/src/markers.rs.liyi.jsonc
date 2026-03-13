@@ -20,7 +20,7 @@
         7,
         38
       ],
-      "tree_path": "enum::SourceMarker",
+      "tree_path": "enum.SourceMarker",
       "source_hash": "sha256:5163fbee6924398358a26f343aba593524d7ab3e82935e3400002efc733e679b",
       "source_anchor": "pub enum SourceMarker {"
     },
@@ -32,7 +32,7 @@
         42,
         54
       ],
-      "tree_path": "fn::normalize_line",
+      "tree_path": "fn.normalize_line",
       "source_hash": "sha256:1ea7f63b592c761a4b6cb04cf97dbe501928bb7e4b985e98e7a37241968db2c3",
       "source_anchor": "pub fn normalize_line(line: &str) -> String {",
       "related": {
@@ -47,7 +47,7 @@
         84,
         139
       ],
-      "tree_path": "const::ALIAS_TABLE",
+      "tree_path": "const.ALIAS_TABLE",
       "source_hash": "sha256:e16ba6384d0a3fc7e12e6f29f735b00e7dcbf9867f4a85a15d43d225137a4340",
       "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &[",
       "related": {
@@ -62,7 +62,7 @@
         144,
         151
       ],
-      "tree_path": "fn::find_marker",
+      "tree_path": "fn.find_marker",
       "source_hash": "sha256:211721ddd702aba9aea74f65715b955688442e6b315cdc4ef841fe3ecd904de4",
       "source_anchor": "fn find_marker(normalized: &str) -> Option<(&'static str, usize, usize)> {",
       "related": {
@@ -77,7 +77,7 @@
         193,
         205
       ],
-      "tree_path": "const::QUOTE_CHARS",
+      "tree_path": "const.QUOTE_CHARS",
       "source_hash": "sha256:ee3eff2a2025e98fd1a03abd45197bfa2948f48b686ef1741fa9f3f650ffb283",
       "source_anchor": "const QUOTE_CHARS: &[char] = &[",
       "confidence": 0.95
@@ -90,7 +90,7 @@
         210,
         221
       ],
-      "tree_path": "fn::is_in_inline_code",
+      "tree_path": "fn.is_in_inline_code",
       "source_hash": "sha256:9ae8ada836bee1fed505f890342dd5eec818c35bf71cd0d7cc8019b23881cbf9",
       "source_anchor": "fn is_in_inline_code(line: &str, byte_pos: usize) -> bool {",
       "confidence": 0.95
@@ -103,7 +103,7 @@
         225,
         232
       ],
-      "tree_path": "fn::preceded_by_quote",
+      "tree_path": "fn.preceded_by_quote",
       "source_hash": "sha256:7d9413623ab4a54b767c3ce82f0cbe7f32e6bc9bb8ee97602dffe39852610c55",
       "source_anchor": "fn preceded_by_quote(line: &str, byte_pos: usize) -> bool {",
       "confidence": 0.95
@@ -116,7 +116,7 @@
         236,
         239
       ],
-      "tree_path": "fn::is_fence_delimiter",
+      "tree_path": "fn.is_fence_delimiter",
       "source_hash": "sha256:785d829b2997ba79b8f15786fc0bef393d4af727496c44b9027b5ece867ab32f",
       "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
       "confidence": 0.95,
@@ -132,7 +132,7 @@
         157,
         157
       ],
-      "tree_path": "const::MAX_NAME_LEN",
+      "tree_path": "const.MAX_NAME_LEN",
       "source_hash": "sha256:a31c8dbf7aa7c2559e00304b9e29665e105c7aae4a1ad2089c0a1125cf748728",
       "source_anchor": "const MAX_NAME_LEN: usize = 128;"
     },
@@ -144,7 +144,7 @@
         163,
         183
       ],
-      "tree_path": "fn::extract_name",
+      "tree_path": "fn.extract_name",
       "source_hash": "sha256:82f1ce7a581c8d01e063fb6a65c28da907d5256c006eaf53a540c2a3c13a2a06",
       "source_anchor": "fn extract_name(rest: &str) -> Option<String> {"
     },
@@ -156,7 +156,7 @@
         250,
         353
       ],
-      "tree_path": "fn::scan_markers",
+      "tree_path": "fn.scan_markers",
       "source_hash": "sha256:407964abfa8381c7931bcf3b27187f0a179789e77be7f4097c5a8b451ca2935b",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
       "related": {

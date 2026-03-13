@@ -11,7 +11,7 @@
         6,
         13
       ],
-      "tree_path": "enum::SpanError",
+      "tree_path": "enum.SpanError",
       "source_hash": "sha256:ea37356cb7bad13dd1834c4031b0bb3206dcc5b94893afa3e7521faaeaba5f1b",
       "source_anchor": "pub enum SpanError {"
     },
@@ -23,7 +23,7 @@
         38,
         62
       ],
-      "tree_path": "fn::hash_span",
+      "tree_path": "fn.hash_span",
       "source_hash": "sha256:21ca63044fbc5b69b02086134ddfdf196d72c5e54ed4d4e2d0450df1012bd5ed",
       "source_anchor": "pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, String), SpanError> {",
       "related": {

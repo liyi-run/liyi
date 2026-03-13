@@ -11,7 +11,7 @@
         32,
         47
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:520db256bfdfb89f4df208bbaa19df3743066e07e1e00165fa3e85344a4ae20a",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
@@ -23,7 +23,7 @@
         9,
         29
       ],
-      "tree_path": "fn::ruby_node_name",
+      "tree_path": "fn.ruby_node_name",
       "source_hash": "sha256:46f7f6c5cfcd53ebdf3c048808e2401808cf5f7645a152ceb249e06ea84d0584",
       "source_anchor": "fn ruby_node_name(node: &Node, source: &str) -> Option<String> {"
     }

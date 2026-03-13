@@ -11,7 +11,7 @@
         14,
         28
       ],
-      "tree_path": "fn::dart_node_name",
+      "tree_path": "fn.dart_node_name",
       "source_hash": "sha256:931e6f1c2d6958225da74e0c1219f55cf297593b6bbc36ca06be920dc4ddded2",
       "source_anchor": "fn dart_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -23,7 +23,7 @@
         30,
         51
       ],
-      "tree_path": "fn::dart_has_doc_comment",
+      "tree_path": "fn.dart_has_doc_comment",
       "source_hash": "sha256:9f0fafae6cbcfc7454eb728b44c1aff2930ab2956d00e4fd5c9fc04a78a8d011",
       "source_anchor": "fn dart_has_doc_comment(node: &Node, source: &str) -> bool {"
     },
@@ -35,7 +35,7 @@
         54,
         81
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:1800150e1e349c0de6221496d22f92d74ca0c139140ca56c2f438600269922fe",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }

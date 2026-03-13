@@ -11,7 +11,7 @@
         12,
         68
       ],
-      "tree_path": "fn::objc_node_name",
+      "tree_path": "fn.objc_node_name",
       "source_hash": "sha256:565676d6fc575ae177bdd050d7d515d38af7b7ed461240a5020380fb2003c052",
       "source_anchor": "fn objc_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -23,7 +23,7 @@
         71,
         91
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:34d6d1ac114bde885324b53fac1aaf04e217c62dac9f14c49c31582a51461770",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }

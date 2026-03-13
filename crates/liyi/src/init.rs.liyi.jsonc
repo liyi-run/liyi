@@ -11,7 +11,7 @@
         11,
         25
       ],
-      "tree_path": "const::AGENTS_MD_BLOCK",
+      "tree_path": "const.AGENTS_MD_BLOCK",
       "source_hash": "sha256:09e12b925d998b7cf1283e022ff44e7d15a471fe03a34bdd06a9a53827b8167a",
       "source_anchor": "const AGENTS_MD_BLOCK: &str = \"\\n\\",
       "related": {
@@ -26,7 +26,7 @@
         29,
         34
       ],
-      "tree_path": "enum::InitError",
+      "tree_path": "enum.InitError",
       "source_hash": "sha256:90a3bd7254f7d5a74ce2d55135699a5d8a0caedb42a3866f1ab9d5629676210e",
       "source_anchor": "pub enum InitError {"
     },
@@ -38,7 +38,7 @@
         60,
         79
       ],
-      "tree_path": "fn::init_agents_md",
+      "tree_path": "fn.init_agents_md",
       "source_hash": "sha256:7e668c93658d46630ba4331d6a0424e03f4971d64024f798eda390eb24c19d90",
       "source_anchor": "pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {"
     },
@@ -50,7 +50,7 @@
         100,
         175
       ],
-      "tree_path": "fn::init_sidecar",
+      "tree_path": "fn.init_sidecar",
       "source_hash": "sha256:6a5c338b6d894e17a05d579fdbd1b9f65217699dd2a7494dafc1ed472aa945ee",
       "source_anchor": "pub fn init_sidecar(",
       "related": {

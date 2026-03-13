@@ -11,7 +11,7 @@
         5,
         9
       ],
-      "tree_path": "enum::Severity",
+      "tree_path": "enum.Severity",
       "source_hash": "sha256:f8063cf209d5ce262ccff6306b87872a5877fb8a6cc9a9d406050f07c9a3c9e5",
       "source_anchor": "pub enum Severity {"
     },
@@ -23,7 +23,7 @@
         12,
         34
       ],
-      "tree_path": "enum::DiagnosticKind",
+      "tree_path": "enum.DiagnosticKind",
       "source_hash": "sha256:2ca310abcd9940459f003842ed0b1552a65430625abdce48b1ff433c9135a93c",
       "source_anchor": "pub enum DiagnosticKind {"
     },
@@ -35,7 +35,7 @@
         37,
         53
       ],
-      "tree_path": "struct::Diagnostic",
+      "tree_path": "struct.Diagnostic",
       "source_hash": "sha256:e322921d0a64ea81ce561fda31905e4fa31926f770d921448274aef5835d970c",
       "source_anchor": "pub struct Diagnostic {"
     },
@@ -47,7 +47,7 @@
         55,
         97
       ],
-      "tree_path": "impl::Diagnostic",
+      "tree_path": "impl.Diagnostic",
       "source_hash": "sha256:77b03739b7ba64ee8b743a75eadbd3edc66aac342a86c0a1818453d16a600b36",
       "source_anchor": "impl Diagnostic {"
     },
@@ -59,7 +59,7 @@
         122,
         127
       ],
-      "tree_path": "struct::CheckFlags",
+      "tree_path": "struct.CheckFlags",
       "source_hash": "sha256:7db1a400401611d2d83f2c98a9258920cd81a040e2237804b1a46e5530411fa9",
       "source_anchor": "pub struct CheckFlags {"
     },
@@ -71,7 +71,7 @@
         133,
         137
       ],
-      "tree_path": "enum::LiyiExitCode",
+      "tree_path": "enum.LiyiExitCode",
       "source_hash": "sha256:065e327cb7a385b508af79995f55c2ab18bb0fcb3aeda9c5cf9d2cd0368401c5",
       "source_anchor": "pub enum LiyiExitCode {",
       "related": {
@@ -86,7 +86,7 @@
         140,
         178
       ],
-      "tree_path": "fn::compute_exit_code",
+      "tree_path": "fn.compute_exit_code",
       "source_hash": "sha256:4a2e15f9b73a85306d2b0b8e1e0f565bb1a114e24d21a2b02e84012aac384d0b",
       "source_anchor": "pub fn compute_exit_code(diagnostics: &[Diagnostic], flags: &CheckFlags) -> LiyiExitCode {",
       "related": {

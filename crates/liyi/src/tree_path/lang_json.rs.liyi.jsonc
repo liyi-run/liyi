@@ -11,7 +11,7 @@
         10,
         22
       ],
-      "tree_path": "fn::json_node_name",
+      "tree_path": "fn.json_node_name",
       "source_hash": "sha256:1b0deafc4f61de6ea624d09e7f85705fec06c554d24e9867a7dbe62bbf4098db",
       "source_anchor": "fn json_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -23,7 +23,7 @@
         32,
         44
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:02486b0bee8a16ef95c4a4495896a80f18bbb09067413c48a0d65fb0163b0e5b",
       "source_anchor": "/// looks through them to reach `pair` nodes."
     }

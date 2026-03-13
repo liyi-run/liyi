@@ -11,7 +11,7 @@
         9,
         16
       ],
-      "tree_path": "struct::PromptOutput",
+      "tree_path": "struct.PromptOutput",
       "source_hash": "sha256:0b9d743a6e567011b4f2ad4eaa40284a57b8f50609f3f769e9881b1c4d1a99c9",
       "source_anchor": "pub struct PromptOutput {"
     },
@@ -23,7 +23,7 @@
         25,
         28
       ],
-      "tree_path": "struct::Instruction",
+      "tree_path": "struct.Instruction",
       "source_hash": "sha256:e0a3d452b7e3bbfe1ecf324105637b7bad3543534b3a70921a2ec95bb54e773f",
       "source_anchor": "pub struct Instruction {"
     },
@@ -35,7 +35,7 @@
         32,
         60
       ],
-      "tree_path": "enum::PromptItem",
+      "tree_path": "enum.PromptItem",
       "source_hash": "sha256:4e8a7499047a6e7fbb9338bbe08bcaba620ea4371b26c33174fdfe0a1b43fd64",
       "source_anchor": "pub enum PromptItem {"
     },
@@ -47,7 +47,7 @@
         82,
         185
       ],
-      "tree_path": "fn::build_prompt_output",
+      "tree_path": "fn.build_prompt_output",
       "source_hash": "sha256:e80895ecb3693c86ff7fe759497329100e6dd3d31d49ebedb87300c5424e6f70",
       "source_anchor": "pub fn build_prompt_output("
     }

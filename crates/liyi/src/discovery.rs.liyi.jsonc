@@ -11,7 +11,7 @@
         14,
         18
       ],
-      "tree_path": "struct::SidecarEntry",
+      "tree_path": "struct.SidecarEntry",
       "source_hash": "sha256:f99595684bf9b1858f74e98b23821a27133dee56b9d05d48961018b3c4a5d54c",
       "source_anchor": "pub struct SidecarEntry {"
     },
@@ -23,7 +23,7 @@
         21,
         27
       ],
-      "tree_path": "struct::DiscoveryResult",
+      "tree_path": "struct.DiscoveryResult",
       "source_hash": "sha256:ab9f57e754d9e49d7b4e171e705244343fa26b8bdb4a0df9353f79a7903690a4",
       "source_anchor": "pub struct DiscoveryResult {"
     },
@@ -35,7 +35,7 @@
         45,
         78
       ],
-      "tree_path": "fn::find_repo_root",
+      "tree_path": "fn.find_repo_root",
       "source_hash": "sha256:775db6e004689f050f36c2e92557c6c3c5f23eab256a2ef1eff8f4a2e94191c8",
       "source_anchor": "pub fn find_repo_root(from: &Path) -> Option<PathBuf> {",
       "related": {
@@ -50,7 +50,7 @@
         88,
         192
       ],
-      "tree_path": "fn::discover",
+      "tree_path": "fn.discover",
       "source_hash": "sha256:cd2cbc7f415706b1f69eee237216915cee40e50e8bb59d19573fff145a158bcf",
       "source_anchor": "pub fn discover(root: &Path, scope_paths: &[PathBuf]) -> DiscoveryResult {",
       "related": {

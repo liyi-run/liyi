@@ -11,7 +11,7 @@
         14,
         30
       ],
-      "tree_path": "fn::git_show",
+      "tree_path": "fn.git_show",
       "source_hash": "sha256:fd5366581f45d1d743884aab56b234ac70802901570874b2dfb8867d7df74c8c",
       "source_anchor": "pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {",
       "related": {
@@ -26,7 +26,7 @@
         37,
         60
       ],
-      "tree_path": "fn::git_log_revisions",
+      "tree_path": "fn.git_log_revisions",
       "source_hash": "sha256:ab53bf36e433e9dfdd602602d2d79a4eff6deb24286365aca041e81dd108af63",
       "source_anchor": "pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {",
       "related": {

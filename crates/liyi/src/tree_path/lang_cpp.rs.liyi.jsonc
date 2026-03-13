@@ -11,7 +11,7 @@
         11,
         41
       ],
-      "tree_path": "fn::cpp_node_name",
+      "tree_path": "fn.cpp_node_name",
       "source_hash": "sha256:d5e8630c1158a96e9ee4477fd29a8045a263cde5a6f1db34d4de2bd921911d17",
       "source_anchor": "fn cpp_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -23,7 +23,7 @@
         44,
         63
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:435f6f5356bbbd674a5b9c72860141710adb9e43fbdaaec09fe98584eaff1e34",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }

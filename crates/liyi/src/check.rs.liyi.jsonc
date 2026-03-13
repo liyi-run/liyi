@@ -11,7 +11,7 @@
         23,
         30
       ],
-      "tree_path": "struct::RequirementRecord",
+      "tree_path": "struct.RequirementRecord",
       "source_hash": "sha256:4a938b349644222f5387b748f99750302de0d71c7c0e528025bff26d2533497b",
       "source_anchor": "struct RequirementRecord {"
     },
@@ -23,7 +23,7 @@
         42,
         342
       ],
-      "tree_path": "fn::run_check",
+      "tree_path": "fn.run_check",
       "source_hash": "sha256:0e7bb66ac62c7f2104955a2706d12bb4bb724376a4e65d8d772486fd725f73f9",
       "source_anchor": "pub fn run_check(",
       "related": {
@@ -40,7 +40,7 @@
         351,
         1436
       ],
-      "tree_path": "fn::check_sidecar",
+      "tree_path": "fn.check_sidecar",
       "source_hash": "sha256:4defc9f7d6439ebe4e6fcaf591c8e595123d67ca18df6cdfb1d5aeda4e0dbc9f",
       "source_anchor": "fn check_sidecar(",
       "related": {
@@ -60,7 +60,7 @@
         1501,
         1512
       ],
-      "tree_path": "fn::read_cached",
+      "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",
       "source_anchor": "fn read_cached(cache: &mut HashMap<PathBuf, String>, path: &Path) -> Option<String> {"
     }

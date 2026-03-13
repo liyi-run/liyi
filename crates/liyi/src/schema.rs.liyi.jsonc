@@ -11,7 +11,7 @@
         7,
         15
       ],
-      "tree_path": "fn::validate_version",
+      "tree_path": "fn.validate_version",
       "source_hash": "sha256:eb13a8e5c419c2fd0a1bc441fe4eaa5b8cd52ec411cb425c9fb0ca622d5ee96c",
       "source_anchor": "pub fn validate_version(version: &str) -> Result<(), String> {",
       "related": {
@@ -26,7 +26,7 @@
         21,
         23
       ],
-      "tree_path": "fn::migrate",
+      "tree_path": "fn.migrate",
       "source_hash": "sha256:fc978caa9caa36d6f6d99406afbd020d8ef5069b5dba50c0de027fbe2bbfeedf",
       "source_anchor": "pub fn migrate(sidecar: &mut SidecarFile) -> Result<(), String> {"
     }

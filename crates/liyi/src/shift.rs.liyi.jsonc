@@ -11,7 +11,7 @@
         5,
         10
       ],
-      "tree_path": "enum::ShiftResult",
+      "tree_path": "enum.ShiftResult",
       "source_hash": "sha256:1441c168056e1a238272a80bf68e94545e3e8ded0407d0fe79a67c43e368c469",
       "source_anchor": "pub enum ShiftResult {"
     },
@@ -23,7 +23,7 @@
         21,
         24
       ],
-      "tree_path": "fn::detect_shift",
+      "tree_path": "fn.detect_shift",
       "source_hash": "sha256:66e85005cf7bcb453cd8b19001f4a33767305b3e98881e6b86321a37597904c7",
       "source_anchor": "pub fn detect_shift(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {",
       "related": {
@@ -38,7 +38,7 @@
         30,
         42
       ],
-      "tree_path": "fn::detect_shift_with_hint",
+      "tree_path": "fn.detect_shift_with_hint",
       "source_hash": "sha256:b47400f51751ac170746ac830412f25cd45491b9c00fa1290073da3d4d863f43",
       "source_anchor": "pub fn detect_shift_with_hint("
     },
@@ -50,7 +50,7 @@
         46,
         56
       ],
-      "tree_path": "fn::scan",
+      "tree_path": "fn.scan",
       "source_hash": "sha256:d5e1e06845a640f10028f628737bfee515e05330aaa8f03c5363f7d933128e33",
       "source_anchor": "fn scan(source_content: &str, span: [usize; 2], expected_hash: &str) -> ShiftResult {",
       "related": {
@@ -65,7 +65,7 @@
         59,
         80
       ],
-      "tree_path": "fn::try_offset",
+      "tree_path": "fn.try_offset",
       "source_hash": "sha256:4eb9f6d9f607bbfa3b941a291c81cafaabde67a24c4f0b1131c1896b1de6d07b",
       "source_anchor": "fn try_offset("
     }

@@ -11,7 +11,7 @@
         62,
         78
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:47d6bb93813d9148fe3a7e9907a87366e91ff7582e4fd38553f3711729565e1d",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     },
@@ -23,7 +23,7 @@
         18,
         59
       ],
-      "tree_path": "fn::zig_node_name",
+      "tree_path": "fn.zig_node_name",
       "source_hash": "sha256:eb05acba8328fb121ac202a2b124c0ea630f4b5b556ba40a844fe42f84d49a03",
       "source_anchor": "fn zig_node_name(node: &Node, source: &str) -> Option<String> {"
     },
@@ -35,7 +35,7 @@
         6,
         9
       ],
-      "tree_path": "fn::find_child_by_kind",
+      "tree_path": "fn.find_child_by_kind",
       "source_hash": "sha256:475743b87d4a326bcc3cb1c34dc3166766e545b996c93e2af4434fe0ec1d8be8",
       "source_anchor": "fn find_child_by_kind<'a>(node: &Node<'a>, kind: &str) -> Option<Node<'a>> {"
     }

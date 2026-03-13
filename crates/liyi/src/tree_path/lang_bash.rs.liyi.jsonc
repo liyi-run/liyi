@@ -11,7 +11,7 @@
         4,
         14
       ],
-      "tree_path": "static::CONFIG",
+      "tree_path": "static.CONFIG",
       "source_hash": "sha256:435a0fb03d78f56c8d2a5517662dda76d5a44d29b78690ee52eefae2882285b3",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
