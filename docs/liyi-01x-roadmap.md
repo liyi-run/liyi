@@ -41,6 +41,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M10.1 Tree-sitter item discovery | ✅ Complete | `liyi init` pre-populates specs via tree-sitter |
 | M10.2 Doc comment heuristic | ✅ Complete | `_hints._has_doc` for 6 languages |
 | M10.3 Item size heuristic | ✅ Complete | `_hints._body_lines`, `_likely_trivial`, `--trivial-threshold` |
+| M10.5 Combined scaffold test | ✅ Complete | End-to-end golden test: `init_scaffold_combined` |
 
 ---
 
@@ -904,7 +905,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 ## M10. Smart scaffold and `=trivial` sentinel
 
-**Status:** ⏳ In progress (M10.1–M10.4 complete; M10.5 planned)
+**Status:** ✅ Complete (M10.1–M10.5 all done)
 
 Enhance `liyi init` to leverage tree-sitter item discovery and add the `"intent": "=trivial"` sidecar sentinel.
 
@@ -957,7 +958,7 @@ Support `"intent": "=trivial"` as a sidecar-only triviality marker, parallel to 
 - When `@liyi:nontrivial` is in source but `"intent": "=trivial"` in sidecar, a `ConflictingTriviality` diagnostic is emitted.
 - Schema (`liyi.schema.json`) `intent` field description updated to document `=trivial`.
 
-### M10.5. Combined scaffold example ⏳
+### M10.5. Combined scaffold example ✅
 
 End-to-end golden test demonstrating the full scaffold workflow:
 
@@ -986,7 +987,7 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | ~~12~~ | ~~M10.1 Tree-sitter item discovery~~ | ✅ Done | — | Smart scaffold |
 | ~~13~~ | ~~M10.2 Doc comment heuristic~~ | ✅ Done | — | `=doc` suggestions |
 | ~~14~~ | ~~M10.3 Item size heuristic~~ | ✅ Done | — | Trivial suggestions |
-| 15 | M10.5 Combined scaffold test | ⏳ Planned | ~1h | Regression guard |
+| ~~15~~ | ~~M10.5 Combined scaffold test~~ | ✅ Done | — | Regression guard |
 | ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
 | ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
 | 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |

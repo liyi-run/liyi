@@ -1050,3 +1050,148 @@ fn check_fix_strips_hints() {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// M10.5 — Combined scaffold golden test
+// ---------------------------------------------------------------------------
+
+/// End-to-end golden test for the full `liyi init` scaffold workflow.
+///
+/// Verifies that a multi-item source file produces a pre-populated sidecar
+/// with correct `tree_path`, `source_span`, and `_hints` (doc comment,
+/// line count, `_likely_trivial`).  Also verifies the sidecar round-trips
+/// through `check --fix` (hints stripped, hashes filled).
+#[test]
+fn init_scaffold_combined() {
+    let fixture = fixture_path("init_scaffold_combined");
+    let source = fixture.join("example.rs");
+    let tmp = tempfile::TempDir::new().unwrap();
+    let tmp_source = tmp.path().join("example.rs");
+    fs::copy(&source, &tmp_source).unwrap();
+
+    // Phase 1: run init with discover (default threshold = 5)
+    let sidecar_path = liyi::init::init_sidecar(&tmp_source, false, true, 5)
+        .expect("init_sidecar should succeed");
+
+    let content = fs::read_to_string(&sidecar_path).unwrap();
+    let sidecar = liyi::sidecar::parse_sidecar(&content).expect("sidecar should parse");
+
+    assert_eq!(sidecar.version, "0.1");
+    assert_eq!(sidecar.source, "example.rs");
+
+    // Collect items keyed by tree_path for deterministic assertion.
+    let items: std::collections::HashMap<&str, &liyi::sidecar::ItemSpec> = sidecar
+        .specs
+        .iter()
+        .filter_map(|s| match s {
+            liyi::sidecar::Spec::Item(i) => Some((i.tree_path.as_str(), i)),
+            _ => None,
+        })
+        .collect();
+
+    // ---- Expected items table ----
+    struct Expected {
+        tp: &'static str,
+        name: &'static str,
+        span: [usize; 2],
+        body: u64,
+        has_doc: bool,
+        trivial: bool,
+    }
+    let expected: &[Expected] = &[
+        Expected { tp: "struct::Point",                name: "Point",             span: [2, 5],   body: 4,  has_doc: true,  trivial: false },
+        Expected { tp: "struct::Internal",             name: "Internal",          span: [7, 7],   body: 1,  has_doc: false, trivial: true },
+        Expected { tp: "impl::Point",                  name: "Point",             span: [9, 28],  body: 20, has_doc: false, trivial: false },
+        Expected { tp: "impl::Point::fn::origin",      name: "Point::origin",     span: [11, 13], body: 3,  has_doc: true,  trivial: false },
+        Expected { tp: "impl::Point::fn::distance_to", name: "Point::distance_to", span: [18, 22], body: 5, has_doc: true, trivial: false },
+        Expected { tp: "impl::Point::fn::translate",   name: "Point::translate",  span: [24, 27], body: 4,  has_doc: false, trivial: true },
+        Expected { tp: "fn::scale_all",                name: "scale_all",         span: [31, 36], body: 6,  has_doc: true,  trivial: false },
+        Expected { tp: "fn::identity",                 name: "identity",          span: [38, 40], body: 3,  has_doc: false, trivial: true },
+    ];
+
+    assert_eq!(
+        items.len(),
+        expected.len(),
+        "expected {} items, got {}: {:?}",
+        expected.len(),
+        items.len(),
+        items.keys().collect::<Vec<_>>()
+    );
+
+    for e in expected {
+        let item = items
+            .get(e.tp)
+            .unwrap_or_else(|| panic!("missing item with tree_path {}", e.tp));
+
+        assert_eq!(item.item, e.name, "{}: display name mismatch", e.tp);
+        assert_eq!(item.source_span, e.span, "{}: source_span mismatch", e.tp);
+        assert!(!item.reviewed, "{}: reviewed should be false", e.tp);
+        assert!(item.intent.is_empty(), "{}: intent should be empty", e.tp);
+        assert!(item.source_hash.is_none(), "{}: source_hash should be None", e.tp);
+        assert!(item.source_anchor.is_none(), "{}: source_anchor should be None", e.tp);
+
+        let hints = item._hints.as_ref().unwrap_or_else(|| panic!("{}: missing _hints", e.tp));
+        assert_eq!(hints["_body_lines"], e.body, "{}: _body_lines mismatch", e.tp);
+        assert_eq!(hints["_has_doc"], e.has_doc, "{}: _has_doc mismatch", e.tp);
+        if e.trivial {
+            assert_eq!(
+                hints["_likely_trivial"], true,
+                "{}: expected _likely_trivial: true", e.tp
+            );
+        } else {
+            assert!(
+                hints.get("_likely_trivial").is_none(),
+                "{}: should NOT have _likely_trivial", e.tp
+            );
+        }
+    }
+
+    // Phase 2: check --fix fills hashes and strips _hints.
+    let flags = liyi::diagnostics::CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+    liyi::check::run_check(tmp.path(), &[], true, false, &flags);
+
+    let after_content = fs::read_to_string(&sidecar_path).unwrap();
+    let after = liyi::sidecar::parse_sidecar(&after_content).expect("sidecar should parse after fix");
+
+    for spec in &after.specs {
+        if let liyi::sidecar::Spec::Item(item) = spec {
+            assert!(
+                item._hints.is_none(),
+                "{}: _hints should be stripped after check --fix",
+                item.tree_path
+            );
+            assert!(
+                item.source_hash.is_some(),
+                "{}: source_hash should be filled after check --fix",
+                item.tree_path
+            );
+            assert!(
+                item.source_anchor.is_some(),
+                "{}: source_anchor should be filled after check --fix",
+                item.tree_path
+            );
+        }
+    }
+
+    // Phase 3: re-check should be clean (all current, no stale).
+    let (diagnostics, exit_code) = liyi::check::run_check(tmp.path(), &[], false, false, &flags);
+    let failures: Vec<_> = diagnostics
+        .iter()
+        .filter(|d| {
+            !matches!(
+                d.kind,
+                liyi::diagnostics::DiagnosticKind::Current
+                    | liyi::diagnostics::DiagnosticKind::Trivial
+                    | liyi::diagnostics::DiagnosticKind::Ignored
+                    | liyi::diagnostics::DiagnosticKind::Unreviewed
+            )
+        })
+        .collect();
+    assert!(failures.is_empty(), "unexpected diagnostics after fix: {failures:#?}");
+    assert_eq!(exit_code, liyi::diagnostics::LiyiExitCode::Clean);
+}
