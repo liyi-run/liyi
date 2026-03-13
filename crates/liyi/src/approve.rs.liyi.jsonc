@@ -65,7 +65,7 @@
     },
     {
       "item": "collect_approval_candidates",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
       "source_span": [
         120,

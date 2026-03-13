@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the TypeScript language configuration for tree_path resolution: register tree-sitter-typescript grammar (LANGUAGE_TYPESCRIPT), .ts/.mts/.cts extensions, kind mappings for fn/class/method/interface/type/enum, using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         5,
@@ -17,7 +17,7 @@
     },
     {
       "item": "TSX_CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the TSX language configuration for tree_path resolution: register tree-sitter-typescript TSX grammar (LANGUAGE_TSX), .tsx extension, same kind mappings as TypeScript (fn/class/method/interface/type/enum), using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         24,

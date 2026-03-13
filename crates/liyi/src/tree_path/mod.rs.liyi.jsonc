@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "LanguageConfig",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding), and an optional doc_comment_detector callback that checks whether a doc comment is attached to an item node.",
       "source_span": [
         40,

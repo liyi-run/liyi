@@ -41,7 +41,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c extension only, kind mappings for fn/struct/enum/typedef, wire the custom c_node_name callback for name extraction, and no doc comment detector.",
       "source_span": [
         49,

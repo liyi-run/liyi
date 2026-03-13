@@ -20,7 +20,7 @@
     },
     {
       "item": "git_log_revisions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return commit hashes that touched a file, most recent first, by shelling out to `git log --follow --format=%H -<limit> -- <path>`. Runs in repo_root, captures stdout, suppresses stderr. Returns at most `limit` entries. Uses --follow to track renames. Returns empty vec if git is unavailable or the file has no history.",
       "source_span": [
         37,

@@ -29,7 +29,7 @@
     },
     {
       "item": "ItemSpec",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, tree_path, source_hash, source_anchor, confidence, related, _hints). Enforce deny_unknown_fields and skip serializing None optionals. _hints holds transient inference aids from liyi init, stripped by check --fix.",
       "source_span": [
         24,
@@ -44,7 +44,7 @@
     },
     {
       "item": "RequirementSpec",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Model a requirement spec entry with requirement name, source_span, and optional tree_path, source_hash, source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
       "source_span": [
         59,
