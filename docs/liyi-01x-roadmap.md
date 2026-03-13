@@ -682,11 +682,11 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 ---
 ## M7. Additional language support
 
-**Status:** ⏳ Planned
+**Status:** ✅ Complete.
 
 **Goal:** Extend tree-sitter structural identity to Ruby, Bash, Dart, and Zig. All grammars are compiled into the binary unconditionally, matching the M1/M2 design decision.
 
-### M7.1. Ruby ⏳
+### M7.1. Ruby ✅
 
 **Grammar:** `tree-sitter-ruby` — mature, widely used.
 
@@ -711,7 +711,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 - Classes, methods, modules, singleton methods all resolve.
 - Module → class → method nesting roundtrips correctly.
 
-### M7.2. Bash ⏳
+### M7.2. Bash ✅
 
 **Grammar:** `tree-sitter-bash` — stable, well maintained.
 
@@ -768,7 +768,7 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 - Classes, methods, functions, getters, setters, constructors, mixins, extensions, extension types, enums all resolve. ✅
 - Roundtrip passes. ✅
 
-### M7.4. Zig ⏳
+### M7.4. Zig ✅
 
 **Grammar:** `tree-sitter-zig` — actively maintained.
 
