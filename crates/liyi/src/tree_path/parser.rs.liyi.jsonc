@@ -9,7 +9,7 @@
       "intent": "Represents a single segment in a parsed tree_path: Kind for kind shorthands (fn, class), Name for item names, or Injection for M9 language injection markers.",
       "source_span": [
         18,
-        25
+        27
       ],
       "tree_path": "enum::Segment",
       "source_hash": "sha256:f03e58f7d39bc6afc57714a20d7dd2f0ae7df5b41984ddc73a03cdceeeaf8eb3",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Parsed representation of a complete tree_path string. Provides parse() for deserializing from string and to_string() for serializing back with automatic quoting of complex names.",
       "source_span": [
-        29,
-        31
+        31,
+        33
       ],
       "tree_path": "struct::TreePath",
       "source_hash": "sha256:5d1af2aa90dd466d122b375cd4965a2af46251cc09cba1db82aaab13feaaeeae",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Handles :: delimited segments and injection markers attached directly to the preceding segment (name//lang) without requiring a :: separator.",
       "source_span": [
-        100,
-        112
+        109,
+        121
       ],
       "tree_path": "fn::parse_tree_path",
       "source_hash": "sha256:2be8584a996ee2a96a8ef64a574b380d98698b3e2628c46545c52f85217a5acd",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Parses a single tree_path segment, trying injection markers, quoted strings, and simple names in order. Uses heuristic to classify simple names as Kind or Name.",
       "source_span": [
-        115,
-        130
+        124,
+        139
       ],
       "tree_path": "fn::parse_segment",
       "source_hash": "sha256:a3a88773a8c9efa33fc7a9f095cc355918d27fbe0e7bc9d2953224b6a3153e52",
@@ -56,8 +56,8 @@
       "reviewed": true,
       "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping. Public so that collect_path in mod.rs can use it for tree_path construction.",
       "source_span": [
-        65,
-        84
+        74,
+        93
       ],
       "tree_path": "fn::serialize_name",
       "source_hash": "sha256:b8dd81d8073ea0e32e85b41124e93cf98b211bf62c50d273767890f344498530",
