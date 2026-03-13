@@ -57,13 +57,13 @@
     {
       "item": "resolve_tree_path",
       "reviewed": false,
-      "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
+      "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect Pairs into (kind, name, optional index) triples, then walk the tree-sitter AST via resolve_segments to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
         325,
-        371
+        357
       ],
       "tree_path": "fn.resolve_tree_path",
-      "source_hash": "sha256:7b316c728ec7b7d66d9ec534c1126ab91893d5454a32989445be5b5e2d6b5101",
+      "source_hash": "sha256:e6ede0775cab05e7920b46a6daa399f82a4b55846508b2071874e5373838753f",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -81,13 +81,14 @@
     {
       "item": "resolve_tree_path_sibling_scan",
       "reviewed": false,
-      "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path, find the last indexed segment, resolve the parent array container, iterate all named children (resolving any suffix segments within each), hash each candidate's span, and return the unique match. Returns None when the path has no indexed segment, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
+      "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path into Pairs, find the last pair with an index, resolve the parent array container, iterate all named children (resolving any suffix pairs within each), hash each candidate's span, and return the unique match. Returns None when no pair has an index, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
-        381,
-        522
+        367,
+        483
       ],
-      "source_hash": "sha256:9691b69841179bcb8ece0807483623bf474cf1f3714e51280a70f4873f45f382",
-      "source_anchor": "/// siblings of an indexed tree_path segment.",
+      "tree_path": "fn.resolve_tree_path_sibling_scan",
+      "source_hash": "sha256:dad39e0c1d70b51a4c5176d2f612c657e4591a20164f94e203f79f6dfbb5a2e6",
+      "source_anchor": "/// Attempt to find an array element matching `expected_hash` by scanning",
       "related": {
         "sibling-scan-recovery": "sha256:ab84a6af68e2eee484f755a26625fa314c238fd5a7131944e9a55b614e4d06ba"
       }
@@ -141,14 +142,14 @@
     },
     {
       "item": "collect_path",
-      "reviewed": true,
-      "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
+      "reviewed": false,
+      "intent": "Recursively walk from root to target node, collecting kind.name path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        753,
-        799
+        688,
+        734
       ],
       "tree_path": "fn.collect_path",
-      "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",
+      "source_hash": "sha256:d6db330999717bbea6d21f24455ff2720da3393a219f0c4119e481535e67c729",
       "source_anchor": "fn collect_path(",
       "related": {
         "exhaustive-inclusion": "sha256:5b729afeeb3162d6f07f6bd6f6a88e348cb57a06ddb0886e69df61438206bcf6",

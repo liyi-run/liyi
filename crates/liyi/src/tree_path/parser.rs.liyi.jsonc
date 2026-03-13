@@ -4,63 +4,63 @@
   "source": "crates/liyi/src/tree_path/parser.rs",
   "specs": [
     {
-      "item": "Segment",
-      "reviewed": true,
-      "intent": "Represents a single segment in a parsed tree_path: Kind for kind shorthands (fn, class), Name for item names, or Injection for M9 language injection markers.",
+      "item": "Pair",
+      "reviewed": false,
+      "intent": "Represents a single kind.name pair in a parsed tree_path: bundles a kind shorthand, item name, optional 0-based positional index for data-file arrays, and optional injection language marker.",
       "source_span": [
-        18,
-        27
+        28,
+        37
       ],
-      "tree_path": "enum.Segment",
-      "source_hash": "sha256:f03e58f7d39bc6afc57714a20d7dd2f0ae7df5b41984ddc73a03cdceeeaf8eb3",
-      "source_anchor": "pub enum Segment {"
+      "tree_path": "struct.Pair",
+      "source_hash": "sha256:a00028d410f62b561758b83503387d187ec80860152fa296525bbb49639e250b",
+      "source_anchor": "pub struct Pair {"
     },
     {
       "item": "TreePath",
-      "reviewed": true,
-      "intent": "Parsed representation of a complete tree_path string. Provides parse() for deserializing from string and to_string() for serializing back with automatic quoting of complex names.",
+      "reviewed": false,
+      "intent": "Parsed representation of a complete tree_path string as a list of Pairs. Provides parse() for deserializing from string and serialize() for serializing back with automatic quoting of complex names.",
       "source_span": [
-        31,
-        33
+        41,
+        43
       ],
       "tree_path": "struct.TreePath",
-      "source_hash": "sha256:5d1af2aa90dd466d122b375cd4965a2af46251cc09cba1db82aaab13feaaeeae",
+      "source_hash": "sha256:1f0ad859f4cb23349d79e9af272c66b2eaa3970f9f72feeee73ee6d256b43e47",
       "source_anchor": "pub struct TreePath {"
     },
     {
       "item": "parse_tree_path",
-      "reviewed": true,
-      "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Handles :: delimited segments and injection markers attached directly to the preceding segment (name//lang) without requiring a :: separator.",
+      "reviewed": false,
+      "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Parses the first pair then collects subsequent pairs preceded by :: delimiters.",
       "source_span": [
-        109,
-        121
+        116,
+        122
       ],
       "tree_path": "fn.parse_tree_path",
-      "source_hash": "sha256:2be8584a996ee2a96a8ef64a574b380d98698b3e2628c46545c52f85217a5acd",
+      "source_hash": "sha256:e43b633e0cb3ba83dfc1d4e00961dce314365f0773c250a8444a0804c3621aa3",
       "source_anchor": "fn parse_tree_path(input: &str) -> IResult<&str, TreePath> {"
     },
     {
-      "item": "parse_segment",
-      "reviewed": true,
-      "intent": "Parses a single tree_path segment, trying injection markers, quoted strings, and simple names in order. Uses heuristic to classify simple names as Kind or Name.",
+      "item": "parse_pair",
+      "reviewed": false,
+      "intent": "Parses a single kind.name pair: a simple identifier for kind, a '.' separator, then a name (quoted or simple) with optional [N] index, followed by an optional //lang injection marker. Returns a Pair struct.",
       "source_span": [
         124,
-        139
+        143
       ],
-      "tree_path": "fn.parse_segment",
-      "source_hash": "sha256:a3a88773a8c9efa33fc7a9f095cc355918d27fbe0e7bc9d2953224b6a3153e52",
-      "source_anchor": "fn parse_segment(input: &str) -> IResult<&str, Segment> {"
+      "tree_path": "fn.parse_pair",
+      "source_hash": "sha256:3eb2eecef4886baa0c326a008199f4b4c97087e60bb1491bda620688384f80b0",
+      "source_anchor": "/// Parse a single `kind.name[index?]//injection?` pair."
     },
     {
       "item": "serialize_name",
-      "reviewed": true,
-      "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping. Public so that collect_path in mod.rs can use it for tree_path construction.",
+      "reviewed": false,
+      "intent": "Serializes a name, automatically quoting if it contains special characters (dots, colons, ::, spaces, tabs, newlines, quotes, backslashes) or is not a simple identifier. Escapes backslashes and quotes within quoted strings. Public so that collect_path in mod.rs can use it for tree_path construction.",
       "source_span": [
-        74,
-        93
+        80,
+        100
       ],
       "tree_path": "fn.serialize_name",
-      "source_hash": "sha256:b8dd81d8073ea0e32e85b41124e93cf98b211bf62c50d273767890f344498530",
+      "source_hash": "sha256:27977207fbaf294890221c381dd80a5b99ac7ea4c635f5cd87f91479ca0cc611",
       "source_anchor": "pub fn serialize_name(name: &str) -> String {"
     }
   ]

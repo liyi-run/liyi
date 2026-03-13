@@ -31,7 +31,7 @@
       "source_anchor": "<!-- @liyi:requirement no-injection-without-profile -->"
     },
     {
-      "requirement": "even-pair-invariant",
+      "requirement": "injection-pair-attachment",
       "source_span": [
         52,
         58
