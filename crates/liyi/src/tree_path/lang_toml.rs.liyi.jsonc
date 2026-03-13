@@ -1,0 +1,29 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_toml.rs",
+  "specs": [
+    {
+      "item": "toml_node_name",
+      "reviewed": false,
+      "intent": "Extract names from TOML AST nodes: for table and table_array_element, return the first bare_key or quoted_key child text (stripping quotes from quoted keys); for pair, return the first bare_key or quoted_key child text similarly; return None for other node kinds.",
+      "source_span": [
+        17,
+        46
+      ],
+      "source_hash": "sha256:2f4448486173c3caf2b4fd7b150c00690daa24c1ce4da333641b7194cb9f19f8",
+      "source_anchor": "    match node.kind() {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the TOML language configuration for tree_path resolution: register tree-sitter-toml-ng grammar, .toml extension, kind mappings (table→table, key→pair, array_table→table_array_element), self-as-body (\".\") sentinel so tables act as their own body containers, and toml_node_name custom callback for name extraction from bare_key/quoted_key children.",
+      "source_span": [
+        51,
+        64
+      ],
+      "source_hash": "sha256:25fc782f4b1ee0d1a979aea83a026a58fbfcdf5186997f2c2ceb07cc885351df",
+      "source_anchor": "/// in `body_fields` tells `find_body` to return the node itself."
+    }
+  ]
+}

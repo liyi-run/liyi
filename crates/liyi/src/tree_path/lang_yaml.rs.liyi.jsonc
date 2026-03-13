@@ -1,0 +1,40 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_yaml.rs",
+  "specs": [
+    {
+      "item": "leaf_text",
+      "reviewed": false,
+      "intent": "Recursively descend through named children of a YAML wrapper node until reaching a leaf (no named children) and return its source text. Used to unwrap flow_node → plain_scalar → string_scalar chains to extract key text.",
+      "source_span": [
+        11,
+        20
+      ],
+      "source_hash": "sha256:14a4f3b9030a3f21cdf9a1f40205d3eaa23c4a951f175d6867a7760fc51cfcc8",
+      "source_anchor": "    if node.named_child_count() == 0 {"
+    },
+    {
+      "item": "yaml_node_name",
+      "reviewed": false,
+      "intent": "Extract names from YAML block_mapping_pair nodes: get the key field, drill down to the leaf scalar text via leaf_text, and strip surrounding quotes from quoted scalars. Return None for non-block_mapping_pair nodes.",
+      "source_span": [
+        28,
+        42
+      ],
+      "source_hash": "sha256:e09d34683575b18581f7cc5e227e241729ca852758d1ebadea7d6de510cd69fe",
+      "source_anchor": "fn yaml_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the YAML language configuration for tree_path resolution (without injection support): register tree-sitter-yaml grammar, .yml/.yaml extensions, kind mapping (key→block_mapping_pair), value field for body traversal, yaml_node_name custom callback for deep key extraction, and document/block_node/block_mapping/block_sequence as transparent kinds so the resolver looks through YAML's deeply nested wrapper structure.",
+      "source_span": [
+        51,
+        62
+      ],
+      "source_hash": "sha256:47e79b5718cf22e18a26d687dd720d738de96ffdd8c1a4a08c8cc7dd13e6e88b",
+      "source_anchor": "/// transparent so the resolver looks through them to reach the actual"
+    }
+  ]
+}

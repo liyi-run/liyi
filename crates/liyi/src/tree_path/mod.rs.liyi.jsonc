@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Define the data-driven abstraction for language-specific tree_path behaviour. Each field captures one language-dependent axis: grammar loader (ts_language), file extensions, kind shorthand mapping, name extraction field and overrides, body-descending fields, an optional custom_name callback for languages with non-trivial name extraction (e.g., Go receiver encoding), an optional doc_comment_detector callback that checks whether a doc comment is attached to an item node, and a transparent_kinds list of node kinds that resolve_segments should recurse through transparently (for grammars that wrap item nodes in intermediate containers, e.g., Dart class_member).",
       "source_span": [
-        43,
-        71
+        46,
+        74
       ],
       "tree_path": "struct::LanguageConfig",
       "source_hash": "sha256:b0b42fad068403f34ec1530685e69a61e871990f2ffbc2eeaa4ae9fb339c8c17",
@@ -17,14 +17,14 @@
     },
     {
       "item": "detect_language",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        216,
-        283
+        232,
+        310
       ],
       "tree_path": "fn::detect_language",
-      "source_hash": "sha256:7273aa1df2d82a1001a2f69903d3fb23c6c5e2c6191c4ef65b9ce43c4e7b3843",
+      "source_hash": "sha256:1095d3ea0012a582615d997095c5d9f843dabadef76b7213a5a7fede7ac30d12",
       "source_anchor": "pub fn detect_language(path: &Path) -> Option<Language> {",
       "related": {
         "graceful-degradation": "sha256:d18b719e0bc043203b04fea2cd944eec8fecd4b998a6824f74eeade5f14343cf"
@@ -32,14 +32,14 @@
     },
     {
       "item": "Language",
-      "reviewed": true,
-      "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, and Zig. Each variant maps to a static LanguageConfig via config().",
+      "reviewed": false,
+      "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, Zig, TOML, JSON, and YAML. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
-        151,
-        170
+        161,
+        183
       ],
       "tree_path": "enum::Language",
-      "source_hash": "sha256:6b7798351e111b0495ac53f87d9a52b34c826cc4b141e6f1aea8a9405695704a",
+      "source_hash": "sha256:22ac6ffee8cb31c56dc49788f70b5ddf5a7e7e3d40fd1ba96053073b5c797416",
       "source_anchor": "pub enum Language {"
     },
     {
@@ -47,8 +47,8 @@
       "reviewed": true,
       "intent": "Extract the user-visible name of an AST node via the language's LanguageConfig. Checks the custom_name callback first (for complex patterns like Go receiver encoding). Falls back to name_overrides for special cases (e.g., impl_item uses type field). Otherwise reads the standard name field. Returns Cow::Owned for constructed names, Cow::Borrowed for field-extracted names.",
       "source_span": [
-        95,
-        115
+        98,
+        118
       ],
       "tree_path": "impl::LanguageConfig::fn::node_name",
       "source_hash": "sha256:c311d8a17fab52814d95f71fd4346ce81ec87abcdd0514575e94f6934471f2e2",
@@ -56,14 +56,14 @@
     },
     {
       "item": "resolve_tree_path",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Parse a tree_path string via the nom grammar (parser::TreePath::parse), collect non-injection segments into (kind, name) pairs, validate even-pair structure, then walk the tree-sitter AST to resolve the path to a 1-indexed inclusive [start, end] line span. Returns None on empty/malformed input, parse failure, or when no matching AST node is found.",
       "source_span": [
-        299,
-        344
+        325,
+        371
       ],
       "tree_path": "fn::resolve_tree_path",
-      "source_hash": "sha256:810715d8eaf728b7977ac6e4759c71dd07e1db1f84c9a3a8a630b78695ba07ad",
+      "source_hash": "sha256:7b316c728ec7b7d66d9ec534c1126ab91893d5454a32989445be5b5e2d6b5101",
       "source_anchor": "pub fn resolve_tree_path(source: &str, tree_path: &str, lang: Language) -> Option<[usize; 2]> {"
     },
     {
@@ -71,22 +71,22 @@
       "reviewed": false,
       "intent": "Hold the result of a hash-based sibling scan: the 1-indexed inclusive span of the matched sibling element and the updated tree_path with the corrected array index.",
       "source_span": [
-        347,
-        353
+        373,
+        378
       ],
       "tree_path": "struct::SiblingScanResult",
-      "source_hash": "sha256:10cb53cbe418dde6ef69e66f7d14f71d7fd0e87e71f7c6ece3d7b0e2dba2113d",
+      "source_hash": "sha256:16f08b111123e54dffb3cbdba88814476eea4ff857aaf1941bebd85157e8180c",
       "source_anchor": "pub struct SiblingScanResult {"
     },
     {
       "item": "resolve_tree_path_sibling_scan",
       "reviewed": false,
-      "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path, find the last indexed segment, resolve the parent array container, iterate all named children (resolving any suffix segments within each), hash each candidate's span, and return the unique match. Returns None when the path has no indexed segment, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exacty-one-match invariant enforced.",
+      "intent": "Fallback for indexed array elements whose positional resolution produces a hash mismatch. Parse the tree_path, find the last indexed segment, resolve the parent array container, iterate all named children (resolving any suffix segments within each), hash each candidate's span, and return the unique match. Returns None when the path has no indexed segment, the parent array cannot be resolved, or zero/multiple elements match (ambiguous). Must never silently pick a wrong element — exactly-one-match invariant enforced.",
       "source_span": [
-        355,
-        496
+        381,
+        522
       ],
-      "source_hash": "sha256:ce86200651a3e1e1992af8e5c55efc36318c1ab80a6bf38624b847012d28292b",
+      "source_hash": "sha256:9691b69841179bcb8ece0807483623bf474cf1f3714e51280a70f4873f45f382",
       "source_anchor": "/// siblings of an indexed tree_path segment.",
       "related": {
         "sibling-scan-recovery": "sha256:ab84a6af68e2eee484f755a26625fa314c238fd5a7131944e9a55b614e4d06ba"
@@ -94,35 +94,34 @@
     },
     {
       "item": "resolve_segments",
-      "reviewed": true,
-      "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[(&str, &str)] (kind, name) pairs. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member).",
+      "reviewed": false,
+      "intent": "Walk tree-sitter children of the given parent to find nodes matching each path segment in order. Accepts segments as &[PathPair] (kind, name, optional index) triples. For segments with an index, delegate to resolve_indexed_child for positional array access. For single-segment paths, return the matching child directly. For multi-segment paths, descend into the first matching child via resolve_in_body for subsequent segments. When a child's kind is in transparent_kinds, recurse into it to find item nodes nested inside wrapper containers (e.g., Dart class_member, YAML block_node/block_mapping).",
       "source_span": [
-        532,
-        573
+        558,
+        600
       ],
       "tree_path": "fn::resolve_segments",
-      "source_hash": "sha256:3bdc501a0e690e516f759276fedd96d864b6ca6e422c0a14077d0f8d2c326791",
+      "source_hash": "sha256:b6c9bfada9e73a1b9b27a416f5b0bb11365f05486e4666d45efc604f1822a919",
       "source_anchor": "fn resolve_segments<'a>("
     },
     {
       "item": "resolve_in_body",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Find subsequent path segments inside an item's body. Delegates to config.find_body to locate the body node, then to resolve_segments for recursive matching. Accepts segments as &[(&str, &str)] (kind, name) pairs.",
       "source_span": [
-        604,
-        612
+        645,
+        653
       ],
-      "tree_path": "fn::resolve_in_body",
-      "source_hash": "sha256:24b0a365c235e94ccfbb2abe4f839524e2ef7b250e45b6f2d84229729d0641c5",
-      "source_anchor": "fn resolve_in_body<'a>("
+      "source_hash": "sha256:4ffa3be8bfaca11f717008cc4cf643abad5bb71145c5352ae68e69e82c3a79d3",
+      "source_anchor": "    config: &LanguageConfig,"
     },
     {
       "item": "compute_tree_path",
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        619,
-        640
+        659,
+        680
       ],
       "tree_path": "fn::compute_tree_path",
       "source_hash": "sha256:d26c58f5d1e8e905754b00690744e6d567e93ce7ebfc0e72ac679822f116e4f2",
@@ -133,8 +132,8 @@
       "reviewed": true,
       "intent": "Find the widest item-bearing tree-sitter node whose start and end rows both fall within [target_start, target_end]. Must handle the attribute-sibling pattern where Rust attributes (#[derive(...)]) are siblings of the item node — the sidecar span can start before the item node. Prefer the outermost (widest) item when multiple items fall within the range.",
       "source_span": [
-        648,
-        694
+        688,
+        734
       ],
       "tree_path": "fn::find_item_in_range",
       "source_hash": "sha256:89f9be8bb463609a2a31ba36192af18539d850346b1b552130a07a15f5553b43",
@@ -145,8 +144,8 @@
       "reviewed": true,
       "intent": "Recursively walk from root to target node, collecting (kind::name) path segments. Uses parser::serialize_name to quote names with special characters. At the target node, push its segment and return true. During descent, only enter children that spatially contain the target. When a child's subtree contains the target, prepend the current node's segment if it is an item node. Return false if the target cannot be found.",
       "source_span": [
-        713,
-        759
+        753,
+        799
       ],
       "tree_path": "fn::collect_path",
       "source_hash": "sha256:6e586df799c32a071cfddd1dccd26f13a79d36b69c62515d3a922d91aadd6a3e",

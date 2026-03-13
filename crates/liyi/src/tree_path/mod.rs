@@ -17,6 +17,7 @@ mod lang_dart;
 mod lang_go;
 mod lang_java;
 mod lang_javascript;
+mod lang_json;
 mod lang_kotlin;
 mod lang_objc;
 mod lang_php;
@@ -24,7 +25,9 @@ mod lang_python;
 mod lang_ruby;
 mod lang_rust;
 mod lang_swift;
+mod lang_toml;
 mod lang_typescript;
+mod lang_yaml;
 mod lang_zig;
 pub mod parser;
 
@@ -115,8 +118,15 @@ impl LanguageConfig {
     }
 
     /// Find a body/declaration_list child for descending into containers.
+    ///
+    /// The sentinel `"."` in `body_fields` means the node itself acts as
+    /// its own body container (e.g., TOML tables whose pairs are direct
+    /// children).
     fn find_body<'a>(&self, node: &Node<'a>) -> Option<Node<'a>> {
         for field in self.body_fields {
+            if *field == "." {
+                return Some(*node);
+            }
             if let Some(body) = node.child_by_field_name(field) {
                 return Some(body);
             }
@@ -167,6 +177,9 @@ pub enum Language {
     Kotlin,
     Swift,
     Zig,
+    Toml,
+    Json,
+    Yaml,
 }
 
 impl Language {
@@ -191,6 +204,9 @@ impl Language {
             Language::Kotlin => &lang_kotlin::CONFIG,
             Language::Swift => &lang_swift::CONFIG,
             Language::Zig => &lang_zig::CONFIG,
+            Language::Toml => &lang_toml::CONFIG,
+            Language::Json => &lang_json::CONFIG,
+            Language::Yaml => &lang_yaml::CONFIG,
         }
     }
 
@@ -210,8 +226,8 @@ impl Language {
 ///
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
-/// Bash → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
-/// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig.
+/// Bash → Dart → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
+/// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig → TOML → JSON → YAML.
 // @liyi:related graceful-degradation
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
@@ -277,6 +293,16 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     }
     if lang_zig::CONFIG.matches_extension(ext) {
         return Some(Language::Zig);
+    }
+
+    if lang_toml::CONFIG.matches_extension(ext) {
+        return Some(Language::Toml);
+    }
+    if lang_json::CONFIG.matches_extension(ext) {
+        return Some(Language::Json);
+    }
+    if lang_yaml::CONFIG.matches_extension(ext) {
+        return Some(Language::Yaml);
     }
 
     None
@@ -586,7 +612,21 @@ fn resolve_indexed_child<'a>(
 ) -> Option<Node<'a>> {
     // For data-file grammars, the "body" of a key-value pair is its value
     // node (an array or object). Find it, then select the Nth child.
-    let body = config.find_body(node)?;
+    let mut body = config.find_body(node)?;
+    // Walk through transparent wrapper nodes to reach the actual array
+    // container (e.g., YAML block_node → block_sequence).
+    while config.transparent_kinds.contains(&body.kind()) {
+        let mut cursor = body.walk();
+        let named: Vec<Node<'a>> = body
+            .children(&mut cursor)
+            .filter(|c| c.is_named())
+            .collect();
+        if named.len() == 1 {
+            body = named[0];
+        } else {
+            break;
+        }
+    }
     let mut cursor = body.walk();
     let child = body
         .children(&mut cursor)
