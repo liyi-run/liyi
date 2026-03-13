@@ -1,0 +1,21 @@
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_dart.rs",
+  "specs": [
+    {
+      "item": "dart_node_name",
+      "intent": "Handle Dart-specific name extraction for extension_type_declaration, where the name field yields an extension_type_name wrapper node containing the actual identifier. Must drill through the wrapper to return the inner identifier text. Returns None for all other node kinds to fall through to default name extraction.",
+      "source_span": [14, 28]
+    },
+    {
+      "item": "dart_has_doc_comment",
+      "intent": "Detect whether a Dart doc comment (/// line comment or /** */ documentation_block_comment) immediately precedes a declaration node. Must skip past annotation siblings (@override, @deprecated, etc.) to find doc comments that precede the annotation chain.",
+      "source_span": [30, 51]
+    },
+    {
+      "item": "CONFIG",
+      "intent": "Define the Dart language configuration for tree_path resolution: register tree-sitter-dart grammar v0.1.0, .dart extension, kind mappings for fn (function_signature), class (class_declaration), mixin, extension, extension_type, enum, getter, setter, constructor (4 variants), wire custom dart_node_name and dart_has_doc_comment callbacks, and declare class_member/method_signature/declaration as transparent wrapper kinds so resolve_segments can find inner signature nodes nested inside class bodies.",
+      "source_span": [54, 81]
+    }
+  ]
+}

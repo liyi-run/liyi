@@ -59,6 +59,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body", "declaration_list"],
     custom_name: Some(cpp_node_name),
     doc_comment_detector: None,
+    transparent_kinds: &[],
 };
 
 #[cfg(test)]

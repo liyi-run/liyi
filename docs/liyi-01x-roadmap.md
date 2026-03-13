@@ -28,7 +28,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M5.3 `--prompt` mode | ✅ Complete | `docs/prompt-mode-design.md` |
 | M7.1 Ruby | ✅ Complete | tree-sitter-ruby v0.23.1 |
 | M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
-| M7.3 Dart | ⏳ Planned | Flutter ecosystem |
+| M7.3 Dart | ✅ Complete | tree-sitter-dart v0.1.0 |
 | M7.4 Zig | ✅ Complete | tree-sitter-zig v1.1.2 |
 | M8 Data file support | ⏳ Design | TOML, JSON, YAML; key-path tree_path paradigm |
 | M9 Injection framework | ⏳ Design | Multi-language files (YAML+shell, Vue SFC) |
@@ -473,31 +473,40 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 - Functions resolve. Both declaration forms produce the same tree_path.
 - Roundtrip passes.
 
-### M7.3. Dart ⏳
+### M7.3. Dart ✅
 
-**Grammar:** `tree-sitter-dart` — exists on crates.io; requires compatibility verification against tree-sitter 0.26.
+**Grammar:** `tree-sitter-dart` v0.1.0 — ABI version 15, compatible with tree-sitter 0.26.6. Uses modern `LanguageFn` const via `tree-sitter-language` 0.1.
 
 **Kind mappings:**
 
 | Shorthand | Node kind |
 |---|---|
-| `fn` | `function_signature` (top-level) |
-| `class` | `class_definition` |
-| `method` | `method_signature` |
+| `fn` | `function_signature` |
+| `class` | `class_declaration` |
 | `mixin` | `mixin_declaration` |
 | `extension` | `extension_declaration` |
+| `extension_type` | `extension_type_declaration` |
 | `enum` | `enum_declaration` |
+| `getter` | `getter_signature` |
+| `setter` | `setter_signature` |
+| `constructor` | `constructor_signature` |
+| `const_constructor` | `constant_constructor_signature` |
+| `factory` | `factory_constructor_signature` |
+| `factory_redirect` | `redirecting_factory_constructor_signature` |
 
 **Design notes:**
+- `method_signature` is a choice/wrapper node with no `name` field; it delegates to inner signature nodes (`function_signature`, `getter_signature`, etc.). Kind mappings target the inner nodes.
+- Class members are wrapped in `class_member` → `method_signature`/`declaration` → inner signature. A new `transparent_kinds` field on `LanguageConfig` lets `resolve_segments` look through these wrapper nodes without affecting other languages.
+- `extension_type_declaration` has `name: (extension_type_name (identifier))` — custom name extraction drills through the wrapper.
 - Extensions and mixins have names and body containers — they fit the `LanguageConfig` pattern naturally.
-- `extension Foo on Bar` is analogous to Rust's `impl Trait for Type` — name extraction uses the extension's own name, not the target type.
-- Grammar crate stability is a risk; if it doesn't track tree-sitter 0.26, a fork or pin may be needed.
+- `extension Foo on Bar` — name extraction uses the extension's own name, not the target type.
+- Doc comment detection handles `///` line comments and `/** */` block comments, skipping annotations.
 
 **Extensions:** `.dart`
 
 **Acceptance criteria:**
-- Classes, methods, functions, mixins, extensions, enums all resolve.
-- Roundtrip passes.
+- Classes, methods, functions, getters, setters, constructors, mixins, extensions, extension types, enums all resolve. ✅
+- Roundtrip passes. ✅
 
 ### M7.4. Zig ⏳
 
@@ -992,7 +1001,7 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
 | 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
 | 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
-| 20 | M7.3 Dart | ⏳ Planned | ~3h | Flutter ecosystem |
+| ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
 | ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
 | 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
 | 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |

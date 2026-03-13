@@ -13,6 +13,7 @@ mod lang_bash;
 mod lang_c;
 mod lang_cpp;
 mod lang_csharp;
+mod lang_dart;
 mod lang_go;
 mod lang_java;
 mod lang_javascript;
@@ -57,6 +58,14 @@ pub struct LanguageConfig {
     /// Optional callback to detect whether a doc comment is attached to an item node.
     /// Returns true if a doc comment immediately precedes or is inside the item.
     doc_comment_detector: Option<fn(&Node, &str) -> bool>,
+    /// Node kinds that `resolve_segments` should look through transparently.
+    ///
+    /// Some grammars wrap item nodes in intermediate containers (e.g., Dart's
+    /// `class_member` → `method_signature` → `function_signature`).  When
+    /// resolving a path segment inside a body, nodes whose kind appears in
+    /// this list are recursed into automatically so that the inner item nodes
+    /// become visible to the resolver.
+    transparent_kinds: &'static [&'static str],
 }
 
 impl LanguageConfig {
@@ -139,6 +148,7 @@ impl LanguageConfig {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     Bash,
+    Dart,
     Rust,
     Ruby,
     Python,
@@ -162,6 +172,7 @@ impl Language {
     fn config(&self) -> &'static LanguageConfig {
         match self {
             Language::Bash => &lang_bash::CONFIG,
+            Language::Dart => &lang_dart::CONFIG,
             Language::Rust => &lang_rust::CONFIG,
             Language::Ruby => &lang_ruby::CONFIG,
             Language::Python => &lang_python::CONFIG,
@@ -205,6 +216,10 @@ pub fn detect_language(path: &Path) -> Option<Language> {
 
     if lang_bash::CONFIG.matches_extension(ext) {
         return Some(Language::Bash);
+    }
+
+    if lang_dart::CONFIG.matches_extension(ext) {
+        return Some(Language::Dart);
     }
 
     if lang_rust::CONFIG.matches_extension(ext) {
@@ -332,15 +347,19 @@ fn resolve_segments<'a>(
 
     let mut cursor = parent.walk();
     for child in parent.children(&mut cursor) {
-        if child.kind() != ts_kind {
-            continue;
-        }
-        if let Some(node_name) = config.node_name(&child, source) {
-            if *node_name == *name && segments.len() == 1 {
-                return Some(child);
-            } else if *node_name == *name {
-                // Descend — look inside this node's body
-                return resolve_in_body(config, &child, &segments[1..], source);
+        if child.kind() == ts_kind {
+            if let Some(node_name) = config.node_name(&child, source) {
+                if *node_name == *name && segments.len() == 1 {
+                    return Some(child);
+                } else if *node_name == *name {
+                    // Descend — look inside this node's body
+                    return resolve_in_body(config, &child, &segments[1..], source);
+                }
+            }
+        } else if config.transparent_kinds.contains(&child.kind()) {
+            // Look through transparent wrapper nodes (e.g., Dart class_member)
+            if let Some(found) = resolve_segments(config, &child, segments, source) {
+                return Some(found);
             }
         }
     }

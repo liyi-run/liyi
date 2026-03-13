@@ -74,6 +74,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["block", "struct_declaration"],
     custom_name: Some(zig_node_name),
     doc_comment_detector: None,
+    transparent_kinds: &[],
 };
 
 #[cfg(test)]

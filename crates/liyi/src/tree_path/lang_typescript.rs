@@ -18,6 +18,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
     custom_name: None,
     doc_comment_detector: Some(js_has_doc_comment),
+    transparent_kinds: &[],
 };
 
 /// TSX language configuration.
@@ -37,6 +38,7 @@ pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
     custom_name: None,
     doc_comment_detector: Some(js_has_doc_comment),
+    transparent_kinds: &[],
 };
 
 #[cfg(test)]

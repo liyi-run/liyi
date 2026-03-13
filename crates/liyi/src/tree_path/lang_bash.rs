@@ -10,6 +10,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     body_fields: &["body"],
     custom_name: None,
     doc_comment_detector: None,
+    transparent_kinds: &[],
 };
 
 #[cfg(test)]
