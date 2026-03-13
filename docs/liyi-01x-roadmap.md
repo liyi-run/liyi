@@ -38,6 +38,9 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M6.6 Tests | ✅ Complete | Unit tests for NL-quoting |
 | M6.7 Contributing guides | ✅ Complete | NL-quoting documented |
 | M10.4 `=trivial` sentinel | ✅ Complete | `ConflictingTriviality` diagnostic, golden tests |
+| M10.1 Tree-sitter item discovery | ✅ Complete | `liyi init` pre-populates specs via tree-sitter |
+| M10.2 Doc comment heuristic | ✅ Complete | `_hints._has_doc` for 6 languages |
+| M10.3 Item size heuristic | ✅ Complete | `_hints._body_lines`, `_likely_trivial`, `--trivial-threshold` |
 
 ---
 
@@ -901,11 +904,13 @@ Extended the quine-escape sections in both `contributing-guide.en.md` and `contr
 
 ## M10. Smart scaffold and `=trivial` sentinel
 
-**Status:** ⏳ Planned
+**Status:** ⏳ In progress (M10.1–M10.4 complete; M10.5 planned)
 
 Enhance `liyi init` to leverage tree-sitter item discovery and add the `"intent": "=trivial"` sidecar sentinel.
 
-### M10.1. Tree-sitter item discovery in `liyi init` ⏳
+### M10.1. Tree-sitter item discovery in `liyi init` ✅
+
+**Status:** ✅ Complete.
 
 Extend `liyi init <source-file>` to use tree-sitter to enumerate items (functions, structs, classes, methods, etc.) and pre-populate the sidecar `specs` array with stub entries. Currently `liyi init` creates an empty `"specs": []` skeleton — this milestone fills it with discovered items so agents can focus on inferring intent rather than discovering structure.
 
@@ -915,7 +920,9 @@ Extend `liyi init <source-file>` to use tree-sitter to enumerate items (function
 - `--no-discover` flag to opt out and get the old empty-skeleton behavior.
 - Items inside `impl` blocks produce nested `tree_path` (e.g., `impl::Money::fn::new`).
 
-### M10.2. Doc comment detection heuristic ⏳
+### M10.2. Doc comment detection heuristic ✅
+
+**Status:** ✅ Complete.
 
 When discovering items, detect whether a doc comment is attached (language-specific: `///` / `/** */` for Rust, `"""..."""` for Python, `//` / `/** */` for JS/TS, etc.). Items with doc comments get `"intent": "=doc"` as a suggested starting point in `_hints`.
 
@@ -924,14 +931,17 @@ When discovering items, detect whether a doc comment is attached (language-speci
 - Discovered items with doc comments have `_hints.has_doc_comment: true` in the scaffold.
 - Items without doc comments have `_hints.has_doc_comment: false` or the key is absent.
 
-### M10.3. Item size heuristic ⏳
+### M10.3. Item size heuristic ✅
+
+**Status:** ✅ Complete.
 
 Compute line count for each discovered item's span. Small items (≤5 lines) are suggested as trivial candidates in `_hints`.
 
 **Acceptance criteria:**
-- `_hints.line_count` is populated for each discovered item.
-- `_hints.suggested_trivial: true` is set for items ≤5 lines and no doc comment.
+- `_hints._body_lines` is populated for each discovered item.
+- `_hints._likely_trivial: true` is set for items ≤ threshold lines and no doc comment.
 - The threshold is configurable via `--trivial-threshold <N>` (default: 5).
+- `liyi check --fix` strips `_hints` unconditionally (hints are transient scaffold aids).
 
 ### M10.4. `"intent": "=trivial"` sentinel support ✅
 
@@ -973,9 +983,9 @@ End-to-end golden test demonstrating the full scaffold workflow:
 | ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
 | ~~10~~ | ~~M5.3 `--prompt` output~~ | ✅ Done | — | — |
 | ~~11~~ | ~~M10.4 `=trivial` sentinel~~ | ✅ Done | — | — |
-| 12 | M10.1 Tree-sitter item discovery | ⏳ Planned | ~4h | Smart scaffold |
-| 13 | M10.2 Doc comment heuristic | ⏳ Planned | ~2h | `=doc` suggestions |
-| 14 | M10.3 Item size heuristic | ⏳ Planned | ~1h | Trivial suggestions |
+| ~~12~~ | ~~M10.1 Tree-sitter item discovery~~ | ✅ Done | — | Smart scaffold |
+| ~~13~~ | ~~M10.2 Doc comment heuristic~~ | ✅ Done | — | `=doc` suggestions |
+| ~~14~~ | ~~M10.3 Item size heuristic~~ | ✅ Done | — | Trivial suggestions |
 | 15 | M10.5 Combined scaffold test | ⏳ Planned | ~1h | Regression guard |
 | ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
 | ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
