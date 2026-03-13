@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "run_reanchor",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and rehash. Otherwise, for every spec: for items with a non-empty tree_path and a tree-sitter grammar, locate the item by structural identity; when tree_path resolves but hash mismatches, try hash-based sibling scan to find the correct sibling element before accepting the span; when tree_path fails to resolve, try sibling scan as fallback. Then recompute hash/anchor and compute canonical tree_path. For requirements: use tree_path-based resolution if available, otherwise fall back to marker-based span recovery (@liyi:requirement/@liyi:end-requirement). Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
         24,
         162
       ],
       "tree_path": "fn.run_reanchor",
-      "source_hash": "sha256:5d52e9857e182b6a0dfee9a50fd3c58ec141cefdb1695cdee2550f75619a933b",
+      "source_hash": "sha256:a3e2f633149143687bbb6d385212415fdf3a78c4d7e3edfda6f87bc861e81763",
       "source_anchor": "pub fn run_reanchor(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
