@@ -60,7 +60,7 @@
       "intent": "Create a skeleton .liyi.jsonc sidecar file next to the specified source file. If the sidecar already exists and force is false, return AlreadyExists. The sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
         95,
-        180
+        170
       ],
       "tree_path": "fn::init_sidecar",
       "source_hash": "sha256:59f2a9632a3302cac88f3a5a4061f7ef4f5d558eaf1b8154abfa7f4b23a6a949",

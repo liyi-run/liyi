@@ -142,13 +142,15 @@ fn main() {
             no_discover,
             trivial_threshold,
         } => match source_file {
-            Some(src) => match liyi::init::init_sidecar(&src, force, !no_discover, trivial_threshold) {
-                Ok(path) => println!("Created: {}", path.display()),
-                Err(e) => {
-                    eprintln!("Error: {e}");
-                    process::exit(1);
+            Some(src) => {
+                match liyi::init::init_sidecar(&src, force, !no_discover, trivial_threshold) {
+                    Ok(path) => println!("Created: {}", path.display()),
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(1);
+                    }
                 }
-            },
+            }
             None => {
                 let root = env::current_dir().unwrap_or_default();
                 match liyi::init::init_agents_md(&root, force) {

@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction.",
       "source_span": [
-        37,
-        46
+        35,
+        44
       ],
       "tree_path": "static::CONFIG",
       "source_hash": "sha256:b43bf648b4a5df6349fa9375db3dfbf1dd62ebc7cc106dafe220dcf53e27cd35",

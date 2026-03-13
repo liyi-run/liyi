@@ -126,24 +126,14 @@ pub fn init_sidecar(
                 .map(|d| {
                     let mut hints = serde_json::Map::new();
                     if let Some(has_doc) = d.has_doc_comment {
-                        hints.insert(
-                            "_has_doc".to_string(),
-                            serde_json::Value::Bool(has_doc),
-                        );
+                        hints.insert("_has_doc".to_string(), serde_json::Value::Bool(has_doc));
                     }
                     let body_lines = d.span[1] - d.span[0] + 1;
-                    hints.insert(
-                        "_body_lines".to_string(),
-                        serde_json::json!(body_lines),
-                    );
+                    hints.insert("_body_lines".to_string(), serde_json::json!(body_lines));
                     let likely_trivial =
-                        body_lines <= trivial_threshold
-                            && d.has_doc_comment != Some(true);
+                        body_lines <= trivial_threshold && d.has_doc_comment != Some(true);
                     if likely_trivial {
-                        hints.insert(
-                            "_likely_trivial".to_string(),
-                            serde_json::Value::Bool(true),
-                        );
+                        hints.insert("_likely_trivial".to_string(), serde_json::Value::Bool(true));
                     }
                     let _hints = Some(serde_json::Value::Object(hints));
                     Spec::Item(ItemSpec {

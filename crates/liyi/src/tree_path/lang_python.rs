@@ -14,9 +14,7 @@ fn python_has_doc_comment(node: &Node, source: &str) -> bool {
                 for inner in child.children(&mut inner_cursor) {
                     if inner.kind() == "string" {
                         let text = &source[inner.byte_range()];
-                        if text.starts_with("\"\"\"")
-                            || text.starts_with("'''")
-                        {
+                        if text.starts_with("\"\"\"") || text.starts_with("'''") {
                             return true;
                         }
                     }

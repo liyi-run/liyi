@@ -881,13 +881,25 @@ fn standalone() -> i32 { 42 }
 
         // Verify tree_paths are populated
         for item in &items {
-            assert!(!item.tree_path.is_empty(), "tree_path should be populated for {}", item.name);
+            assert!(
+                !item.tree_path.is_empty(),
+                "tree_path should be populated for {}",
+                item.name
+            );
         }
 
         // Verify spans are valid
         for item in &items {
-            assert!(item.span[0] >= 1, "span start should be >= 1 for {}", item.name);
-            assert!(item.span[1] >= item.span[0], "span end should be >= start for {}", item.name);
+            assert!(
+                item.span[0] >= 1,
+                "span start should be >= 1 for {}",
+                item.name
+            );
+            assert!(
+                item.span[1] >= item.span[0],
+                "span end should be >= start for {}",
+                item.name
+            );
         }
     }
 
