@@ -66,11 +66,11 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | ~~15~~ | ~~M10.5 Combined scaffold test~~ | ✅ Done | — | Regression guard |
 | ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
 | ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
-| 18 | M8.2 TOML | ✅ Done | — | Config-as-source (dogfooding) |
-| 19 | M8.3 JSON | ✅ Done | — | Schemas, package.json |
+| ~~18~~ | ~~M8.2 TOML~~ | ✅ Done | — | Config-as-source (dogfooding) |
+| ~~19~~ | ~~M8.3 JSON~~ | ✅ Done | — | Schemas, package.json |
 | ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
 | ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
-| 22 | M8.4 YAML (no injection) | ✅ Done | — | CI/k8s (limited without M9) |
+| ~~22~~ | ~~M8.4 YAML (no injection)~~ | ✅ Done | — | CI/k8s (limited without M9) |
 | 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
 
 ---
@@ -935,6 +935,10 @@ The `[N]` suffix attaches to the name segment, preserving the even-pair invarian
 - ✅ Top-level keys, nested keys (jobs → build → runs-on), and indexed sequence items (steps[N]) all resolve.
 - ✅ Roundtrip passes for top-level and nested paths.
 - ✅ `.yml` and `.yaml` extensions detected correctly.
+
+---
+
+## M9. Language injection framework
 
 **Status:** ⏳ Design
 
