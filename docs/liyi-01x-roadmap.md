@@ -45,6 +45,36 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 
 ---
 
+## Priority order (updated)
+
+| Priority | Item | Status | Effort | Unlocks |
+|---|---|---|---|---|
+| ~~1~~ | ~~M3.1–M3.6 MVP gaps~~ | ✅ Done | — | — |
+| ~~2~~ | ~~M5.1 MissingRelated~~ | ✅ Done | — | Annotation coverage |
+| ~~3~~ | ~~M5.2 `--fail-on-untracked`~~ | ✅ Done | — | CI-gateable coverage |
+| ~~4~~ | ~~M5.4 Golden fixtures~~ | ✅ Done | — | Test coverage for M5 |
+| ~~5~~ | ~~M5.5 AGENTS.md rule 11~~ | ✅ Done | — | Convention completeness |
+| ~~6~~ | ~~M6.1–M6.3 NL-quoting scanner~~ | ✅ Done | — | Docs processable |
+| ~~7~~ | ~~M6.4–M6.5 `.liyiignore` + AGENTS.md~~ | ✅ Done | — | Self-hosting docs |
+| ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
+| ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
+| ~~10~~ | ~~M5.3 `--prompt` output~~ | ✅ Done | — | — |
+| ~~11~~ | ~~M10.4 `=trivial` sentinel~~ | ✅ Done | — | — |
+| ~~12~~ | ~~M10.1 Tree-sitter item discovery~~ | ✅ Done | — | Smart scaffold |
+| ~~13~~ | ~~M10.2 Doc comment heuristic~~ | ✅ Done | — | `=doc` suggestions |
+| ~~14~~ | ~~M10.3 Item size heuristic~~ | ✅ Done | — | Trivial suggestions |
+| ~~15~~ | ~~M10.5 Combined scaffold test~~ | ✅ Done | — | Regression guard |
+| ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
+| ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
+| 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
+| 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
+| ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
+| ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
+| 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
+| 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
+
+---
+
 ## M1. Multi-language `tree_path` support
 
 **Status:** ✅ Complete — all languages built-in, no feature gates.
@@ -420,6 +450,236 @@ The `custom_name` callback handles languages with non-trivial name extraction (e
 
 ---
 
+## M3. Remaining MVP gaps (0.1.x)
+
+**Status:** ✅ Complete — all items implemented and shipped.
+
+These items are from the MVP roadmap's "remaining work" section.
+
+### M3.1. `liyi approve` — interactive review command ✅
+
+The primary mechanism for transitioning intent from "agent-inferred" to "human-approved." Without this, users must hand-edit JSON to set `"reviewed": true`.
+
+- Interactive by default when stdin is a TTY: show intent + source span, prompt `[y]es / [n]o / [e]dit / [s]kip`.
+- Batch mode via `--yes` or when non-TTY.
+- `--dry-run`, `--item <name>` flags.
+- Fills `source_hash` and `source_anchor` on approval.
+
+### M3.2. `liyi init` — scaffold command ✅
+
+- `liyi init` — append agent instruction to `AGENTS.md`.
+- `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
+- `--force` flag for overwriting existing files.
+- `liyi init <source-file> --hints` — populate `_hints` in skeleton sidecar entries with VCS/filesystem signals (commit count, fix-commit count, test presence, docstring lines, file age). Requires git; gracefully degrades (omits VCS hints) when not in a git repo. Opt-in in 0.1.x, may become default later.
+
+### M3.3. Wire remaining diagnostics ✅
+
+1. `RequirementCycle` — cycle detection in pass 2
+2. `Untracked` — requirements in source but absent from sidecars
+3. `ReqNoRelated` — requirements with no referencing items
+4. `MalformedHash` — validate `source_hash` format
+
+### M3.4. Missing golden-file fixtures ✅
+
+1. `req_changed/` — test `ReqChanged` diagnostic
+2. `req_cycle/` — test `RequirementCycle` diagnostic (depends on M3.3)
+
+### M3.5. CI setup ✅
+
+GitHub Actions workflow: `cargo test` + `liyi check --root .` on push/PR.
+
+### M3.6. Summary line output ✅
+
+Print count summary after diagnostics: `12 current, 3 stale, 1 unreviewed`.
+
+---
+
+## M4. Git-aware triage (deferred — not planned)
+
+Considered and explicitly rejected for 0.1.x. Recorded here for posterity.
+
+**Proposal:** Store `anchored_at` (git commit hash) per sidecar. Use `git diff <anchored_at>..HEAD` to give the triage agent a bounded, focused diff instead of the full file.
+
+**Why rejected:**
+- `source_hash` is already a content-addressed anchor — strictly more robust than a temporal anchor (immune to history rewriting, rebased commits, shallow clones).
+- The triage question is "does current code match declared intent?" — answerable from current code + intent alone. History tells you *how* drift happened, not *whether* intent still holds.
+- Adds git as a soft dependency. The sidecar model is currently VCS-agnostic.
+- Two staleness signals (hash + commit) that can disagree create ambiguity.
+
+**If git context helps triage quality**, it belongs in the triage **workflow** (the agent invokes `git log`/`git blame` at triage time), not the **data layer** (the sidecar schema). Zero schema changes, zero backward-compatibility concerns.
+
+---
+
+## M5. Annotation coverage checks and `--prompt` mode
+
+### M5.1. `MissingRelated` diagnostic ✅
+
+**Status:** Implemented.
+
+Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers discovered during pass 1 against `"related"` edges in the enclosing item's sidecar spec.
+
+**Implementation:**
+
+1. During pass 1, in addition to collecting `@liyi:requirement` markers, also collect `@liyi:related` markers with their source file, line number, and requirement name.
+2. In the post-pass (after pass 2), for each `@liyi:related` marker:
+   a. Find the sidecar for the marker's source file.
+   b. Find the `itemSpec` whose `source_span` encloses the marker's line number.
+   c. If no enclosing item exists, or the enclosing item has no `"related"` key containing the marker's requirement name, emit `MissingRelated`.
+3. Add `MissingRelated` variant to `DiagnosticKind` in `diagnostics.rs` with severity `Error`.
+
+**New types:**
+
+```rust
+// In diagnostics.rs
+enum DiagnosticKind {
+    // ...existing variants...
+    MissingRelatedEdge { name: String },
+}
+```
+
+**Message template:** `<item>: ✗ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar`
+
+**Exit code:** 1 (always treated as error).
+
+**Auto-fix:** `--fix` adds the missing edge to the sidecar.
+
+### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` ✅
+
+**Status:** Implemented.
+
+The existing `Untracked` diagnostic (requirements in source but absent from sidecars) currently exits 0. Update it to exit 1 when `--fail-on-untracked` is set (default: true).
+
+**Changes:**
+- Add `--fail-on-untracked` / `--no-fail-on-untracked` flag to `cli.rs`.
+- Update `compute_exit_code` in `diagnostics.rs` so that `Untracked` respects this flag; `MissingRelatedEdge` remains an unconditional error (exit 1).
+- Update existing `untracked` golden fixture expected output if exit code changes.
+
+### M5.3. `--prompt` output mode ✅
+
+**Status:** ✅ Complete. See `docs/prompt-mode-design.md`.
+
+Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
+
+**Implementation:**
+
+1. Add `--prompt` flag to the `Check` variant in `cli.rs`.
+2. After the check pass, if `--prompt` is active, serialize all `Untracked` and `MissingRelated` diagnostics into the prompt JSON schema (see design doc v8.7).
+3. Print to stdout and exit with the appropriate code.
+4. `--prompt` is mutually exclusive with `--json` (when `--json` is implemented).
+
+**Output schema:**
+
+```jsonc
+{
+  "version": "0.1",
+  "gaps": [
+    {
+      "type": "missing_requirement_spec" | "missing_related_edge",
+      "requirement": "<name>",
+      "source_file": "<repo-relative path>",
+      "annotation_line": <line number>,
+      "enclosing_item": "<item name>",        // only for missing_related_edge
+      "expected_sidecar": "<repo-relative path>",
+      "instruction": "<natural-language resolution instruction>"
+    }
+  ],
+  "exit_code": 0 | 1
+}
+```
+
+**Acceptance criteria:**
+- `liyi check --prompt` on a fixture with gaps produces valid JSON matching the schema.
+- `liyi check --prompt` on a clean repo produces `{"version": "0.1", "gaps": [], "exit_code": 0}`.
+- The JSON includes both `missing_requirement_spec` and `missing_related_edge` gap types.
+
+### M5.4. Golden-file fixtures ✅
+
+**Status:** ✅ Complete.
+
+1. ✅ **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
+2. ✅ **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
+3. ✅ **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
+
+### M5.5. AGENTS.md rule 11 ✅
+
+**Status:** Implemented.
+
+Add rule 11 to the project's own `AGENTS.md`:
+
+> 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
+
+---
+
+## M6. NL-quoting quine suppression in marker scanner
+
+**Goal:** Enable the scanner to process documentation files (Markdown, READMEs, design docs) without false-positive marker matches on documentary mentions. This unblocks removing `docs/`, `AGENTS.md`, and `README.md` from `.liyiignore`, enabling cross-boundary `@liyi:requirement` / `@liyi:related` edges between design docs and source code.
+
+**Design authority:** Design doc v8.7, *Self-hosting and the quine problem*.
+
+### M6.1. Fenced code block suppression ✅
+
+**Status:** Implemented with unit tests.
+
+Add fenced-block state tracking to `scan_markers` in `markers.rs`.
+
+- Track a `bool` toggled on lines starting with `` ``` `` or `~~~` (after optional leading whitespace).
+- When inside a fenced block, skip all marker detection.
+- This is the multi-line component — all other checks remain per-line.
+
+### M6.2. Inline backtick span detection ✅
+
+**Status:** Implemented with unit tests.
+
+Before returning a marker match from `find_marker`, check whether the match position falls inside an inline backtick span on the same line.
+
+- Count backtick characters before the match position. Odd count → inside inline code → reject.
+- Handles `` `@liyi:module` `` and `` `<!-- @liyi:module -->` `` alike.
+
+### M6.3. Preceding quote character rejection ✅
+
+**Status:** Implemented with unit tests.
+
+If the character immediately before the `@` (or its full-width equivalent after normalization) is a quotation mark, reject the match.
+
+**Rejected characters:** `'` (U+0027), `"` (U+0022), `\`` (U+0060), `\u{2018}` (`'`), `\u{2019}` (`'`), `\u{201C}` (`"`), `\u{201D}` (`"`), `\u{300C}` (`「`), `\u{300D}` (`」`), `\u{00AB}` (`«`), `\u{00BB}` (`»`).
+
+The backtick in this list is redundant with M6.2 but retained as defense-in-depth.
+
+### M6.4. Update `.liyiignore` (~5min)
+
+**Status:** Implemented.
+
+Removed `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
+
+### M6.5. Escape `@liyi:intent` in AGENTS.md JSON schema (~5min)
+
+**Status:** Implemented.
+
+The one remaining unquoted `@liyi:intent` string in AGENTS.md was inside a JSON `"description"` field within a fenced code block (handled by M6.1). Additionally, escaped the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
+
+### M6.6. Golden-file fixtures and unit tests ✅
+
+**Status:** Implemented.
+
+1. Unit tests in `markers.rs` for:
+   - Fenced code block suppression (markers inside `` ``` `` blocks not found)
+   - Inline backtick suppression (`` `@liyi:module` `` not matched)
+   - Preceding-quote suppression (`"@liyi:intent"` not matched)
+   - Real markers adjacent to these constructs still matched
+2. Golden-file fixture `nl_quoting/` — not created; existing unit tests provide coverage.
+
+### M6.7. Update contributing guides (~15min)
+
+**Status:** Implemented.
+
+Extended the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
+
+**Acceptance criteria:**
+- `liyi check` on the project's own repo (with `docs/` no longer ignored) produces no false-positive markers from the design doc.
+- The `<!-- @liyi:requirement liyi-check-exit-code -->` block in the design doc is correctly detected as a real marker.
+- All existing tests pass.
+
+---
 ## M7. Additional language support
 
 **Status:** ⏳ Planned
@@ -681,237 +941,6 @@ These languages are tracked but not planned for the 0.1.x series.
 
 ---
 
-## M3. Remaining MVP gaps (0.1.x)
-
-**Status:** ✅ Complete — all items implemented and shipped.
-
-These items are from the MVP roadmap's "remaining work" section.
-
-### M3.1. `liyi approve` — interactive review command ✅
-
-The primary mechanism for transitioning intent from "agent-inferred" to "human-approved." Without this, users must hand-edit JSON to set `"reviewed": true`.
-
-- Interactive by default when stdin is a TTY: show intent + source span, prompt `[y]es / [n]o / [e]dit / [s]kip`.
-- Batch mode via `--yes` or when non-TTY.
-- `--dry-run`, `--item <name>` flags.
-- Fills `source_hash` and `source_anchor` on approval.
-
-### M3.2. `liyi init` — scaffold command ✅
-
-- `liyi init` — append agent instruction to `AGENTS.md`.
-- `liyi init <source-file>` — create skeleton `.liyi.jsonc` sidecar.
-- `--force` flag for overwriting existing files.
-- `liyi init <source-file> --hints` — populate `_hints` in skeleton sidecar entries with VCS/filesystem signals (commit count, fix-commit count, test presence, docstring lines, file age). Requires git; gracefully degrades (omits VCS hints) when not in a git repo. Opt-in in 0.1.x, may become default later.
-
-### M3.3. Wire remaining diagnostics ✅
-
-1. `RequirementCycle` — cycle detection in pass 2
-2. `Untracked` — requirements in source but absent from sidecars
-3. `ReqNoRelated` — requirements with no referencing items
-4. `MalformedHash` — validate `source_hash` format
-
-### M3.4. Missing golden-file fixtures ✅
-
-1. `req_changed/` — test `ReqChanged` diagnostic
-2. `req_cycle/` — test `RequirementCycle` diagnostic (depends on M3.3)
-
-### M3.5. CI setup ✅
-
-GitHub Actions workflow: `cargo test` + `liyi check --root .` on push/PR.
-
-### M3.6. Summary line output ✅
-
-Print count summary after diagnostics: `12 current, 3 stale, 1 unreviewed`.
-
----
-
-## M4. Git-aware triage (deferred — not planned)
-
-Considered and explicitly rejected for 0.1.x. Recorded here for posterity.
-
-**Proposal:** Store `anchored_at` (git commit hash) per sidecar. Use `git diff <anchored_at>..HEAD` to give the triage agent a bounded, focused diff instead of the full file.
-
-**Why rejected:**
-- `source_hash` is already a content-addressed anchor — strictly more robust than a temporal anchor (immune to history rewriting, rebased commits, shallow clones).
-- The triage question is "does current code match declared intent?" — answerable from current code + intent alone. History tells you *how* drift happened, not *whether* intent still holds.
-- Adds git as a soft dependency. The sidecar model is currently VCS-agnostic.
-- Two staleness signals (hash + commit) that can disagree create ambiguity.
-
-**If git context helps triage quality**, it belongs in the triage **workflow** (the agent invokes `git log`/`git blame` at triage time), not the **data layer** (the sidecar schema). Zero schema changes, zero backward-compatibility concerns.
-
----
-
-## M5. Annotation coverage checks and `--prompt` mode
-
-### M5.1. `MissingRelated` diagnostic ✅
-
-**Status:** Implemented.
-
-Extend the post-pass in `check.rs` to cross-reference `@liyi:related` markers discovered during pass 1 against `"related"` edges in the enclosing item's sidecar spec.
-
-**Implementation:**
-
-1. During pass 1, in addition to collecting `@liyi:requirement` markers, also collect `@liyi:related` markers with their source file, line number, and requirement name.
-2. In the post-pass (after pass 2), for each `@liyi:related` marker:
-   a. Find the sidecar for the marker's source file.
-   b. Find the `itemSpec` whose `source_span` encloses the marker's line number.
-   c. If no enclosing item exists, or the enclosing item has no `"related"` key containing the marker's requirement name, emit `MissingRelated`.
-3. Add `MissingRelated` variant to `DiagnosticKind` in `diagnostics.rs` with severity `Error`.
-
-**New types:**
-
-```rust
-// In diagnostics.rs
-enum DiagnosticKind {
-    // ...existing variants...
-    MissingRelatedEdge { name: String },
-}
-```
-
-**Message template:** `<item>: ✗ MISSING RELATED — @liyi:related "<name>" in source but no related edge in sidecar`
-
-**Exit code:** 1 (always treated as error).
-
-**Auto-fix:** `--fix` adds the missing edge to the sidecar.
-
-### M5.2. Promote `Untracked` to exit 1 under `--fail-on-untracked` ✅
-
-**Status:** Implemented.
-
-The existing `Untracked` diagnostic (requirements in source but absent from sidecars) currently exits 0. Update it to exit 1 when `--fail-on-untracked` is set (default: true).
-
-**Changes:**
-- Add `--fail-on-untracked` / `--no-fail-on-untracked` flag to `cli.rs`.
-- Update `compute_exit_code` in `diagnostics.rs` so that `Untracked` respects this flag; `MissingRelatedEdge` remains an unconditional error (exit 1).
-- Update existing `untracked` golden fixture expected output if exit code changes.
-
-### M5.3. `--prompt` output mode ✅
-
-**Status:** ✅ Complete. See `docs/prompt-mode-design.md`.
-
-Add a `--prompt` flag to `liyi check` that emits structured JSON listing every coverage gap with resolution instructions.
-
-**Implementation:**
-
-1. Add `--prompt` flag to the `Check` variant in `cli.rs`.
-2. After the check pass, if `--prompt` is active, serialize all `Untracked` and `MissingRelated` diagnostics into the prompt JSON schema (see design doc v8.7).
-3. Print to stdout and exit with the appropriate code.
-4. `--prompt` is mutually exclusive with `--json` (when `--json` is implemented).
-
-**Output schema:**
-
-```jsonc
-{
-  "version": "0.1",
-  "gaps": [
-    {
-      "type": "missing_requirement_spec" | "missing_related_edge",
-      "requirement": "<name>",
-      "source_file": "<repo-relative path>",
-      "annotation_line": <line number>,
-      "enclosing_item": "<item name>",        // only for missing_related_edge
-      "expected_sidecar": "<repo-relative path>",
-      "instruction": "<natural-language resolution instruction>"
-    }
-  ],
-  "exit_code": 0 | 1
-}
-```
-
-**Acceptance criteria:**
-- `liyi check --prompt` on a fixture with gaps produces valid JSON matching the schema.
-- `liyi check --prompt` on a clean repo produces `{"version": "0.1", "gaps": [], "exit_code": 0}`.
-- The JSON includes both `missing_requirement_spec` and `missing_related_edge` gap types.
-
-### M5.4. Golden-file fixtures ✅
-
-**Status:** ✅ Complete.
-
-1. ✅ **`missing_related/`**: `@liyi:related` in source, itemSpec exists but lacks the `related` edge. Expected: `MISSING RELATED`.
-2. ✅ **`missing_related_pass/`**: Same as above but edge exists. Expected: no diagnostic.
-3. ✅ **`prompt_output/`**: Mixed gaps. Expected: `--prompt` JSON output matches snapshot.
-
-### M5.5. AGENTS.md rule 11 ✅
-
-**Status:** Implemented.
-
-Add rule 11 to the project's own `AGENTS.md`:
-
-> 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
-
----
-
-## M6. NL-quoting quine suppression in marker scanner
-
-**Goal:** Enable the scanner to process documentation files (Markdown, READMEs, design docs) without false-positive marker matches on documentary mentions. This unblocks removing `docs/`, `AGENTS.md`, and `README.md` from `.liyiignore`, enabling cross-boundary `@liyi:requirement` / `@liyi:related` edges between design docs and source code.
-
-**Design authority:** Design doc v8.7, *Self-hosting and the quine problem*.
-
-### M6.1. Fenced code block suppression ✅
-
-**Status:** Implemented with unit tests.
-
-Add fenced-block state tracking to `scan_markers` in `markers.rs`.
-
-- Track a `bool` toggled on lines starting with `` ``` `` or `~~~` (after optional leading whitespace).
-- When inside a fenced block, skip all marker detection.
-- This is the multi-line component — all other checks remain per-line.
-
-### M6.2. Inline backtick span detection ✅
-
-**Status:** Implemented with unit tests.
-
-Before returning a marker match from `find_marker`, check whether the match position falls inside an inline backtick span on the same line.
-
-- Count backtick characters before the match position. Odd count → inside inline code → reject.
-- Handles `` `@liyi:module` `` and `` `<!-- @liyi:module -->` `` alike.
-
-### M6.3. Preceding quote character rejection ✅
-
-**Status:** Implemented with unit tests.
-
-If the character immediately before the `@` (or its full-width equivalent after normalization) is a quotation mark, reject the match.
-
-**Rejected characters:** `'` (U+0027), `"` (U+0022), `\`` (U+0060), `\u{2018}` (`'`), `\u{2019}` (`'`), `\u{201C}` (`"`), `\u{201D}` (`"`), `\u{300C}` (`「`), `\u{300D}` (`」`), `\u{00AB}` (`«`), `\u{00BB}` (`»`).
-
-The backtick in this list is redundant with M6.2 but retained as defense-in-depth.
-
-### M6.4. Update `.liyiignore` (~5min)
-
-**Status:** Implemented.
-
-Removed `docs/`, `AGENTS.md`, `README.md`, `README.zh.md` from the project's `.liyiignore`. The NL-quoting checks now handle documentary mentions.
-
-### M6.5. Escape `@liyi:intent` in AGENTS.md JSON schema (~5min)
-
-**Status:** Implemented.
-
-The one remaining unquoted `@liyi:intent` string in AGENTS.md was inside a JSON `"description"` field within a fenced code block (handled by M6.1). Additionally, escaped the `@` as `\u0040` in the JSON string to be consistent with the code-level quine-escape convention.
-
-### M6.6. Golden-file fixtures and unit tests ✅
-
-**Status:** Implemented.
-
-1. Unit tests in `markers.rs` for:
-   - Fenced code block suppression (markers inside `` ``` `` blocks not found)
-   - Inline backtick suppression (`` `@liyi:module` `` not matched)
-   - Preceding-quote suppression (`"@liyi:intent"` not matched)
-   - Real markers adjacent to these constructs still matched
-2. Golden-file fixture `nl_quoting/` — not created; existing unit tests provide coverage.
-
-### M6.7. Update contributing guides (~15min)
-
-**Status:** Implemented.
-
-Extended the quine-escape sections in both `contributing-guide.en.md` and `contributing-guide.zh.md` to document the NL-quoting convention for documentation files.
-
-**Acceptance criteria:**
-- `liyi check` on the project's own repo (with `docs/` no longer ignored) produces no false-positive markers from the design doc.
-- The `<!-- @liyi:requirement liyi-check-exit-code -->` block in the design doc is correctly detected as a real marker.
-- All existing tests pass.
-
----
-
 ## M10. Smart scaffold and `=trivial` sentinel
 
 **Status:** ✅ Complete (M10.1–M10.5 all done)
@@ -975,36 +1004,6 @@ End-to-end golden test demonstrating the full scaffold workflow:
 - Golden fixture with a multi-item source file producing a pre-populated sidecar.
 - Fixture verifies `tree_path`, `source_span`, `_hints` (doc comment, line count, suggested_trivial).
 - Existing `liyi init` tests still pass (backward compatibility).
-
----
-
-## Priority order (updated)
-
-| Priority | Item | Status | Effort | Unlocks |
-|---|---|---|---|---|
-| ~~1~~ | ~~M3.1–M3.6 MVP gaps~~ | ✅ Done | — | — |
-| ~~2~~ | ~~M5.1 MissingRelated~~ | ✅ Done | — | Annotation coverage |
-| ~~3~~ | ~~M5.2 `--fail-on-untracked`~~ | ✅ Done | — | CI-gateable coverage |
-| ~~4~~ | ~~M5.4 Golden fixtures~~ | ✅ Done | — | Test coverage for M5 |
-| ~~5~~ | ~~M5.5 AGENTS.md rule 11~~ | ✅ Done | — | Convention completeness |
-| ~~6~~ | ~~M6.1–M6.3 NL-quoting scanner~~ | ✅ Done | — | Docs processable |
-| ~~7~~ | ~~M6.4–M6.5 `.liyiignore` + AGENTS.md~~ | ✅ Done | — | Self-hosting docs |
-| ~~8~~ | ~~M6.6 Tests~~ | ✅ Done | — | Regression guard |
-| ~~9~~ | ~~M6.7 Contributing guides~~ | ✅ Done | — | Convention documentation |
-| ~~10~~ | ~~M5.3 `--prompt` output~~ | ✅ Done | — | — |
-| ~~11~~ | ~~M10.4 `=trivial` sentinel~~ | ✅ Done | — | — |
-| ~~12~~ | ~~M10.1 Tree-sitter item discovery~~ | ✅ Done | — | Smart scaffold |
-| ~~13~~ | ~~M10.2 Doc comment heuristic~~ | ✅ Done | — | `=doc` suggestions |
-| ~~14~~ | ~~M10.3 Item size heuristic~~ | ✅ Done | — | Trivial suggestions |
-| ~~15~~ | ~~M10.5 Combined scaffold test~~ | ✅ Done | — | Regression guard |
-| ~~16~~ | ~~M7.1 Ruby~~ | ✅ Done | — | Ruby/Rails ecosystem |
-| ~~17~~ | ~~M7.2 Bash~~ | ✅ Done | — | CI scripts, devops |
-| 18 | M8.2 TOML | ⏳ Planned | ~3h | Config-as-source (dogfooding) |
-| 19 | M8.3 JSON | ⏳ Planned | ~2h | Schemas, package.json |
-| ~~20~~ | ~~M7.3 Dart~~ | ✅ Done | — | Flutter ecosystem |
-| ~~21~~ | ~~M7.4 Zig~~ | ✅ Done | — | Systems lang, growing |
-| 22 | M8.4 YAML (no injection) | ⏳ Planned | ~2h | CI/k8s (limited without M9) |
-| 18 | M9 Injection framework | ⏳ Design | ~20h | Multi-language files |
 
 ---
 
