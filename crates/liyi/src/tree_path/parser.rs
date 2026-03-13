@@ -133,8 +133,7 @@ fn parse_segment(input: &str) -> IResult<&str, Segment> {
 fn is_common_kind(s: &str) -> bool {
     matches!(
         s,
-        "fn"
-            | "annotation"
+        "fn" | "annotation"
             | "class"
             | "const"
             | "constructor"

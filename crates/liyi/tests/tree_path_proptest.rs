@@ -35,9 +35,29 @@ fn arb_name() -> impl Strategy<Value = String> {
 /// Strategy for a kind shorthand.
 fn arb_kind() -> impl Strategy<Value = String> {
     prop::sample::select(vec![
-        "fn", "class", "struct", "enum", "trait", "impl", "mod", "const", "type", "test",
-        "method", "namespace", "interface", "protocol", "module", "var", "property", "object",
-        "typedef", "init", "singleton_method", "record", "constructor",
+        "fn",
+        "class",
+        "struct",
+        "enum",
+        "trait",
+        "impl",
+        "mod",
+        "const",
+        "type",
+        "test",
+        "method",
+        "namespace",
+        "interface",
+        "protocol",
+        "module",
+        "var",
+        "property",
+        "object",
+        "typedef",
+        "init",
+        "singleton_method",
+        "record",
+        "constructor",
     ])
     .prop_map(|s| s.to_string())
 }
@@ -50,10 +70,7 @@ fn arb_segment_pair() -> impl Strategy<Value = (Segment, Segment)> {
 /// Strategy for a complete TreePath (1–4 segment pairs, no injection).
 fn arb_tree_path() -> impl Strategy<Value = TreePath> {
     prop::collection::vec(arb_segment_pair(), 1..=4).prop_map(|pairs| {
-        let segments: Vec<Segment> = pairs
-            .into_iter()
-            .flat_map(|(k, n)| vec![k, n])
-            .collect();
+        let segments: Vec<Segment> = pairs.into_iter().flat_map(|(k, n)| vec![k, n]).collect();
         TreePath { segments }
     })
 }
