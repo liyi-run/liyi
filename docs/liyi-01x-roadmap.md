@@ -25,7 +25,7 @@ The MVP roadmap covered the 0.1.0 release (removed; see git history). This docum
 | M5.2 `--fail-on-untracked` | ✅ Complete | Flag implemented with tests |
 | M5.4 Golden fixtures | ✅ Complete | `missing_related/` and `missing_related_pass/` added |
 | M5.5 AGENTS.md rule 11 | ✅ Complete | Pre-commit check requirement added |
-| M5.3 `--prompt` mode | ⏳ Design | Design doc at `docs/prompt-mode-design.md` |
+| M5.3 `--prompt` mode | ✅ Complete | `docs/prompt-mode-design.md` |
 | M7.1 Ruby | ✅ Complete | tree-sitter-ruby v0.23.1 |
 | M7.2 Bash | ✅ Complete | tree-sitter-bash v0.25.1 |
 | M7.3 Dart | ⏳ Planned | Flutter ecosystem |

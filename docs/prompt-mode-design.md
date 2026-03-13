@@ -2,7 +2,7 @@
 
 # `--prompt` Mode Design
 
-**Status:** Design complete, awaiting implementation  
+**Status:** Implemented  
 **Target:** v0.1.x (M5.3)  
 **Design authority:** `docs/liyi-design.md` v8.10
 

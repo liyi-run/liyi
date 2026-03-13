@@ -1,0 +1,21 @@
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/prompt.rs",
+  "specs": [
+    {
+      "item": "PromptOutput",
+      "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with version, optional root, items array, and exit_code.",
+      "source_span": [8, 14]
+    },
+    {
+      "item": "PromptItem",
+      "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema.",
+      "source_span": [17, 47]
+    },
+    {
+      "item": "build_prompt_output",
+      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item natural-language resolution instructions. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
+      "source_span": [52, 120]
+    }
+  ]
+}
