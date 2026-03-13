@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Nom parser combinator for parsing a complete tree_path into a TreePath struct. Handles :: delimited segments and injection markers attached directly to the preceding segment (name//lang) without requiring a :: separator.",
       "source_span": [
-        99,
-        111
+        100,
+        112
       ],
       "tree_path": "fn::parse_tree_path",
       "source_hash": "sha256:209d3af3a95c59cfc448b099fea352329bd4fc895d6fd7737ed95fb063d38c06",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Parses a single tree_path segment, trying injection markers, quoted strings, and simple names in order. Uses heuristic to classify simple names as Kind or Name.",
       "source_span": [
-        114,
-        129
+        115,
+        130
       ],
       "tree_path": "fn::parse_segment",
       "source_hash": "sha256:2d570524b2adefd28ed3af36218c7b77db1eff350d48dd830a7651b2eae2debd",
@@ -54,14 +54,14 @@
     {
       "item": "serialize_name",
       "reviewed": true,
-      "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping.",
+      "intent": "Serializes a name, automatically quoting if it contains spaces, :: delimiters, quotes, or other special characters. Handles backslash and quote escaping. Public so that collect_path in mod.rs can use it for tree_path construction.",
       "source_span": [
         65,
         84
       ],
       "tree_path": "fn::serialize_name",
-      "source_hash": "sha256:0398cceb21d0564c22c3105074f081f493aaab7e7e6a7b171df93ace78192ad6",
-      "source_anchor": "fn serialize_name(name: &str) -> String {"
+      "source_hash": "sha256:7b5b91e1db28380568f82fe1451464b153e102f5b551054b1e786c5a90c8ad5c",
+      "source_anchor": "pub fn serialize_name(name: &str) -> String {"
     }
   ]
 }
