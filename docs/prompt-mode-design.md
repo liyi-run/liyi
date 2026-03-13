@@ -217,4 +217,11 @@ Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear 
 
 ---
 
-*Design document for `--prompt` mode implementation.*
+## AIGC Disclaimer
+
+This document contains content from the following AI agents:
+
+* Claude Opus 4.6
+* Kimi K2.5
+
+The document is primarily authored by Kimi K2.5 with the human designer's input.
