@@ -42,6 +42,17 @@ Follow Conventional Commits: `<type>(<scope>): <summary>`
 - AIGC trailers required: `Original prompt:`, blank line, Markdown block quote of user prompts verbatim, blank line, `AI-assisted-by: Your model identity (Name of client used to interact with you)`.
 - Do **not** add `Signed-off-by` on behalf of the user.
 
+`AI-assisted-by` convention:
+
+```plain
+AI-assisted-by: <model name/version> (<tool name>)
+
+# For example:
+AI-assisted-by: Claude Opus 4.6 (GitHub Copilot)
+AI-assisted-by: GPT-4o (Cursor)
+AI-assisted-by: Kimi K2.5 (OpenClaw)
+```
+
 See the contributing guide for full details and examples.
 
 ---

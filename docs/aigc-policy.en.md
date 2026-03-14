@@ -58,6 +58,7 @@ For example:
 ```plain
 AI-assisted-by: Claude Opus 4.6 (GitHub Copilot)
 AI-assisted-by: GPT-4o (Cursor)
+AI-assisted-by: Kimi K2.5 (OpenClaw)
 ```
 
 ### Original Prompt Recording
