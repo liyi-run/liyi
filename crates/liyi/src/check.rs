@@ -10,7 +10,7 @@ use crate::hashing::{SpanError, hash_span};
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
-use crate::sidecar::{ItemSpec, Spec, parse_sidecar, write_sidecar};
+use crate::sidecar::{ItemSpec, RequirementSpec, Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{
     compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
 };
@@ -1176,8 +1176,6 @@ fn check_sidecar(
                 }
             }
             Spec::Requirement(req) => {
-                let label = req.requirement.clone();
-
                 // Try marker-based span recovery first: if the file has
                 // @liyi:end-requirement markers, use those for span.
                 if let Some(&marker_span) = marker_span_map.get(&req.requirement)
@@ -1189,183 +1187,14 @@ fn check_sidecar(
                     }
                 }
 
-                match hash_span(&source_content, req.source_span) {
-                    Ok((computed_hash, computed_anchor)) => {
-                        let is_current = req.source_hash.as_ref() == Some(&computed_hash);
-
-                        if is_current {
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label,
-                                kind: DiagnosticKind::Current,
-                                severity: Severity::Info,
-                                message: "requirement hash matches".into(),
-                                fix_hint: None,
-                                fixed: false,
-                                span_start: Some(req.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                                intent: None,
-                            });
-                        } else {
-                            if fix {
-                                req.source_hash = Some(computed_hash);
-                                req.source_anchor = Some(computed_anchor);
-                                modified = true;
-                            }
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label,
-                                kind: DiagnosticKind::Stale,
-                                severity: Severity::Warning,
-                                message: "requirement hash mismatch or missing".into(),
-                                fix_hint: None,
-                                fixed: fix,
-                                span_start: Some(req.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                                intent: None,
-                            });
-                        }
-                    }
-                    Err(SpanError::PastEof { end, total }) => {
-                        // Try tree-path recovery before giving up
-                        let lang = detect_language(&entry.source_path);
-                        let (recovered, tp_note) = if req.tree_path.is_empty() {
-                            (None, "no tree_path set")
-                        } else if lang.is_none() {
-                            (None, "no grammar for source language")
-                        } else {
-                            let r =
-                                resolve_tree_path(&source_content, &req.tree_path, lang.unwrap());
-                            if r.is_some() {
-                                (r, "")
-                            } else {
-                                (None, "tree_path resolution failed")
-                            }
-                        };
-
-                        if let Some(new_span) = recovered {
-                            let old_span = req.source_span;
-                            let content_unchanged = req
-                                .source_hash
-                                .as_ref()
-                                .and_then(|old_h| {
-                                    hash_span(&source_content, new_span)
-                                        .ok()
-                                        .map(|(h, _)| h == *old_h)
-                                })
-                                .unwrap_or(false);
-
-                            if content_unchanged {
-                                let delta = new_span[0] as i64 - old_span[0] as i64;
-                                if fix {
-                                    req.source_span = new_span;
-                                    if let Ok((h, a)) = hash_span(&source_content, new_span) {
-                                        req.source_hash = Some(h);
-                                        req.source_anchor = Some(a);
-                                    }
-                                    if let Some(l) = lang {
-                                        let canonical =
-                                            compute_tree_path(&source_content, new_span, l);
-                                        if !canonical.is_empty() {
-                                            req.tree_path = canonical;
-                                        }
-                                    }
-                                    modified = true;
-                                }
-                                diagnostics.push(Diagnostic {
-                                    file: entry.source_path.clone(),
-                                    item_or_req: label,
-                                    kind: DiagnosticKind::Shifted {
-                                        from: old_span,
-                                        to: new_span,
-                                    },
-                                    severity: Severity::Warning,
-                                    message: format!(
-                                        "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
-                                        new_span[0], new_span[1]
-                                    ),
-                                fix_hint: Some("liyi check --fix".into()),
-                                fixed: fix,
-                                span_start: Some(req.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                        intent: None,
-                                });
-                            } else {
-                                if fix {
-                                    req.source_span = new_span;
-                                    if let Some(l) = lang {
-                                        let canonical =
-                                            compute_tree_path(&source_content, new_span, l);
-                                        if !canonical.is_empty() {
-                                            req.tree_path = canonical;
-                                        }
-                                    }
-                                    modified = true;
-                                }
-                                diagnostics.push(Diagnostic {
-                                    file: entry.source_path.clone(),
-                                    item_or_req: label,
-                                    kind: DiagnosticKind::Stale,
-                                    severity: Severity::Warning,
-                                    message: format!(
-                                        "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed)",
-                                        new_span[0], new_span[1]
-                                    ),
-                                fix_hint: None,
-                                fixed: false,
-                                span_start: Some(req.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                        intent: None,
-                                });
-                            }
-                        } else {
-                            let detail = if tp_note.is_empty() {
-                                format!("span end {end} exceeds file length {total}")
-                            } else {
-                                format!("span end {end} exceeds file length {total} ({tp_note})")
-                            };
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label,
-                                kind: DiagnosticKind::SpanPastEof {
-                                    span: req.source_span,
-                                    file_lines: total,
-                                },
-                                severity: Severity::Error,
-                                message: detail,
-                                fix_hint: Some("liyi check --fix".into()),
-                                fixed: false,
-                                span_start: Some(req.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                                intent: None,
-                            });
-                        }
-                    }
-                    Err(SpanError::Inverted { .. } | SpanError::Empty) => {
-                        diagnostics.push(Diagnostic {
-                            file: entry.source_path.clone(),
-                            item_or_req: label,
-                            kind: DiagnosticKind::InvalidSpan {
-                                span: req.source_span,
-                            },
-                            severity: Severity::Error,
-                            message: format!(
-                                "invalid span [{}, {}]",
-                                req.source_span[0], req.source_span[1]
-                            ),
-                            fix_hint: None,
-                            fixed: false,
-                            span_start: None,
-                            annotation_line: None,
-                            requirement_text: None,
-                            intent: None,
-                        });
-                    }
+                if check_requirement_hash(
+                    &entry.source_path,
+                    req,
+                    &source_content,
+                    fix,
+                    diagnostics,
+                ) {
+                    modified = true;
                 }
             }
         }
@@ -1389,6 +1218,201 @@ fn check_sidecar(
         let output = write_sidecar(&sidecar);
         let _ = fs::write(sidecar_path, output);
     }
+}
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// check_sidecar helpers — requirement hash check
+// ---------------------------------------------------------------------------
+
+/// Check a requirement spec's hash freshness with tree_path recovery on
+/// PastEof.  Returns true if `--fix` modified the spec.
+fn check_requirement_hash(
+    file: &Path,
+    req: &mut RequirementSpec,
+    source_content: &str,
+    fix: bool,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> bool {
+    let mut modified = false;
+    let label = req.requirement.clone();
+
+    match hash_span(source_content, req.source_span) {
+        Ok((computed_hash, computed_anchor)) => {
+            let is_current = req.source_hash.as_ref() == Some(&computed_hash);
+
+            if is_current {
+                diagnostics.push(Diagnostic {
+                    file: file.to_path_buf(),
+                    item_or_req: label,
+                    kind: DiagnosticKind::Current,
+                    severity: Severity::Info,
+                    message: "requirement hash matches".into(),
+                    fix_hint: None,
+                    fixed: false,
+                    span_start: Some(req.source_span[0]),
+                    annotation_line: None,
+                    requirement_text: None,
+                    intent: None,
+                });
+            } else {
+                if fix {
+                    req.source_hash = Some(computed_hash);
+                    req.source_anchor = Some(computed_anchor);
+                    modified = true;
+                }
+                diagnostics.push(Diagnostic {
+                    file: file.to_path_buf(),
+                    item_or_req: label,
+                    kind: DiagnosticKind::Stale,
+                    severity: Severity::Warning,
+                    message: "requirement hash mismatch or missing".into(),
+                    fix_hint: None,
+                    fixed: fix,
+                    span_start: Some(req.source_span[0]),
+                    annotation_line: None,
+                    requirement_text: None,
+                    intent: None,
+                });
+            }
+        }
+        Err(SpanError::PastEof { end, total }) => {
+            let lang = detect_language(file);
+            let (recovered, tp_note) = if req.tree_path.is_empty() {
+                (None, "no tree_path set")
+            } else if lang.is_none() {
+                (None, "no grammar for source language")
+            } else {
+                let r = resolve_tree_path(source_content, &req.tree_path, lang.unwrap());
+                if r.is_some() {
+                    (r, "")
+                } else {
+                    (None, "tree_path resolution failed")
+                }
+            };
+
+            if let Some(new_span) = recovered {
+                let old_span = req.source_span;
+                let content_unchanged = req
+                    .source_hash
+                    .as_ref()
+                    .and_then(|old_h| {
+                        hash_span(source_content, new_span)
+                            .ok()
+                            .map(|(h, _)| h == *old_h)
+                    })
+                    .unwrap_or(false);
+
+                if content_unchanged {
+                    let delta = new_span[0] as i64 - old_span[0] as i64;
+                    if fix {
+                        req.source_span = new_span;
+                        if let Ok((h, a)) = hash_span(source_content, new_span) {
+                            req.source_hash = Some(h);
+                            req.source_anchor = Some(a);
+                        }
+                        if let Some(l) = lang {
+                            let canonical = compute_tree_path(source_content, new_span, l);
+                            if !canonical.is_empty() {
+                                req.tree_path = canonical;
+                            }
+                        }
+                        modified = true;
+                    }
+                    diagnostics.push(Diagnostic {
+                        file: file.to_path_buf(),
+                        item_or_req: label,
+                        kind: DiagnosticKind::Shifted {
+                            from: old_span,
+                            to: new_span,
+                        },
+                        severity: Severity::Warning,
+                        message: format!(
+                            "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+                            new_span[0], new_span[1]
+                        ),
+                        fix_hint: Some("liyi check --fix".into()),
+                        fixed: fix,
+                        span_start: Some(req.source_span[0]),
+                        annotation_line: None,
+                        requirement_text: None,
+                        intent: None,
+                    });
+                } else {
+                    if fix {
+                        req.source_span = new_span;
+                        if let Some(l) = lang {
+                            let canonical = compute_tree_path(source_content, new_span, l);
+                            if !canonical.is_empty() {
+                                req.tree_path = canonical;
+                            }
+                        }
+                        modified = true;
+                    }
+                    diagnostics.push(Diagnostic {
+                        file: file.to_path_buf(),
+                        item_or_req: label,
+                        kind: DiagnosticKind::Stale,
+                        severity: Severity::Warning,
+                        message: format!(
+                            "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed)",
+                            new_span[0], new_span[1]
+                        ),
+                        fix_hint: None,
+                        fixed: false,
+                        span_start: Some(req.source_span[0]),
+                        annotation_line: None,
+                        requirement_text: None,
+                        intent: None,
+                    });
+                }
+            } else {
+                let detail = if tp_note.is_empty() {
+                    format!("span end {end} exceeds file length {total}")
+                } else {
+                    format!("span end {end} exceeds file length {total} ({tp_note})")
+                };
+                diagnostics.push(Diagnostic {
+                    file: file.to_path_buf(),
+                    item_or_req: label,
+                    kind: DiagnosticKind::SpanPastEof {
+                        span: req.source_span,
+                        file_lines: total,
+                    },
+                    severity: Severity::Error,
+                    message: detail,
+                    fix_hint: Some("liyi check --fix".into()),
+                    fixed: false,
+                    span_start: Some(req.source_span[0]),
+                    annotation_line: None,
+                    requirement_text: None,
+                    intent: None,
+                });
+            }
+        }
+        Err(SpanError::Inverted { .. } | SpanError::Empty) => {
+            diagnostics.push(Diagnostic {
+                file: file.to_path_buf(),
+                item_or_req: label,
+                kind: DiagnosticKind::InvalidSpan {
+                    span: req.source_span,
+                },
+                severity: Severity::Error,
+                message: format!(
+                    "invalid span [{}, {}]",
+                    req.source_span[0], req.source_span[1]
+                ),
+                fix_hint: None,
+                fixed: false,
+                span_start: None,
+                annotation_line: None,
+                requirement_text: None,
+                intent: None,
+            });
+        }
+    }
+
+    modified
 }
 
 // ---------------------------------------------------------------------------
