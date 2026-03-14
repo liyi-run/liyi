@@ -29,6 +29,13 @@ struct RequirementRecord {
     computed_hash: Option<String>,
 }
 
+struct ItemCheckCtx<'a> {
+    file: &'a Path,
+    source_content: &'a str,
+    source_markers: &'a [SourceMarker],
+    fix: bool,
+}
+
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
@@ -599,6 +606,12 @@ fn check_sidecar(
     };
 
     let source_markers = scan_markers(&source_content);
+    let item_ctx = ItemCheckCtx {
+        file: &entry.source_path,
+        source_content: &source_content,
+        source_markers: &source_markers,
+        fix,
+    };
     let marker_span_map = requirement_spans(&source_markers);
     let mut modified = false;
 
@@ -610,12 +623,12 @@ fn check_sidecar(
 
                 // a. Hash the span (with tree_path recovery, shift detection)
                 if check_item_hash(
-                    &entry.source_path,
+                    item_ctx.file,
                     &label,
                     item,
-                    &source_content,
-                    &source_markers,
-                    fix,
+                    item_ctx.source_content,
+                    item_ctx.source_markers,
+                    item_ctx.fix,
                     diagnostics,
                 ) {
                     modified = true;
