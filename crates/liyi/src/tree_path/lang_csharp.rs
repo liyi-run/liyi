@@ -1,29 +1,28 @@
-// C# language configuration.
-declare_language! {
-    /// C# language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_c_sharp::LANGUAGE.into(),
-        extensions: ["cs"],
-        kind_map: [
-            ("fn", "method_declaration"),
-            ("class", "class_declaration"),
-            ("interface", "interface_declaration"),
-            ("enum", "enum_declaration"),
-            ("struct", "struct_declaration"),
-            ("namespace", "namespace_declaration"),
-            ("constructor", "constructor_declaration"),
-            ("property", "property_declaration"),
-            ("record", "record_declaration"),
-            ("delegate", "delegate_declaration"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+use super::LanguageConfig;
+
+/// C# language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_c_sharp::LANGUAGE.into(),
+    extensions: &["cs"],
+    kind_map: &[
+        ("fn", "method_declaration"),
+        ("class", "class_declaration"),
+        ("interface", "interface_declaration"),
+        ("enum", "enum_declaration"),
+        ("struct", "struct_declaration"),
+        ("namespace", "namespace_declaration"),
+        ("constructor", "constructor_declaration"),
+        ("property", "property_declaration"),
+        ("record", "record_declaration"),
+        ("delegate", "delegate_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

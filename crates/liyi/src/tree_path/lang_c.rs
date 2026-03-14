@@ -1,3 +1,5 @@
+use super::LanguageConfig;
+
 use tree_sitter::Node;
 
 /// Extract the function name from a C/C++ `function_definition` node.
@@ -43,26 +45,23 @@ fn c_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-// C language configuration.
-declare_language! {
-    /// C language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_c::LANGUAGE.into(),
-        extensions: ["c"],
-        kind_map: [
-            ("fn", "function_definition"),
-            ("struct", "struct_specifier"),
-            ("enum", "enum_specifier"),
-            ("typedef", "type_definition"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: Some(c_node_name),
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+/// C language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_c::LANGUAGE.into(),
+    extensions: &["c"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("struct", "struct_specifier"),
+        ("enum", "enum_specifier"),
+        ("typedef", "type_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: Some(c_node_name),
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

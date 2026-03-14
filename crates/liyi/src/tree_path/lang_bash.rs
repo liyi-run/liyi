@@ -1,18 +1,17 @@
-// Bash language configuration.
-declare_language! {
-    /// Bash language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_bash::LANGUAGE.into(),
-        extensions: ["sh", "bash"],
-        kind_map: [("fn", "function_definition")],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+use super::LanguageConfig;
+
+/// Bash language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_bash::LANGUAGE.into(),
+    extensions: &["sh", "bash"],
+    kind_map: &[("fn", "function_definition")],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

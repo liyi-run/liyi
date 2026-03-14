@@ -1,50 +1,45 @@
+use super::LanguageConfig;
 use super::lang_javascript::js_has_doc_comment;
 
-// TypeScript language configuration.
-declare_language! {
-    /// TypeScript language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
-        extensions: ["ts", "mts", "cts"],
-        kind_map: [
-            ("fn", "function_declaration"),
-            ("class", "class_declaration"),
-            ("method", "method_definition"),
-            ("interface", "interface_declaration"),
-            ("type", "type_alias_declaration"),
-            ("enum", "enum_declaration"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: Some(js_has_doc_comment),
-        transparent_kinds: [],
-    }
-}
+/// TypeScript language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+    extensions: &["ts", "mts", "cts"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+        ("interface", "interface_declaration"),
+        ("type", "type_alias_declaration"),
+        ("enum", "enum_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
+    transparent_kinds: &[],
+};
 
-// TSX language configuration.
-declare_language! {
-    /// TSX language configuration.
-    pub(super) static TSX_CONFIG {
-        ts_language: || tree_sitter_typescript::LANGUAGE_TSX.into(),
-        extensions: ["tsx"],
-        kind_map: [
-            ("fn", "function_declaration"),
-            ("class", "class_declaration"),
-            ("method", "method_definition"),
-            ("interface", "interface_declaration"),
-            ("type", "type_alias_declaration"),
-            ("enum", "enum_declaration"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: Some(js_has_doc_comment),
-        transparent_kinds: [],
-    }
-}
+/// TSX language configuration.
+pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_typescript::LANGUAGE_TSX.into(),
+    extensions: &["tsx"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+        ("interface", "interface_declaration"),
+        ("type", "type_alias_declaration"),
+        ("enum", "enum_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

@@ -1,3 +1,5 @@
+use super::LanguageConfig;
+
 use tree_sitter::Node;
 
 /// Detect JSDoc comments (`/** ... */` before a declaration).
@@ -13,25 +15,22 @@ pub(super) fn js_has_doc_comment(node: &Node, source: &str) -> bool {
     false
 }
 
-// JavaScript language configuration.
-declare_language! {
-    /// JavaScript language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_javascript::LANGUAGE.into(),
-        extensions: ["js", "mjs", "cjs", "jsx"],
-        kind_map: [
-            ("fn", "function_declaration"),
-            ("class", "class_declaration"),
-            ("method", "method_definition"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: Some(js_has_doc_comment),
-        transparent_kinds: [],
-    }
-}
+/// JavaScript language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_javascript::LANGUAGE.into(),
+    extensions: &["js", "mjs", "cjs", "jsx"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("method", "method_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: Some(js_has_doc_comment),
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

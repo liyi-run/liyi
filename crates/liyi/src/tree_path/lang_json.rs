@@ -1,3 +1,5 @@
+use super::LanguageConfig;
+
 use tree_sitter::Node;
 
 /// Custom name extraction for JSON `pair` nodes.
@@ -19,37 +21,26 @@ fn json_node_name(node: &Node, source: &str) -> Option<String> {
         .map(|sc| source[sc.byte_range()].to_string())
 }
 
-// JSON language configuration.
-//
-// JSON has a single item kind: `pair` (object key-value entries).
-// Nesting follows the `value` field — when a pair's value is an `object`,
-// the resolver descends into it to find nested pairs.
-//
-// The root `document` node wraps the top-level `object` (or `array`);
-// `object` and `array` are listed as transparent kinds so the resolver
-// looks through them to reach `pair` nodes.
-declare_language! {
-    /// JSON language configuration.
-    ///
-    /// JSON has a single item kind: `pair` (object key-value entries).
-    /// Nesting follows the `value` field — when a pair's value is an `object`,
-    /// the resolver descends into it to find nested pairs.
-    ///
-    /// The root `document` node wraps the top-level `object` (or `array`);
-    /// `object` and `array` are listed as transparent kinds so the resolver
-    /// looks through them to reach `pair` nodes.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_json::LANGUAGE.into(),
-        extensions: ["json"],
-        kind_map: [("key", "pair")],
-        name_field: "",
-        name_overrides: [],
-        body_fields: ["value"],
-        custom_name: Some(json_node_name),
-        doc_comment_detector: None,
-        transparent_kinds: ["object", "array"],
-    }
-}
+/// JSON language configuration.
+///
+/// JSON has a single item kind: `pair` (object key-value entries).
+/// Nesting follows the `value` field — when a pair's value is an `object`,
+/// the resolver descends into it to find nested pairs.
+///
+/// The root `document` node wraps the top-level `object` (or `array`);
+/// `object` and `array` are listed as transparent kinds so the resolver
+/// looks through them to reach `pair` nodes.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_json::LANGUAGE.into(),
+    extensions: &["json"],
+    kind_map: &[("key", "pair")],
+    name_field: "",
+    name_overrides: &[],
+    body_fields: &["value"],
+    custom_name: Some(json_node_name),
+    doc_comment_detector: None,
+    transparent_kinds: &["object", "array"],
+};
 
 #[cfg(test)]
 mod tests {

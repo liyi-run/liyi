@@ -1,26 +1,25 @@
-// Swift language configuration.
-declare_language! {
-    /// Swift language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_swift::LANGUAGE.into(),
-        extensions: ["swift"],
-        kind_map: [
-            ("fn", "function_declaration"),
-            ("class", "class_declaration"),
-            ("protocol", "protocol_declaration"),
-            ("enum", "enum_entry"),
-            ("property", "property_declaration"),
-            ("init", "init_declaration"),
-            ("typealias", "typealias_declaration"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: None,
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+use super::LanguageConfig;
+
+/// Swift language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_swift::LANGUAGE.into(),
+    extensions: &["swift"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("class", "class_declaration"),
+        ("protocol", "protocol_declaration"),
+        ("enum", "enum_entry"),
+        ("property", "property_declaration"),
+        ("init", "init_declaration"),
+        ("typealias", "typealias_declaration"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: None,
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

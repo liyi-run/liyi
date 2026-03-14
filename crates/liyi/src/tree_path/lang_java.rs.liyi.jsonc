@@ -5,14 +5,15 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Java language configuration for tree_path resolution: register tree-sitter-java grammar, .java extension, kind mappings for fn/class/interface/enum/constructor/record/annotation, using standard name field with no custom name extraction, and java_has_doc_comment detector for /** Javadoc comments.",
       "source_span": [
         26,
         44
       ],
-      "source_hash": "sha256:371b04c7a7e1094cca495c92fffe61747887268e89bb190882a06de6ea6460b5",
-      "source_anchor": "    pub(super) static CONFIG {"
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:55f7446f7f31f73d519425de0f39d2e2d1331d0c54c4466013e4b47b533a712e",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

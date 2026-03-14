@@ -5,14 +5,15 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction, and python_has_doc_comment detector for triple-quoted docstrings.",
       "source_span": [
         35,
         45
       ],
-      "source_hash": "sha256:ecbf25dbd219f11f6c06a3652f307ed1f9f762631987ef4fc7ead4b37f26539a",
-      "source_anchor": "    pub(super) static CONFIG {"
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:db4a475937b5f454b05d37957988bcaa60f5acfb74c31f86169109b0db1ee398",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

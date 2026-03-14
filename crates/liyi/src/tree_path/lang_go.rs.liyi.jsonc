@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for Go AST nodes: encode method receivers into the name as ReceiverType.Method or (*ReceiverType).Method for method_declaration; navigate into type_spec for type_declaration names; navigate into const_spec/var_spec for const_declaration/var_declaration names. Return None for unrecognized kinds.",
       "source_span": [
-        10,
-        61
+        12,
+        63
       ],
       "tree_path": "fn.go_node_name",
       "source_hash": "sha256:25f5ae7eaaf98c7b77298c61c8f0ced58b3109094bf3e5ae52e92f6a1a0d7f9b",
@@ -17,14 +17,15 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Go language configuration for tree_path resolution: register tree-sitter-go grammar, .go extension, kind mappings for fn/method/type/const/var, wire the custom go_node_name callback for receiver-encoded method names, and go_has_doc_comment detector for preceding // comments.",
       "source_span": [
         77,
         93
       ],
-      "source_hash": "sha256:789dc95384557d4a9bdc81246c9c65708f1f717b172a4d761604cf90cd4a7a2a",
-      "source_anchor": "    pub(super) static CONFIG {"
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:643b75d0ab90b3fd814424611fa190db7baa85fc018b6719db7c4e81ae492776",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

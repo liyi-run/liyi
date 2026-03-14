@@ -1,3 +1,4 @@
+use super::LanguageConfig;
 use super::lang_c::c_extract_declarator_name;
 
 use tree_sitter::Node;
@@ -66,31 +67,28 @@ fn objc_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-// Objective-C language configuration.
-declare_language! {
-    /// Objective-C language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_objc::LANGUAGE.into(),
-        extensions: ["m", "mm"],
-        kind_map: [
-            ("fn", "function_definition"),
-            ("class", "class_interface"),
-            ("impl", "class_implementation"),
-            ("protocol", "protocol_declaration"),
-            ("method", "method_definition"),
-            ("method_decl", "method_declaration"),
-            ("struct", "struct_specifier"),
-            ("enum", "enum_specifier"),
-            ("typedef", "type_definition"),
-        ],
-        name_field: "name",
-        name_overrides: [],
-        body_fields: ["body"],
-        custom_name: Some(objc_node_name),
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+/// Objective-C language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_objc::LANGUAGE.into(),
+    extensions: &["m", "mm"],
+    kind_map: &[
+        ("fn", "function_definition"),
+        ("class", "class_interface"),
+        ("impl", "class_implementation"),
+        ("protocol", "protocol_declaration"),
+        ("method", "method_definition"),
+        ("method_decl", "method_declaration"),
+        ("struct", "struct_specifier"),
+        ("enum", "enum_specifier"),
+        ("typedef", "type_definition"),
+    ],
+    name_field: "name",
+    name_overrides: &[],
+    body_fields: &["body"],
+    custom_name: Some(objc_node_name),
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {

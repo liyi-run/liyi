@@ -5,14 +5,15 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Rust language configuration for tree_path resolution: register tree-sitter-rust grammar, .rs extension, kind mappings for fn/struct/enum/impl/trait/mod/const/static/type/macro, with impl_item using the type field for name extraction via name_overrides, no custom name callback, and rust_has_doc_comment detector for ///|//!|/** doc comments.",
       "source_span": [
         37,
         58
       ],
-      "source_hash": "sha256:d33b675f00f807f4efede60b27a7563adca649c362d8a0fa88b651cce82ac1a5",
-      "source_anchor": "    pub(super) static CONFIG {"
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:a5e3dca0f94dcd24752e06e1ba82f425acd14b52bcd130ac1dfcacb88bd8a6c4",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

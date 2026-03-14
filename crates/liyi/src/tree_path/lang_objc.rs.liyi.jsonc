@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for Objective-C AST nodes: delegate function_definition to c_extract_declarator_name; extract class/protocol names from identifier/type_identifier children; compose method selector names from keyword_declarator children (multi-part selectors) or a single identifier (zero-argument methods). Return None for unrecognized kinds.",
       "source_span": [
-        11,
-        67
+        12,
+        68
       ],
       "tree_path": "fn.objc_node_name",
       "source_hash": "sha256:565676d6fc575ae177bdd050d7d515d38af7b7ed461240a5020380fb2003c052",
@@ -17,14 +17,15 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Objective-C language configuration for tree_path resolution: register tree-sitter-objc grammar, .m/.mm extensions, kind mappings for fn/class/impl/protocol/method/method_decl/struct/enum/typedef, wire the custom objc_node_name callback, and no doc comment detector.",
       "source_span": [
         71,
         91
       ],
-      "source_hash": "sha256:856c80d1aefc29f4d6938f5aadb76e2f25d2f36f74f94eca1c6ed23f180398cc",
-      "source_anchor": "    /// Objective-C language configuration."
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:34d6d1ac114bde885324b53fac1aaf04e217c62dac9f14c49c31582a51461770",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
 }

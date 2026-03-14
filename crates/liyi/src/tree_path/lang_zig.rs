@@ -1,3 +1,5 @@
+use super::LanguageConfig;
+
 use tree_sitter::Node;
 
 /// Find the first child with a given kind.
@@ -56,25 +58,24 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-// Zig language configuration.
-declare_language! {
-    /// Zig language configuration.
-    pub(super) static CONFIG {
-        ts_language: || tree_sitter_zig::LANGUAGE.into(),
-        extensions: ["zig"],
-        kind_map: [
-            ("fn", "function_declaration"),
-            ("struct", "variable_declaration"),
-            ("test", "test_declaration"),
-        ],
-        name_field: "",
-        name_overrides: [],
-        body_fields: ["block", "struct_declaration"],
-        custom_name: Some(zig_node_name),
-        doc_comment_detector: None,
-        transparent_kinds: [],
-    }
-}
+/// Zig language configuration.
+pub(super) static CONFIG: LanguageConfig = LanguageConfig {
+    ts_language: || tree_sitter_zig::LANGUAGE.into(),
+    extensions: &["zig"],
+    kind_map: &[
+        ("fn", "function_declaration"),
+        ("struct", "variable_declaration"), // const Name = struct { ... }
+        ("test", "test_declaration"),
+    ],
+    name_field: "", // Not used - we extract names via custom callback
+    name_overrides: &[],
+    // Zig uses "block" for function bodies, and "struct_declaration" is the
+    // container for struct-as-namespace contents (methods, fields).
+    body_fields: &["block", "struct_declaration"],
+    custom_name: Some(zig_node_name),
+    doc_comment_detector: None,
+    transparent_kinds: &[],
+};
 
 #[cfg(test)]
 mod tests {
