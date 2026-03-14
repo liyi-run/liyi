@@ -116,7 +116,11 @@ pub fn run_check(
 // run_check helpers
 // ---------------------------------------------------------------------------
 
-fn emit_ambiguous_sidecar_warnings(root: &Path, warnings: &[String], diagnostics: &mut Vec<Diagnostic>) {
+fn emit_ambiguous_sidecar_warnings(
+    root: &Path,
+    warnings: &[String],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
     for w in warnings {
         diagnostics.push(Diagnostic {
             file: root.to_path_buf(),
