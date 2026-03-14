@@ -7,7 +7,7 @@ use crate::discovery::{discover, find_repo_root, resolve_sidecar_targets};
 use crate::git::{git_show, walk_git_history};
 use crate::hashing::hash_span;
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
-use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
+use crate::sidecar::{ItemSpec, Spec, parse_sidecar, write_sidecar};
 
 /// Result of an approve operation on a single sidecar.
 #[derive(Debug)]
@@ -237,6 +237,189 @@ struct RequirementInfo {
     current_text: String,
 }
 
+struct CandidateFileCtx<'a> {
+    repo_root: Option<&'a Path>,
+    sidecar_path: &'a Path,
+    source_path: &'a Path,
+    source_display: &'a str,
+    source_content: &'a str,
+    all_lines: &'a [&'a str],
+    source_markers: &'a [SourceMarker],
+    source_lines: &'a [(usize, String)],
+    item_filter: Option<&'a str>,
+}
+
+fn collect_unreviewed(
+    ctx: &CandidateFileCtx<'_>,
+    spec_index: usize,
+    item: &ItemSpec,
+) -> Option<ApprovalCandidate> {
+    if let Some(filter) = ctx.item_filter
+        && item.item != filter
+    {
+        return None;
+    }
+
+    let has_source_intent = ctx.source_markers.iter().any(|marker| {
+        matches!(marker, SourceMarker::Intent { line, .. }
+            if *line >= item.source_span[0] && *line <= item.source_span[1])
+    });
+    if item.reviewed || has_source_intent {
+        return None;
+    }
+
+    let span_start = item.source_span[0].saturating_sub(1);
+    let span_end = item.source_span[1].min(ctx.all_lines.len());
+    let prev_intent =
+        lookup_prev_intent(ctx.repo_root, ctx.sidecar_path, &item.item, &item.tree_path);
+
+    Some(ApprovalCandidate {
+        sidecar_path: ctx.sidecar_path.to_path_buf(),
+        source_display: ctx.source_display.to_string(),
+        spec_index,
+        item_name: item.item.clone(),
+        intent: item.intent.clone(),
+        source_span: item.source_span,
+        source_lines: ctx.source_lines.to_vec(),
+        span_offset: span_start,
+        span_len: span_end.saturating_sub(span_start),
+        prev_intent,
+        kind: CandidateKind::Unreviewed,
+        prev_source: None,
+        current_source: None,
+        changed_requirement: None,
+        old_requirement_text: None,
+        new_requirement_text: None,
+    })
+}
+
+fn collect_stale(
+    ctx: &CandidateFileCtx<'_>,
+    spec_index: usize,
+    item: &ItemSpec,
+) -> Option<ApprovalCandidate> {
+    if let Some(filter) = ctx.item_filter
+        && item.item != filter
+    {
+        return None;
+    }
+
+    let has_source_intent = ctx.source_markers.iter().any(|marker| {
+        matches!(marker, SourceMarker::Intent { line, .. }
+            if *line >= item.source_span[0] && *line <= item.source_span[1])
+    });
+    if !(item.reviewed || has_source_intent) {
+        return None;
+    }
+
+    let stored_hash = item.source_hash.as_ref()?;
+    let (current_hash, _) = hash_span(ctx.source_content, item.source_span).ok()?;
+    if *stored_hash == current_hash {
+        return None;
+    }
+
+    let span_start = item.source_span[0].saturating_sub(1);
+    let span_end = item.source_span[1].min(ctx.all_lines.len());
+    let cur_src = ctx.all_lines[span_start..span_end].join("\n");
+    let prev_src = lookup_prev_source(
+        ctx.repo_root,
+        ctx.source_path,
+        ctx.sidecar_path,
+        &item.item,
+        &item.tree_path,
+        stored_hash,
+        item.source_span,
+    );
+
+    Some(ApprovalCandidate {
+        sidecar_path: ctx.sidecar_path.to_path_buf(),
+        source_display: ctx.source_display.to_string(),
+        spec_index,
+        item_name: item.item.clone(),
+        intent: item.intent.clone(),
+        source_span: item.source_span,
+        source_lines: ctx.source_lines.to_vec(),
+        span_offset: span_start,
+        span_len: span_end.saturating_sub(span_start),
+        prev_intent: None,
+        kind: CandidateKind::StaleReviewed,
+        prev_source: prev_src,
+        current_source: Some(cur_src),
+        changed_requirement: None,
+        old_requirement_text: None,
+        new_requirement_text: None,
+    })
+}
+
+fn collect_req_changed(
+    ctx: &CandidateFileCtx<'_>,
+    spec_index: usize,
+    item: &ItemSpec,
+    req_registry: &HashMap<String, RequirementInfo>,
+) -> Vec<ApprovalCandidate> {
+    if let Some(filter) = ctx.item_filter
+        && item.item != filter
+    {
+        return Vec::new();
+    }
+
+    let has_source_intent = ctx.source_markers.iter().any(|marker| {
+        matches!(marker, SourceMarker::Intent { line, .. }
+            if *line >= item.source_span[0] && *line <= item.source_span[1])
+    });
+    if !(item.reviewed || has_source_intent) {
+        return Vec::new();
+    }
+
+    let Some(related) = &item.related else {
+        return Vec::new();
+    };
+
+    let span_start = item.source_span[0].saturating_sub(1);
+    let span_end = item.source_span[1].min(ctx.all_lines.len());
+    let span_len = span_end.saturating_sub(span_start);
+    let mut candidates = Vec::new();
+
+    for (req_name, stored_hash) in related {
+        let Some(stored_h) = stored_hash else {
+            continue;
+        };
+        let Some(req_info) = req_registry.get(req_name) else {
+            continue;
+        };
+        if *stored_h == req_info.current_hash {
+            continue;
+        }
+
+        let old_text = ctx
+            .repo_root
+            .and_then(|root| lookup_prev_requirement_text(root, req_info, stored_h, req_name));
+
+        candidates.push(ApprovalCandidate {
+            sidecar_path: ctx.sidecar_path.to_path_buf(),
+            source_display: ctx.source_display.to_string(),
+            spec_index,
+            item_name: item.item.clone(),
+            intent: item.intent.clone(),
+            source_span: item.source_span,
+            source_lines: ctx.source_lines.to_vec(),
+            span_offset: span_start,
+            span_len,
+            prev_intent: None,
+            kind: CandidateKind::ReqChanged {
+                requirement: req_name.clone(),
+            },
+            prev_source: None,
+            current_source: None,
+            changed_requirement: Some(req_name.clone()),
+            old_requirement_text: old_text,
+            new_requirement_text: Some(req_info.current_text.clone()),
+        });
+    }
+
+    candidates
+}
+
 /// Build a global requirement registry by scanning all sidecars in the repo.
 ///
 /// For each requirement spec, reads the source file, computes a fresh hash
@@ -376,11 +559,12 @@ pub fn collect_approval_candidates(
     // Try to locate the repo root for Git history lookups.
     let repo_root = targets.first().and_then(|p| find_repo_root(p));
 
-    let collect_unreviewed =
+    let should_collect_unreviewed =
         kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::UnreviewedOnly;
-    let collect_stale =
+    let should_collect_stale =
         kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::StaleOnly;
-    let collect_req = kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::ReqOnly;
+    let should_collect_req =
+        kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::ReqOnly;
 
     let mut unreviewed_candidates = Vec::new();
     let mut stale_candidates = Vec::new();
@@ -388,7 +572,7 @@ pub fn collect_approval_candidates(
 
     // Build global requirement registry for ReqChanged detection.
     // Requirements can live in any sidecar, so we scan the whole repo.
-    let req_registry: HashMap<String, RequirementInfo> = if collect_req {
+    let req_registry: HashMap<String, RequirementInfo> = if should_collect_req {
         if let Some(ref root) = repo_root {
             build_requirement_registry(root)
         } else {
@@ -414,129 +598,40 @@ pub fn collect_approval_candidates(
             .map(|(i, line)| (i + 1, line.to_string()))
             .collect();
 
+        let ctx = CandidateFileCtx {
+            repo_root: repo_root.as_deref(),
+            sidecar_path,
+            source_path: &source_path,
+            source_display: &sidecar.source,
+            source_content: &source_content,
+            all_lines: &all_lines,
+            source_markers: &source_markers,
+            source_lines: &source_lines,
+            item_filter,
+        };
+
         for (spec_index, spec) in sidecar.specs.iter().enumerate() {
             // @liyi:related approve-never-approves-requirements
             if let Spec::Item(item) = spec {
-                if let Some(filter) = item_filter
-                    && item.item != filter
+                if should_collect_unreviewed
+                    && let Some(candidate) = collect_unreviewed(&ctx, spec_index, item)
                 {
-                    continue;
+                    unreviewed_candidates.push(candidate);
                 }
 
-                let span_start = item.source_span[0].saturating_sub(1);
-                let span_end = item.source_span[1].min(all_lines.len());
-                let span_offset = span_start;
-                let span_len = span_end.saturating_sub(span_start);
+                if should_collect_stale
+                    && let Some(candidate) = collect_stale(&ctx, spec_index, item)
+                {
+                    stale_candidates.push(candidate);
+                }
 
-                // Determine if this item is effectively reviewed.
-                let has_source_intent = source_markers.iter().any(|m| {
-                    matches!(m, SourceMarker::Intent { line, .. }
-                        if *line >= item.source_span[0] && *line <= item.source_span[1])
-                });
-                let effectively_reviewed = item.reviewed || has_source_intent;
-
-                if !effectively_reviewed && collect_unreviewed {
-                    let prev_intent = lookup_prev_intent(
-                        repo_root.as_deref(),
-                        sidecar_path,
-                        &item.item,
-                        &item.tree_path,
-                    );
-
-                    unreviewed_candidates.push(ApprovalCandidate {
-                        sidecar_path: sidecar_path.clone(),
-                        source_display: sidecar.source.clone(),
+                if should_collect_req {
+                    req_candidates.extend(collect_req_changed(
+                        &ctx,
                         spec_index,
-                        item_name: item.item.clone(),
-                        intent: item.intent.clone(),
-                        source_span: item.source_span,
-                        source_lines: source_lines.clone(),
-                        span_offset,
-                        span_len,
-                        prev_intent,
-                        kind: CandidateKind::Unreviewed,
-                        prev_source: None,
-                        current_source: None,
-                        changed_requirement: None,
-                        old_requirement_text: None,
-                        new_requirement_text: None,
-                    });
-                }
-
-                if effectively_reviewed
-                    && collect_stale
-                    && let Some(stored_hash) = &item.source_hash
-                    && let Ok((current_hash, _)) = hash_span(&source_content, item.source_span)
-                    && *stored_hash != current_hash
-                {
-                    // Extract current and previous source at the span.
-                    let cur_src = all_lines[span_start..span_end.min(all_lines.len())].join("\n");
-                    let prev_src = lookup_prev_source(
-                        repo_root.as_deref(),
-                        &source_path,
-                        sidecar_path,
-                        &item.item,
-                        &item.tree_path,
-                        stored_hash,
-                        item.source_span,
-                    );
-
-                    stale_candidates.push(ApprovalCandidate {
-                        sidecar_path: sidecar_path.clone(),
-                        source_display: sidecar.source.clone(),
-                        spec_index,
-                        item_name: item.item.clone(),
-                        intent: item.intent.clone(),
-                        source_span: item.source_span,
-                        source_lines: source_lines.clone(),
-                        span_offset,
-                        span_len,
-                        prev_intent: None,
-                        kind: CandidateKind::StaleReviewed,
-                        prev_source: prev_src,
-                        current_source: Some(cur_src),
-                        changed_requirement: None,
-                        old_requirement_text: None,
-                        new_requirement_text: None,
-                    });
-                }
-
-                // ReqChanged: check related edges against global requirement registry.
-                if effectively_reviewed
-                    && collect_req
-                    && let Some(related) = &item.related
-                {
-                    for (req_name, stored_hash) in related {
-                        if let Some(stored_h) = stored_hash
-                            && let Some(req_info) = req_registry.get(req_name)
-                            && *stored_h != req_info.current_hash
-                        {
-                            let old_text = repo_root.as_deref().and_then(|root| {
-                                lookup_prev_requirement_text(root, req_info, stored_h, req_name)
-                            });
-
-                            req_candidates.push(ApprovalCandidate {
-                                sidecar_path: sidecar_path.clone(),
-                                source_display: sidecar.source.clone(),
-                                spec_index,
-                                item_name: item.item.clone(),
-                                intent: item.intent.clone(),
-                                source_span: item.source_span,
-                                source_lines: source_lines.clone(),
-                                span_offset,
-                                span_len,
-                                prev_intent: None,
-                                kind: CandidateKind::ReqChanged {
-                                    requirement: req_name.clone(),
-                                },
-                                prev_source: None,
-                                current_source: None,
-                                changed_requirement: Some(req_name.clone()),
-                                old_requirement_text: old_text,
-                                new_requirement_text: Some(req_info.current_text.clone()),
-                            });
-                        }
-                    }
+                        item,
+                        &req_registry,
+                    ));
                 }
             }
         }
