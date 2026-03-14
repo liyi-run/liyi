@@ -69,6 +69,12 @@ jobs:
       - name: Build release binary (cross)
         if: matrix.cross
         run: |
+          # aarch64-unknown-linux-musl produces static binaries by default, but
+          # loongarch64 and riscv64 musl targets require explicit flags
+          export CROSS_LOONGARCH64_UNKNOWN_LINUX_MUSL_LINKER=loongarch64-unknown-linux-musl-gcc
+          export CROSS_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER=riscv64-unknown-linux-musl-gcc
+          export CROSS_LOONGARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
+          export CROSS_RISCV64GC_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
           cross build --release -p liyi-cli --target ${{ matrix.target }}
           ls -alF target/${{ matrix.target }}/release/
 
@@ -78,7 +84,7 @@ jobs:
             strip target/${{ matrix.target }}/release/liyi
           else
             # cross-compiled binaries may not be strippable by host strip
-            ${{ matrix.arch }}-linux-musl-strip target/${{ matrix.target }}/release/liyi 2>/dev/null || true
+            ${{ matrix.arch }}-unknown-linux-musl-strip target/${{ matrix.target }}/release/liyi 2>/dev/null || true
           fi
 
       - name: Package binary

@@ -29,14 +29,14 @@
     },
     {
       "item": "jobs::build",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Build one release tarball per configured musl target and publish each tarball as an artifact for the downstream release job. The job must choose native or cross compilation per matrix entry, produce the `liyi` CLI binary from package `liyi-cli`, and package the binary together with licenses and README.",
       "source_span": [
         17,
-        96
+        102
       ],
       "tree_path": "key.jobs::key.build",
-      "source_hash": "sha256:71f4a0f6d299fbf42ee8ba8eb3da5a4c46a157deb550e9c7cced6e9f55e4e537",
+      "source_hash": "sha256:ec4f57c4102358a0f0d1aeca3c15cb616e07bd1899103060109b8b6d0eb848f7",
       "source_anchor": "  build:"
     },
     {
@@ -89,59 +89,59 @@
     },
     {
       "item": "build::build-cross-binary",
-      "reviewed": true,
-      "intent": "For cross targets, build package `liyi-cli` in release mode through `cross` for the selected target triple. The post-build directory listing must verify that the expected target release directory was populated before later packaging steps run.",
+      "reviewed": false,
+      "intent": "For cross targets, build package `liyi-cli` in release mode through `cross` for the selected target triple. Must set explicit linker and `crt-static` rustflags environment variables for loongarch64 and riscv64 musl targets, which do not produce static binaries by default. The post-build directory listing must verify that the expected target release directory was populated before later packaging steps run.",
       "source_span": [
-        69,
-        73
+        71,
+        79
       ],
       "tree_path": "key.jobs::key.build::key.steps[6]::key.run",
-      "source_hash": "sha256:f0516755de82a5ca1b26380cc0157a046918dc7a99005c5e2a8954ecfef9084d",
-      "source_anchor": "      - name: Build release binary (cross)"
+      "source_hash": "sha256:3c849bccad993cf25ddb56402d6ad2e135c8d203656e7ccfad9f509bc69b76b3",
+      "source_anchor": "        run: |"
     },
     {
       "item": "build::strip-binary",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Attempt to strip the produced `liyi` binary after compilation to reduce release artifact size. Native builds must use the host `strip`; cross builds must try the target-specific musl strip tool but tolerate its absence so packaging can still proceed.",
       "source_span": [
-        75,
-        82
+        82,
+        88
       ],
       "tree_path": "key.jobs::key.build::key.steps[7]::key.run",
-      "source_hash": "sha256:3e21374960929ccbaed4d37fc5b285dc0b4b77cf5c75bddfda431871b20374d1",
-      "source_anchor": "      - name: Strip binary"
+      "source_hash": "sha256:aa870f6b6cb901f17480e9d6936ef6d18a18b543d1083ba0a6987543e42308a0",
+      "source_anchor": "        run: |"
     },
     {
       "item": "build::package-binary",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Assemble the release tarball for the current target by copying the built `liyi` binary, the repository license files, and `README.md` into `dist/`, then creating `liyi-<tag>-<target>.tar.gz` in the workspace root. The tarball name must stay stable because the upload and release steps consume that exact filename pattern.",
       "source_span": [
-        84,
-        90
+        91,
+        96
       ],
       "tree_path": "key.jobs::key.build::key.steps[8]::key.run",
-      "source_hash": "sha256:3e07ffc6ef6e4854235d2668749ade3536be6eece60e8c0f592244f701e506d5",
-      "source_anchor": "      - name: Package binary"
+      "source_hash": "sha256:79785e2a57cf8c8df91bef86bb8d7804f12d5ae25e6a353a3267460caed0dd54",
+      "source_anchor": "        run: |"
     },
     {
       "item": "build::upload-artifact",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Upload the packaged tarball as a GitHub Actions artifact named `dist-artifact-<target>`. The artifact naming convention must remain consistent with the release job's download pattern so every target tarball is collected for publication.",
       "source_span": [
-        92,
-        96
+        100,
+        102
       ],
       "tree_path": "key.jobs::key.build::key.steps[9]::key.with",
-      "source_hash": "sha256:b53367295c966328cd1ed89adb45574227d5a1b28a929e9442f7fd7e86d994a5",
-      "source_anchor": "      - name: Upload artifact"
+      "source_hash": "sha256:a3cb5812e6a5f176e8d803c906ea3f0118fd29add0e6b1c29bd46728df82c3b9",
+      "source_anchor": "        with:"
     },
     {
       "item": "jobs::release",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Wait for all build-matrix artifacts, gather the packaged tarballs into one directory, and publish them on the GitHub release corresponding to the pushed tag. The job must not try to publish before the build job succeeds.",
       "source_span": [
-        98,
-        123
+        104,
+        129
       ],
       "tree_path": "key.jobs::key.release",
       "source_hash": "sha256:1c505f0c2dda23075de3f2b6265714e95dad26cf4b7840c3ce3fe070bc540eda",
@@ -149,23 +149,25 @@
     },
     {
       "item": "release::download-artifacts",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Download every target tarball artifact emitted by the build matrix into the local `artifacts/` directory. The `dist-artifact-*` pattern and `merge-multiple: true` setting must gather all per-target uploads into one flat directory so the release step can attach them with a single glob.",
       "source_span": [
-        105,
-        110
+        111,
+        116
       ],
+      "tree_path": "key.jobs::key.release::key.steps[1]::key.with",
       "source_hash": "sha256:5cb97468bcd3e1686454133b658486b7359407a75637bd46c408dc622c757ea8",
       "source_anchor": "      - name: Download all artifacts"
     },
     {
       "item": "release::create-release",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Create or update the GitHub release only when the event is a tag push, then attach every `artifacts/*.tar.gz` asset, keep the release non-draft and non-prerelease, generate release notes, and authenticate with `GITHUB_TOKEN`. The explicit `if` guard must prevent accidental release publication from any future non-tag trigger added to this workflow.",
       "source_span": [
-        114,
-        123
+        120,
+        129
       ],
+      "tree_path": "key.jobs::key.release::key.steps[3]::key.with",
       "source_hash": "sha256:216ea36572f4dc28e5641bc4cc64b64e769140ce0517f9cd84a7483b914891c4",
       "source_anchor": "      - name: Create Release"
     }
