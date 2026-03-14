@@ -202,20 +202,27 @@ subsequent `--fix` pass re-derives them from source.
 
 **`related`** (two-part merge):
 - *Edge keys:* Discard both sides' key sets. `--fix` re-discovers them from
-  `@liyi:related` markers in the post-merge source. Missing keys are added
-  with `null` hashes (triggering the normal `--fix` hash-fill path).
-- *Stored hashes:* For edges that exist on both sides, apply three-way merge
-  on the hash value per-key:
+  `@liyi:related` markers in the post-merge source. For each re-discovered
+  key, look up whether either side had a stored hash for that key (see
+  below). Only keys with no prior evidence on either side get `null`.
+- *Stored hashes:* For each edge key surviving in the post-merge source,
+  resolve the hash by looking at what ours and theirs carried:
   - Both sides same hash → keep it.
-  - One side changed the hash (e.g., ran `liyi approve` on that branch) →
-    take the changed side.
-  - Both sides changed to different hashes → take the *more recent* hash
-    (i.e., the one matching the requirement's current `source_hash`). If
-    neither matches current, keep either and let `ReqChanged` fire — the
-    human must approve.
-  - One side has `null`, other has a hash → keep the hash (a `null` means
-    the edge was newly added and not yet reviewed; a hash means it was
-    reviewed at some point).
+  - One side changed the hash (e.g., ran `liyi approve` on that branch),
+    other side unchanged from base → take the changed side.
+  - Both sides changed to different hashes → keep either (do not pick
+    the one matching current requirement text — that would manufacture
+    review evidence for a revision the human may not have reviewed). Let
+    `ReqChanged` fire on whichever hash survives; the human must approve.
+  - Only one side has the edge (the other side lacked it entirely) →
+    keep the surviving side's hash. This preserves review provenance for
+    edges that were reviewed on one branch. Do not replace with `null` or
+    the current requirement hash — that would silently rebase the
+    provenance.
+  - Neither side has a hash (both `null`, or edge is genuinely new —
+    not present on either side before merge) → `null`. This is the only
+    case where `--fix` fills from the current requirement hash, because
+    there is no prior review evidence to lose.
 
   This preserves review evidence while ensuring that a merge cannot silently
   clear a `ReqChanged` diagnostic that should require human judgment.
