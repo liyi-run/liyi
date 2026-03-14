@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Model the top-level .liyi.jsonc file with version, source path, and a list of specs. Enforce deny_unknown_fields to reject extraneous keys during deserialization.",
       "source_span": [
-        7,
-        11
+        9,
+        13
       ],
       "tree_path": "struct.SidecarFile",
       "source_hash": "sha256:5092aa1dcd60cb05a77ab22347886da5abc71c66ddafe8456ec9196cd3082beb",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Discriminated union of ItemSpec and RequirementSpec, using untagged serde deserialization so the variant is inferred from the presence of 'item' vs 'requirement' keys.",
       "source_span": [
-        16,
-        19
+        18,
+        21
       ],
       "tree_path": "enum.Spec",
       "source_hash": "sha256:08fc4ad94021a75631e7a296aad438888725e367f52162f17d52f18ff40ed843",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Model a code-item spec entry with item name, intent string, source_span, and optional fields (reviewed, tree_path, source_hash, source_anchor, confidence, related, _hints). Enforce deny_unknown_fields and skip serializing None optionals. _hints holds transient inference aids from liyi init, stripped by check --fix.",
       "source_span": [
-        24,
-        54
+        26,
+        56
       ],
       "tree_path": "struct.ItemSpec",
       "source_hash": "sha256:80f8873cc2af239c9aaef42578152c0c53216a348b6abfd3fa6f8b018d583c48",
@@ -47,8 +47,8 @@
       "reviewed": true,
       "intent": "Model a requirement spec entry with requirement name, source_span, and optional tree_path, source_hash, source_anchor. Enforce deny_unknown_fields and skip serializing None optionals.",
       "source_span": [
-        59,
-        72
+        61,
+        74
       ],
       "tree_path": "struct.RequirementSpec",
       "source_hash": "sha256:a0024b3fdff62d6f9ab32e1af9a50175ee1ab1f79e26d0dc13557a55df93b516",
@@ -62,8 +62,8 @@
       "reviewed": true,
       "intent": "Remove // line comments and /* block comments from JSONC input while respecting JSON string boundaries and backslash escapes. Preserve newlines from line comments so downstream line numbers remain meaningful.",
       "source_span": [
-        76,
-        126
+        78,
+        128
       ],
       "tree_path": "fn.strip_jsonc_comments",
       "source_hash": "sha256:720e75651949f21cbd2ca06de7cf472641e28d9bfc508b5b06519a00f7ad6a93",
@@ -74,8 +74,8 @@
       "reviewed": true,
       "intent": "Parse a .liyi.jsonc string by stripping JSONC comments then deserializing into a SidecarFile. Return a human-readable error on parse failure.",
       "source_span": [
-        129,
-        133
+        131,
+        135
       ],
       "tree_path": "fn.parse_sidecar",
       "source_hash": "sha256:8eb01032396cba4b70e0f3e6accf0eb453ee23ccad3a1e7fe0ef6a52bafc0a7c",
@@ -86,8 +86,8 @@
       "reviewed": true,
       "intent": "Serialize a SidecarFile to pretty-printed JSON prefixed with a '// liyi v0.1 spec file' header comment and a trailing newline.",
       "source_span": [
-        136,
-        140
+        138,
+        142
       ],
       "tree_path": "fn.write_sidecar",
       "source_hash": "sha256:e12aef5043da065fc4613120322b9454cb1f85d3324c5d00e769700942d06ae9",
@@ -95,14 +95,14 @@
     },
     {
       "item": "validate_sidecar",
-      "reviewed": true,
-      "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches sha256:<hex> pattern, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
+      "reviewed": false,
+      "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches the shared sha256:<hex> validator, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
-        143,
+        145,
         210
       ],
       "tree_path": "fn.validate_sidecar",
-      "source_hash": "sha256:68a500fc50f88a363118faaf0ddb9d5700d95284dfa8b94dff7c8938ac3c6308",
+      "source_hash": "sha256:97e862e0699f7aae46fc45fb7a94c37c8e0318c5a23429b915628d504c0f1b4f",
       "source_anchor": "pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {"
     }
   ]

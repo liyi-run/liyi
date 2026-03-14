@@ -1,5 +1,9 @@
 use sha2::{Digest, Sha256};
 use std::fmt;
+use std::sync::LazyLock;
+
+static HASH_RE: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap());
 
 /// Errors produced when a source span is invalid.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,6 +31,11 @@ impl fmt::Display for SpanError {
 }
 
 impl std::error::Error for SpanError {}
+
+// @liyi:trivial
+pub fn is_valid_hash(value: &str) -> bool {
+    HASH_RE.is_match(value)
+}
 
 /// Hash the source lines in `span` and return `("sha256:{hex}", anchor)`.
 ///
@@ -102,5 +111,12 @@ mod tests {
     #[test]
     fn error_empty() {
         assert_eq!(hash_span("a\n", [0, 1]), Err(SpanError::Empty));
+    }
+
+    #[test]
+    fn validates_hash_format() {
+        assert!(is_valid_hash("sha256:deadbeef"));
+        assert!(!is_valid_hash("sha256:DEADBEEF"));
+        assert!(!is_valid_hash("deadbeef"));
     }
 }

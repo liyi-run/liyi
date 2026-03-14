@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+use crate::hashing::is_valid_hash;
+
 /// Top-level `.liyi.jsonc` file representation
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -150,8 +152,6 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
         ));
     }
 
-    let hash_re = regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap();
-
     for (idx, spec) in sidecar.specs.iter().enumerate() {
         match spec {
             Spec::Item(item) => {
@@ -166,7 +166,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                     ));
                 }
                 if let Some(ref h) = item.source_hash
-                    && !hash_re.is_match(h)
+                    && !is_valid_hash(h)
                 {
                     errors.push(format!(
                         "{label}: source_hash \"{h}\" does not match sha256:<hex>"
@@ -175,7 +175,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                 if let Some(ref related) = item.related {
                     for (name, hash_opt) in related {
                         if let Some(h) = hash_opt
-                            && !hash_re.is_match(h)
+                            && !is_valid_hash(h)
                         {
                             errors.push(format!(
                                 "{label}: related[\"{name}\"] hash \"{h}\" does not match sha256:<hex>"
@@ -196,7 +196,7 @@ pub fn validate_sidecar(sidecar: &SidecarFile) -> Vec<String> {
                     ));
                 }
                 if let Some(ref h) = req.source_hash
-                    && !hash_re.is_match(h)
+                    && !is_valid_hash(h)
                 {
                     errors.push(format!(
                         "{label}: source_hash \"{h}\" does not match sha256:<hex>"

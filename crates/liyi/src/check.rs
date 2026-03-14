@@ -6,7 +6,7 @@ use crate::diagnostics::{
     CheckFlags, Diagnostic, DiagnosticKind, LiyiExitCode, Severity, compute_exit_code,
 };
 use crate::discovery::{SidecarEntry, discover};
-use crate::hashing::{SpanError, hash_span};
+use crate::hashing::{SpanError, hash_span, is_valid_hash};
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
@@ -508,12 +508,11 @@ fn check_sidecar(
     }
 
     // 2b. Validate source_hash format on all specs
-    let hash_re = regex::Regex::new(r"^sha256:[0-9a-f]+$").unwrap();
     for spec in &sidecar.specs {
         match spec {
             Spec::Item(item) => {
                 if let Some(ref h) = item.source_hash
-                    && !hash_re.is_match(h)
+                    && !is_valid_hash(h)
                 {
                     diagnostics.push(Diagnostic {
                         file: sidecar_path.clone(),
@@ -532,7 +531,7 @@ fn check_sidecar(
                 if let Some(ref related) = item.related {
                     for (name, hash_opt) in related {
                         if let Some(h) = hash_opt
-                            && !hash_re.is_match(h)
+                            && !is_valid_hash(h)
                         {
                             diagnostics.push(Diagnostic {
                                 file: sidecar_path.clone(),
@@ -555,7 +554,7 @@ fn check_sidecar(
             }
             Spec::Requirement(req) => {
                 if let Some(ref h) = req.source_hash
-                    && !hash_re.is_match(h)
+                    && !is_valid_hash(h)
                 {
                     diagnostics.push(Diagnostic {
                         file: sidecar_path.clone(),
