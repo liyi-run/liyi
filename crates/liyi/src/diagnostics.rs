@@ -50,6 +50,8 @@ pub struct Diagnostic {
     pub annotation_line: Option<usize>,
     /// Full text of a requirement block, for `--prompt` output.
     pub requirement_text: Option<String>,
+    /// Intent text from the sidecar spec, for CI annotation output.
+    pub intent: Option<String>,
 }
 
 impl Diagnostic {
@@ -265,11 +267,20 @@ pub fn format_github_actions(d: &Diagnostic, root: &std::path::Path) -> String {
 
     // Escape special characters per GitHub Actions workflow command spec:
     // https://github.com/actions/toolkit/blob/main/packages/core/src/command.ts
-    let message = d
-        .message
-        .replace('%', "%25")
-        .replace('\r', "%0D")
-        .replace('\n', "%0A");
+    let escape = |s: &str| {
+        s.replace('%', "%25")
+            .replace('\r', "%0D")
+            .replace('\n', "%0A")
+    };
+    let message = escape(&d.message);
+
+    // Append intent text to the message when available and non-sentinel.
+    let message = match &d.intent {
+        Some(intent) if intent != "=doc" && intent != "=trivial" => {
+            format!("{message}%0AIntent: {}", escape(intent))
+        }
+        _ => message,
+    };
 
     let title = if d.item_or_req.is_empty() {
         "立意".to_string()

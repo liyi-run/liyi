@@ -29,14 +29,14 @@
     },
     {
       "item": "Diagnostic",
-      "reviewed": true,
-      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, an optional fix hint, a fixed flag indicating whether --fix resolved this diagnostic, an optional span_start for file:line display, an optional annotation_line for --prompt output, and an optional requirement_text carrying the full requirement block text.",
+      "reviewed": false,
+      "intent": "Bundle a single diagnostic report with the file path, item or requirement name, diagnostic kind, severity, a human-readable message, an optional fix hint, a fixed flag indicating whether --fix resolved this diagnostic, an optional span_start for file:line display, an optional annotation_line for --prompt output, an optional requirement_text carrying the full requirement block text, and an optional intent carrying the sidecar intent text for CI annotation output.",
       "source_span": [
         37,
-        53
+        55
       ],
       "tree_path": "struct.Diagnostic",
-      "source_hash": "sha256:e322921d0a64ea81ce561fda31905e4fa31926f770d921448274aef5835d970c",
+      "source_hash": "sha256:f729285bd25967eae5b2e8e38683beda296a493847af86c45aff9d69673b85fb",
       "source_anchor": "pub struct Diagnostic {"
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Format a diagnostic for terminal output. display_with_root shows a repo-relative file path with optional :line suffix (from span_start or annotation_line); for fixed diagnostics uses '✓ fixed' icon and suppresses fix hints, otherwise selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file:line: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
-        55,
-        97
+        57,
+        99
       ],
       "tree_path": "impl.Diagnostic",
       "source_hash": "sha256:77b03739b7ba64ee8b743a75eadbd3edc66aac342a86c0a1818453d16a600b36",
@@ -56,8 +56,8 @@
       "reviewed": true,
       "intent": "Hold the four boolean policy flags (fail_on_stale, fail_on_unreviewed, fail_on_req_changed, fail_on_untracked) that control which diagnostic kinds escalate the exit code to CheckFailure.",
       "source_span": [
-        122,
-        127
+        124,
+        129
       ],
       "tree_path": "struct.CheckFlags",
       "source_hash": "sha256:7db1a400401611d2d83f2c98a9258920cd81a040e2237804b1a46e5530411fa9",
@@ -68,8 +68,8 @@
       "reviewed": true,
       "intent": "Define the three possible exit codes: Clean (0) for no actionable findings, CheckFailure (1) for policy violations, InternalError (2) for parse or version errors.",
       "source_span": [
-        133,
-        137
+        135,
+        139
       ],
       "tree_path": "enum.LiyiExitCode",
       "source_hash": "sha256:065e327cb7a385b508af79995f55c2ab18bb0fcb3aeda9c5cf9d2cd0368401c5",
@@ -83,8 +83,8 @@
       "reviewed": true,
       "intent": "Scan diagnostics and return InternalError immediately if any ParseError or UnknownVersion is found. Skip diagnostics with fixed=true. Return CheckFailure if any flagged policy violation (stale, unreviewed, req-changed, untracked) or error-severity diagnostic (MalformedHash, UnknownRequirement, RequirementCycle, SpanPastEof, InvalidSpan, OrphanedSource, DuplicateEntry, MissingRelatedEdge, ConflictingTriviality) is present per the CheckFlags, otherwise Clean.",
       "source_span": [
-        140,
-        178
+        142,
+        180
       ],
       "tree_path": "fn.compute_exit_code",
       "source_hash": "sha256:4a2e15f9b73a85306d2b0b8e1e0f565bb1a114e24d21a2b02e84012aac384d0b",
@@ -96,13 +96,13 @@
     {
       "item": "format_github_actions",
       "reviewed": false,
-      "intent": "Format a single diagnostic as a GitHub Actions workflow command (::notice, ::warning, or ::error) with file, line, and title parameters. Maps severity to annotation level, strips the repo root from file paths, escapes %, \\r, \\n per the Actions toolkit spec, and uses the item name with a severity icon as the annotation title.",
+      "intent": "Format a single diagnostic as a GitHub Actions workflow command (::notice, ::warning, or ::error) with file, line, and title parameters. Maps severity to annotation level, strips the repo root from file paths, escapes %, \\r, \\n per the Actions toolkit spec, uses the item name with a severity icon as the annotation title, and appends the intent text to the message body when present and non-sentinel (not =doc or =trivial).",
       "source_span": [
-        257,
-        294
+        259,
+        305
       ],
       "tree_path": "fn.format_github_actions",
-      "source_hash": "sha256:478ebfaa7a3169cca907760fbf6b3fd5fb5a42e927165bba88156f935943d779",
+      "source_hash": "sha256:4b40f8d57fb98a81e056599bccfca5433e9329071c6f3b39d9b521075a191533",
       "source_anchor": "pub fn format_github_actions(d: &Diagnostic, root: &std::path::Path) -> String {"
     }
   ]

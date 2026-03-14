@@ -65,6 +65,7 @@ pub fn run_check(
             span_start: None,
             annotation_line: None,
             requirement_text: None,
+            intent: None,
         });
     }
 
@@ -103,6 +104,7 @@ pub fn run_check(
                         span_start: None,
                         annotation_line: None,
                         requirement_text: None,
+                        intent: None,
                     });
                 } else {
                     requirements.insert(
@@ -279,6 +281,7 @@ pub fn run_check(
                 span_start: None,
                 annotation_line: Some(rec.line),
                 requirement_text: req_text,
+                intent: None,
             });
         }
     }
@@ -301,6 +304,7 @@ pub fn run_check(
                 span_start: None,
                 annotation_line: Some(rec.line),
                 requirement_text: None,
+                intent: None,
             });
         }
     }
@@ -327,6 +331,7 @@ pub fn run_check(
             span_start: None,
             annotation_line: None,
             requirement_text: None,
+            intent: None,
         });
     }
 
@@ -381,6 +386,7 @@ fn check_sidecar(
                 span_start: None,
                 annotation_line: None,
                 requirement_text: None,
+                intent: None,
             });
             return;
         }
@@ -400,6 +406,7 @@ fn check_sidecar(
                 span_start: None,
                 annotation_line: None,
                 requirement_text: None,
+                intent: None,
             });
             return;
         }
@@ -420,6 +427,7 @@ fn check_sidecar(
             span_start: None,
             annotation_line: None,
             requirement_text: None,
+            intent: None,
         });
         return;
     }
@@ -443,6 +451,7 @@ fn check_sidecar(
                         span_start: Some(item.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
+                        intent: Some(item.intent.clone()),
                     });
                 }
                 if let Some(ref related) = item.related {
@@ -463,6 +472,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         }
                     }
@@ -483,6 +493,7 @@ fn check_sidecar(
                         span_start: Some(req.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
+                        intent: None,
                     });
                 }
             }
@@ -502,6 +513,7 @@ fn check_sidecar(
             span_start: None,
             annotation_line: None,
             requirement_text: None,
+            intent: None,
         });
         return;
     }
@@ -540,6 +552,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         } else if item.source_hash.is_none() {
                             // No hash yet — try tree_path recovery
@@ -589,6 +602,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         } else {
                             // Hash mismatch — try tree_path first, then shift
@@ -660,6 +674,7 @@ fn check_sidecar(
                                     span_start: Some(item.source_span[0]),
                                     annotation_line: None,
                                     requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                     });
                                 } else if let Some(l) = lang
                                     && let Some(sibling) = resolve_tree_path_sibling_scan(
@@ -700,6 +715,7 @@ fn check_sidecar(
                                         span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                     });
                                 } else {
                                     // For reviewed specs (sidecar or
@@ -754,6 +770,7 @@ fn check_sidecar(
                                             span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
+                                            intent: Some(item.intent.clone()),
                                         });
                                     } else {
                                         let msg = if new_span != old_span {
@@ -775,6 +792,7 @@ fn check_sidecar(
                                             span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
+                                            intent: Some(item.intent.clone()),
                                         });
                                     }
                                 }
@@ -817,6 +835,7 @@ fn check_sidecar(
                                     span_start: Some(item.source_span[0]),
                                     annotation_line: None,
                                     requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                 });
                             } else {
                                 // Fallback to shift heuristic
@@ -859,6 +878,7 @@ fn check_sidecar(
                                             span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
+                                            intent: Some(item.intent.clone()),
                                         });
                                     }
                                     ShiftResult::Stale => {
@@ -880,6 +900,7 @@ fn check_sidecar(
                                             span_start: Some(item.source_span[0]),
                                             annotation_line: None,
                                             requirement_text: None,
+                                            intent: Some(item.intent.clone()),
                                         });
                                     }
                                 }
@@ -954,6 +975,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                 });
                             } else {
                                 // Content also changed — relocate span.
@@ -995,6 +1017,7 @@ fn check_sidecar(
                                         span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                     });
                                 } else {
                                     diagnostics.push(Diagnostic {
@@ -1011,6 +1034,7 @@ fn check_sidecar(
                                         span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                     });
                                 }
                             }
@@ -1034,6 +1058,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         }
                     }
@@ -1054,6 +1079,7 @@ fn check_sidecar(
                             span_start: None,
                             annotation_line: None,
                             requirement_text: None,
+                            intent: Some(item.intent.clone()),
                         });
                     }
                 }
@@ -1079,6 +1105,7 @@ fn check_sidecar(
                         span_start: Some(item.source_span[0]),
                         annotation_line: None,
                         requirement_text: None,
+                        intent: Some(item.intent.clone()),
                     });
                 }
 
@@ -1101,6 +1128,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         }
                         SourceMarker::Ignore { line, .. }
@@ -1117,6 +1145,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: Some(item.intent.clone()),
                             });
                         }
                         _ => {}
@@ -1142,6 +1171,7 @@ fn check_sidecar(
                             span_start: Some(item.source_span[0]),
                             annotation_line: None,
                             requirement_text: None,
+                        intent: Some(item.intent.clone()),
                         });
                     } else {
                         diagnostics.push(Diagnostic {
@@ -1155,6 +1185,7 @@ fn check_sidecar(
                             span_start: Some(item.source_span[0]),
                             annotation_line: None,
                             requirement_text: None,
+                            intent: Some(item.intent.clone()),
                         });
                     }
                 }
@@ -1179,6 +1210,7 @@ fn check_sidecar(
                                     span_start: Some(item.source_span[0]),
                                     annotation_line: None,
                                     requirement_text: None,
+                                    intent: Some(item.intent.clone()),
                                 });
                             }
                             Some(rec) => {
@@ -1210,6 +1242,7 @@ fn check_sidecar(
                                         span_start: Some(item.source_span[0]),
                                         annotation_line: None,
                                         requirement_text: None,
+                                        intent: Some(item.intent.clone()),
                                     });
                                 }
                             }
@@ -1249,6 +1282,7 @@ fn check_sidecar(
                                 span_start: Some(item.source_span[0]),
                                 annotation_line: Some(*line),
                                 requirement_text: None,
+                        intent: Some(item.intent.clone()),
                                 });
                             }
                         }
@@ -1298,6 +1332,7 @@ fn check_sidecar(
                                 span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: None,
                             });
                         } else {
                             if fix {
@@ -1316,6 +1351,7 @@ fn check_sidecar(
                                 span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: None,
                             });
                         }
                     }
@@ -1382,6 +1418,7 @@ fn check_sidecar(
                                 span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                        intent: None,
                                 });
                             } else {
                                 if fix {
@@ -1409,6 +1446,7 @@ fn check_sidecar(
                                 span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                        intent: None,
                                 });
                             }
                         } else {
@@ -1431,6 +1469,7 @@ fn check_sidecar(
                                 span_start: Some(req.source_span[0]),
                                 annotation_line: None,
                                 requirement_text: None,
+                                intent: None,
                             });
                         }
                     }
@@ -1451,6 +1490,7 @@ fn check_sidecar(
                             span_start: None,
                             annotation_line: None,
                             requirement_text: None,
+                            intent: None,
                         });
                     }
                 }
