@@ -9,6 +9,37 @@
 //! locate items by structural identity, making span recovery deterministic
 //! across formatting changes, import additions, and line reflows.
 
+#[allow(unused_macros)]
+macro_rules! declare_language {
+    (
+        $(#[$meta:meta])*
+        $vis:vis static $name:ident {
+            ts_language: $ts_language:expr,
+            extensions: [$($ext:expr),* $(,)?],
+            kind_map: [$(($short:expr, $kind:expr)),* $(,)?],
+            name_field: $name_field:expr,
+            name_overrides: [$(($override_kind:expr, $override_field:expr)),* $(,)?],
+            body_fields: [$($body_field:expr),* $(,)?],
+            custom_name: $custom_name:expr,
+            doc_comment_detector: $doc_comment_detector:expr,
+            transparent_kinds: [$($transparent:expr),* $(,)?],
+        }
+    ) => {
+        $(#[$meta])*
+        $vis static $name: super::LanguageConfig = super::LanguageConfig {
+            ts_language: $ts_language,
+            extensions: &[$($ext),*],
+            kind_map: &[$(($short, $kind)),*],
+            name_field: $name_field,
+            name_overrides: &[$(($override_kind, $override_field)),*],
+            body_fields: &[$($body_field),*],
+            custom_name: $custom_name,
+            doc_comment_detector: $doc_comment_detector,
+            transparent_kinds: &[$($transparent),*],
+        };
+    };
+}
+
 pub mod inject;
 mod lang_bash;
 mod lang_c;
