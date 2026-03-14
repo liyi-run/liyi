@@ -22,11 +22,11 @@ This project enforces strict separation and labeling of human-produced and AI-pr
 All AI agents contributing to this project must comply with these requirements; the humans directing these agents must understand and help the AI agents comply.
 
 - Ideally, the content of each Git commit in this project should be either entirely written by a human or entirely written by an AI.
-  - If you intend to modify part of an AIGC output and submit it as a single commit, please note: this will cause the entire commit content to be considered your own creation.
+    - If you intend to modify part of an AIGC output and submit it as a single commit, please note: this will cause the entire commit content to be considered your own creation.
 - All commit content must be reviewed by a human submitter.
-  - The human must append a `Signed-off-by` tag i.e. DCO to the trailer section of the commit message.
-  - Under current legal understanding and practice, the human who signs off on a commit may be considered responsible for the entire content of that commit.
-  - As a natural person, if you cannot fully understand and accept certain content (i.e., you would not have produced it yourself), then you are advised not to submit it.
+    - The human must append a `Signed-off-by` tag i.e. DCO to the trailer section of the commit message.
+    - Under current legal understanding and practice, the human who signs off on a commit may be considered responsible for the entire content of that commit.
+    - As a natural person, if you cannot fully understand and accept certain content (i.e., you would not have produced it yourself), then you are advised not to submit it.
 - If a human deems it necessary to modify AI-generated content, given the legal implications described above, the AI should first complete its commit, and then the human can make their modifications in a separate commit.
 - If a human considers the vast majority of an AIGC output to need reworking, the human may either let the AI complete its commit first or discard the current round of AIGC entirely.
 
@@ -67,7 +67,7 @@ AI agents should record the original prompt that triggered the work at the end o
 
 - If multiple rounds of user interaction are involved, output each round's prompt as a separate paragraph.
 - The paragraph should be written in the same natural language as the rest of the commit message.
-  - If the user's prompt was in a different language, do not translate it.
+    - If the user's prompt was in a different language, do not translate it.
 - If the original prompt contains the user's sensitive information, alert the user and/or redact it: replace sensitive content with `[redacted]` or `[略]`.
 
 For English commit messages, use the following format:

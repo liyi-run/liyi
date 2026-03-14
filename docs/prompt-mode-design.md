@@ -2,8 +2,8 @@
 
 # `--prompt` Mode Design
 
-**Status:** Implemented  
-**Target:** v0.1.x  
+**Status:** Implemented
+**Target:** v0.1.x
 **Design authority:** `docs/liyi-design.md` v8.10
 
 **Scope note (v8.10):** This document covers the initial `--prompt` scope: coverage gaps (Untracked, MissingRelatedEdge, ReqNoRelated). The cognitive load inversion principle (design doc v8.10, *The cognitive load inversion: tool-guided agents*) calls for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. The generalized `--prompt` design is deferred to a future revision of this document.
@@ -257,10 +257,10 @@ Other diagnostics (Stale, Shifted, etc.) are not coverage gaps and don't appear 
 ## Testing Strategy
 
 1. **Golden-file fixtures:**
-   - `prompt_output/mixed_gaps/` — fixture with all three gap types present.
-   - `prompt_output/clean/` — fixture with no gaps (empty `items` array).
-   - `prompt_output/errors_only/` — fixture with `ParseError` or `OrphanedSource` but no coverage gaps (verifies `exit_code: 2` with empty `items`).
-   - `prompt_output/multi_file/` — gaps spread across multiple files.
+    - `prompt_output/mixed_gaps/` — fixture with all three gap types present.
+    - `prompt_output/clean/` — fixture with no gaps (empty `items` array).
+    - `prompt_output/errors_only/` — fixture with `ParseError` or `OrphanedSource` but no coverage gaps (verifies `exit_code: 2` with empty `items`).
+    - `prompt_output/multi_file/` — gaps spread across multiple files.
 2. **Unit tests:** Verify instruction generation for each of the three gap types.
 3. **Integration test:** Parse `--prompt` output and validate against `schema/prompt.schema.json`.
 4. **Instruction accuracy test:** For each instruction template, apply the described mutation and verify that a follow-up `liyi check` no longer reports the gap.
