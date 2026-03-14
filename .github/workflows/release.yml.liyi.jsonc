@@ -5,8 +5,8 @@
   "specs": [
     {
       "item": "on",
-      "reviewed": true,
-      "intent": "=trivial",
+      "reviewed": false,
+      "intent": "Trigger this workflow only for pushed Git tags. Ordinary branch pushes and pull requests must not run the release pipeline or publish release assets.",
       "source_span": [
         5,
         8
@@ -17,8 +17,8 @@
     },
     {
       "item": "permissions",
-      "reviewed": true,
-      "intent": "Grant the workflow GITHUB_TOKEN write access to repository contents so the release job can create and publish a GitHub release. Must not request broader repository permissions than contents: write.",
+      "reviewed": false,
+      "intent": "Grant the workflow token write access to repository contents so the release job can create or update a GitHub release and attach assets. Must not request broader repository permissions than contents: write.",
       "source_span": [
         10,
         11
@@ -30,7 +30,7 @@
     {
       "item": "jobs::build",
       "reviewed": false,
-      "intent": "Build one statically linked release tarball per configured musl target. Must install the appropriate Rust target and build tool, use native cargo for non-cross targets and cross for cross targets, strip the produced binary when possible, package the binary together with the license files and README, and upload a per-target artifact for the release job.",
+      "intent": "Build one release tarball per configured musl target and publish each tarball as an artifact for the downstream release job. The job must choose native or cross compilation per matrix entry, produce the `liyi` CLI binary from package `liyi-cli`, and package the binary together with licenses and README.",
       "source_span": [
         17,
         96
@@ -40,9 +40,105 @@
       "source_anchor": "  build:"
     },
     {
+      "item": "build::strategy",
+      "reviewed": false,
+      "intent": "Enumerate the supported musl release targets and annotate each target with the architecture name and whether it requires cross compilation. The `cross` flag and `arch` value must stay aligned with the later install, build, and strip steps.",
+      "source_span": [
+        20,
+        34
+      ],
+      "tree_path": "key.jobs::key.build::key.strategy",
+      "source_hash": "sha256:e23b623cd0cbd9ee9e51e3eef73fa8b0a33f988486d8d89c1541032def51daab",
+      "source_anchor": "    strategy:"
+    },
+    {
+      "item": "build::install-native-musl-tools",
+      "reviewed": false,
+      "intent": "For native builds only, install the host musl toolchain packages before compilation so cargo can link the static musl binary without cross. This step must not run for matrix entries that use cross.",
+      "source_span": [
+        44,
+        48
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:53d3f3776031cd2a1de9c69d47a04405a586d455b4816654453563aee662c0b4",
+      "source_anchor": "      - name: Install native musl tools"
+    },
+    {
+      "item": "build::install-cross",
+      "reviewed": false,
+      "intent": "For cross-compiled targets only, install `cross` from the upstream Git repository instead of the pinned marketplace installer because the packaged action version is too old for the loongarch64 and riscv64 musl targets used in this matrix. This step must not run for native builds.",
+      "source_span": [
+        50,
+        56
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:f8258de5e2a775f28b6837a034c23142c802e840a645aae82feea016592e14c9",
+      "source_anchor": "      - name: Install cross"
+    },
+    {
+      "item": "build::build-native-binary",
+      "reviewed": false,
+      "intent": "For non-cross targets, build package `liyi-cli` in release mode for the selected target with `crt-static` enabled so the produced `liyi` binary is statically linked. The post-build directory listing acts as a sanity check that the expected release artifact exists at `target/<target>/release/`.",
+      "source_span": [
+        62,
+        67
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:ad6da2aaa86f294126892da476be8e7255abd010ab6a7f1d3e1ac696cbab923e",
+      "source_anchor": "      - name: Build release binary (native)"
+    },
+    {
+      "item": "build::build-cross-binary",
+      "reviewed": false,
+      "intent": "For cross targets, build package `liyi-cli` in release mode through `cross` for the selected target triple. The post-build directory listing must verify that the expected target release directory was populated before later packaging steps run.",
+      "source_span": [
+        69,
+        73
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:f0516755de82a5ca1b26380cc0157a046918dc7a99005c5e2a8954ecfef9084d",
+      "source_anchor": "      - name: Build release binary (cross)"
+    },
+    {
+      "item": "build::strip-binary",
+      "reviewed": false,
+      "intent": "Attempt to strip the produced `liyi` binary after compilation to reduce release artifact size. Native builds must use the host `strip`; cross builds must try the target-specific musl strip tool but tolerate its absence so packaging can still proceed.",
+      "source_span": [
+        75,
+        82
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:3e21374960929ccbaed4d37fc5b285dc0b4b77cf5c75bddfda431871b20374d1",
+      "source_anchor": "      - name: Strip binary"
+    },
+    {
+      "item": "build::package-binary",
+      "reviewed": false,
+      "intent": "Assemble the release tarball for the current target by copying the built `liyi` binary, the repository license files, and `README.md` into `dist/`, then creating `liyi-<tag>-<target>.tar.gz` in the workspace root. The tarball name must stay stable because the upload and release steps consume that exact filename pattern.",
+      "source_span": [
+        84,
+        90
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:3e07ffc6ef6e4854235d2668749ade3536be6eece60e8c0f592244f701e506d5",
+      "source_anchor": "      - name: Package binary"
+    },
+    {
+      "item": "build::upload-artifact",
+      "reviewed": false,
+      "intent": "Upload the packaged tarball as a GitHub Actions artifact named `dist-artifact-<target>`. The artifact naming convention must remain consistent with the release job's download pattern so every target tarball is collected for publication.",
+      "source_span": [
+        92,
+        96
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:b53367295c966328cd1ed89adb45574227d5a1b28a929e9442f7fd7e86d994a5",
+      "source_anchor": "      - name: Upload artifact"
+    },
+    {
       "item": "jobs::release",
       "reviewed": false,
-      "intent": "After all build-matrix artifacts are available, download every packaged tarball and publish them on the GitHub release for the pushed tag. Must attach all artifacts, generate release notes, and authenticate with the repository GITHUB_TOKEN.",
+      "intent": "Wait for all build-matrix artifacts, gather the packaged tarballs into one directory, and publish them on the GitHub release corresponding to the pushed tag. The job must not try to publish before the build job succeeds.",
       "source_span": [
         98,
         123
@@ -50,6 +146,30 @@
       "tree_path": "key.jobs::key.release",
       "source_hash": "sha256:1c505f0c2dda23075de3f2b6265714e95dad26cf4b7840c3ce3fe070bc540eda",
       "source_anchor": "  release:"
+    },
+    {
+      "item": "release::download-artifacts",
+      "reviewed": false,
+      "intent": "Download every target tarball artifact emitted by the build matrix into the local `artifacts/` directory. The `dist-artifact-*` pattern and `merge-multiple: true` setting must gather all per-target uploads into one flat directory so the release step can attach them with a single glob.",
+      "source_span": [
+        105,
+        110
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:5cb97468bcd3e1686454133b658486b7359407a75637bd46c408dc622c757ea8",
+      "source_anchor": "      - name: Download all artifacts"
+    },
+    {
+      "item": "release::create-release",
+      "reviewed": false,
+      "intent": "Create or update the GitHub release only when the event is a tag push, then attach every `artifacts/*.tar.gz` asset, keep the release non-draft and non-prerelease, generate release notes, and authenticate with `GITHUB_TOKEN`. The explicit `if` guard must prevent accidental release publication from any future non-tag trigger added to this workflow.",
+      "source_span": [
+        114,
+        123
+      ],
+      "tree_path": "",
+      "source_hash": "sha256:216ea36572f4dc28e5641bc4cc64b64e769140ce0517f9cd84a7483b914891c4",
+      "source_anchor": "      - name: Create Release"
     }
   ]
 }
