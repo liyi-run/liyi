@@ -29,7 +29,7 @@
     },
     {
       "item": "jobs::dco",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Verify that each non-tag workflow revision satisfies Developer Certificate of Origin requirements by running `christophebedard/dco-check` with the repository token. Must skip tag refs so release tags without DCO text do not fail CI.",
       "source_span": [
         17,

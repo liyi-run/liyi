@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "on",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         5,
@@ -17,7 +17,7 @@
     },
     {
       "item": "permissions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Grant the workflow GITHUB_TOKEN write access to repository contents so the release job can create and publish a GitHub release. Must not request broader repository permissions than contents: write.",
       "source_span": [
         10,
@@ -29,7 +29,7 @@
     },
     {
       "item": "jobs::build",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Build one statically linked release tarball per configured musl target. Must install the appropriate Rust target and build tool, use native cargo for non-cross targets and cross for cross targets, strip the produced binary when possible, package the binary together with the license files and README, and upload a per-target artifact for the release job.",
       "source_span": [
         17,
@@ -41,7 +41,7 @@
     },
     {
       "item": "jobs::release",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "After all build-matrix artifacts are available, download every packaged tarball and publish them on the GitHub release for the pushed tag. Must attach all artifacts, generate release notes, and authenticate with the repository GITHUB_TOKEN.",
       "source_span": [
         92,
