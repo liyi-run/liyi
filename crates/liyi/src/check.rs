@@ -622,15 +622,7 @@ fn check_sidecar(
                 let label = item.item.clone();
 
                 // a. Hash the span (with tree_path recovery, shift detection)
-                if check_item_hash(
-                    item_ctx.file,
-                    &label,
-                    item,
-                    item_ctx.source_content,
-                    item_ctx.source_markers,
-                    item_ctx.fix,
-                    diagnostics,
-                ) {
+                if check_item_hash(&item_ctx, &label, item, diagnostics) {
                     modified = true;
                 }
 
@@ -912,26 +904,22 @@ fn check_requirement_hash(
 /// Hash-check an item spec: verify `source_hash`, attempt tree_path recovery,
 /// sibling scan, and shift heuristic when stale.  Returns `true` when the spec
 /// was modified (and the sidecar must be rewritten).
-#[allow(clippy::too_many_arguments)]
 fn check_item_hash(
-    file: &Path,
+    ctx: &ItemCheckCtx<'_>,
     label: &str,
     item: &mut ItemSpec,
-    source_content: &str,
-    source_markers: &[SourceMarker],
-    fix: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     let mut modified = false;
 
-    match hash_span(source_content, item.source_span) {
+    match hash_span(ctx.source_content, item.source_span) {
         Ok((computed_hash, _computed_anchor)) => {
             let is_current = item.source_hash.as_ref() == Some(&computed_hash);
 
             if is_current {
                 // CURRENT
                 diagnostics.push(Diagnostic {
-                    file: file.to_path_buf(),
+                    file: ctx.file.to_path_buf(),
                     item_or_req: label.to_string(),
                     kind: DiagnosticKind::Current,
                     severity: Severity::Info,
@@ -944,36 +932,24 @@ fn check_item_hash(
                     intent: Some(item.intent.clone()),
                 });
             } else if item.source_hash.is_none() {
-                modified |=
-                    handle_missing_hash(file, label, item, source_content, fix, diagnostics);
-            } else {
-                modified |= handle_hash_mismatch(
-                    file,
+                modified |= handle_missing_hash(
+                    ctx.file,
                     label,
                     item,
-                    source_content,
-                    source_markers,
-                    fix,
+                    ctx.source_content,
+                    ctx.fix,
                     diagnostics,
                 );
+            } else {
+                modified |= handle_hash_mismatch(ctx, label, item, diagnostics);
             }
         }
         Err(SpanError::PastEof { end, total }) => {
-            modified |= handle_past_eof(
-                file,
-                label,
-                item,
-                source_content,
-                source_markers,
-                end,
-                total,
-                fix,
-                diagnostics,
-            );
+            modified |= handle_past_eof(ctx, label, item, end, total, diagnostics);
         }
         Err(SpanError::Inverted { .. } | SpanError::Empty) => {
             diagnostics.push(Diagnostic {
-                file: file.to_path_buf(),
+                file: ctx.file.to_path_buf(),
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::InvalidSpan {
                     span: item.source_span,
@@ -1051,18 +1027,14 @@ fn handle_missing_hash(
 }
 
 /// Handle a hash mismatch: try tree_path → sibling scan → shift heuristic.
-#[allow(clippy::too_many_arguments)]
 fn handle_hash_mismatch(
-    file: &Path,
+    ctx: &ItemCheckCtx<'_>,
     label: &str,
     item: &mut ItemSpec,
-    source_content: &str,
-    source_markers: &[SourceMarker],
-    fix: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     let mut modified = false;
-    let lang = detect_language(file);
+    let lang = detect_language(ctx.file);
 
     // Try tree_path-based recovery, tracking why it may not be available.
     let (tree_path_recovered, tree_path_note) = if item.tree_path.is_empty() {
@@ -1070,7 +1042,7 @@ fn handle_hash_mismatch(
     } else if lang.is_none() {
         (None, "no grammar for source language")
     } else {
-        let resolved = resolve_tree_path(source_content, &item.tree_path, lang.unwrap());
+        let resolved = resolve_tree_path(ctx.source_content, &item.tree_path, lang.unwrap());
         if resolved.is_some() {
             (resolved, "")
         } else {
@@ -1079,20 +1051,10 @@ fn handle_hash_mismatch(
     };
 
     if let Some(new_span) = tree_path_recovered {
-        modified |= handle_tree_path_resolved(
-            file,
-            label,
-            item,
-            source_content,
-            source_markers,
-            new_span,
-            lang,
-            fix,
-            diagnostics,
-        );
+        modified |= handle_tree_path_resolved(ctx, label, item, new_span, lang, diagnostics);
     } else if let Some(l) = lang
         && let Some(sibling) = resolve_tree_path_sibling_scan(
-            source_content,
+            ctx.source_content,
             &item.tree_path,
             l,
             item.source_hash.as_ref().unwrap(),
@@ -1101,17 +1063,17 @@ fn handle_hash_mismatch(
         // tree_path resolution failed but sibling scan found the element.
         let old_span = item.source_span;
         let delta = sibling.span[0] as i64 - old_span[0] as i64;
-        if fix {
+        if ctx.fix {
             item.source_span = sibling.span;
             item.tree_path = sibling.updated_tree_path;
-            if let Ok((h, a)) = hash_span(source_content, sibling.span) {
+            if let Ok((h, a)) = hash_span(ctx.source_content, sibling.span) {
                 item.source_hash = Some(h);
                 item.source_anchor = Some(a);
             }
             modified = true;
         }
         diagnostics.push(Diagnostic {
-            file: file.to_path_buf(),
+            file: ctx.file.to_path_buf(),
             item_or_req: label.to_string(),
             kind: DiagnosticKind::Shifted {
                 from: old_span,
@@ -1123,7 +1085,7 @@ fn handle_hash_mismatch(
                 sibling.span[0], sibling.span[1]
             ),
             fix_hint: Some("liyi check --fix".into()),
-            fixed: fix,
+            fixed: ctx.fix,
             span_start: Some(item.source_span[0]),
             annotation_line: None,
             requirement_text: None,
@@ -1132,17 +1094,17 @@ fn handle_hash_mismatch(
     } else {
         // Fallback to shift heuristic
         let expected = item.source_hash.as_ref().unwrap();
-        match detect_shift(source_content, item.source_span, expected) {
+        match detect_shift(ctx.source_content, item.source_span, expected) {
             ShiftResult::Shifted { delta, new_span } => {
                 let old_span = item.source_span;
-                if fix {
+                if ctx.fix {
                     item.source_span = new_span;
-                    if let Ok((h, a)) = hash_span(source_content, new_span) {
+                    if let Ok((h, a)) = hash_span(ctx.source_content, new_span) {
                         item.source_hash = Some(h);
                         item.source_anchor = Some(a);
                     }
                     if let Some(l) = lang {
-                        let canonical = compute_tree_path(source_content, new_span, l);
+                        let canonical = compute_tree_path(ctx.source_content, new_span, l);
                         if !canonical.is_empty() {
                             item.tree_path = canonical;
                         }
@@ -1150,7 +1112,7 @@ fn handle_hash_mismatch(
                     modified = true;
                 }
                 diagnostics.push(Diagnostic {
-                    file: file.to_path_buf(),
+                    file: ctx.file.to_path_buf(),
                     item_or_req: label.to_string(),
                     kind: DiagnosticKind::Shifted {
                         from: old_span,
@@ -1162,7 +1124,7 @@ fn handle_hash_mismatch(
                         new_span[0], new_span[1]
                     ),
                     fix_hint: Some("liyi check --fix".into()),
-                    fixed: fix,
+                    fixed: ctx.fix,
                     span_start: Some(item.source_span[0]),
                     annotation_line: None,
                     requirement_text: None,
@@ -1176,7 +1138,7 @@ fn handle_hash_mismatch(
                     format!("hash mismatch, could not relocate ({tree_path_note})")
                 };
                 diagnostics.push(Diagnostic {
-                    file: file.to_path_buf(),
+                    file: ctx.file.to_path_buf(),
                     item_or_req: label.to_string(),
                     kind: DiagnosticKind::Stale,
                     severity: Severity::Warning,
@@ -1195,36 +1157,32 @@ fn handle_hash_mismatch(
 }
 
 /// Handle tree_path-resolved span: pure shift vs content drift vs sibling.
-#[allow(clippy::too_many_arguments)]
 fn handle_tree_path_resolved(
-    file: &Path,
+    ctx: &ItemCheckCtx<'_>,
     label: &str,
     item: &mut ItemSpec,
-    source_content: &str,
-    source_markers: &[SourceMarker],
     new_span: [usize; 2],
     lang: Option<crate::tree_path::Language>,
-    fix: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     let mut modified = false;
     let old_span = item.source_span;
     let old_hash = item.source_hash.as_ref().unwrap();
-    let content_unchanged = hash_span(source_content, new_span)
+    let content_unchanged = hash_span(ctx.source_content, new_span)
         .map(|(h, _)| h == *old_hash)
         .unwrap_or(false);
 
     if new_span != old_span && content_unchanged {
         // Pure shift — content intact, only position changed.
         let delta = new_span[0] as i64 - old_span[0] as i64;
-        if fix {
+        if ctx.fix {
             item.source_span = new_span;
-            if let Ok((h, a)) = hash_span(source_content, new_span) {
+            if let Ok((h, a)) = hash_span(ctx.source_content, new_span) {
                 item.source_hash = Some(h);
                 item.source_anchor = Some(a);
             }
             if let Some(l) = lang {
-                let canonical = compute_tree_path(source_content, new_span, l);
+                let canonical = compute_tree_path(ctx.source_content, new_span, l);
                 if !canonical.is_empty() {
                     item.tree_path = canonical;
                 }
@@ -1232,7 +1190,7 @@ fn handle_tree_path_resolved(
             modified = true;
         }
         diagnostics.push(Diagnostic {
-            file: file.to_path_buf(),
+            file: ctx.file.to_path_buf(),
             item_or_req: label.to_string(),
             kind: DiagnosticKind::Shifted {
                 from: old_span,
@@ -1244,7 +1202,7 @@ fn handle_tree_path_resolved(
                 new_span[0], new_span[1]
             ),
             fix_hint: Some("liyi check --fix".into()),
-            fixed: fix,
+            fixed: ctx.fix,
             span_start: Some(item.source_span[0]),
             annotation_line: None,
             requirement_text: None,
@@ -1252,21 +1210,21 @@ fn handle_tree_path_resolved(
         });
     } else if let Some(l) = lang
         && let Some(sibling) =
-            resolve_tree_path_sibling_scan(source_content, &item.tree_path, l, old_hash)
+            resolve_tree_path_sibling_scan(ctx.source_content, &item.tree_path, l, old_hash)
     {
         // Hash-based sibling scan found the element at a different array index.
         let delta = sibling.span[0] as i64 - old_span[0] as i64;
-        if fix {
+        if ctx.fix {
             item.source_span = sibling.span;
             item.tree_path = sibling.updated_tree_path;
-            if let Ok((h, a)) = hash_span(source_content, sibling.span) {
+            if let Ok((h, a)) = hash_span(ctx.source_content, sibling.span) {
                 item.source_hash = Some(h);
                 item.source_anchor = Some(a);
             }
             modified = true;
         }
         diagnostics.push(Diagnostic {
-            file: file.to_path_buf(),
+            file: ctx.file.to_path_buf(),
             item_or_req: label.to_string(),
             kind: DiagnosticKind::Shifted {
                 from: old_span,
@@ -1278,7 +1236,7 @@ fn handle_tree_path_resolved(
                 sibling.span[0], sibling.span[1]
             ),
             fix_hint: Some("liyi check --fix".into()),
-            fixed: fix,
+            fixed: ctx.fix,
             span_start: Some(item.source_span[0]),
             annotation_line: None,
             requirement_text: None,
@@ -1290,20 +1248,20 @@ fn handle_tree_path_resolved(
         // rehash — the stale hash signals that intent review is needed.
         // For unreviewed specs: rehash is safe.
         let effectively_reviewed = item.reviewed
-            || source_markers.iter().any(|m| {
+            || ctx.source_markers.iter().any(|m| {
                 matches!(m, SourceMarker::Intent { line, .. } if *line >= new_span[0] && *line <= new_span[1])
             });
-        if fix {
+        if ctx.fix {
             if new_span != old_span {
                 item.source_span = new_span;
                 if let Some(l) = lang {
-                    let canonical = compute_tree_path(source_content, new_span, l);
+                    let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
                     }
                 }
             }
-            if !effectively_reviewed && let Ok((h, a)) = hash_span(source_content, new_span) {
+            if !effectively_reviewed && let Ok((h, a)) = hash_span(ctx.source_content, new_span) {
                 item.source_hash = Some(h);
                 item.source_anchor = Some(a);
             }
@@ -1319,7 +1277,7 @@ fn handle_tree_path_resolved(
                 "source changed at tree_path location (not auto-rehashed — reviewed)".into()
             };
             diagnostics.push(Diagnostic {
-                file: file.to_path_buf(),
+                file: ctx.file.to_path_buf(),
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::Stale,
                 severity: Severity::Warning,
@@ -1341,13 +1299,13 @@ fn handle_tree_path_resolved(
                 "source changed at tree_path location (auto-rehashed — unreviewed)".into()
             };
             diagnostics.push(Diagnostic {
-                file: file.to_path_buf(),
+                file: ctx.file.to_path_buf(),
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::Stale,
                 severity: Severity::Warning,
                 message: msg,
                 fix_hint: Some("liyi check --fix".into()),
-                fixed: fix,
+                fixed: ctx.fix,
                 span_start: Some(item.source_span[0]),
                 annotation_line: None,
                 requirement_text: None,
@@ -1360,26 +1318,22 @@ fn handle_tree_path_resolved(
 
 /// Handle `SpanError::PastEof`: try tree_path recovery, distinguish pure shift
 /// from content drift, emit appropriate diagnostics.
-#[allow(clippy::too_many_arguments)]
 fn handle_past_eof(
-    file: &Path,
+    ctx: &ItemCheckCtx<'_>,
     label: &str,
     item: &mut ItemSpec,
-    source_content: &str,
-    source_markers: &[SourceMarker],
     end: usize,
     total: usize,
-    fix: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     let mut modified = false;
-    let lang = detect_language(file);
+    let lang = detect_language(ctx.file);
     let (recovered, tp_note) = if item.tree_path.is_empty() {
         (None, "no tree_path set")
     } else if lang.is_none() {
         (None, "no grammar for source language")
     } else {
-        let r = resolve_tree_path(source_content, &item.tree_path, lang.unwrap());
+        let r = resolve_tree_path(ctx.source_content, &item.tree_path, lang.unwrap());
         if r.is_some() {
             (r, "")
         } else {
@@ -1393,7 +1347,7 @@ fn handle_past_eof(
             .source_hash
             .as_ref()
             .and_then(|old_h| {
-                hash_span(source_content, new_span)
+                hash_span(ctx.source_content, new_span)
                     .ok()
                     .map(|(h, _)| h == *old_h)
             })
@@ -1401,14 +1355,14 @@ fn handle_past_eof(
 
         if content_unchanged {
             let delta = new_span[0] as i64 - old_span[0] as i64;
-            if fix {
+            if ctx.fix {
                 item.source_span = new_span;
-                if let Ok((h, a)) = hash_span(source_content, new_span) {
+                if let Ok((h, a)) = hash_span(ctx.source_content, new_span) {
                     item.source_hash = Some(h);
                     item.source_anchor = Some(a);
                 }
                 if let Some(l) = lang {
-                    let canonical = compute_tree_path(source_content, new_span, l);
+                    let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
                     }
@@ -1416,7 +1370,7 @@ fn handle_past_eof(
                 modified = true;
             }
             diagnostics.push(Diagnostic {
-                file: file.to_path_buf(),
+                file: ctx.file.to_path_buf(),
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::Shifted {
                     from: old_span,
@@ -1428,7 +1382,7 @@ fn handle_past_eof(
                     new_span[0], new_span[1]
                 ),
                 fix_hint: Some("liyi check --fix".into()),
-                fixed: fix,
+                fixed: ctx.fix,
                 span_start: Some(item.source_span[0]),
                 annotation_line: None,
                 requirement_text: None,
@@ -1437,18 +1391,19 @@ fn handle_past_eof(
         } else {
             // Content also changed — relocate span.
             let effectively_reviewed = item.reviewed
-                || source_markers.iter().any(|m| {
+                || ctx.source_markers.iter().any(|m| {
                     matches!(m, SourceMarker::Intent { line, .. } if *line >= new_span[0] && *line <= new_span[1])
                 });
-            if fix {
+            if ctx.fix {
                 item.source_span = new_span;
                 if let Some(l) = lang {
-                    let canonical = compute_tree_path(source_content, new_span, l);
+                    let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
                     }
                 }
-                if !effectively_reviewed && let Ok((h, a)) = hash_span(source_content, new_span) {
+                if !effectively_reviewed && let Ok((h, a)) = hash_span(ctx.source_content, new_span)
+                {
                     item.source_hash = Some(h);
                     item.source_anchor = Some(a);
                 }
@@ -1456,7 +1411,7 @@ fn handle_past_eof(
             }
             if effectively_reviewed {
                 diagnostics.push(Diagnostic {
-                    file: file.to_path_buf(),
+                    file: ctx.file.to_path_buf(),
                     item_or_req: label.to_string(),
                     kind: DiagnosticKind::Stale,
                     severity: Severity::Warning,
@@ -1473,7 +1428,7 @@ fn handle_past_eof(
                 });
             } else {
                 diagnostics.push(Diagnostic {
-                    file: file.to_path_buf(),
+                    file: ctx.file.to_path_buf(),
                     item_or_req: label.to_string(),
                     kind: DiagnosticKind::Stale,
                     severity: Severity::Warning,
@@ -1482,7 +1437,7 @@ fn handle_past_eof(
                         new_span[0], new_span[1]
                     ),
                     fix_hint: Some("liyi check --fix".into()),
-                    fixed: fix,
+                    fixed: ctx.fix,
                     span_start: Some(item.source_span[0]),
                     annotation_line: None,
                     requirement_text: None,
@@ -1497,7 +1452,7 @@ fn handle_past_eof(
             format!("span end {end} exceeds file length {total} ({tp_note})")
         };
         diagnostics.push(Diagnostic {
-            file: file.to_path_buf(),
+            file: ctx.file.to_path_buf(),
             item_or_req: label.to_string(),
             kind: DiagnosticKind::SpanPastEof {
                 span: item.source_span,
