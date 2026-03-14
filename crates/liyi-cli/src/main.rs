@@ -176,6 +176,9 @@ fn main() {
             yes,
             dry_run,
             item,
+            unreviewed_only,
+            stale_only,
+            req_only,
         } => {
             let targets = if paths.is_empty() {
                 vec![env::current_dir().unwrap_or_default()]
@@ -183,18 +186,31 @@ fn main() {
                 paths
             };
 
+            let kind_filter = if unreviewed_only {
+                liyi::approve::ApproveFilter::UnreviewedOnly
+            } else if stale_only {
+                liyi::approve::ApproveFilter::StaleOnly
+            } else if req_only {
+                liyi::approve::ApproveFilter::ReqOnly
+            } else {
+                liyi::approve::ApproveFilter::All
+            };
+
             let is_interactive = !yes && is_tty();
 
             if is_interactive {
                 // Collect candidates, run TUI, apply decisions.
-                let candidates =
-                    match liyi::approve::collect_approval_candidates(&targets, item.as_deref()) {
-                        Ok(c) => c,
-                        Err(e) => {
-                            eprintln!("Error: {e}");
-                            process::exit(2);
-                        }
-                    };
+                let candidates = match liyi::approve::collect_approval_candidates(
+                    &targets,
+                    item.as_deref(),
+                    kind_filter,
+                ) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                };
 
                 if candidates.is_empty() {
                     println!("nothing to approve");
@@ -225,14 +241,17 @@ fn main() {
                 }
             } else {
                 // Batch mode: collect + auto-approve all.
-                let candidates =
-                    match liyi::approve::collect_approval_candidates(&targets, item.as_deref()) {
-                        Ok(c) => c,
-                        Err(e) => {
-                            eprintln!("Error: {e}");
-                            process::exit(2);
-                        }
-                    };
+                let candidates = match liyi::approve::collect_approval_candidates(
+                    &targets,
+                    item.as_deref(),
+                    kind_filter,
+                ) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                };
 
                 let decisions = vec![liyi::approve::Decision::Yes; candidates.len()];
                 match liyi::approve::apply_approval_decisions(&candidates, &decisions, dry_run) {

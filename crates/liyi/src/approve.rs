@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::discovery::{find_repo_root, resolve_sidecar_targets};
 use crate::git::{git_log_revisions, git_show};
 use crate::hashing::hash_span;
+use crate::markers::{SourceMarker, scan_markers};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
 /// Result of an approve operation on a single sidecar.
@@ -50,6 +51,33 @@ pub enum Decision {
     Edit(String),
 }
 
+/// What kind of review this candidate requires.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CandidateKind {
+    /// Agent-inferred intent; no human confirmation yet.
+    Unreviewed,
+    /// Reviewed item whose source code changed (source_hash mismatch).
+    StaleReviewed,
+    /// Reviewed item whose related requirement text changed.
+    ReqChanged {
+        /// Name of the requirement that changed.
+        requirement: String,
+    },
+}
+
+/// Filter for which candidate kinds to collect.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApproveFilter {
+    /// All candidate kinds.
+    All,
+    /// Only unreviewed items.
+    UnreviewedOnly,
+    /// Only stale-reviewed items.
+    StaleOnly,
+    /// Only requirement-changed items.
+    ReqOnly,
+}
+
 /// A single item pending approval, with all context needed for display.
 #[derive(Debug)]
 pub struct ApprovalCandidate {
@@ -73,6 +101,18 @@ pub struct ApprovalCandidate {
     pub span_len: usize,
     /// Previously approved intent text from Git history, if available.
     pub prev_intent: Option<String>,
+    /// What kind of review this candidate requires.
+    pub kind: CandidateKind,
+    /// Previous source text at the span (for StaleReviewed diffs).
+    pub prev_source: Option<String>,
+    /// Current source text at the span (for StaleReviewed diffs).
+    pub current_source: Option<String>,
+    /// Requirement name that changed (for ReqChanged display).
+    pub changed_requirement: Option<String>,
+    /// Old requirement text (for ReqChanged diff).
+    pub old_requirement_text: Option<String>,
+    /// New requirement text (for ReqChanged diff).
+    pub new_requirement_text: Option<String>,
 }
 
 /// Look up the previously approved intent for an item by walking Git
@@ -116,10 +156,49 @@ fn lookup_prev_intent(
     None
 }
 
-/// Collect all unreviewed items as approval candidates.
+/// Look up the source text at the time when `source_hash` was last valid,
+/// by walking Git history on the source file.
+///
+/// Returns the full source lines at the span from the historical version,
+/// or `None` if git history is unavailable or no matching commit is found.
+fn lookup_prev_source(
+    repo_root: Option<&Path>,
+    source_path: &Path,
+    source_hash: &str,
+    span: [usize; 2],
+) -> Option<String> {
+    let root = repo_root?;
+    let rel = source_path.strip_prefix(root).ok()?;
+    let rel_str = rel.to_str()?;
+    let revisions = git_log_revisions(root, rel_str, 20);
+
+    for rev in &revisions {
+        let content = match git_show(root, rel_str, rev) {
+            Some(c) => c,
+            None => continue,
+        };
+        if let Ok((hash, _)) = hash_span(&content, span)
+            && hash == source_hash
+        {
+            // Found the version — extract span lines.
+            let lines: Vec<&str> = content.lines().collect();
+            let start = span[0].saturating_sub(1);
+            let end = span[1].min(lines.len());
+            return Some(lines[start..end].join("\n"));
+        }
+    }
+    None
+}
+
+/// Collect approval candidates matching the given filter.
+///
+/// When `kind_filter` is `All`, collects unreviewed, stale-reviewed, and
+/// req-changed items (in that order). Specific filters restrict to one kind.
+// @liyi:related stale-reviewed-demands-human-judgment
 pub fn collect_approval_candidates(
     paths: &[PathBuf],
     item_filter: Option<&str>,
+    kind_filter: ApproveFilter,
 ) -> Result<Vec<ApprovalCandidate>, ApproveError> {
     let targets = resolve_sidecar_targets(paths).map_err(ApproveError::Parse)?;
     if targets.is_empty() {
@@ -129,7 +208,16 @@ pub fn collect_approval_candidates(
     // Try to locate the repo root for Git history lookups.
     let repo_root = targets.first().and_then(|p| find_repo_root(p));
 
-    let mut candidates = Vec::new();
+    let collect_unreviewed =
+        kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::UnreviewedOnly;
+    let collect_stale =
+        kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::StaleOnly;
+    let collect_req = kind_filter == ApproveFilter::All || kind_filter == ApproveFilter::ReqOnly;
+
+    let mut unreviewed_candidates = Vec::new();
+    let mut stale_candidates = Vec::new();
+    let mut req_candidates = Vec::new();
+
     for sidecar_path in &targets {
         let sc_content = fs::read_to_string(sidecar_path)?;
         let sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
@@ -137,6 +225,32 @@ pub fn collect_approval_candidates(
         let source_path = source_path_from_sidecar(sidecar_path)?;
         let source_content = fs::read_to_string(&source_path).unwrap_or_default();
         let all_lines: Vec<&str> = source_content.lines().collect();
+        let source_markers = scan_markers(&source_content);
+
+        // Build source_lines once per file (shared across candidates).
+        let source_lines: Vec<(usize, String)> = all_lines
+            .iter()
+            .enumerate()
+            .map(|(i, line)| (i + 1, line.to_string()))
+            .collect();
+
+        // Build requirement hash registry from the same sidecar set for
+        // ReqChanged detection. Map requirement name → current source_hash.
+        let req_hashes: std::collections::HashMap<&str, Option<&str>> = if collect_req {
+            sidecar
+                .specs
+                .iter()
+                .filter_map(|s| {
+                    if let Spec::Requirement(r) = s {
+                        Some((r.requirement.as_str(), r.source_hash.as_deref()))
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            std::collections::HashMap::new()
+        };
 
         for (spec_index, spec) in sidecar.specs.iter().enumerate() {
             // @liyi:related approve-never-approves-requirements
@@ -146,44 +260,124 @@ pub fn collect_approval_candidates(
                 {
                     continue;
                 }
-                if item.reviewed {
-                    continue;
-                }
 
                 let span_start = item.source_span[0].saturating_sub(1);
                 let span_end = item.source_span[1].min(all_lines.len());
-
-                let source_lines: Vec<(usize, String)> = all_lines
-                    .iter()
-                    .enumerate()
-                    .map(|(i, line)| (i + 1, line.to_string()))
-                    .collect();
-
                 let span_offset = span_start;
                 let span_len = span_end.saturating_sub(span_start);
 
-                let prev_intent = lookup_prev_intent(
-                    repo_root.as_deref(),
-                    sidecar_path,
-                    &item.item,
-                    &item.tree_path,
-                );
-
-                candidates.push(ApprovalCandidate {
-                    sidecar_path: sidecar_path.clone(),
-                    source_display: sidecar.source.clone(),
-                    spec_index,
-                    item_name: item.item.clone(),
-                    intent: item.intent.clone(),
-                    source_span: item.source_span,
-                    source_lines,
-                    span_offset,
-                    span_len,
-                    prev_intent,
+                // Determine if this item is effectively reviewed.
+                let has_source_intent = source_markers.iter().any(|m| {
+                    matches!(m, SourceMarker::Intent { line, .. }
+                        if *line >= item.source_span[0] && *line <= item.source_span[1])
                 });
+                let effectively_reviewed = item.reviewed || has_source_intent;
+
+                if !effectively_reviewed && collect_unreviewed {
+                    let prev_intent = lookup_prev_intent(
+                        repo_root.as_deref(),
+                        sidecar_path,
+                        &item.item,
+                        &item.tree_path,
+                    );
+
+                    unreviewed_candidates.push(ApprovalCandidate {
+                        sidecar_path: sidecar_path.clone(),
+                        source_display: sidecar.source.clone(),
+                        spec_index,
+                        item_name: item.item.clone(),
+                        intent: item.intent.clone(),
+                        source_span: item.source_span,
+                        source_lines: source_lines.clone(),
+                        span_offset,
+                        span_len,
+                        prev_intent,
+                        kind: CandidateKind::Unreviewed,
+                        prev_source: None,
+                        current_source: None,
+                        changed_requirement: None,
+                        old_requirement_text: None,
+                        new_requirement_text: None,
+                    });
+                }
+
+                if effectively_reviewed
+                    && collect_stale
+                    && let Some(stored_hash) = &item.source_hash
+                    && let Ok((current_hash, _)) = hash_span(&source_content, item.source_span)
+                    && *stored_hash != current_hash
+                {
+                    // Extract current and previous source at the span.
+                    let cur_src = all_lines[span_start..span_end.min(all_lines.len())].join("\n");
+                    let prev_src = lookup_prev_source(
+                        repo_root.as_deref(),
+                        &source_path,
+                        stored_hash,
+                        item.source_span,
+                    );
+
+                    stale_candidates.push(ApprovalCandidate {
+                        sidecar_path: sidecar_path.clone(),
+                        source_display: sidecar.source.clone(),
+                        spec_index,
+                        item_name: item.item.clone(),
+                        intent: item.intent.clone(),
+                        source_span: item.source_span,
+                        source_lines: source_lines.clone(),
+                        span_offset,
+                        span_len,
+                        prev_intent: None,
+                        kind: CandidateKind::StaleReviewed,
+                        prev_source: prev_src,
+                        current_source: Some(cur_src),
+                        changed_requirement: None,
+                        old_requirement_text: None,
+                        new_requirement_text: None,
+                    });
+                }
+
+                // ReqChanged: check related edges against requirement registry.
+                if effectively_reviewed
+                    && collect_req
+                    && let Some(related) = &item.related
+                {
+                    for (req_name, stored_hash) in related {
+                        if let Some(stored_h) = stored_hash
+                            && let Some(Some(cur)) = req_hashes.get(req_name.as_str())
+                            && stored_h != cur
+                        {
+                            req_candidates.push(ApprovalCandidate {
+                                sidecar_path: sidecar_path.clone(),
+                                source_display: sidecar.source.clone(),
+                                spec_index,
+                                item_name: item.item.clone(),
+                                intent: item.intent.clone(),
+                                source_span: item.source_span,
+                                source_lines: source_lines.clone(),
+                                span_offset,
+                                span_len,
+                                prev_intent: None,
+                                kind: CandidateKind::ReqChanged {
+                                    requirement: req_name.clone(),
+                                },
+                                prev_source: None,
+                                current_source: None,
+                                changed_requirement: Some(req_name.clone()),
+                                old_requirement_text: None,
+                                new_requirement_text: None,
+                            });
+                        }
+                    }
+                }
             }
         }
     }
+
+    // Ordering: unreviewed first, then stale-reviewed by file, then req-changed.
+    let mut candidates = Vec::new();
+    candidates.append(&mut unreviewed_candidates);
+    candidates.append(&mut stale_candidates);
+    candidates.append(&mut req_candidates);
     Ok(candidates)
 }
 
@@ -194,6 +388,7 @@ pub fn collect_approval_candidates(
 // @liyi:related reviewed-semantics
 // @liyi:related reqchanged-orthogonal-to-reviewed
 // @liyi:related reqchanged-demands-human-judgment
+// @liyi:related stale-reviewed-demands-human-judgment
 pub fn apply_approval_decisions(
     candidates: &[ApprovalCandidate],
     decisions: &[Decision],
@@ -201,13 +396,13 @@ pub fn apply_approval_decisions(
 ) -> Result<Vec<ApproveResult>, ApproveError> {
     use std::collections::HashMap;
 
-    // Group decisions by sidecar path.
-    let mut per_sidecar: HashMap<&Path, Vec<(usize, &Decision)>> = HashMap::new();
+    // Group decisions by sidecar path, carrying the candidate kind.
+    let mut per_sidecar: HashMap<&Path, Vec<(usize, &Decision, &CandidateKind)>> = HashMap::new();
     for (candidate, decision) in candidates.iter().zip(decisions.iter()) {
         per_sidecar
             .entry(candidate.sidecar_path.as_path())
             .or_default()
-            .push((candidate.spec_index, decision));
+            .push((candidate.spec_index, decision, &candidate.kind));
     }
 
     let mut results = Vec::new();
@@ -222,16 +417,31 @@ pub fn apply_approval_decisions(
         let mut rejected = 0usize;
         let mut modified = false;
 
-        for &(spec_index, ref decision) in item_decisions {
+        for &(spec_index, ref decision, ref kind) in item_decisions {
             if let Some(Spec::Item(item)) = sidecar.specs.get_mut(spec_index) {
                 match decision {
                     Decision::Yes => {
                         if !dry_run {
-                            item.reviewed = true;
-                            if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span)
-                            {
-                                item.source_hash = Some(hash);
-                                item.source_anchor = Some(anchor);
+                            match kind {
+                                CandidateKind::Unreviewed | CandidateKind::StaleReviewed => {
+                                    // Set reviewed and rehash.
+                                    item.reviewed = true;
+                                    if let Ok((hash, anchor)) =
+                                        hash_span(&source_content, item.source_span)
+                                    {
+                                        item.source_hash = Some(hash);
+                                        item.source_anchor = Some(anchor);
+                                    }
+                                }
+                                CandidateKind::ReqChanged { requirement } => {
+                                    // Refresh the related edge hash only.
+                                    // Do not touch reviewed, intent, or source_hash.
+                                    if let Some(related) = &mut item.related {
+                                        // Set to null so `liyi check --fix` fills
+                                        // in the current requirement hash.
+                                        related.insert(requirement.clone(), None);
+                                    }
+                                }
                             }
                             modified = true;
                         }
@@ -240,11 +450,29 @@ pub fn apply_approval_decisions(
                     Decision::Edit(new_intent) => {
                         if !dry_run {
                             item.intent = new_intent.clone();
-                            item.reviewed = true;
-                            if let Ok((hash, anchor)) = hash_span(&source_content, item.source_span)
-                            {
-                                item.source_hash = Some(hash);
-                                item.source_anchor = Some(anchor);
+                            match kind {
+                                CandidateKind::Unreviewed | CandidateKind::StaleReviewed => {
+                                    item.reviewed = true;
+                                    if let Ok((hash, anchor)) =
+                                        hash_span(&source_content, item.source_span)
+                                    {
+                                        item.source_hash = Some(hash);
+                                        item.source_anchor = Some(anchor);
+                                    }
+                                }
+                                CandidateKind::ReqChanged { requirement } => {
+                                    // Update intent and refresh the related edge.
+                                    item.reviewed = true;
+                                    if let Ok((hash, anchor)) =
+                                        hash_span(&source_content, item.source_span)
+                                    {
+                                        item.source_hash = Some(hash);
+                                        item.source_anchor = Some(anchor);
+                                    }
+                                    if let Some(related) = &mut item.related {
+                                        related.insert(requirement.clone(), None);
+                                    }
+                                }
                             }
                             modified = true;
                         }
@@ -252,7 +480,17 @@ pub fn apply_approval_decisions(
                     }
                     Decision::No => {
                         if !dry_run {
-                            item.reviewed = false;
+                            match kind {
+                                CandidateKind::Unreviewed => {
+                                    // Explicitly mark as not reviewed.
+                                    item.reviewed = false;
+                                    modified = true;
+                                }
+                                CandidateKind::StaleReviewed | CandidateKind::ReqChanged { .. } => {
+                                    // Leave unchanged — item stays stale/req-changed
+                                    // as a todo marker.
+                                }
+                            }
                         }
                         rejected += 1;
                     }

@@ -16,7 +16,7 @@ use similar::{ChangeTag, TextDiff};
 use syntect::highlighting::{self, ThemeSet};
 use syntect::parsing::SyntaxSet;
 
-use liyi::approve::{ApprovalCandidate, Decision};
+use liyi::approve::{ApprovalCandidate, CandidateKind, Decision};
 
 /// Shared syntax-highlighting resources, initialised once per TUI session.
 struct Highlighter {
@@ -277,17 +277,30 @@ fn draw_header(
     current: usize,
     total: usize,
 ) {
+    let kind_label = match &candidate.kind {
+        CandidateKind::Unreviewed => "UNREVIEWED",
+        CandidateKind::StaleReviewed => "STALE — source changed since last review",
+        CandidateKind::ReqChanged { requirement } => {
+            // We'll format this below since we need dynamic content.
+            &format!("REQ CHANGED — {requirement}")
+        }
+    };
     let title = format!(
-        " Item {current}/{total} │ {} │ {}:{}-{} ",
+        " [{kind_label}] Item {current}/{total} │ {} │ {}:{}-{} ",
         candidate.source_display,
         candidate.item_name,
         candidate.source_span[0],
         candidate.source_span[1],
     );
+    let border_color = match &candidate.kind {
+        CandidateKind::Unreviewed => Color::Cyan,
+        CandidateKind::StaleReviewed => Color::Yellow,
+        CandidateKind::ReqChanged { .. } => Color::Magenta,
+    };
     let block = Block::default()
         .title(title)
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan));
+        .border_style(Style::default().fg(border_color));
     f.render_widget(block, area);
 }
 
@@ -354,6 +367,16 @@ fn push_span_lines<'a>(spans: Vec<Span<'a>>, lines: &mut Vec<Line<'a>>) {
 }
 
 fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {
+    match &candidate.kind {
+        CandidateKind::Unreviewed => draw_intent_unreviewed(f, area, candidate),
+        CandidateKind::StaleReviewed => draw_intent_stale_reviewed(f, area, candidate),
+        CandidateKind::ReqChanged { requirement } => {
+            draw_intent_req_changed(f, area, candidate, requirement)
+        }
+    }
+}
+
+fn draw_intent_unreviewed(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {
     let current_text = if candidate.intent == "=doc" {
         "(intent delegated to source docstring)".to_string()
     } else {
@@ -446,6 +469,164 @@ fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate
             }
         }
     }
+}
+
+fn draw_intent_stale_reviewed(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {
+    let mut lines: Vec<Line> = Vec::new();
+
+    // Show intent first so the human knows what's supposed to hold.
+    lines.push(Line::from(Span::styled(
+        "▼ Current intent:",
+        Style::default().fg(Color::DarkGray).bold(),
+    )));
+    let intent_text = if candidate.intent == "=doc" {
+        "  (intent delegated to source docstring)"
+    } else {
+        &candidate.intent
+    };
+    for l in intent_text.lines() {
+        lines.push(Line::from(format!("  {l}")));
+    }
+
+    lines.push(Line::from(""));
+
+    // Show source diff if available.
+    match (&candidate.prev_source, &candidate.current_source) {
+        (Some(old), Some(new)) if old != new => {
+            lines.push(Line::from(Span::styled(
+                "▼ Source diff (old → new):",
+                Style::default().fg(Color::DarkGray).bold(),
+            )));
+
+            let prev_spans = diff_spans(
+                old,
+                new,
+                ChangeTag::Delete,
+                Style::default().fg(Color::Red),
+                Style::default()
+                    .fg(Color::White)
+                    .bg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+            );
+            push_span_lines(prev_spans, &mut lines);
+
+            lines.push(Line::from(""));
+
+            let cur_spans = diff_spans(
+                old,
+                new,
+                ChangeTag::Insert,
+                Style::default().fg(Color::Green),
+                Style::default()
+                    .fg(Color::White)
+                    .bg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            );
+            push_span_lines(cur_spans, &mut lines);
+        }
+        (None, Some(_)) => {
+            lines.push(Line::from(Span::styled(
+                "  (old source unavailable from git history)",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+        _ => {
+            lines.push(Line::from(Span::styled(
+                "  (source diff unavailable)",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+    }
+
+    let paragraph = Paragraph::new(Text::from(lines))
+        .block(
+            Block::default()
+                .title(" Stale Review — does intent still hold? ")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Yellow)),
+        )
+        .wrap(Wrap { trim: false });
+    f.render_widget(paragraph, area);
+}
+
+fn draw_intent_req_changed(
+    f: &mut ratatui::Frame,
+    area: Rect,
+    candidate: &ApprovalCandidate,
+    requirement: &str,
+) {
+    let mut lines: Vec<Line> = Vec::new();
+
+    // Show requirement diff.
+    lines.push(Line::from(Span::styled(
+        format!("▼ Requirement \"{requirement}\" changed:"),
+        Style::default().fg(Color::DarkGray).bold(),
+    )));
+
+    match (
+        &candidate.old_requirement_text,
+        &candidate.new_requirement_text,
+    ) {
+        (Some(old), Some(new)) if old != new => {
+            let prev_spans = diff_spans(
+                old,
+                new,
+                ChangeTag::Delete,
+                Style::default().fg(Color::Red),
+                Style::default()
+                    .fg(Color::White)
+                    .bg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+            );
+            push_span_lines(prev_spans, &mut lines);
+
+            lines.push(Line::from(""));
+
+            let cur_spans = diff_spans(
+                old,
+                new,
+                ChangeTag::Insert,
+                Style::default().fg(Color::Green),
+                Style::default()
+                    .fg(Color::White)
+                    .bg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            );
+            push_span_lines(cur_spans, &mut lines);
+        }
+        _ => {
+            lines.push(Line::from(Span::styled(
+                "  (requirement diff unavailable)",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+    }
+
+    lines.push(Line::from(""));
+
+    // Show current intent.
+    lines.push(Line::from(Span::styled(
+        "▼ Item intent (does it still hold?):",
+        Style::default().fg(Color::DarkGray).bold(),
+    )));
+    let intent_text = if candidate.intent == "=doc" {
+        "  (intent delegated to source docstring)"
+    } else {
+        &candidate.intent
+    };
+    for l in intent_text.lines() {
+        lines.push(Line::from(format!("  {l}")));
+    }
+
+    let paragraph = Paragraph::new(Text::from(lines))
+        .block(
+            Block::default()
+                .title(format!(" Req Changed — {requirement} "))
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Magenta)),
+        )
+        .wrap(Wrap { trim: false });
+    f.render_widget(paragraph, area);
 }
 
 /// Convert a syntect `Color` to a ratatui `Color`.

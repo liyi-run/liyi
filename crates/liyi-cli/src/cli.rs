@@ -113,5 +113,17 @@ pub enum Commands {
         /// Filter to a specific item by name
         #[arg(long)]
         item: Option<String>,
+
+        /// Only show unreviewed items
+        #[arg(long, conflicts_with_all = ["stale_only", "req_only"])]
+        unreviewed_only: bool,
+
+        /// Only show stale-reviewed items
+        #[arg(long, conflicts_with_all = ["unreviewed_only", "req_only"])]
+        stale_only: bool,
+
+        /// Only show requirement-changed items
+        #[arg(long, conflicts_with_all = ["unreviewed_only", "stale_only"])]
+        req_only: bool,
     },
 }
