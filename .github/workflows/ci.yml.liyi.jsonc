@@ -28,12 +28,24 @@
       "source_anchor": "permissions:"
     },
     {
+      "item": "jobs::dco",
+      "reviewed": false,
+      "intent": "Verify that each non-tag workflow revision satisfies Developer Certificate of Origin requirements by running `christophebedard/dco-check` with the repository token. Must skip tag refs so release tags without DCO text do not fail CI.",
+      "source_span": [
+        17,
+        34
+      ],
+      "tree_path": "key.jobs::key.dco",
+      "source_hash": "sha256:1308a681a58feb08b043b04b03b763dea782c1b356dbde2da70f5e361678ae38",
+      "source_anchor": "  dco:"
+    },
+    {
       "item": "jobs::test",
       "reviewed": true,
       "intent": "Run the full workspace test suite (`cargo test --workspace`). Must fail the PR if any test fails.",
       "source_span": [
-        17,
-        24
+        36,
+        43
       ],
       "tree_path": "key.jobs::key.test",
       "source_hash": "sha256:b06cc28bb71ff28745b168d087ddf31edf6c05d6180c6dfa7752d1ffc119fbf3",
@@ -44,8 +56,8 @@
       "reviewed": true,
       "intent": "Run Clippy on the full workspace with `-D warnings` so that any lint fires a hard failure. Must install the clippy component before running.",
       "source_span": [
-        26,
-        35
+        45,
+        54
       ],
       "tree_path": "key.jobs::key.clippy",
       "source_hash": "sha256:cbb637404c867645892e30ba0b342e8410538f89abc936f9d4e9bb84dea28948",
@@ -56,8 +68,8 @@
       "reviewed": true,
       "intent": "Verify that all code is formatted with `cargo fmt --check`. Must install the rustfmt component before running. Must not reformat in place — only check.",
       "source_span": [
-        37,
-        45
+        56,
+        64
       ],
       "tree_path": "key.jobs::key.fmt",
       "source_hash": "sha256:1021efd4819e9a7b7a7d1b686bae8279b7b37964020d628edffd1861909b90f3",
@@ -68,8 +80,8 @@
       "reviewed": true,
       "intent": "Run `liyi check` against the repository root to verify that all sidecar specs are current (no stale hashes, no coverage gaps). Must fail the PR if liyi check exits non-zero.",
       "source_span": [
-        47,
-        54
+        66,
+        73
       ],
       "tree_path": "key.jobs::key.\"liyi-check\"",
       "source_hash": "sha256:991baeb9c5382d8fab9e2c777bd2af27a7c6c9fcc08b64263f7b5963f7ba0909",
