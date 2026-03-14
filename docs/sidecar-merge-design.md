@@ -93,6 +93,20 @@ first, then proceeds with the normal hash / span / related-edge recomputation.
 This means a single `liyi check --fix` after any git operation is sufficient.
 <!-- @liyi:end-requirement merge-is-pre-phase -->
 
+<!-- @liyi:requirement merge-refuses-cross-version -->
+**Merge refuses to merge across schema versions.** If the `version` field
+differs between ours and theirs (e.g., `"0.1"` vs `"0.2"`), the merge phase
+emits a diagnostic and leaves the conflict markers intact. Schema migration
+is a deliberate operation, not something to resolve silently during merge.
+<!-- @liyi:end-requirement merge-refuses-cross-version -->
+
+<!-- @liyi:requirement merge-respects-dry-run -->
+**Merge pre-phase respects `--dry-run`.** When `--dry-run` is active, the
+merge phase reports what it would resolve ("would auto-resolve N specs, M
+need manual review") without writing any files. This is consistent with the
+existing `--fix --dry-run` contract.
+<!-- @liyi:end-requirement merge-respects-dry-run -->
+
 ---
 
 ## Conflict detection
@@ -112,6 +126,12 @@ and the non-conflicting regions are preserved as-is. The concatenated result of
 all resolved regions must parse as valid JSONC before proceeding to the fix
 phase.
 
+**Failure handling:** If either side of a conflict region produces unparseable
+JSONC, or the concatenated result is invalid, the merge phase does not write
+the file. It leaves the raw conflict markers intact and emits a diagnostic at
+`Error` severity instructing the human to resolve manually. The merge phase
+must never produce a corrupted sidecar.
+
 ---
 
 ## Merge algorithm
@@ -123,9 +143,19 @@ Resolution proceeds in two stages: structural merge, then field-level merge.
 Parse ours and theirs as JSONC (lenient — tolerating trailing commas and
 comments). Match specs by identity key:
 
-- **Item specs:** matched by `(item, tree_path)`. If `tree_path` is absent or
-  empty, fall back to `(item, source_span)` on the base side.
+- **Item specs:** matched by identity cascade:
+  1. `(item, tree_path)` — preferred when both sides have `tree_path`.
+  2. `(item, source_anchor)` — when `tree_path` is absent or differs
+     (common after refactoring on one branch).
+  3. `(item)` alone — last resort when a single spec with that name exists
+     on each side. If multiple specs share the same `item` name and no
+     higher-priority key matches, flag as ambiguous (human review).
 - **Requirement specs:** matched by `requirement` (unique per repo).
+
+The identity cascade prevents the common failure mode where one branch
+refactors a function (changing `tree_path`) while the other modifies its
+intent — without the cascade, these appear as unrelated add/delete pairs
+rather than a matched modification.
 
 Three cases:
 
@@ -164,6 +194,20 @@ subsequent `--fix` pass re-derives them from source.
 When base is unavailable (no diff3), fall back to: if ours == theirs, take
 either. Otherwise, conflict.
 
+**Sentinel intent values** (`=doc`, `=trivial`): These carry structural
+meaning beyond their text. A transition between sentinel and literal intent
+(e.g., one side changes `=trivial` → explicit intent, or `=doc` → literal
+string) is always treated as a conflict, even if only one side changed.
+Sentinel-to-sentinel changes (e.g., `=trivial` → `=doc`) are also conflicts.
+The only auto-resolvable case is when both sides agree on the same sentinel.
+
+**`@liyi:intent` in source:** When an item has `@liyi:intent` in the
+post-merge source file, the source marker is authoritative regardless of
+sidecar `intent` or `reviewed` values. The merge phase sets `intent` to
+`=doc` (or the marker's prose if inline) and `reviewed` to `true`, since
+source-level intent is definitionally reviewed. This takes precedence over
+the three-way table above.
+
 **`reviewed`:**
 
 - If either side is `false` (or absent) → `false`
@@ -174,7 +218,8 @@ either. Otherwise, conflict.
 
 **`confidence`:**
 Take the side that changed `intent`. If neither or both changed, take the
-lower value (conservative). Absent is treated as "no confidence."
+lower value (conservative). Absent beats present (conservative — no
+confidence claim is safer than an inherited one from a stale context).
 
 ### Unresolvable conflicts
 
@@ -196,9 +241,30 @@ or delete-vs-modify), it:
    }
    ```
 
+   **Schema compatibility:** `_merge_conflict` must be added to the
+   `itemSpec` definition in `schema/liyi.schema.json` as an optional
+   transient field (same lifecycle as `_hints` — stripped once resolved):
+
+   ```json
+   "_merge_conflict": {
+     "type": "object",
+     "properties": {
+       "ours": { "type": ["string", "null"] },
+       "theirs": { "type": ["string", "null"] }
+     },
+     "description": "Transient merge-conflict marker. Present only when both sides changed intent and the merge could not auto-resolve. Stripped by liyi check --fix after the human edits intent."
+   }
+   ```
+
 3. Emits a diagnostic at `Error` severity so `liyi check` fails until the
    human resolves it. The diagnostic message references the item name and
    both candidate intents.
+
+4. `_merge_conflict` is orthogonal to the triage workflow
+   (`.liyi/triage.json`). Triage handles stale-but-parseable specs; merge
+   conflicts are unparseable specs that block all downstream processing.
+   `liyi triage` should skip items with `_merge_conflict` and report them
+   as "blocked on merge resolution."
 
 This avoids leaving raw Git conflict markers in JSONC (which would make the
 file unparseable) while still giving the human enough information to decide.
@@ -243,6 +309,11 @@ liyi check --fix
 After the pre-phase, the sidecar is conflict-free but has placeholder spans
 and null hashes. Pass 2 treats it exactly like a sidecar that was manually
 edited — all derived fields get recomputed.
+
+**Spec ordering:** The merged spec array follows source order — specs are
+sorted by `source_span[0]` (start line) ascending, matching the convention
+used by `liyi init` and `--fix` writeback. Specs without a valid span
+(e.g., those with `_merge_conflict`) are appended at the end.
 
 ---
 
@@ -343,3 +414,36 @@ git commit
 The key difference — human-authored fields in sidecars — is why liyi cannot
 simply "accept either side and regenerate." The two-tier approach (discard
 derived, merge human) handles this cleanly.
+
+---
+
+## Testing strategy
+
+The three-way merge has high combinatorial complexity. Testing should cover:
+
+**Golden tests** (one per row of each merge table):
+- Each intent merge case (unchanged / one-side-changed / both-identical /
+  both-different / no-base)
+- Sentinel value transitions (`=doc` ↔ literal, `=trivial` ↔ literal)
+- `reviewed` merge matrix (true/true, true/false, false/false, with
+  matching and divergent intents)
+- `@liyi:intent` source-marker override
+- Delete-vs-modify conflicts
+- Schema version mismatch → diagnostic
+
+**Property-based tests** (following the existing `shift_proptest.rs` pattern):
+- Merge of arbitrary spec arrays preserves all non-conflicting specs
+- Derived fields in merge output are always null/placeholder (never
+  carried from either side)
+- `reviewed: true` in output implies identical intent on both sides
+- Merge is deterministic (same inputs → same output)
+- Roundtrip: merge output parses as valid JSONC and passes schema
+  validation (except for `_merge_conflict` items, which fail at
+  `intent: null`)
+
+**Conflict-marker fuzzing:**
+- Nested / malformed / partial conflict markers → graceful fallback
+  (leave markers intact, emit diagnostic)
+- Multiple conflict regions in a single file
+- Conflict markers inside JSONC string values (must not be detected
+  as real conflicts)
