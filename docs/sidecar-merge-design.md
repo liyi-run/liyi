@@ -447,3 +447,15 @@ The three-way merge has high combinatorial complexity. Testing should cover:
 - Multiple conflict regions in a single file
 - Conflict markers inside JSONC string values (must not be detected
   as real conflicts)
+
+---
+
+## AIGC Disclaimer
+
+This document contains content from the following AI agents:
+
+* Claude Opus 4.6
+* Hunter Alpha
+
+The document is primarily authored by Claude Opus 4.6 with the human designer's input.
+Hunter Alpha did a round of design review and most of their suggestions were integrated.
