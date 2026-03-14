@@ -1,0 +1,55 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": ".github/workflows/release.yml",
+  "specs": [
+    {
+      "item": "on",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        5,
+        8
+      ],
+      "tree_path": "key.on",
+      "source_hash": "sha256:94ef282efeaf4dcf7ccc7a6d9318c017388797d78778e8b6491daa82122b7fb3",
+      "source_anchor": "on:"
+    },
+    {
+      "item": "permissions",
+      "reviewed": false,
+      "intent": "Grant the workflow GITHUB_TOKEN write access to repository contents so the release job can create and publish a GitHub release. Must not request broader repository permissions than contents: write.",
+      "source_span": [
+        10,
+        11
+      ],
+      "tree_path": "key.permissions",
+      "source_hash": "sha256:15496fe691ea11aaede654b8d8e8f8410cf112f63381571f4926b11de55cd2cd",
+      "source_anchor": "permissions:"
+    },
+    {
+      "item": "jobs::build",
+      "reviewed": false,
+      "intent": "Build one statically linked release tarball per configured musl target. Must install the appropriate Rust target and build tool, use native cargo for non-cross targets and cross for cross targets, strip the produced binary when possible, package the binary together with the license files and README, and upload a per-target artifact for the release job.",
+      "source_span": [
+        17,
+        90
+      ],
+      "tree_path": "key.jobs::key.build",
+      "source_hash": "sha256:0ad980ae568b7d37f208ec19bd9f2c68ab4546a123390514507cbcdcf4f25eff",
+      "source_anchor": "  build:"
+    },
+    {
+      "item": "jobs::release",
+      "reviewed": false,
+      "intent": "After all build-matrix artifacts are available, download every packaged tarball and publish them on the GitHub release for the pushed tag. Must attach all artifacts, generate release notes, and authenticate with the repository GITHUB_TOKEN.",
+      "source_span": [
+        92,
+        114
+      ],
+      "tree_path": "key.jobs::key.release",
+      "source_hash": "sha256:bfc7fd802dbded85b5ee694007432677d288376e5f46f0c74a39335ce123c1d5",
+      "source_anchor": "  release:"
+    }
+  ]
+}
