@@ -33,16 +33,16 @@
       }
     },
     {
-      "item": "emit_discovery_warnings",
+      "item": "emit_ambiguous_sidecar_warnings",
       "reviewed": false,
       "intent": "Convert discovery warning strings into AmbiguousSidecar diagnostics.",
       "source_span": [
         119,
         138
       ],
-      "tree_path": "fn.emit_discovery_warnings",
-      "source_hash": "sha256:bcbb6bf2df7c294a1ad6e52e8488e3844ce76c6139239c60c259c5f0e70276a6",
-      "source_anchor": "fn emit_discovery_warnings(root: &Path, warnings: &[String], diagnostics: &mut Vec<Diagnostic>) {"
+      "tree_path": "fn.emit_ambiguous_sidecar_warnings",
+      "source_hash": "sha256:6acc421446a6e7c8b61b8b0ec315c5a78147aa27377c804d7926b9cca9a6119e",
+      "source_anchor": "fn emit_ambiguous_sidecar_warnings(root: &Path, warnings: &[String], diagnostics: &mut Vec<Diagnostic>) {"
     },
     {
       "item": "discover_requirements",
