@@ -17,14 +17,14 @@
     },
     {
       "item": "run_check",
-      "reviewed": true,
-      "intent": "Execute the two-pass check: pass 1 discovers all @liyi:requirement and @liyi:related markers project-wide, enriches them with hashes from existing sidecars, and computes fresh hashes from current source spans so that downstream related-edge staleness is detected in a single run without requiring --fix first; pass 2 validates each sidecar's items and requirements (hash freshness, review status, related-requirement integrity using computed_hash, trivial/ignore markers, MissingRelatedEdge coverage). When --fix is set, shifted spans, missing hashes, and missing related edges are corrected in place and their diagnostics are marked fixed. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
+      "reviewed": false,
+      "intent": "Orchestrate the two-pass check by delegating to helpers: pass 1 calls discover_requirements, compute_requirement_hashes, collect_source_related_refs, enrich_requirements_from_sidecars to build the global requirement registry; pass 2 calls check_sidecar for each entry. Post-pass calls emit_untracked_requirements, emit_unreferenced_requirements, detect_requirement_cycles, and emit_cycle_diagnostics. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         42,
-        347
+        113
       ],
       "tree_path": "fn.run_check",
-      "source_hash": "sha256:b246cdc61e31b25055daa3f15fc73de9b58d206f0369487df380c98b905e291d",
+      "source_hash": "sha256:2720872f3e14eaf6a956f0e6284694f93867a30a4a21ade27c5a9d1ecd6e180b",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
@@ -33,15 +33,111 @@
       }
     },
     {
-      "item": "check_sidecar",
-      "reviewed": true,
-      "intent": "For a single sidecar entry: parse the sidecar, validate its version, validate source_hash format (sha256:<hex> regex) on all item and requirement hashes including related edges, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, hash-based sibling scan fallback, PastEof tree_path recovery, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore source markers and sidecar =trivial sentinel (emitting Trivial info or ConflictingTriviality error when @liyi:nontrivial conflicts), and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). For requirements: marker-based span recovery from @liyi:requirement/@liyi:end-requirement blocks before hashing; PastEof tree_path recovery with pure-shift vs content-changed distinction. Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (structural errors). On semantic drift (tree_path resolves but content changed): for reviewed specs, update span but leave hash stale so the spec is flagged for intent review; for unreviewed specs, also rehash at the new location since no human judgment is at stake. When hash mismatches after tree_path resolution, try hash-based sibling scan before treating as drift or falling back to shift heuristic. When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. When --fix is active, strip _hints from all item specs (hints are transient scaffold aids). Write the sidecar back if --fix produced modifications.",
+      "item": "emit_discovery_warnings",
+      "reviewed": false,
+      "intent": "Convert discovery warning strings into AmbiguousSidecar diagnostics.",
       "source_span": [
-        356,
-        1519
+        119,
+        138
+      ],
+      "tree_path": "fn.emit_discovery_warnings",
+      "source_hash": "sha256:bcbb6bf2df7c294a1ad6e52e8488e3844ce76c6139239c60c259c5f0e70276a6",
+      "source_anchor": "fn emit_discovery_warnings(root: &Path, warnings: &[String], diagnostics: &mut Vec<Diagnostic>) {"
+    },
+    {
+      "item": "discover_requirements",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        142,
+        192
+      ],
+      "tree_path": "fn.discover_requirements",
+      "source_hash": "sha256:3bd591e5b058e23ff286ce8a0cc6fe6e1d54f103210a8819d056040c67c57a40",
+      "source_anchor": "fn discover_requirements("
+    },
+    {
+      "item": "compute_requirement_hashes",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        196,
+        216
+      ],
+      "tree_path": "fn.compute_requirement_hashes",
+      "source_hash": "sha256:a6776f9aa98c59c5f85f1a63f896c49e6a9db52c0c851b3701b8bbdecbb94734",
+      "source_anchor": "fn compute_requirement_hashes("
+    },
+    {
+      "item": "collect_source_related_refs",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        220,
+        237
+      ],
+      "tree_path": "fn.collect_source_related_refs",
+      "source_hash": "sha256:f664ab1dd3f4d52d90bed14d9d670e13a0b9a50396e6162e5b82f76cf3cf2636",
+      "source_anchor": "fn collect_source_related_refs("
+    },
+    {
+      "item": "enrich_requirements_from_sidecars",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        242,
+        306
+      ],
+      "tree_path": "fn.enrich_requirements_from_sidecars",
+      "source_hash": "sha256:81fbdbe3165852809ddce49dfd7bb304944eb5b1a901d548745deca7b63d6d03",
+      "source_anchor": "fn enrich_requirements_from_sidecars("
+    },
+    {
+      "item": "emit_untracked_requirements",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        310,
+        356
+      ],
+      "tree_path": "fn.emit_untracked_requirements",
+      "source_hash": "sha256:4530fe9e2fa03f0adfbef50a87b1dee61b3c822d3de0c74aa50b6102b46dbe2d",
+      "source_anchor": "fn emit_untracked_requirements("
+    },
+    {
+      "item": "emit_unreferenced_requirements",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        360,
+        387
+      ],
+      "tree_path": "fn.emit_unreferenced_requirements",
+      "source_hash": "sha256:d0891b49f5cc3e0081d87578cc71d2f82c6f3ac7ef6310b119eb1d7f44310d44",
+      "source_anchor": "fn emit_unreferenced_requirements("
+    },
+    {
+      "item": "emit_cycle_diagnostics",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        390,
+        418
+      ],
+      "tree_path": "fn.emit_cycle_diagnostics",
+      "source_hash": "sha256:7d16344ccd0a1863a20f37ea1c2dff370c697110d78f31b59e9f589a289e48aa",
+      "source_anchor": "fn emit_cycle_diagnostics("
+    },
+    {
+      "item": "check_sidecar",
+      "reviewed": false,
+      "intent": "For a single sidecar entry: parse the sidecar, validate its version and source_hash format (sha256:<hex> regex), verify the source file exists, then for each spec delegate to check_item_hash, check_review_status, check_trivial_ignore, check_related_edges (for items) or check_requirement_hash (for requirements, with marker-based span recovery first). When --fix is active, strip _hints from all item specs. Write the sidecar back if --fix produced modifications.",
+      "source_span": [
+        427,
+        696
       ],
       "tree_path": "fn.check_sidecar",
-      "source_hash": "sha256:0aa6df2a8927b1dfc6b341a49f8434127abc4f5dfeb9d7d8fa16fdefe15283f8",
+      "source_hash": "sha256:7073aadcbb2212d01fa60615ecada03f86acc6382aaafc6fa4b462b3cc9471fb",
       "source_anchor": "fn check_sidecar(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
@@ -53,12 +149,150 @@
       }
     },
     {
+      "item": "check_requirement_hash",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        704,
+        890
+      ],
+      "tree_path": "fn.check_requirement_hash",
+      "source_hash": "sha256:33b049164f163dcc79e1de3f27f216fffd3c93b7fbb1773914bef667584d44c8",
+      "source_anchor": "fn check_requirement_hash("
+    },
+    {
+      "item": "check_item_hash",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        900,
+        981
+      ],
+      "tree_path": "fn.check_item_hash",
+      "source_hash": "sha256:d292e9a449db185ae7a0b9aa6b1e541a6ab02001b553a1f947eefc846e5c4859",
+      "source_anchor": "fn check_item_hash("
+    },
+    {
+      "item": "handle_missing_hash",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        984,
+        1035
+      ],
+      "tree_path": "fn.handle_missing_hash",
+      "source_hash": "sha256:0b84f4da4912fb4daf1d45a6a0f093eff81cbdce22bc38247f74c6f1c0eeb2a5",
+      "source_anchor": "fn handle_missing_hash("
+    },
+    {
+      "item": "handle_hash_mismatch",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        1039,
+        1179
+      ],
+      "tree_path": "fn.handle_hash_mismatch",
+      "source_hash": "sha256:322f1c68b92739e5e546672ddda40c7a886327fb4dac984b4f2ccd0ae751da5c",
+      "source_anchor": "fn handle_hash_mismatch(",
+      "related": {
+        "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b"
+      }
+    },
+    {
+      "item": "handle_tree_path_resolved",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        1183,
+        1343
+      ],
+      "tree_path": "fn.handle_tree_path_resolved",
+      "source_hash": "sha256:be18c43e0b7b16a0fe7481556498c2455c6cd3a7430139d40c106a65cf47a9d6",
+      "source_anchor": "fn handle_tree_path_resolved(",
+      "related": {
+        "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
+        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
+      }
+    },
+    {
+      "item": "handle_past_eof",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        1348,
+        1501
+      ],
+      "tree_path": "fn.handle_past_eof",
+      "source_hash": "sha256:545b3d996cf4c3623067dc4269e984235c8b1d235376fdeb023ef985b597de64",
+      "source_anchor": "fn handle_past_eof(",
+      "related": {
+        "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
+        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
+      }
+    },
+    {
+      "item": "check_review_status",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        1509,
+        1539
+      ],
+      "tree_path": "fn.check_review_status",
+      "source_hash": "sha256:62cd6e7a08df4bb831f0f4c860cb6cbaf41ec1483e53ed0bbb36894e93bf1eb0",
+      "source_anchor": "fn check_review_status(",
+      "related": {
+        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
+      }
+    },
+    {
+      "item": "check_trivial_ignore",
+      "reviewed": false,
+      "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
+      "source_span": [
+        1542,
+        1629
+      ],
+      "tree_path": "fn.check_trivial_ignore",
+      "source_hash": "sha256:434e82e6c548233c1113313ec013030b349da1f922c4f5e8b9a5c5f2a6f4feb5",
+      "source_anchor": "fn check_trivial_ignore("
+    },
+    {
+      "item": "check_related_edges",
+      "reviewed": false,
+      "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
+      "source_span": [
+        1634,
+        1747
+      ],
+      "tree_path": "fn.check_related_edges",
+      "source_hash": "sha256:66f6a7ee8df06a18e9a4e29e19851b775ee70717bc5b01a179afc8738a00aa12",
+      "source_anchor": "fn check_related_edges(",
+      "related": {
+        "reqchanged-demands-human-judgment": "sha256:30ba3f1eea4b3e68d6c5b3926c643cd41d753636d9420329934d9dd43ae14de5",
+        "reqchanged-orthogonal-to-reviewed": "sha256:5c85639dd24c2cecdeb7c466e414319fdd40451d0abb896e495fcd13d63a78d8"
+      }
+    },
+    {
+      "item": "detect_requirement_cycles",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        1757,
+        1809
+      ],
+      "tree_path": "fn.detect_requirement_cycles",
+      "source_hash": "sha256:c7124f27dcaade014657e1b571274470d11511922c508ca2a3836d7df20e808d",
+      "source_anchor": "fn detect_requirement_cycles(graph: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {"
+    },
+    {
       "item": "read_cached",
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1584,
-        1595
+        1812,
+        1823
       ],
       "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",

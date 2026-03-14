@@ -1693,7 +1693,7 @@ fn check_related_edges(
         }
     }
 
-    // Source @liyi:related markers missing from sidecar
+    // Source `@liyi:related` markers missing from sidecar
     let span_start = item.source_span[0];
     let span_end = item.source_span[1];
     for m in source_markers {
