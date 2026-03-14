@@ -147,7 +147,7 @@
     },
     {
       "item": "format_segment",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Serialize a single kind.name tree_path segment and append `[N]` when an indexed data-file array element is being represented. Uses parser::serialize_name so complex names remain correctly quoted.",
       "source_span": [
         1035,
@@ -159,7 +159,7 @@
     },
     {
       "item": "sequence_children",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return the named children of a sequence-valued body for a data-file item. Descends through transparent wrappers but must stop when it reaches the actual `array` or `block_sequence` container so single-element sequences do not lose their indexed identity during tree_path reconstruction.",
       "source_span": [
         1045,
@@ -171,7 +171,7 @@
     },
     {
       "item": "is_descendant_of",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return true when the target node is nested anywhere under the given ancestor node by walking the parent chain upward and comparing node identity.",
       "source_span": [
         1075,
@@ -183,7 +183,7 @@
     },
     {
       "item": "collect_path",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recursively walk from root to target node and build the canonical tree_path. At the target node, emit its segment. For sequence-valued data-file items, detect which child element actually contains the target, recurse through that element, and emit the parent segment with `[N]` so indexed paths like `key.steps[0]` are preserved. Outside indexed sequences, descend only through children whose byte range contains the target and prepend item segments on the way back out. Return false if the target cannot be found.",
       "source_span": [
         1087,
