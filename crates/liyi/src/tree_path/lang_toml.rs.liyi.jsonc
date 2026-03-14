@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Extract names from TOML AST nodes: for table and table_array_element, return the first bare_key or quoted_key child text (stripping quotes from quoted keys); for pair, return the first bare_key or quoted_key child text similarly; return None for other node kinds.",
       "source_span": [
-        16,
-        45
+        14,
+        43
       ],
       "tree_path": "fn.toml_node_name",
       "source_hash": "sha256:d41ee07a8c2572e7762248cea2feaf8deaa6d9d1c532281f8784c35cbc257e47",
@@ -17,15 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the TOML language configuration for tree_path resolution: register tree-sitter-toml-ng grammar, .toml extension, kind mappings (table→table, key→pair, array_table→table_array_element), self-as-body (\".\") sentinel so tables act as their own body containers, and toml_node_name custom callback for name extraction from bare_key/quoted_key children.",
       "source_span": [
         52,
         66
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:85e76a6797de1a694fc28798120f95bb63add5aac818d602c40aeb3b0d16ad7a",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:d8d777d241d049433fca10a0e01323628a14ef0e4bd6766af97970017d674c97",
+      "source_anchor": "    ///"
     }
   ]
 }

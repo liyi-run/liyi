@@ -5,27 +5,25 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the TypeScript language configuration for tree_path resolution: register tree-sitter-typescript grammar (LANGUAGE_TYPESCRIPT), .ts/.mts/.cts extensions, kind mappings for fn/class/method/interface/type/enum, using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         5,
         22
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:9dce29dec94e3accad76966aa0fa9d9dece08830b6f2c07e27390613d199d6e8",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:f652044359f10098e2a4c443c8891dd98aacf001038afa2ec80e19b0e4a55352",
+      "source_anchor": "    /// TypeScript language configuration."
     },
     {
       "item": "TSX_CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the TSX language configuration for tree_path resolution: register tree-sitter-typescript TSX grammar (LANGUAGE_TSX), .tsx extension, same kind mappings as TypeScript (fn/class/method/interface/type/enum), using standard name field with no custom name extraction, and js_has_doc_comment detector (reused from JavaScript) for /** JSDoc comments.",
       "source_span": [
         25,
         42
       ],
-      "tree_path": "static.TSX_CONFIG",
-      "source_hash": "sha256:2c76bd01bf64b6332386c1269d287ed29ae2e1d0985ee2d4396989dec0ec019c",
-      "source_anchor": "pub(super) static TSX_CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:e984b4f0b2b2762f69311657d0744f66c6c9151e18c51ab73db1a50acd7d0161",
+      "source_anchor": ""
     }
   ]
 }

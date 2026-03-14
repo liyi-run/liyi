@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Custom name extraction for Ruby nodes.
@@ -28,23 +26,26 @@ fn ruby_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// Ruby language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_ruby::LANGUAGE.into(),
-    extensions: &["rb", "rake", "gemspec"],
-    kind_map: &[
-        ("fn", "method"),
-        ("class", "class"),
-        ("module", "module"),
-        ("singleton_method", "singleton_method"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body", "statements"],
-    custom_name: Some(ruby_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &[],
-};
+// Ruby language configuration.
+declare_language! {
+    /// Ruby language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_ruby::LANGUAGE.into(),
+        extensions: ["rb", "rake", "gemspec"],
+        kind_map: [
+            ("fn", "method"),
+            ("class", "class"),
+            ("module", "module"),
+            ("singleton_method", "singleton_method"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body", "statements"],
+        custom_name: Some(ruby_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

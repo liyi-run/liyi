@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Custom name extraction for PHP `const_declaration` nodes.
@@ -19,27 +17,30 @@ fn php_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// PHP language configuration (PHP-only grammar, no HTML interleaving).
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_php::LANGUAGE_PHP_ONLY.into(),
-    extensions: &["php"],
-    kind_map: &[
-        ("fn", "function_definition"),
-        ("class", "class_declaration"),
-        ("method", "method_declaration"),
-        ("interface", "interface_declaration"),
-        ("enum", "enum_declaration"),
-        ("trait", "trait_declaration"),
-        ("namespace", "namespace_definition"),
-        ("const", "const_declaration"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body"],
-    custom_name: Some(php_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &[],
-};
+// PHP language configuration (PHP-only grammar, no HTML interleaving).
+declare_language! {
+    /// PHP language configuration (PHP-only grammar, no HTML interleaving).
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_php::LANGUAGE_PHP_ONLY.into(),
+        extensions: ["php"],
+        kind_map: [
+            ("fn", "function_definition"),
+            ("class", "class_declaration"),
+            ("method", "method_declaration"),
+            ("interface", "interface_declaration"),
+            ("enum", "enum_declaration"),
+            ("trait", "trait_declaration"),
+            ("namespace", "namespace_definition"),
+            ("const", "const_declaration"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body"],
+        custom_name: Some(php_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

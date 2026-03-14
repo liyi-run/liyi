@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for PHP const_declaration nodes: navigate into the const_element child and read its name field. Return None for all other node kinds.",
       "source_span": [
-        8,
-        20
+        6,
+        18
       ],
       "tree_path": "fn.php_node_name",
       "source_hash": "sha256:000b0989e6a231a3110b351589333e338f71cda03213dbe747c83271a52f460a",
@@ -17,15 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the PHP language configuration for tree_path resolution: register tree-sitter-php PHP-only grammar (no HTML interleaving), .php extension, kind mappings for fn/class/method/interface/enum/trait/namespace/const, wire the custom php_node_name callback, and no doc comment detector.",
       "source_span": [
         23,
         42
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:834be3bf9acb078c50e1628c4053e5bb63c524b36ca61a0fadee5ddbd2e75bc4",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:274360751472499dae445a0309c114907de14466b6fae5a615e4d5b30214a466",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }

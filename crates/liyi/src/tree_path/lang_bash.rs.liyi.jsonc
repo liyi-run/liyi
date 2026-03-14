@@ -5,15 +5,14 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the Bash language configuration for tree_path resolution: register tree-sitter-bash grammar v0.25.1, .sh/.bash extensions, kind mapping for fn (function_definition), using standard name field with no custom name extraction, body field for function body traversal, and no doc comment detector.",
       "source_span": [
         4,
         14
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:435a0fb03d78f56c8d2a5517662dda76d5a44d29b78690ee52eefae2882285b3",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:7800268b0da4dd80a2fe49c58a39c68138f875405c531a922e9c19d2eb06eb45",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }

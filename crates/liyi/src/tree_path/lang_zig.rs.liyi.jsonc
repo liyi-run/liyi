@@ -5,23 +5,22 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the Zig language configuration for tree_path resolution: register tree-sitter-zig grammar v1.1.2, .zig extension, kind mappings for fn (function_declaration), struct (variable_declaration for const Name = struct { ... }), and test (test_declaration). Uses custom name extraction and struct_declaration as body container for struct-as-namespace pattern. No doc comment detector.",
       "source_span": [
         62,
         78
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:47d6bb93813d9148fe3a7e9907a87366e91ff7582e4fd38553f3711729565e1d",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:38307fa46525aff7c38b7bc7e59729ab863b291d7f585c177b3e29f40a791d53",
+      "source_anchor": "    pub(super) static CONFIG {"
     },
     {
       "item": "zig_node_name",
       "reviewed": true,
       "intent": "Custom name extraction for Zig nodes. Handles function_declaration (finds identifier child), variable_declaration (detects const + struct_declaration pattern for struct-as-namespace), and test_declaration (extracts string literal content for test names).",
       "source_span": [
-        18,
-        59
+        16,
+        57
       ],
       "tree_path": "fn.zig_node_name",
       "source_hash": "sha256:90fd073b1f0e166c5e8b27c05d21a75caea36a5388ad38dd3f5d97cf2e34bb81",
@@ -32,8 +31,8 @@
       "reviewed": true,
       "intent": "Helper function to find the first child node with a given kind. Used by zig_node_name for identifier and string extraction.",
       "source_span": [
-        6,
-        9
+        4,
+        7
       ],
       "tree_path": "fn.find_child_by_kind",
       "source_hash": "sha256:475743b87d4a326bcc3cb1c34dc3166766e545b996c93e2af4434fe0ec1d8be8",

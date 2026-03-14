@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Custom name extraction for Dart nodes.
@@ -50,34 +48,37 @@ fn dart_has_doc_comment(node: &Node, source: &str) -> bool {
     false
 }
 
-/// Dart language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_dart::LANGUAGE.into(),
-    extensions: &["dart"],
-    kind_map: &[
-        ("fn", "function_signature"),
-        ("class", "class_declaration"),
-        ("mixin", "mixin_declaration"),
-        ("extension", "extension_declaration"),
-        ("extension_type", "extension_type_declaration"),
-        ("enum", "enum_declaration"),
-        ("getter", "getter_signature"),
-        ("setter", "setter_signature"),
-        ("constructor", "constructor_signature"),
-        ("const_constructor", "constant_constructor_signature"),
-        ("factory", "factory_constructor_signature"),
-        (
-            "factory_redirect",
-            "redirecting_factory_constructor_signature",
-        ),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body"],
-    custom_name: Some(dart_node_name),
-    doc_comment_detector: Some(dart_has_doc_comment),
-    transparent_kinds: &["class_member", "method_signature", "declaration"],
-};
+// Dart language configuration.
+declare_language! {
+    /// Dart language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_dart::LANGUAGE.into(),
+        extensions: ["dart"],
+        kind_map: [
+            ("fn", "function_signature"),
+            ("class", "class_declaration"),
+            ("mixin", "mixin_declaration"),
+            ("extension", "extension_declaration"),
+            ("extension_type", "extension_type_declaration"),
+            ("enum", "enum_declaration"),
+            ("getter", "getter_signature"),
+            ("setter", "setter_signature"),
+            ("constructor", "constructor_signature"),
+            ("const_constructor", "constant_constructor_signature"),
+            ("factory", "factory_constructor_signature"),
+            (
+                "factory_redirect",
+                "redirecting_factory_constructor_signature"
+            ),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body"],
+        custom_name: Some(dart_node_name),
+        doc_comment_detector: Some(dart_has_doc_comment),
+        transparent_kinds: ["class_member", "method_signature", "declaration"],
+    }
+}
 
 #[cfg(test)]
 mod tests {

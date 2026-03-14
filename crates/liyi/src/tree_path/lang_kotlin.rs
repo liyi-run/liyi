@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Custom name extraction for Kotlin nodes.
@@ -38,24 +36,27 @@ fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// Kotlin language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_kotlin_ng::LANGUAGE.into(),
-    extensions: &["kt", "kts"],
-    kind_map: &[
-        ("fn", "function_declaration"),
-        ("class", "class_declaration"),
-        ("object", "object_declaration"),
-        ("property", "property_declaration"),
-        ("typealias", "type_alias"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body", "class_body"],
-    custom_name: Some(kotlin_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &[],
-};
+// Kotlin language configuration.
+declare_language! {
+    /// Kotlin language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_kotlin_ng::LANGUAGE.into(),
+        extensions: ["kt", "kts"],
+        kind_map: [
+            ("fn", "function_declaration"),
+            ("class", "class_declaration"),
+            ("object", "object_declaration"),
+            ("property", "property_declaration"),
+            ("typealias", "type_alias"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body", "class_body"],
+        custom_name: Some(kotlin_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

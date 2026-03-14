@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Extract names from JSON pair nodes: get the key field (a string node), find the string_content child inside it, and return its text. Return None for non-pair nodes.",
       "source_span": [
-        10,
-        22
+        8,
+        20
       ],
       "tree_path": "fn.json_node_name",
       "source_hash": "sha256:1b0deafc4f61de6ea624d09e7f85705fec06c554d24e9867a7dbe62bbf4098db",
@@ -17,15 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the JSON language configuration for tree_path resolution: register tree-sitter-json grammar, .json extension, kind mapping (key→pair), value field for body traversal enabling nested object descent, json_node_name custom callback for string_content extraction, and object/array as transparent kinds so the resolver looks through them to reach pair nodes.",
       "source_span": [
         33,
         43
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:60f561f8d7d873a09b1e1e406fe88edf19d1db6534a2ff366a70adf196b8748d",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:2cccb883f5155b12c3ac752be32bb513e14646a1a66a302aaf5209b297c23196",
+      "source_anchor": "    ///"
     }
   ]
 }

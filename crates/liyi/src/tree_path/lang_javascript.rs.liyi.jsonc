@@ -5,15 +5,14 @@
   "specs": [
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the JavaScript language configuration for tree_path resolution: register tree-sitter-javascript grammar, .js/.mjs/.cjs/.jsx extensions, kind mappings for fn/class/method, using standard name field with no custom name extraction, and js_has_doc_comment detector for /** JSDoc comments.",
       "source_span": [
         19,
         33
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:5be8dd42c457cb5705efd5a4c5b41aa7119a452a466f6f8acb37ede08f0f0418",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:ad1b0bdbb8fcc7932bf0ffc657fe1236ba7cb02c82a9d2be1a87371683cc332d",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }

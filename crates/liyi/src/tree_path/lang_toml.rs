@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Find the first child with a given kind.
@@ -44,26 +42,33 @@ fn toml_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// TOML language configuration.
-///
-/// Tables and table array elements act as their own body containers —
-/// pairs are direct children of the table node.  The `"."` sentinel
-/// in `body_fields` tells `find_body` to return the node itself.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_toml_ng::LANGUAGE.into(),
-    extensions: &["toml"],
-    kind_map: &[
-        ("table", "table"),
-        ("key", "pair"),
-        ("array_table", "table_array_element"),
-    ],
-    name_field: "",
-    name_overrides: &[],
-    body_fields: &["."],
-    custom_name: Some(toml_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &[],
-};
+// TOML language configuration.
+//
+// Tables and table array elements act as their own body containers —
+// pairs are direct children of the table node.  The `"."` sentinel
+// in `body_fields` tells `find_body` to return the node itself.
+declare_language! {
+    /// TOML language configuration.
+    ///
+    /// Tables and table array elements act as their own body containers —
+    /// pairs are direct children of the table node.  The "." sentinel
+    /// in `body_fields` tells `find_body` to return the node itself.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_toml_ng::LANGUAGE.into(),
+        extensions: ["toml"],
+        kind_map: [
+            ("table", "table"),
+            ("key", "pair"),
+            ("array_table", "table_array_element"),
+        ],
+        name_field: "",
+        name_overrides: [],
+        body_fields: ["."],
+        custom_name: Some(toml_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Custom name extraction for Go nodes.
@@ -73,24 +71,27 @@ fn go_has_doc_comment(node: &Node, source: &str) -> bool {
     false
 }
 
-/// Go language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_go::LANGUAGE.into(),
-    extensions: &["go"],
-    kind_map: &[
-        ("fn", "function_declaration"),
-        ("method", "method_declaration"),
-        ("type", "type_declaration"),
-        ("const", "const_declaration"),
-        ("var", "var_declaration"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body"],
-    custom_name: Some(go_node_name),
-    doc_comment_detector: Some(go_has_doc_comment),
-    transparent_kinds: &[],
-};
+// Go language configuration.
+declare_language! {
+    /// Go language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_go::LANGUAGE.into(),
+        extensions: ["go"],
+        kind_map: [
+            ("fn", "function_declaration"),
+            ("method", "method_declaration"),
+            ("type", "type_declaration"),
+            ("const", "const_declaration"),
+            ("var", "var_declaration"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body"],
+        custom_name: Some(go_node_name),
+        doc_comment_detector: Some(go_has_doc_comment),
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -1,4 +1,3 @@
-use super::LanguageConfig;
 use super::lang_c::c_extract_declarator_name;
 
 use tree_sitter::Node;
@@ -40,27 +39,30 @@ fn cpp_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// C++ language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_cpp::LANGUAGE.into(),
-    extensions: &["cpp", "cc", "cxx", "h", "hpp", "hh", "hxx", "h++", "c++"],
-    kind_map: &[
-        ("fn", "function_definition"),
-        ("class", "class_specifier"),
-        ("struct", "struct_specifier"),
-        ("namespace", "namespace_definition"),
-        ("enum", "enum_specifier"),
-        ("template", "template_declaration"),
-        ("typedef", "type_definition"),
-        ("using", "alias_declaration"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body", "declaration_list"],
-    custom_name: Some(cpp_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &[],
-};
+// C++ language configuration.
+declare_language! {
+    /// C++ language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_cpp::LANGUAGE.into(),
+        extensions: ["cpp", "cc", "cxx", "h", "hpp", "hh", "hxx", "h++", "c++"],
+        kind_map: [
+            ("fn", "function_definition"),
+            ("class", "class_specifier"),
+            ("struct", "struct_specifier"),
+            ("namespace", "namespace_definition"),
+            ("enum", "enum_specifier"),
+            ("template", "template_declaration"),
+            ("typedef", "type_definition"),
+            ("using", "alias_declaration"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body", "declaration_list"],
+        custom_name: Some(cpp_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

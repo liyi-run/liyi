@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Delegate to leaf_text_pub; thin private wrapper preserving the original call-site contract.",
       "source_span": [
-        10,
-        12
+        8,
+        10
       ],
       "tree_path": "fn.leaf_text",
       "source_hash": "sha256:8a49b7d0201b290d8fc25629532e355e7010ed734e7145dafc6096664d69a250",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Recursively descend through named children of a YAML wrapper node until reaching a leaf (no named children) and return its source text. Used to unwrap flow_node → plain_scalar → string_scalar chains to extract key text. Public within the crate for use by the injection framework.",
       "source_span": [
-        15,
-        26
+        13,
+        24
       ],
       "tree_path": "fn.leaf_text_pub",
       "source_hash": "sha256:70291ff0abf2cb72cb7f562c5665e23d18e826df0b91f88d8e71243a910aa983",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Extract names from YAML block_mapping_pair nodes: get the key field, drill down to the leaf scalar text via leaf_text, and strip surrounding quotes from quoted scalars. Return None for non-block_mapping_pair nodes.",
       "source_span": [
-        33,
-        49
+        31,
+        47
       ],
       "tree_path": "fn.yaml_node_name",
       "source_hash": "sha256:f0cbc73e846ab015bedb3d7f183c333adc32ccbe296be720523b9e6b776d3b53",
@@ -41,15 +41,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the YAML language configuration for tree_path resolution (without injection support): register tree-sitter-yaml grammar, .yml/.yaml extensions, kind mapping (key→block_mapping_pair), value field for body traversal, yaml_node_name custom callback for deep key extraction, and document/block_node/block_mapping/block_sequence as transparent kinds so the resolver looks through YAML's deeply nested wrapper structure.",
       "source_span": [
         58,
         68
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:43284633389863bd3e2efc1977291889c15998291025da3a81275c1f37b498c6",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:9ecca3aac0a57b6b132547a0a25523d0f2d766585041d4af364b3725166432c3",
+      "source_anchor": "    ///"
     }
   ]
 }

@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Walk down wrapper nodes to find the leaf scalar text.
@@ -48,24 +46,33 @@ fn yaml_node_name(node: &Node, source: &str) -> Option<String> {
     })
 }
 
-/// YAML language configuration (without injection support).
-///
-/// YAML nesting follows `block_mapping_pair → value (block_node) →
-/// block_mapping → block_mapping_pair`.  The intermediate `document`,
-/// `block_node`, `block_mapping`, and `block_sequence` nodes are marked
-/// transparent so the resolver looks through them to reach the actual
-/// `block_mapping_pair` items.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_yaml::LANGUAGE.into(),
-    extensions: &["yml", "yaml"],
-    kind_map: &[("key", "block_mapping_pair")],
-    name_field: "",
-    name_overrides: &[],
-    body_fields: &["value"],
-    custom_name: Some(yaml_node_name),
-    doc_comment_detector: None,
-    transparent_kinds: &["document", "block_node", "block_mapping", "block_sequence"],
-};
+// YAML language configuration (without injection support).
+//
+// YAML nesting follows `block_mapping_pair → value (block_node) →
+// block_mapping → block_mapping_pair`.  The intermediate `document`,
+// `block_node`, `block_mapping`, and `block_sequence` nodes are marked
+// transparent so the resolver looks through them to reach the actual
+// `block_mapping_pair` items.
+declare_language! {
+    /// YAML language configuration (without injection support).
+    ///
+    /// YAML nesting follows `block_mapping_pair → value (block_node) →
+    /// block_mapping → block_mapping_pair`.  The intermediate `document`,
+    /// `block_node`, `block_mapping`, and `block_sequence` nodes are marked
+    /// transparent so the resolver looks through them to reach the actual
+    /// `block_mapping_pair` items.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_yaml::LANGUAGE.into(),
+        extensions: ["yml", "yaml"],
+        kind_map: [("key", "block_mapping_pair")],
+        name_field: "",
+        name_overrides: [],
+        body_fields: ["value"],
+        custom_name: Some(yaml_node_name),
+        doc_comment_detector: None,
+        transparent_kinds: ["document", "block_node", "block_mapping", "block_sequence"],
+    }
+}
 
 #[cfg(test)]
 mod tests {

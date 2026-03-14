@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Detect Python docstrings (`"""..."""`/`'''...'''` as first statement of body).
@@ -31,18 +29,21 @@ fn python_has_doc_comment(node: &Node, source: &str) -> bool {
     false
 }
 
-/// Python language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_python::LANGUAGE.into(),
-    extensions: &["py", "pyi"],
-    kind_map: &[("fn", "function_definition"), ("class", "class_definition")],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body"],
-    custom_name: None,
-    doc_comment_detector: Some(python_has_doc_comment),
-    transparent_kinds: &[],
-};
+// Python language configuration.
+declare_language! {
+    /// Python language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_python::LANGUAGE.into(),
+        extensions: ["py", "pyi"],
+        kind_map: [("fn", "function_definition"), ("class", "class_definition")],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body"],
+        custom_name: None,
+        doc_comment_detector: Some(python_has_doc_comment),
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

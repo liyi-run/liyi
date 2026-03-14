@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for C++ AST nodes extending the C extractor: handle function_definition via c_extract_declarator_name, type_definition/alias_declaration via name or declarator fields, and template_declaration by transparently extracting the name from the wrapped inner declaration (class, struct, enum, concept, alias, function, or nested template).",
       "source_span": [
-        11,
-        41
+        10,
+        40
       ],
       "tree_path": "fn.cpp_node_name",
       "source_hash": "sha256:d5e8630c1158a96e9ee4477fd29a8045a263cde5a6f1db34d4de2bd921911d17",
@@ -17,15 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the C++ language configuration for tree_path resolution: register tree-sitter-cpp grammar, C++ file extensions (.cpp/.cc/.cxx/.hpp etc.), kind mappings for fn/class/struct/namespace/enum/template/typedef/using, wire the custom cpp_node_name callback, and no doc comment detector.",
       "source_span": [
         44,
         63
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:435f6f5356bbbd674a5b9c72860141710adb9e43fbdaaec09fe98584eaff1e34",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:789b17fb26ce7e9911dede1154eb12214a116812ecf79790fd0220894ecb67c2",
+      "source_anchor": "    /// C++ language configuration."
     }
   ]
 }

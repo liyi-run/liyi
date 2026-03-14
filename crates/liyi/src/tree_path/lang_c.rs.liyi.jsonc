@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Extract the function name from a C/C++ function_definition node by walking the declarator field chain (function_definition → function_declarator → declarator identifier), unwrapping pointer/parenthesized/attributed wrappers as needed.",
       "source_span": [
-        12,
-        17
+        10,
+        15
       ],
       "tree_path": "fn.c_extract_declarator_name",
       "source_hash": "sha256:557dd283043051a8ecd06b764fcb2dbd427336ea901def53233e6c5d3f17dd9a",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Recursively unwrap pointer_declarator, parenthesized_declarator, and attributed_declarator wrapper nodes to locate the inner function_declarator node. Must return None if no function_declarator is found in the chain.",
       "source_span": [
-        21,
-        30
+        19,
+        28
       ],
       "tree_path": "fn.unwrap_to_function_declarator",
       "source_hash": "sha256:7deb95767257a9673219fc33409d41ed5acc25171e544a185fef48bf2ba36a24",
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for C AST nodes: dispatch to c_extract_declarator_name for function_definition, and read the declarator field directly for type_definition (typedef). Return None for all other node kinds.",
       "source_span": [
-        36,
-        46
+        34,
+        44
       ],
       "tree_path": "fn.c_node_name",
       "source_hash": "sha256:b307bbb1f46aacfeca84ae3de1021ac8754377403638fa435d2dab598f92d237",
@@ -41,15 +41,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the C language configuration for tree_path resolution: register tree-sitter-c grammar, .c extension only, kind mappings for fn/struct/enum/typedef, wire the custom c_node_name callback for name extraction, and no doc comment detector.",
       "source_span": [
         49,
         64
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:896b0b51a031e70d135ee3c4f5c5fec8e24548e376d24f3551c1bcf865815c16",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:46f2f75e608da8b8c32c2379e9b43ad5657eea8a6485ba6f5962c5553d826214",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }

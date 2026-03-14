@@ -1,5 +1,3 @@
-use super::LanguageConfig;
-
 use tree_sitter::Node;
 
 /// Detect Javadoc comments (`/** ... */` before a declaration).
@@ -22,26 +20,29 @@ fn java_has_doc_comment(node: &Node, source: &str) -> bool {
     false
 }
 
-/// Java language configuration.
-pub(super) static CONFIG: LanguageConfig = LanguageConfig {
-    ts_language: || tree_sitter_java::LANGUAGE.into(),
-    extensions: &["java"],
-    kind_map: &[
-        ("fn", "method_declaration"),
-        ("class", "class_declaration"),
-        ("interface", "interface_declaration"),
-        ("enum", "enum_declaration"),
-        ("constructor", "constructor_declaration"),
-        ("record", "record_declaration"),
-        ("annotation", "annotation_type_declaration"),
-    ],
-    name_field: "name",
-    name_overrides: &[],
-    body_fields: &["body"],
-    custom_name: None,
-    doc_comment_detector: Some(java_has_doc_comment),
-    transparent_kinds: &[],
-};
+// Java language configuration.
+declare_language! {
+    /// Java language configuration.
+    pub(super) static CONFIG {
+        ts_language: || tree_sitter_java::LANGUAGE.into(),
+        extensions: ["java"],
+        kind_map: [
+            ("fn", "method_declaration"),
+            ("class", "class_declaration"),
+            ("interface", "interface_declaration"),
+            ("enum", "enum_declaration"),
+            ("constructor", "constructor_declaration"),
+            ("record", "record_declaration"),
+            ("annotation", "annotation_type_declaration"),
+        ],
+        name_field: "name",
+        name_overrides: [],
+        body_fields: ["body"],
+        custom_name: None,
+        doc_comment_detector: Some(java_has_doc_comment),
+        transparent_kinds: [],
+    }
+}
 
 #[cfg(test)]
 mod tests {

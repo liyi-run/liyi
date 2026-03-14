@@ -5,14 +5,14 @@
   "specs": [
     {
       "item": "dart_node_name",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Handle Dart-specific name extraction for extension_type_declaration, where the name field yields an extension_type_name wrapper node containing the actual identifier. Must drill through the wrapper to return the inner identifier text. Returns None for all other node kinds to fall through to default name extraction.",
       "source_span": [
-        14,
-        28
+        12,
+        25
       ],
       "tree_path": "fn.dart_node_name",
-      "source_hash": "sha256:931e6f1c2d6958225da74e0c1219f55cf297593b6bbc36ca06be920dc4ddded2",
+      "source_hash": "sha256:8c51bee6010d45edade6f95e7baba6af176e66597eeffab3f9122517946e4a53",
       "source_anchor": "fn dart_node_name(node: &Node, source: &str) -> Option<String> {"
     },
     {
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Detect whether a Dart doc comment (/// line comment or /** */ documentation_block_comment) immediately precedes a declaration node. Must skip past annotation siblings (@override, @deprecated, etc.) to find doc comments that precede the annotation chain.",
       "source_span": [
-        30,
-        51
+        28,
+        49
       ],
       "tree_path": "fn.dart_has_doc_comment",
       "source_hash": "sha256:9f0fafae6cbcfc7454eb728b44c1aff2930ab2956d00e4fd5c9fc04a78a8d011",
@@ -29,15 +29,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the Dart language configuration for tree_path resolution: register tree-sitter-dart grammar, .dart extension, kind mappings for fn (function_signature), class (class_declaration), mixin, extension, extension_type, enum, getter, setter, constructor (4 variants), wire custom dart_node_name and dart_has_doc_comment callbacks, and declare class_member/method_signature/declaration as transparent wrapper kinds so resolve_segments can find inner signature nodes nested inside class bodies.",
       "source_span": [
         54,
         81
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:1800150e1e349c0de6221496d22f92d74ca0c139140ca56c2f438600269922fe",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:3212c2901cd8311a2f38bbb2080e164016d86f0187b6ba8ac94a9e612cc4804f",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }

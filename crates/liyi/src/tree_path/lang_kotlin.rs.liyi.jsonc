@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Custom name extractor for Kotlin AST nodes: for property_declaration, find the name inside a variable_declaration child or a simple_identifier child; for type_alias, find the type_identifier or simple_identifier child before the RHS. Return None for unrecognized kinds.",
       "source_span": [
-        10,
-        39
+        8,
+        37
       ],
       "tree_path": "fn.kotlin_node_name",
       "source_hash": "sha256:2a28e86d5bade7386e754061a6091f9c355ae41fb2c204ac4a1665bd1758db36",
@@ -17,15 +17,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Define the Kotlin language configuration for tree_path resolution: register tree-sitter-kotlin-ng grammar, .kt/.kts extensions, kind mappings for fn/class/object/property/typealias, wire the custom kotlin_node_name callback, and no doc comment detector.",
       "source_span": [
         42,
         58
       ],
-      "tree_path": "static.CONFIG",
-      "source_hash": "sha256:c44502301bfedb32c49eb543da976a65e3dbe9b4c4d5fc7323a8c6541fe64423",
-      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+      "source_hash": "sha256:c74b3298fd3a3a58a23d057b939de83adff100564285c8d43db1a42a657335f8",
+      "source_anchor": "    pub(super) static CONFIG {"
     }
   ]
 }
