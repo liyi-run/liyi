@@ -318,11 +318,16 @@ or delete-vs-modify), it:
    - `check.rs`: emit `Error` diagnostic when `_merge_conflict` is present;
      strip it (along with the sentinel intent) once the human provides
      real intent
+   - `approve.rs`: `collect_approval_candidates` must skip items with
+     `_merge_conflict`, and `apply_approval` must hard-error if called
+     on one. Without this, the approval flow would treat a conflicted item
+     as a normal unreviewed candidate and allow `Yes`/`Edit` to mark it
+     reviewed — silently promoting the `<<<MERGE_CONFLICT>>>` sentinel to
+     human-vouched intent. The human must first resolve the conflict (pick
+     ours, theirs, or write new intent), then run `liyi check --fix` to
+     strip `_merge_conflict`, and only then can `liyi approve` surface it
    - `prompt.rs` / triage consumers: skip items with `_merge_conflict`
      or surface them as "blocked on merge resolution"
-
-   No changes needed to the core validation, approval, or hash-computation
-   paths — they already gate on `intent` content.
 
 3. Emits a diagnostic at `Error` severity so `liyi check` fails until the
    human resolves it. The diagnostic message references the item name and
