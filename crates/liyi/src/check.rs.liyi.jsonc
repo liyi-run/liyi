@@ -24,7 +24,7 @@
         113
       ],
       "tree_path": "fn.run_check",
-      "source_hash": "sha256:2720872f3e14eaf6a956f0e6284694f93867a30a4a21ade27c5a9d1ecd6e180b",
+      "source_hash": "sha256:eb0b33db4b23fd3aff3d72bd2074f199a2851c9a70e9f785118cd1554055d7f2",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
@@ -34,7 +34,7 @@
     },
     {
       "item": "emit_ambiguous_sidecar_warnings",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Convert discovery warning strings into AmbiguousSidecar diagnostics.",
       "source_span": [
         119,
