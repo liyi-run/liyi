@@ -210,10 +210,13 @@ subsequent `--fix` pass re-derives them from source.
   - Both sides same hash → keep it.
   - One side changed the hash (e.g., ran `liyi approve` on that branch),
     other side unchanged from base → take the changed side.
-  - Both sides changed to different hashes → keep either (do not pick
-    the one matching current requirement text — that would manufacture
-    review evidence for a revision the human may not have reviewed). Let
-    `ReqChanged` fire on whichever hash survives; the human must approve.
+  - Both sides changed to different hashes → prefer the hash that does
+    *not* match the requirement's current `source_hash`. This guarantees
+    `ReqChanged` fires, preventing a nondeterministic "keep either" from
+    accidentally picking the current hash and silently suppressing review.
+    If neither hash matches current, either is safe (both will trigger
+    `ReqChanged`). If both match current (requirement unchanged, both
+    sides independently re-approved), keep it — there is nothing stale.
   - Only one side has the edge (the other side lacked it entirely) →
     keep the surviving side's hash. This preserves review provenance for
     edges that were reviewed on one branch. Do not replace with `null` or
