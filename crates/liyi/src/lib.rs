@@ -8,6 +8,7 @@ pub mod init;
 pub mod markers;
 pub mod prompt;
 pub mod reanchor;
+pub mod recovery;
 pub mod schema;
 pub mod shift;
 pub mod sidecar;

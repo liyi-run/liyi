@@ -1,0 +1,55 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/recovery.rs",
+  "specs": [
+    {
+      "item": "RecoveryMethod",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        6,
+        10
+      ],
+      "tree_path": "enum.RecoveryMethod",
+      "source_hash": "sha256:1c9b3e29648a87cdace9cc9922df9e9044cc68af18f16859a0cb2eb46ee0cd8c",
+      "source_anchor": "pub enum RecoveryMethod {"
+    },
+    {
+      "item": "ItemSpanRecovery",
+      "reviewed": false,
+      "intent": "Represent the shared item span recovery result as unchanged, shifted, or failed, while preserving any updated tree_path emitted by sibling scan and the recovery method that produced the result.",
+      "source_span": [
+        13,
+        28
+      ],
+      "tree_path": "enum.ItemSpanRecovery",
+      "source_hash": "sha256:674b692fed385ca843a678942c5afc52da6ede413950f34dc5bb6161e0aa84b5",
+      "source_anchor": "pub enum ItemSpanRecovery {"
+    },
+    {
+      "item": "recover_item_span",
+      "reviewed": false,
+      "intent": "Run the shared item span recovery cascade. Prefer tree_path resolution when available, fall back to sibling scan when the resolved content no longer matches the expected hash, then fall back to the hash-based shift heuristic. Return a structured recovery result and preserve a failure note describing why structural recovery was unavailable or failed.",
+      "source_span": [
+        66,
+        128
+      ],
+      "tree_path": "fn.recover_item_span",
+      "source_hash": "sha256:9ac0f8cab5e1bfb4be92523d4d09134c75532aafc671f41f96860737888a73a7",
+      "source_anchor": "pub fn recover_item_span("
+    },
+    {
+      "item": "to_recovery",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        130,
+        150
+      ],
+      "tree_path": "fn.to_recovery",
+      "source_hash": "sha256:5a71c6d51c738ce29306e75d74d12be0723ce1843322766011abe5f401d11fa8",
+      "source_anchor": "fn to_recovery("
+    }
+  ]
+}
