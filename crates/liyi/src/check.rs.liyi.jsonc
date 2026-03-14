@@ -17,7 +17,7 @@
     },
     {
       "item": "run_check",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Orchestrate the two-pass check by delegating to helpers: pass 1 calls discover_requirements, compute_requirement_hashes, collect_source_related_refs, enrich_requirements_from_sidecars to build the global requirement registry; pass 2 calls check_sidecar for each entry. Post-pass calls emit_untracked_requirements, emit_unreferenced_requirements, detect_requirement_cycles, and emit_cycle_diagnostics. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         42,
@@ -46,7 +46,7 @@
     },
     {
       "item": "discover_requirements",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         142,
@@ -58,7 +58,7 @@
     },
     {
       "item": "compute_requirement_hashes",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         196,
@@ -70,7 +70,7 @@
     },
     {
       "item": "collect_source_related_refs",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         220,
@@ -82,7 +82,7 @@
     },
     {
       "item": "enrich_requirements_from_sidecars",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         242,
@@ -94,7 +94,7 @@
     },
     {
       "item": "emit_untracked_requirements",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         310,
@@ -106,7 +106,7 @@
     },
     {
       "item": "emit_unreferenced_requirements",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         360,
@@ -118,7 +118,7 @@
     },
     {
       "item": "emit_cycle_diagnostics",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         390,
@@ -130,7 +130,7 @@
     },
     {
       "item": "check_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version and source_hash format (sha256:<hex> regex), verify the source file exists, then for each spec delegate to check_item_hash, check_review_status, check_trivial_ignore, check_related_edges (for items) or check_requirement_hash (for requirements, with marker-based span recovery first). When --fix is active, strip _hints from all item specs. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         427,
@@ -150,7 +150,7 @@
     },
     {
       "item": "check_requirement_hash",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         704,
@@ -162,7 +162,7 @@
     },
     {
       "item": "check_item_hash",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         900,
@@ -174,7 +174,7 @@
     },
     {
       "item": "handle_missing_hash",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         984,
@@ -186,7 +186,7 @@
     },
     {
       "item": "handle_hash_mismatch",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1039,
@@ -201,7 +201,7 @@
     },
     {
       "item": "handle_tree_path_resolved",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1183,
@@ -217,7 +217,7 @@
     },
     {
       "item": "handle_past_eof",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1348,
@@ -233,7 +233,7 @@
     },
     {
       "item": "check_review_status",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1509,
@@ -248,7 +248,7 @@
     },
     {
       "item": "check_trivial_ignore",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
       "source_span": [
         1542,
@@ -260,7 +260,7 @@
     },
     {
       "item": "check_related_edges",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
       "source_span": [
         1634,
@@ -276,7 +276,7 @@
     },
     {
       "item": "detect_requirement_cycles",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1757,
