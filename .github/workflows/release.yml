@@ -63,12 +63,14 @@ jobs:
         if: ${{ !matrix.cross }}
         run: |
           RUSTFLAGS='-C target-feature=+crt-static' \
-            cargo build --release -p liyi --target ${{ matrix.target }}
+            cargo build --release -p liyi-cli --target ${{ matrix.target }}
+          ls -alF target/${{ matrix.target }}/release/
 
       - name: Build release binary (cross)
         if: matrix.cross
         run: |
-          cross build --release -p liyi --target ${{ matrix.target }}
+          cross build --release -p liyi-cli --target ${{ matrix.target }}
+          ls -alF target/${{ matrix.target }}/release/
 
       - name: Strip binary
         run: |
@@ -85,12 +87,12 @@ jobs:
           cp target/${{ matrix.target }}/release/liyi dist/
           cp LICENSE-*.txt dist/
           cp README.md dist/
-          tar -C dist -czf ../liyi-${{ github.ref_name }}-${{ matrix.target }}.tar.gz .
+          tar -C dist -czf ./liyi-${{ github.ref_name }}-${{ matrix.target }}.tar.gz .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: liyi-${{ matrix.target }}
+          name: dist-artifact-${{ matrix.target }}
           path: liyi-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
 
   release:
@@ -104,10 +106,13 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: artifacts
-          pattern: liyi-*
+          pattern: dist-artifact-*
           merge-multiple: true
 
+      - run: ls -alF artifacts
+
       - name: Create Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*.tar.gz
