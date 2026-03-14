@@ -78,11 +78,10 @@ jobs:
       - name: Package binary
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/liyi dist/liyi
+          cp target/${{ matrix.target }}/release/liyi dist/
           cp LICENSE-*.txt dist/
           cp README.md dist/
-          cd dist
-          tar czf ../liyi-${{ github.ref_name }}-${{ matrix.target }}.tar.gz liyi LICENSE-*.txt README.md
+          tar -C dist -czf ../liyi-${{ github.ref_name }}-${{ matrix.target }}.tar.gz .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
