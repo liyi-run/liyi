@@ -916,19 +916,12 @@ fn check_item_hash(
 
             if is_current {
                 // CURRENT
-                diagnostics.push(Diagnostic {
-                    file: ctx.file.to_path_buf(),
-                    item_or_req: label.to_string(),
-                    kind: DiagnosticKind::Current,
-                    severity: Severity::Info,
-                    message: "hash matches".into(),
-                    fix_hint: None,
-                    fixed: false,
-                    span_start: Some(item.source_span[0]),
-                    annotation_line: None,
-                    requirement_text: None,
-                    intent: Some(item.intent.clone()),
-                });
+                diagnostics.push(Diagnostic::current(
+                    ctx.file.to_path_buf(),
+                    label.to_string(),
+                    item.source_span[0],
+                    item.intent.clone(),
+                ));
             } else if item.source_hash.is_none() {
                 modified |= handle_missing_hash(
                     ctx.file,
@@ -946,24 +939,12 @@ fn check_item_hash(
             modified |= handle_past_eof(ctx, label, item, end, total, diagnostics);
         }
         Err(SpanError::Inverted { .. } | SpanError::Empty) => {
-            diagnostics.push(Diagnostic {
-                file: ctx.file.to_path_buf(),
-                item_or_req: label.to_string(),
-                kind: DiagnosticKind::InvalidSpan {
-                    span: item.source_span,
-                },
-                severity: Severity::Error,
-                message: format!(
-                    "invalid span [{}, {}]",
-                    item.source_span[0], item.source_span[1]
-                ),
-                fix_hint: None,
-                fixed: false,
-                span_start: None,
-                annotation_line: None,
-                requirement_text: None,
-                intent: Some(item.intent.clone()),
-            });
+            diagnostics.push(Diagnostic::invalid_span(
+                ctx.file.to_path_buf(),
+                label.to_string(),
+                item.source_span,
+                item.intent.clone(),
+            ));
         }
     }
 
@@ -1008,19 +989,15 @@ fn handle_missing_hash(
         item.reviewed = false;
         modified = true;
     }
-    diagnostics.push(Diagnostic {
-        file: file.to_path_buf(),
-        item_or_req: label.to_string(),
-        kind: DiagnosticKind::Stale,
-        severity: Severity::Warning,
-        message: "missing source_hash".into(),
-        fix_hint: Some("liyi check --fix".into()),
-        fixed: fix,
-        span_start: Some(item.source_span[0]),
-        annotation_line: None,
-        requirement_text: None,
-        intent: Some(item.intent.clone()),
-    });
+    diagnostics.push(Diagnostic::stale(
+        file.to_path_buf(),
+        label.to_string(),
+        "missing source_hash".into(),
+        Some("liyi check --fix".into()),
+        fix,
+        item.source_span[0],
+        item.intent.clone(),
+    ));
     modified
 }
 
@@ -1047,19 +1024,15 @@ fn handle_hash_mismatch(
             } else {
                 format!("hash mismatch, could not relocate ({note})")
             };
-            diagnostics.push(Diagnostic {
-                file: ctx.file.to_path_buf(),
-                item_or_req: label.to_string(),
-                kind: DiagnosticKind::Stale,
-                severity: Severity::Warning,
-                message: detail,
-                fix_hint: None,
-                fixed: false,
-                span_start: Some(item.source_span[0]),
-                annotation_line: None,
-                requirement_text: None,
-                intent: Some(item.intent.clone()),
-            });
+            diagnostics.push(Diagnostic::stale(
+                ctx.file.to_path_buf(),
+                label.to_string(),
+                detail,
+                None,
+                false,
+                item.source_span[0],
+                item.intent.clone(),
+            ));
             false
         }
         recovery => handle_tree_path_resolved(ctx, label, item, recovery, lang, diagnostics),
@@ -1108,22 +1081,14 @@ fn handle_tree_path_resolved(
             }
             modified = true;
         }
-        diagnostics.push(Diagnostic {
-            file: ctx.file.to_path_buf(),
-            item_or_req: label.to_string(),
-            kind: DiagnosticKind::Shifted {
-                from: old_span,
-                to: new_span,
-            },
-            severity: Severity::Warning,
-            message: shifted_recovery_message(recovery_method, delta, new_span),
-            fix_hint: Some("liyi check --fix".into()),
-            fixed: ctx.fix,
-            span_start: Some(item.source_span[0]),
-            annotation_line: None,
-            requirement_text: None,
-            intent: Some(item.intent.clone()),
-        });
+        diagnostics.push(Diagnostic::shifted(
+            ctx.file.to_path_buf(),
+            label.to_string(),
+            (old_span, new_span),
+            shifted_recovery_message(recovery_method, delta, new_span),
+            ctx.fix,
+            (item.source_span[0], item.intent.clone()),
+        ));
     } else {
         // Content at tree_path location has changed.
         // For reviewed specs (`@liyi:intent` in source): update span but do NOT
@@ -1160,19 +1125,15 @@ fn handle_tree_path_resolved(
             } else {
                 "source changed at tree_path location (not auto-rehashed — reviewed)".into()
             };
-            diagnostics.push(Diagnostic {
-                file: ctx.file.to_path_buf(),
-                item_or_req: label.to_string(),
-                kind: DiagnosticKind::Stale,
-                severity: Severity::Warning,
-                message: msg,
-                fix_hint: None,
-                fixed: false,
-                span_start: Some(item.source_span[0]),
-                annotation_line: None,
-                requirement_text: None,
-                intent: Some(item.intent.clone()),
-            });
+            diagnostics.push(Diagnostic::stale(
+                ctx.file.to_path_buf(),
+                label.to_string(),
+                msg,
+                None,
+                false,
+                item.source_span[0],
+                item.intent.clone(),
+            ));
         } else {
             let msg = if new_span != old_span {
                 format!(
@@ -1182,19 +1143,15 @@ fn handle_tree_path_resolved(
             } else {
                 "source changed at tree_path location (auto-rehashed — unreviewed)".into()
             };
-            diagnostics.push(Diagnostic {
-                file: ctx.file.to_path_buf(),
-                item_or_req: label.to_string(),
-                kind: DiagnosticKind::Stale,
-                severity: Severity::Warning,
-                message: msg,
-                fix_hint: Some("liyi check --fix".into()),
-                fixed: ctx.fix,
-                span_start: Some(item.source_span[0]),
-                annotation_line: None,
-                requirement_text: None,
-                intent: Some(item.intent.clone()),
-            });
+            diagnostics.push(Diagnostic::stale(
+                ctx.file.to_path_buf(),
+                label.to_string(),
+                msg,
+                Some("liyi check --fix".into()),
+                ctx.fix,
+                item.source_span[0],
+                item.intent.clone(),
+            ));
         }
     }
     modified
@@ -1254,22 +1211,14 @@ fn handle_past_eof(
                 }
                 modified = true;
             }
-            diagnostics.push(Diagnostic {
-                file: ctx.file.to_path_buf(),
-                item_or_req: label.to_string(),
-                kind: DiagnosticKind::Shifted {
-                    from: old_span,
-                    to: new_span,
-                },
-                severity: Severity::Warning,
-                message: past_eof_recovery_message(recovery_method, end, total, delta, new_span),
-                fix_hint: Some("liyi check --fix".into()),
-                fixed: ctx.fix,
-                span_start: Some(item.source_span[0]),
-                annotation_line: None,
-                requirement_text: None,
-                intent: Some(item.intent.clone()),
-            });
+            diagnostics.push(Diagnostic::shifted(
+                ctx.file.to_path_buf(),
+                label.to_string(),
+                (old_span, new_span),
+                past_eof_recovery_message(recovery_method, end, total, delta, new_span),
+                ctx.fix,
+                (item.source_span[0], item.intent.clone()),
+            ));
         } else {
             // Content also changed — relocate span.
             let effectively_reviewed = item.reviewed
@@ -1294,39 +1243,31 @@ fn handle_past_eof(
                 modified = true;
             }
             if effectively_reviewed {
-                diagnostics.push(Diagnostic {
-                    file: ctx.file.to_path_buf(),
-                    item_or_req: label.to_string(),
-                    kind: DiagnosticKind::Stale,
-                    severity: Severity::Warning,
-                    message: format!(
+                diagnostics.push(Diagnostic::stale(
+                    ctx.file.to_path_buf(),
+                    label.to_string(),
+                    format!(
                         "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] but content also changed (not auto-rehashed — reviewed)",
                         new_span[0], new_span[1]
                     ),
-                    fix_hint: None,
-                    fixed: false,
-                    span_start: Some(item.source_span[0]),
-                    annotation_line: None,
-                    requirement_text: None,
-                    intent: Some(item.intent.clone()),
-                });
+                    None,
+                    false,
+                    item.source_span[0],
+                    item.intent.clone(),
+                ));
             } else {
-                diagnostics.push(Diagnostic {
-                    file: ctx.file.to_path_buf(),
-                    item_or_req: label.to_string(),
-                    kind: DiagnosticKind::Stale,
-                    severity: Severity::Warning,
-                    message: format!(
+                diagnostics.push(Diagnostic::stale(
+                    ctx.file.to_path_buf(),
+                    label.to_string(),
+                    format!(
                         "span past EOF (end {end} > {total}), tree_path resolved to [{}, {}] (auto-rehashed — unreviewed)",
                         new_span[0], new_span[1]
                     ),
-                    fix_hint: Some("liyi check --fix".into()),
-                    fixed: ctx.fix,
-                    span_start: Some(item.source_span[0]),
-                    annotation_line: None,
-                    requirement_text: None,
-                    intent: Some(item.intent.clone()),
-                });
+                    Some("liyi check --fix".into()),
+                    ctx.fix,
+                    item.source_span[0],
+                    item.intent.clone(),
+                ));
             }
         }
     } else {
@@ -1337,22 +1278,14 @@ fn handle_past_eof(
         } else {
             format!("span end {end} exceeds file length {total}")
         };
-        diagnostics.push(Diagnostic {
-            file: ctx.file.to_path_buf(),
-            item_or_req: label.to_string(),
-            kind: DiagnosticKind::SpanPastEof {
-                span: item.source_span,
-                file_lines: total,
-            },
-            severity: Severity::Error,
-            message: detail,
-            fix_hint: Some("liyi check --fix".into()),
-            fixed: false,
-            span_start: Some(item.source_span[0]),
-            annotation_line: None,
-            requirement_text: None,
-            intent: Some(item.intent.clone()),
-        });
+        diagnostics.push(Diagnostic::span_past_eof(
+            ctx.file.to_path_buf(),
+            label.to_string(),
+            item.source_span,
+            total,
+            detail,
+            item.intent.clone(),
+        ));
     }
     modified
 }

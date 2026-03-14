@@ -178,22 +178,22 @@
       "intent": "=doc",
       "source_span": [
         905,
-        971
+        952
       ],
       "tree_path": "fn.check_item_hash",
-      "source_hash": "sha256:caa5ecb32d7c539633cdce87246c0e69660379ecc1094abc198a51d14873c4e4",
+      "source_hash": "sha256:dff7e649ac1d6489b89f3d746fc4cdc28505b28f63017e84b84d259c401a30a2",
       "source_anchor": "fn check_item_hash("
     },
     {
       "item": "handle_missing_hash",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        974,
-        1025
+        955,
+        1002
       ],
       "tree_path": "fn.handle_missing_hash",
-      "source_hash": "sha256:0b84f4da4912fb4daf1d45a6a0f093eff81cbdce22bc38247f74c6f1c0eeb2a5",
+      "source_hash": "sha256:fbe4440b1e6f7310dba3cee4c57137a9e7a65878e1cc8e3949d1a2e300630e22",
       "source_anchor": "fn handle_missing_hash("
     },
     {
@@ -201,11 +201,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        1028,
-        1067
+        1005,
+        1040
       ],
       "tree_path": "fn.handle_hash_mismatch",
-      "source_hash": "sha256:01387698f184263e5d6880cc3bf9b840cc045594a8ce49a4355d1efb186ca313",
+      "source_hash": "sha256:e33479af5622e2c1b19e9afceb7ecbb6226c3806a91f5300231267c34c5d7779",
       "source_anchor": "fn handle_hash_mismatch(",
       "related": {
         "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b"
@@ -216,11 +216,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        1070,
-        1201
+        1043,
+        1158
       ],
       "tree_path": "fn.handle_tree_path_resolved",
-      "source_hash": "sha256:cb66248d4b872a1f714ae5fee43ab7effb12df81f694bd6db0b9e5fef1ea61cc",
+      "source_hash": "sha256:bbb9af8f79b77415d9bf53392b0deb29f49dfba3c9ab83556aa224245bcd925f",
       "source_anchor": "fn handle_tree_path_resolved(",
       "related": {
         "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
@@ -232,11 +232,11 @@
       "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        1205,
-        1358
+        1162,
+        1291
       ],
       "tree_path": "fn.handle_past_eof",
-      "source_hash": "sha256:fdc109738d30ecc5bbb7b7f3491173343a5dbe37f04e43bc164f06ca23af5e18",
+      "source_hash": "sha256:d6b1469814c4506c6026f22454cef036d3ac78dc5ed7a101644afd1c01b9837e",
       "source_anchor": "fn handle_past_eof(",
       "related": {
         "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
@@ -248,8 +248,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1405,
-        1435
+        1338,
+        1368
       ],
       "tree_path": "fn.check_review_status",
       "source_hash": "sha256:62cd6e7a08df4bb831f0f4c860cb6cbaf41ec1483e53ed0bbb36894e93bf1eb0",
@@ -263,8 +263,8 @@
       "reviewed": true,
       "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
       "source_span": [
-        1438,
-        1525
+        1371,
+        1458
       ],
       "tree_path": "fn.check_trivial_ignore",
       "source_hash": "sha256:434e82e6c548233c1113313ec013030b349da1f922c4f5e8b9a5c5f2a6f4feb5",
@@ -275,8 +275,8 @@
       "reviewed": true,
       "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
       "source_span": [
-        1530,
-        1643
+        1463,
+        1576
       ],
       "tree_path": "fn.check_related_edges",
       "source_hash": "sha256:66f6a7ee8df06a18e9a4e29e19851b775ee70717bc5b01a179afc8738a00aa12",
@@ -291,8 +291,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1653,
-        1705
+        1586,
+        1638
       ],
       "tree_path": "fn.detect_requirement_cycles",
       "source_hash": "sha256:c7124f27dcaade014657e1b571274470d11511922c508ca2a3836d7df20e808d",
@@ -303,8 +303,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1708,
-        1719
+        1641,
+        1652
       ],
       "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",

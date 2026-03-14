@@ -54,7 +54,142 @@ pub struct Diagnostic {
     pub intent: Option<String>,
 }
 
+struct DiagnosticDetails {
+    kind: DiagnosticKind,
+    severity: Severity,
+    message: String,
+    fix_hint: Option<String>,
+    fixed: bool,
+}
+
 impl Diagnostic {
+    fn build(
+        file: PathBuf,
+        item_or_req: String,
+        details: DiagnosticDetails,
+        context: (Option<usize>, Option<String>),
+    ) -> Self {
+        Self {
+            file,
+            item_or_req,
+            kind: details.kind,
+            severity: details.severity,
+            message: details.message,
+            fix_hint: details.fix_hint,
+            fixed: details.fixed,
+            span_start: context.0,
+            annotation_line: None,
+            requirement_text: None,
+            intent: context.1,
+        }
+    }
+
+    pub fn current(file: PathBuf, item_or_req: String, span_start: usize, intent: String) -> Self {
+        Self::build(
+            file,
+            item_or_req,
+            DiagnosticDetails {
+                kind: DiagnosticKind::Current,
+                severity: Severity::Info,
+                message: "hash matches".into(),
+                fix_hint: None,
+                fixed: false,
+            },
+            (Some(span_start), Some(intent)),
+        )
+    }
+
+    pub fn stale(
+        file: PathBuf,
+        item_or_req: String,
+        message: String,
+        fix_hint: Option<String>,
+        fixed: bool,
+        span_start: usize,
+        intent: String,
+    ) -> Self {
+        Self::build(
+            file,
+            item_or_req,
+            DiagnosticDetails {
+                kind: DiagnosticKind::Stale,
+                severity: Severity::Warning,
+                message,
+                fix_hint,
+                fixed,
+            },
+            (Some(span_start), Some(intent)),
+        )
+    }
+
+    pub fn shifted(
+        file: PathBuf,
+        item_or_req: String,
+        shift: ([usize; 2], [usize; 2]),
+        message: String,
+        fixed: bool,
+        context: (usize, String),
+    ) -> Self {
+        Self::build(
+            file,
+            item_or_req,
+            DiagnosticDetails {
+                kind: DiagnosticKind::Shifted {
+                    from: shift.0,
+                    to: shift.1,
+                },
+                severity: Severity::Warning,
+                message,
+                fix_hint: Some("liyi check --fix".into()),
+                fixed,
+            },
+            (Some(context.0), Some(context.1)),
+        )
+    }
+
+    pub fn invalid_span(
+        file: PathBuf,
+        item_or_req: String,
+        span: [usize; 2],
+        intent: String,
+    ) -> Self {
+        let message = format!("invalid span [{}, {}]", span[0], span[1]);
+        Self::build(
+            file,
+            item_or_req,
+            DiagnosticDetails {
+                kind: DiagnosticKind::InvalidSpan { span },
+                severity: Severity::Error,
+                message,
+                fix_hint: None,
+                fixed: false,
+            },
+            (None, Some(intent)),
+        )
+    }
+
+    pub fn span_past_eof(
+        file: PathBuf,
+        item_or_req: String,
+        span: [usize; 2],
+        file_lines: usize,
+        message: String,
+        intent: String,
+    ) -> Self {
+        Self::build(
+            file,
+            item_or_req,
+            DiagnosticDetails {
+                kind: DiagnosticKind::SpanPastEof { span, file_lines },
+                severity: Severity::Error,
+                message,
+                fix_hint: Some("liyi check --fix".into()),
+                fixed: false,
+            },
+            (Some(span[0]), Some(intent)),
+        )
+    }
+
     /// Format this diagnostic with a repo-root prefix stripped from the
     /// file path so that output shows repo-relative paths.
     pub fn display_with_root(&self, root: &std::path::Path) -> String {
