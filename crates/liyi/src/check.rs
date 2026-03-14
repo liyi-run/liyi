@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -50,7 +50,78 @@ pub fn run_check(
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
     // Surface discovery warnings as diagnostics.
-    for w in &disc.warnings {
+    emit_discovery_warnings(root, &disc.warnings, &mut diagnostics);
+
+    // Shared source-content cache (avoids re-reading the same file).
+    let mut source_cache: HashMap<PathBuf, String> = HashMap::new();
+
+    // ------------------------------------------------------------------
+    // Pass 1 — Requirement discovery (project-global)
+    // ------------------------------------------------------------------
+    let mut requirements =
+        discover_requirements(&disc.all_files, &mut source_cache, &mut diagnostics);
+    compute_requirement_hashes(&disc.all_files, &mut source_cache, &mut requirements);
+    let source_related_refs = collect_source_related_refs(&disc.all_files, &mut source_cache);
+    let (requirements_with_sidecar, requirements_referenced, req_dep_graph) =
+        enrich_requirements_from_sidecars(&disc.sidecars, &mut requirements);
+
+    // Detect cycles in the requirement dependency graph using DFS.
+    let cycles = detect_requirement_cycles(&req_dep_graph);
+
+    // ------------------------------------------------------------------
+    // Pass 2 — Item / requirement checking (scoped to discovered sidecars)
+    // ------------------------------------------------------------------
+    for entry in &disc.sidecars {
+        check_sidecar(
+            entry,
+            &mut diagnostics,
+            &mut source_cache,
+            &requirements,
+            root,
+            fix,
+            dry_run,
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Post-pass diagnostics
+    // ------------------------------------------------------------------
+    emit_untracked_requirements(
+        &requirements,
+        &requirements_with_sidecar,
+        &mut source_cache,
+        &mut diagnostics,
+    );
+    emit_unreferenced_requirements(
+        &requirements_with_sidecar,
+        &requirements_referenced,
+        &source_related_refs,
+        &requirements,
+        &mut diagnostics,
+    );
+    emit_cycle_diagnostics(&cycles, &requirements, &mut diagnostics);
+
+    // Sort by file path, then by item/requirement name.
+    diagnostics.sort_by(|a, b| {
+        a.file
+            .cmp(&b.file)
+            .then_with(|| a.item_or_req.cmp(&b.item_or_req))
+    });
+
+    let exit_code = compute_exit_code(&diagnostics, flags);
+    (diagnostics, exit_code)
+}
+
+// ---------------------------------------------------------------------------
+// run_check helpers
+// ---------------------------------------------------------------------------
+
+fn emit_discovery_warnings(
+    root: &Path,
+    warnings: &[String],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for w in warnings {
         diagnostics.push(Diagnostic {
             file: root.to_path_buf(),
             item_or_req: String::new(),
@@ -68,18 +139,19 @@ pub fn run_check(
             intent: None,
         });
     }
+}
 
-    // Shared source-content cache (avoids re-reading the same file).
-    let mut source_cache: HashMap<PathBuf, String> = HashMap::new();
-
-    // ------------------------------------------------------------------
-    // Pass 1 — Requirement discovery (project-global)
-    // ------------------------------------------------------------------
+/// Pass 1a: scan all source files for `@liyi:requirement` markers and build
+/// the initial requirements map (hashes filled later).
+fn discover_requirements(
+    all_files: &[PathBuf],
+    source_cache: &mut HashMap<PathBuf, String>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> HashMap<String, RequirementRecord> {
     let mut requirements: HashMap<String, RequirementRecord> = HashMap::new();
 
-    for file_path in &disc.all_files {
-        let content = read_cached(&mut source_cache, file_path);
-        let content = match content {
+    for file_path in all_files {
+        let content = match read_cached(source_cache, file_path) {
             Some(c) => c,
             None => continue,
         };
@@ -88,7 +160,6 @@ pub fn run_check(
         for m in &markers {
             if let SourceMarker::Requirement { name, line } = m {
                 if let Some(existing) = requirements.get(name) {
-                    // Duplicate requirement name — emit error for both sites.
                     diagnostics.push(Diagnostic {
                         file: file_path.clone(),
                         item_or_req: name.clone(),
@@ -112,8 +183,8 @@ pub fn run_check(
                         RequirementRecord {
                             file: file_path.clone(),
                             line: *line,
-                            hash: None,          // filled from sidecar below
-                            computed_hash: None, // filled from source below
+                            hash: None,
+                            computed_hash: None,
                         },
                     );
                 }
@@ -121,11 +192,18 @@ pub fn run_check(
         }
     }
 
-    // Compute fresh hashes for requirement blocks from source markers so
-    // that downstream related-edge checks can detect cascading staleness
-    // in a single `liyi check` run, without needing `--fix` first.
-    for file_path in &disc.all_files {
-        let content = match read_cached(&mut source_cache, file_path) {
+    requirements
+}
+
+/// Pass 1b: compute fresh hashes for requirement blocks from source so that
+/// downstream related-edge checks detect cascading staleness in one pass.
+fn compute_requirement_hashes(
+    all_files: &[PathBuf],
+    source_cache: &mut HashMap<PathBuf, String>,
+    requirements: &mut HashMap<String, RequirementRecord>,
+) {
+    for file_path in all_files {
+        let content = match read_cached(source_cache, file_path) {
             Some(c) => c,
             None => continue,
         };
@@ -139,37 +217,41 @@ pub fn run_check(
             }
         }
     }
+}
 
-    // Collect related markers (`\x40liyi:related`) from all source files so that
-    // source-level references count toward requirement coverage even
-    // when the sidecar `related` edge has not been written yet.
-    let mut source_related_refs: std::collections::HashSet<String> =
-        std::collections::HashSet::new();
-    for file_path in &disc.all_files {
-        let content = match read_cached(&mut source_cache, file_path) {
+/// Pass 1c: collect `@liyi:related` marker names from all source files so that
+/// source-level references count toward requirement coverage.
+fn collect_source_related_refs(
+    all_files: &[PathBuf],
+    source_cache: &mut HashMap<PathBuf, String>,
+) -> HashSet<String> {
+    let mut refs: HashSet<String> = HashSet::new();
+    for file_path in all_files {
+        let content = match read_cached(source_cache, file_path) {
             Some(c) => c,
             None => continue,
         };
         for m in scan_markers(&content) {
             if let SourceMarker::Related { name, .. } = m {
-                source_related_refs.insert(name);
+                refs.insert(name);
             }
         }
     }
+    refs
+}
 
-    // Enrich requirement records with hashes from any existing sidecars.
-    // Also track which requirements have a Spec::Requirement sidecar entry
-    // and which requirement names are referenced by any Spec::Item via `related`.
-    // Build a requirement dependency graph for cycle detection:
-    //   edge A → B means: a sidecar defines requirement A AND contains an
-    //   item that references requirement B.
-    let mut requirements_with_sidecar: std::collections::HashSet<String> =
-        std::collections::HashSet::new();
-    let mut requirements_referenced: std::collections::HashSet<String> =
-        std::collections::HashSet::new();
+/// Pass 1d: enrich requirement records with hashes from existing sidecars,
+/// track which requirements have sidecar entries and which are referenced
+/// by items, and build the dependency graph for cycle detection.
+fn enrich_requirements_from_sidecars(
+    sidecars: &[SidecarEntry],
+    requirements: &mut HashMap<String, RequirementRecord>,
+) -> (HashSet<String>, HashSet<String>, HashMap<String, Vec<String>>) {
+    let mut requirements_with_sidecar: HashSet<String> = HashSet::new();
+    let mut requirements_referenced: HashSet<String> = HashSet::new();
     let mut req_dep_graph: HashMap<String, Vec<String>> = HashMap::new();
 
-    for entry in &disc.sidecars {
+    for entry in sidecars {
         let sc_content = match fs::read_to_string(&entry.sidecar_path) {
             Ok(c) => c,
             Err(_) => continue,
@@ -179,8 +261,6 @@ pub fn run_check(
             Err(_) => continue,
         };
 
-        // Collect requirements defined in this sidecar and requirements
-        // referenced by items in this sidecar.
         let mut defined_in_sidecar: Vec<String> = Vec::new();
         let mut referenced_in_sidecar: Vec<String> = Vec::new();
 
@@ -206,7 +286,6 @@ pub fn run_check(
             }
         }
 
-        // Build graph edges: defined req → referenced reqs in same sidecar.
         for def in &defined_in_sidecar {
             for reff in &referenced_in_sidecar {
                 if def != reff {
@@ -219,36 +298,21 @@ pub fn run_check(
         }
     }
 
-    // Detect cycles in the requirement dependency graph using DFS.
-    let cycles = detect_requirement_cycles(&req_dep_graph);
+    (requirements_with_sidecar, requirements_referenced, req_dep_graph)
+}
 
-    // ------------------------------------------------------------------
-    // Pass 2 — Item / requirement checking (scoped to discovered sidecars)
-    // ------------------------------------------------------------------
-    for entry in &disc.sidecars {
-        check_sidecar(
-            entry,
-            &mut diagnostics,
-            &mut source_cache,
-            &requirements,
-            root,
-            fix,
-            dry_run,
-        );
-    }
-
-    // ------------------------------------------------------------------
-    // Post-pass diagnostics
-    // ------------------------------------------------------------------
-
-    // Untracked: requirements found in source markers but absent from any sidecar.
-    for (name, rec) in &requirements {
+/// Post-pass: emit `Untracked` for requirements found in source but absent
+/// from any sidecar.
+fn emit_untracked_requirements(
+    requirements: &HashMap<String, RequirementRecord>,
+    requirements_with_sidecar: &HashSet<String>,
+    source_cache: &mut HashMap<PathBuf, String>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    const MAX_REQ_TEXT_CHARS: usize = 4096;
+    for (name, rec) in requirements {
         if !requirements_with_sidecar.contains(name) {
-            // Extract requirement block text for prompt mode.
-            // Capped at MAX_REQ_TEXT_CHARS to bound untrusted content in
-            // --prompt output.  See docs/prompt-mode-design.md §Security.
-            const MAX_REQ_TEXT_CHARS: usize = 4096;
-            let req_text = read_cached(&mut source_cache, &rec.file).and_then(|content| {
+            let req_text = read_cached(source_cache, &rec.file).and_then(|content| {
                 let markers = scan_markers(&content);
                 let spans = requirement_spans(&markers);
                 spans.get(name).map(|span| {
@@ -285,10 +349,18 @@ pub fn run_check(
             });
         }
     }
+}
 
-    // ReqNoRelated: requirements with sidecar entries that no item references
-    // (neither via sidecar `related` edges nor via source related markers).
-    for name in &requirements_with_sidecar {
+/// Post-pass: emit `ReqNoRelated` for requirements with sidecar entries that
+/// no item references.
+fn emit_unreferenced_requirements(
+    requirements_with_sidecar: &HashSet<String>,
+    requirements_referenced: &HashSet<String>,
+    source_related_refs: &HashSet<String>,
+    requirements: &HashMap<String, RequirementRecord>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for name in requirements_with_sidecar {
         if !requirements_referenced.contains(name)
             && !source_related_refs.contains(name)
             && let Some(rec) = requirements.get(name)
@@ -308,11 +380,16 @@ pub fn run_check(
             });
         }
     }
+}
 
-    // RequirementCycle: circular dependencies among requirements.
-    for cycle in &cycles {
+/// Post-pass: emit `RequirementCycle` errors for circular dependencies.
+fn emit_cycle_diagnostics(
+    cycles: &[Vec<String>],
+    requirements: &HashMap<String, RequirementRecord>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for cycle in cycles {
         let cycle_display = cycle.join(" → ");
-        // Report from the first requirement in the cycle.
         let first = &cycle[0];
         let file = requirements
             .get(first)
@@ -334,16 +411,6 @@ pub fn run_check(
             intent: None,
         });
     }
-
-    // Sort by file path, then by item/requirement name.
-    diagnostics.sort_by(|a, b| {
-        a.file
-            .cmp(&b.file)
-            .then_with(|| a.item_or_req.cmp(&b.item_or_req))
-    });
-
-    let exit_code = compute_exit_code(&diagnostics, flags);
-    (diagnostics, exit_code)
 }
 
 // ---------------------------------------------------------------------------
