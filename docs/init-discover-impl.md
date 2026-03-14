@@ -41,7 +41,13 @@ The following constraints are normative for the implementation.
 <!-- @liyi:end-requirement graceful-degradation -->
 
 <!-- @liyi:requirement no-git2-dependency -->
-**Shell out to git, do not add `git2`.** The existing `git.rs` module shells out to the `git` CLI. VCS signal gathering must follow the same pattern. The `git2` crate links libgit2 (a C library), which adds ~2 MB to the binary size, complicates cross-compilation, and introduces a second code path for git operations. One git integration strategy means one debugging surface.
+**Shell out to git, do not add `git2`.** The existing `git.rs` module shells out to the `git` CLI. VCS signal gathering must follow the same pattern. Two reasons are decisive:
+
+1. **System dependency hell.** `git2` pulls in `libgit2-sys`, which links zlib and (depending on platform features) OpenSSL, Security.framework, or Schannel, plus optionally libssh2. These are *system* library links requiring platform-specific discovery (`pkg-config`, vcpkg, vendored-vs-system feature flags). By contrast, every tree-sitter grammar is a vendored single-file C compilation — `cc::Build::new().file("parser.c")` with zero system probing. "We already require a C toolchain" is true but irrelevant; the pain is `FindOpenSSL`-style build failures, not `cc`.
+
+2. **No `git log -L` equivalent in libgit2.** VCS hints need per-line-range commit history. libgit2 exposes diff and blame APIs but has no line-range-scoped log. Reproducing `-L start,end:file` would require walking the commit graph, computing a diff per commit, and checking hunk overlap with the target range — hundreds of lines of non-trivial code (with off-by-one risks in hunk-range intersection) to replace a single `Command::new("git").args(["log", "-L", …])` call.
+
+Secondary considerations (real but not decisive on their own): a single git strategy avoids a split debugging surface; binary size impact (~2–3 MiB on a 39 MiB binary) is marginal; runtime `git` availability is a non-issue for a dev-time tool already covered by the graceful-degradation constraint.
 <!-- @liyi:end-requirement no-git2-dependency -->
 
 <!-- @liyi:requirement item-naming-uses-leaf-name -->
