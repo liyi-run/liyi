@@ -33,10 +33,10 @@
       "intent": "Build one statically linked release tarball per configured musl target. Must install the appropriate Rust target and build tool, use native cargo for non-cross targets and cross for cross targets, strip the produced binary when possible, package the binary together with the license files and README, and upload a per-target artifact for the release job.",
       "source_span": [
         17,
-        90
+        94
       ],
       "tree_path": "key.jobs::key.build",
-      "source_hash": "sha256:0ad980ae568b7d37f208ec19bd9f2c68ab4546a123390514507cbcdcf4f25eff",
+      "source_hash": "sha256:d91d63ed004a32d04cdcd4e2aa7f081a1590bc53b732a8cbbe511d9c6b677e87",
       "source_anchor": "  build:"
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "After all build-matrix artifacts are available, download every packaged tarball and publish them on the GitHub release for the pushed tag. Must attach all artifacts, generate release notes, and authenticate with the repository GITHUB_TOKEN.",
       "source_span": [
-        92,
-        114
+        96,
+        118
       ],
       "tree_path": "key.jobs::key.release",
       "source_hash": "sha256:bfc7fd802dbded85b5ee694007432677d288376e5f46f0c74a39335ce123c1d5",
