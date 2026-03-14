@@ -534,26 +534,27 @@ The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum
 
 All languages are built-in — the binary ships with every supported tree-sitter grammar. The binary-size cost is modest relative to the universality benefit; Python, Go, JavaScript, and TypeScript codebases vastly outnumber Rust codebases, and requiring users to opt in per language would hinder adoption of a tool whose value proposition is universality.
 
-**Built-in languages:**
+**Built-in languages (21 in 0.1):**
 
 | Language | Grammar crate | Notes |
 |---|---|---|
+| Rust | `tree-sitter-rust` | Primary development language. |
 | Python | `tree-sitter-python` | Flat AST; methods are `function_definition` inside `class_definition` body. No `impl`-block equivalent. |
 | Go | `tree-sitter-go` | `type_declaration` wraps `type_spec` for structs/interfaces — custom name extraction navigates the indirection. Methods encode receiver type: `method."(*MyType).DoThing"` (pointer) or `method."MyType.DoThing"` (value) — names with parens/dots are quoted per the tree_path grammar. |
 | JavaScript | `tree-sitter-javascript` | Arrow functions in `const` declarations are pervasive — `const foo = () => ...` maps to `fn.foo` (tracking the `variable_declarator` when its value is an `arrow_function`). |
 | TypeScript | `tree-sitter-typescript` | Superset of JS; adds `interface_declaration`, `type_alias_declaration`, `enum_declaration`. Dual grammar: `.ts` → typescript, `.tsx` → tsx. |
+| C | `tree-sitter-c` | `function_definition`, `struct_specifier`, `enum_specifier`, `type_definition`. |
+| C++ | `tree-sitter-cpp` | Superset of C; adds `class_specifier`, `namespace_definition`, `template_declaration`. |
+| Java | `tree-sitter-java` | `class_declaration`, `method_declaration`, `interface_declaration`, `enum_declaration`. |
+| C# | `tree-sitter-c-sharp` | `class_declaration`, `method_declaration`, `interface_declaration`, `struct_declaration`. |
+| PHP | `tree-sitter-php` | `class_declaration`, `method_declaration`, `function_definition`. |
+| Objective-C | `tree-sitter-objc` | `class_interface`, `class_implementation`, `method_definition`. |
+| Kotlin | `tree-sitter-kotlin` | `class_declaration`, `function_declaration`, `object_declaration`. |
+| Swift | `tree-sitter-swift` | `class_declaration`, `function_declaration`, `protocol_declaration`, `struct_declaration`. |
 | Ruby | `tree-sitter-ruby` | `class`, `module`, `method`, `singleton_method`. Class methods use `custom_name` callback for receiver encoding. |
 | Bash | `tree-sitter-bash` | `function_definition` only. Simplest config — structurally flat. |
+| Dart | `tree-sitter-dart` | `class`, `method`, `mixin`, `extension`, `enum`, `getter`, `setter`, constructors. |
 | Zig | `tree-sitter-zig` | `fn`, `const`, `test`. Struct-as-namespace pattern (`const Foo = struct { ... }`) uses `custom_name`. |
-
-**Additional languages (shipped in 0.1.x):**
-
-| Language | Grammar | Notes |
-|---|---|---|
-| Ruby | `tree-sitter-ruby` v0.23.1 | `class`, `module`, `method`, `singleton_method`. |
-| Bash | `tree-sitter-bash` v0.25.1 | `function_definition` only — shell is structurally flat. |
-| Dart | `tree-sitter-dart` v0.1.0 | `class`, `method`, `mixin`, `extension`, `enum`, `getter`, `setter`, constructors. |
-| Zig | `tree-sitter-zig` v1.1.2 | `fn_decl`, `var_decl` (const), `test_decl`. Struct-as-namespace pattern. |
 | TOML | `tree-sitter-toml-ng` | Data file — `table`, `key`. Key-path identity, not named items. |
 | JSON | `tree-sitter-json` | Data file — `key` (from `pair`). Targets schemas, `package.json`. |
 | YAML | `tree-sitter-yaml` | Data file — `key` (from `block_mapping_pair`). Injection framework enables descent into embedded shell in `run:` blocks. |
@@ -1032,7 +1033,7 @@ flowchart TD
     Doc --> Reviewed
 ```
 
-Without IDE integration, the human edits the sidecar directly (setting `"reviewed": true`) or adds `@liyi:intent` in source. Both work. A dedicated `liyi review` CLI subcommand is a post-MVP convenience.
+Without IDE integration, the human edits the sidecar directly (setting `"reviewed": true`) or adds `@liyi:intent` in source. Both work. The `liyi approve` CLI subcommand provides interactive and batch approval workflows.
 
 ### Source file noise
 
@@ -1497,7 +1498,7 @@ flowchart TD
     Apply --> HumanB["Human reviews<br/><i>reads triage report or PR comment,<br/>accepts suggested intents or fixes code</i>"]
 ```
 
-This replaces the previously described `--smart` flag. The split is cleaner: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
+The split is clean: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
 
 **Direct re-inference: the fast path.** Triage adds value when many items are stale and a human needs to prioritize — a refactor that touches 30 functions, a CI pipeline processing a large PR. But during interactive editing — an agent making focused changes to 2-3 functions in a single session — triage is overhead. The agent already knows what it changed and why.
 
@@ -1791,7 +1792,7 @@ Appends the 立意 agent instruction section (~300 lines: 10 rules + two JSON sc
 liyi init src/money.rs   # discover items, create pre-populated money.rs.liyi.jsonc
 ```
 
-When a tree-sitter grammar is available for the source language (14 languages supported — see *Structural identity via `tree_path`*), `liyi init` parses the file, walks the AST for item nodes, and emits a sidecar with pre-populated spec entries. Each entry has `item`, `source_span`, `tree_path`, and `"intent": ""` — the agent fills in `"intent"` (or writes `"=trivial"` / `"=doc"`), and optionally deletes items it deems unnecessary. This turns the agent’s job from “create everything from scratch + understand the JSON schema” to “annotate a pre-built inventory.”
+When a tree-sitter grammar is available for the source language (21 languages supported — see *Structural identity via `tree_path`*), `liyi init` parses the file, walks the AST for item nodes, and emits a sidecar with pre-populated spec entries. Each entry has `item`, `source_span`, `tree_path`, and `"intent": ""` — the agent fills in `"intent"` (or writes `"=trivial"` / `"=doc"`), and optionally deletes items it deems unnecessary. This turns the agent’s job from “create everything from scratch + understand the JSON schema” to “annotate a pre-built inventory.”
 
 For unsupported languages (no tree-sitter grammar), `liyi init` falls back to the original behavior — a skeleton sidecar with `version`, `source`, and an empty `specs` array.
 
@@ -2184,8 +2185,8 @@ flowchart TD
 
     %% ── Brownfield ──
     HasCode -- Yes --> InitB["liyi init<br/><i>scaffold AGENTS.md</i>"]
-    InitB --> Hints["liyi init --hints src/<br/><i>skeleton sidecars with _hints</i>"]
-    Hints --> Infer["Agent infers intent<br/><i>guided by hints — git history,<br/>test presence, churn signals</i>"]
+    InitB --> Hints["liyi init src/<br/><i>skeleton sidecars with _hints</i>"]
+    Hints --> Infer["Agent infers intent<br/><i>guided by hints — body size,<br/>docstring presence, trivial threshold</i>"]
     Infer --> Incremental["Incremental review<br/><i>review on first touch,<br/>directory by directory</i>"]
     Incremental --> CIB["liyi check in CI<br/><i>track progress, catch staleness</i>"]
     CIB --> Steady
@@ -2197,7 +2198,7 @@ flowchart TD
 
 **Greenfield** is straightforward: `liyi init` scaffolds the agent instruction into `AGENTS.md`, and every file the agent writes from that point forward gets specs alongside code. The codebase conforms from day one.
 
-**Brownfield** adds a bootstrapping step. `liyi init --hints` creates skeleton sidecars populated with cheap VCS/filesystem signals (`_hints`) — commit count, bug-fix frequency, test presence, docstring coverage. The agent reads these hints to prioritize where to invest inference effort: a function with 47 commits and 3 bug fixes warrants `git log` investigation; a simple getter written once and never touched can be inferred from source alone. Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
+**Brownfield** adds a bootstrapping step. `liyi init <source>` creates skeleton sidecars populated with tree-sitter-derived signals (`_hints`) — body line count, docstring presence, and a trivial-item suggestion (controlled by `--trivial-threshold`). The agent reads these hints to prioritize where to invest inference effort: a large function with a docstring warrants deeper investigation; a one-liner can be inferred from source alone or marked trivial. VCS-derived signals (commit count, bug-fix frequency) are planned for a future release. Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
 
 ### Intent-first orchestration
 
@@ -2295,7 +2296,7 @@ What the day-to-day experience looks like once all deliverables exist:
 `liyi init` is the bootstrap command (see the *Adoption paths* diagram above for the visual overview).
 
 1. **`liyi init`** — scaffolds the 立意 agent instruction section into `AGENTS.md`. This is the equivalent of the project’s own [commit 6b98652](https://github.com/liyi-run/liyi/commit/6b98652), adapted for downstream repos (no self-referential dogfooding language).
-2. **`liyi init --hints src/`** — creates skeleton `.liyi.jsonc` sidecars populated with `_hints` (VCS/filesystem signals). The agent reads hints to prioritize inference effort.
+2. **`liyi init src/foo.rs`** — creates skeleton `.liyi.jsonc` sidecars populated with `_hints` (tree-sitter-derived signals: body size, docstring presence, trivial suggestion). The agent reads hints to prioritize inference effort. VCS-derived hint signals are planned for a future release.
 3. **Agent infers intent**, guided by hints, directory by directory. The agent reads each source file, infers intent for non-trivial items, writes `.liyi.jsonc` sidecar files, and adds `@liyi:module` blocks to existing READMEs or doc comments (or creates `LIYI.md` where none exist).
 4. **Incremental review.** Everything starts unreviewed. Review at your own pace — on first touch, by directory, or by criticality.
 
@@ -2427,7 +2428,7 @@ The project's value proposition relies on agents following the AGENTS.md instruc
 
 **Action:** Restructure AGENTS.md into tiered form and extend `--prompt` to cover all diagnostics (not just coverage gaps). This is a convention change that affects the agent skill template — downstream repositories that adopted the current AGENTS.md will need to update. Ship the restructured instruction alongside the `--prompt` generalization.
 
-### 6. Git-aware triage — considered and rejected
+### 7. Git-aware triage — considered and rejected
 
 **Proposal:** Store `anchored_at` (git commit hash) per sidecar. Use `git diff <anchored_at>..HEAD` to give the triage agent a bounded, focused diff instead of the full file.
 
@@ -2507,7 +2508,7 @@ add_money: ⚠ unreviewed (no @liyi:intent, no reviewed:true)
 
 The human reads the inferred intent (in the sidecar or via IDE hover) and confirms it. Two paths:
 
-**Quick approval** — set `"reviewed": true` in the sidecar (via `liyi review src/billing/money.rs add_money` or IDE code action). Zero source noise:
+**Quick approval** — set `"reviewed": true` in the sidecar (via `liyi approve src/billing/money.rs --item add_money` or IDE code action). Zero source noise:
 
 ```
 $ liyi check src/billing/
@@ -2650,6 +2651,10 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
             ]
           },
           "description": "Optional. Maps requirement names to their source_hash at time of last review. Agents write null; the tool fills in hashes."
+        },
+        "_hints": {
+          "type": "object",
+          "description": "Transient inference aids emitted by liyi init for cold-start scenarios. LLM-readable, intentionally unstructured. Stripped by liyi check --fix after initial review. Tools MUST NOT rely on any specific shape."
         }
       }
     },
