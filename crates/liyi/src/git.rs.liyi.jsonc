@@ -32,6 +32,18 @@
       "related": {
         "no-git2-dependency": "sha256:032b561412cc12bd64862101c9d0e6c6ade77ace118136e7a9bb236706be08af"
       }
+    },
+    {
+      "item": "walk_git_history",
+      "reviewed": false,
+      "intent": "Walk up to `limit` revisions that touched a repo-relative path and return the first value produced by the callback. Stop early on the first Some(T) and return None when the file has no relevant history or the callback never matches.",
+      "source_span": [
+        62,
+        74
+      ],
+      "tree_path": "fn.walk_git_history",
+      "source_hash": "sha256:6dfb823b5658f9d216d60ac80326c82ef030cc9e3e94b72e93deed1a66d12766",
+      "source_anchor": "pub fn walk_git_history<T>("
     }
   ]
 }

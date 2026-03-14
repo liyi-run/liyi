@@ -4,7 +4,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::discovery::{discover, find_repo_root, resolve_sidecar_targets};
-use crate::git::{git_log_revisions, git_show};
+use crate::git::{git_show, walk_git_history};
 use crate::hashing::hash_span;
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
@@ -130,17 +130,9 @@ fn lookup_prev_intent(
     let root = repo_root?;
     let rel = sidecar_path.strip_prefix(root).ok()?;
     let rel_str = rel.to_str()?;
-    let revisions = git_log_revisions(root, rel_str, 20);
-
-    for rev in &revisions {
-        let content = match git_show(root, rel_str, rev) {
-            Some(c) => c,
-            None => continue,
-        };
-        let sidecar = match parse_sidecar(&content) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
+    walk_git_history(root, rel_str, 20, |rev| {
+        let content = git_show(root, rel_str, rev)?;
+        let sidecar = parse_sidecar(&content).ok()?;
         for spec in &sidecar.specs {
             if let Spec::Item(old_item) = spec {
                 let matched = if !tree_path.is_empty() && !old_item.tree_path.is_empty() {
@@ -153,8 +145,8 @@ fn lookup_prev_intent(
                 }
             }
         }
-    }
-    None
+        None
+    })
 }
 
 /// Look up the source text at the time when `source_hash` was last valid,
@@ -182,12 +174,8 @@ fn lookup_prev_source(
     let source_rel = source_path.strip_prefix(root).ok()?.to_str()?;
 
     // Fast path: try source history with the current span.
-    let source_revisions = git_log_revisions(root, source_rel, 20);
-    for rev in &source_revisions {
-        let content = match git_show(root, source_rel, rev) {
-            Some(c) => c,
-            None => continue,
-        };
+    if let Some(previous) = walk_git_history(root, source_rel, 20, |rev| {
+        let content = git_show(root, source_rel, rev)?;
         if let Ok((hash, _)) = hash_span(&content, span)
             && hash == source_hash
         {
@@ -196,21 +184,17 @@ fn lookup_prev_source(
             let end = span[1].min(lines.len());
             return Some(lines[start..end].join("\n"));
         }
+        None
+    }) {
+        return Some(previous);
     }
 
     // Slow path: walk sidecar history to find the old span (before check --fix
     // shifted it), then read the source at that revision.
     let sidecar_rel = sidecar_path.strip_prefix(root).ok()?.to_str()?;
-    let sidecar_revisions = git_log_revisions(root, sidecar_rel, 20);
-    for rev in &sidecar_revisions {
-        let sidecar_content = match git_show(root, sidecar_rel, rev) {
-            Some(c) => c,
-            None => continue,
-        };
-        let sidecar = match parse_sidecar(&sidecar_content) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
+    walk_git_history(root, sidecar_rel, 20, |rev| {
+        let sidecar_content = git_show(root, sidecar_rel, rev)?;
+        let sidecar = parse_sidecar(&sidecar_content).ok()?;
         for spec in &sidecar.specs {
             if let Spec::Item(item) = spec {
                 let matched = if !tree_path.is_empty() && !item.tree_path.is_empty() {
@@ -240,9 +224,8 @@ fn lookup_prev_source(
                 }
             }
         }
-    }
-
-    None
+        None
+    })
 }
 
 /// Info about a requirement discovered from the global sidecar scan.
@@ -328,12 +311,8 @@ fn lookup_prev_requirement_text(
         .to_str()?;
 
     // Fast path: try source history with the current span.
-    let source_revisions = git_log_revisions(repo_root, source_rel, 20);
-    for rev in &source_revisions {
-        let content = match git_show(repo_root, source_rel, rev) {
-            Some(c) => c,
-            None => continue,
-        };
+    if let Some(previous) = walk_git_history(repo_root, source_rel, 20, |rev| {
+        let content = git_show(repo_root, source_rel, rev)?;
         if let Ok((hash, _)) = hash_span(&content, req_info.source_span)
             && hash == stored_hash
         {
@@ -342,6 +321,9 @@ fn lookup_prev_requirement_text(
             let end = req_info.source_span[1].min(lines.len());
             return Some(lines[start..end].join("\n"));
         }
+        None
+    }) {
+        return Some(previous);
     }
 
     // Slow path: walk sidecar history to find old span.
@@ -350,16 +332,9 @@ fn lookup_prev_requirement_text(
         .strip_prefix(repo_root)
         .ok()?
         .to_str()?;
-    let sidecar_revisions = git_log_revisions(repo_root, sidecar_rel, 20);
-    for rev in &sidecar_revisions {
-        let sidecar_content = match git_show(repo_root, sidecar_rel, rev) {
-            Some(c) => c,
-            None => continue,
-        };
-        let sidecar = match parse_sidecar(&sidecar_content) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
+    walk_git_history(repo_root, sidecar_rel, 20, |rev| {
+        let sidecar_content = git_show(repo_root, sidecar_rel, rev)?;
+        let sidecar = parse_sidecar(&sidecar_content).ok()?;
         for spec in &sidecar.specs {
             if let Spec::Requirement(req) = spec
                 && req.requirement == req_name
@@ -379,9 +354,8 @@ fn lookup_prev_requirement_text(
                 }
             }
         }
-    }
-
-    None
+        None
+    })
 }
 
 /// Collect approval candidates matching the given filter.

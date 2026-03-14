@@ -59,6 +59,20 @@ pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usiz
     }
 }
 
+pub fn walk_git_history<T>(
+    repo_root: &Path,
+    repo_relative_path: &str,
+    limit: usize,
+    mut f: impl FnMut(&str) -> Option<T>,
+) -> Option<T> {
+    for revision in git_log_revisions(repo_root, repo_relative_path, limit) {
+        if let Some(value) = f(&revision) {
+            return Some(value);
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -67,6 +81,14 @@ mod tests {
     fn git_show_returns_none_for_nonexistent_path() {
         // Even in a real repo, a bogus path should return None.
         let result = git_show(Path::new("."), "nonexistent/file.txt", "HEAD");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn walk_git_history_returns_none_without_history() {
+        let result = walk_git_history(Path::new("."), "nonexistent/file.txt", 20, |_| {
+            Some("unexpected")
+        });
         assert!(result.is_none());
     }
 }

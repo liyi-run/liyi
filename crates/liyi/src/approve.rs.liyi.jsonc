@@ -77,26 +77,26 @@
     },
     {
       "item": "lookup_prev_intent",
-      "reviewed": true,
-      "intent": "Walk Git history (up to 20 commits via git_log_revisions) to find the most recent commit where the item had reviewed=true in the sidecar. For each revision, retrieves the sidecar via git_show, parses it, and matches by tree_path (preferred) or item name. Returns Some(intent) from the first matching reviewed item. Returns None if repo_root is None, the path is not repo-relative, or no reviewed version exists in history.",
+      "reviewed": false,
+      "intent": "Walk sidecar Git history to find the most recent commit where the item had reviewed=true in the sidecar. For each revision, retrieve the sidecar via git_show, parse it, and match by tree_path (preferred) or item name. Return Some(intent) from the first matching reviewed item. Return None if repo_root is None, the path is not repo-relative, or no reviewed version exists in history.",
       "source_span": [
         124,
-        158
+        150
       ],
       "tree_path": "fn.lookup_prev_intent",
-      "source_hash": "sha256:7e641a17f160781026ef2afe2999343e9b5b60d6609ba13fb1348ceaded0fd13",
+      "source_hash": "sha256:313f33f416efb8e76626db03e986696abd3d0e2e321de9f4c97f8509a050d0af",
       "source_anchor": "fn lookup_prev_intent("
     },
     {
       "item": "lookup_prev_source",
-      "reviewed": true,
-      "intent": "Recover the source text at the time source_hash was valid, using a two-pass Git history strategy. Fast path: walk source file history with the current span (works pre-check-fix). Slow path: walk sidecar history to find the pre-shift span, then read source at that revision. Returns None when git history is unavailable. Handles the case where check --fix shifted the span after the function moved.",
+      "reviewed": false,
+      "intent": "Recover the source text at the time source_hash was valid, using a two-pass Git history strategy. Fast path: walk source file history with the current span (works pre-check-fix). Slow path: walk sidecar history to find the pre-shift span, then read source at that revision. Return None when git history is unavailable. Handle the case where check --fix shifted the span after the function moved.",
       "source_span": [
-        172,
-        246
+        164,
+        229
       ],
       "tree_path": "fn.lookup_prev_source",
-      "source_hash": "sha256:4d98e7d46b43481f995217ca79ca4650ddd7be274d49e13b344126d3c43811e6",
+      "source_hash": "sha256:abe689d62378e682592e0a09331be22c78c540d2f564fd94ce1872386b0bde4c",
       "source_anchor": "fn lookup_prev_source("
     },
     {
@@ -104,8 +104,8 @@
       "reviewed": true,
       "intent": "=trivial",
       "source_span": [
-        249,
-        255
+        232,
+        238
       ],
       "tree_path": "struct.RequirementInfo",
       "source_hash": "sha256:c98ea3c19354724d40bde85dd2dfbd412db7cc3d75f7d8f0fda87dbfe1f8d78b",
@@ -116,8 +116,8 @@
       "reviewed": true,
       "intent": "Build a global requirement registry by scanning all sidecars in the repo via discover(). For each RequirementSpec, reads the source file, computes a fresh hash from marker-delimited spans (falling back to sidecar span), and stores current text. Returns a HashMap mapping requirement name to RequirementInfo.",
       "source_span": [
-        263,
-        311
+        246,
+        294
       ],
       "tree_path": "fn.build_requirement_registry",
       "source_hash": "sha256:3b5ddc2d04c2c579aa25282f7ac504230a7c8080831c9e91c667054f94c05811",
@@ -125,14 +125,14 @@
     },
     {
       "item": "lookup_prev_requirement_text",
-      "reviewed": true,
-      "intent": "Recover the old text of a requirement by walking Git history, using the same two-pass strategy as lookup_prev_source (fast path with current span, slow path via sidecar history for pre-shift spans). Returns None when no matching revision is found.",
+      "reviewed": false,
+      "intent": "Recover the old text of a requirement by walking Git history, using the same two-pass strategy as lookup_prev_source (fast path with current span, slow path via sidecar history for pre-shift spans). Return None when no matching revision is found.",
       "source_span": [
-        318,
-        385
+        301,
+        359
       ],
       "tree_path": "fn.lookup_prev_requirement_text",
-      "source_hash": "sha256:87f30988a8c03b2e06b2850486cb2643370c3eb4669e39f737584030c0ed50aa",
+      "source_hash": "sha256:276928ce256ee4c4eca947e11d406cca2342a936009c553b13e7bd135d2134b1",
       "source_anchor": "fn lookup_prev_requirement_text("
     },
     {
@@ -140,8 +140,8 @@
       "reviewed": true,
       "intent": "Resolve sidecar targets from paths, then collect approval candidates of all three kinds (unreviewed, stale-reviewed, req-changed) filtered by kind_filter and item_filter. Builds a global requirement registry for cross-sidecar ReqChanged detection. For unreviewed: gathers items without reviewed=true or @liyi:intent. For stale-reviewed: detects source_hash mismatches and recovers old source via lookup_prev_source. For req-changed: compares related edge hashes against freshly computed requirement hashes and populates old/new requirement text. Orders output: unreviewed first, then stale, then req-changed. Returns error if no targets found.",
       "source_span": [
-        392,
-        577
+        366,
+        551
       ],
       "tree_path": "fn.collect_approval_candidates",
       "source_hash": "sha256:b4e074761641e415b1540030fa11961558e878febdcf1f86a2c8278499abd547",
@@ -156,8 +156,8 @@
       "reviewed": true,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. Kind-aware behavior: For Unreviewed/StaleReviewed Yes: set reviewed=true and rehash. For ReqChanged Yes: refresh the related edge hash only (set to null for tool fill-in), do not touch reviewed/intent/source_hash. For Edit: update intent and rehash (all kinds); for ReqChanged also refresh the related edge. For No on Unreviewed: set reviewed=false. For No on StaleReviewed/ReqChanged: leave unchanged as todo marker. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        587,
-        710
+        561,
+        684
       ],
       "tree_path": "fn.apply_approval_decisions",
       "source_hash": "sha256:c398d3de6beb83aeadeb437ce0a4a3f2bcd1187f36d0ea8413a9bbc6918edfc3",
@@ -174,8 +174,8 @@
       "reviewed": true,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        713,
-        724
+        687,
+        698
       ],
       "tree_path": "fn.source_path_from_sidecar",
       "source_hash": "sha256:490ac4b91d5418e093b852a804fb0c330b1642cd99af3035d3a43fb35429bfab",
