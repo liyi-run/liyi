@@ -685,7 +685,10 @@ fn resolve_indexed_child<'a>(
     let mut body = config.find_body(node)?;
     // Walk through transparent wrapper nodes to reach the actual array
     // container (e.g., YAML block_node → block_sequence).
-    while config.transparent_kinds.contains(&body.kind()) {
+    while config.transparent_kinds.contains(&body.kind())
+        && body.kind() != "array"
+        && body.kind() != "block_sequence"
+    {
         let mut cursor = body.walk();
         let named: Vec<Node<'a>> = body
             .children(&mut cursor)
@@ -1029,6 +1032,57 @@ fn build_path_to_node(config: &LanguageConfig, root: &Node, target: &Node, sourc
     }
 }
 
+fn format_segment(short: &str, name: &str, index: Option<usize>) -> String {
+    let mut segment = format!("{short}.{}", parser::serialize_name(name));
+    if let Some(idx) = index {
+        segment.push('[');
+        segment.push_str(&idx.to_string());
+        segment.push(']');
+    }
+    segment
+}
+
+fn sequence_children<'a>(config: &LanguageConfig, node: &Node<'a>) -> Option<Vec<Node<'a>>> {
+    let mut body = config.find_body(node)?;
+    while config.transparent_kinds.contains(&body.kind())
+        && body.kind() != "array"
+        && body.kind() != "block_sequence"
+    {
+        let mut cursor = body.walk();
+        let named: Vec<Node<'_>> = body
+            .children(&mut cursor)
+            .filter(|c| c.is_named())
+            .collect();
+        if named.len() == 1 {
+            body = named[0];
+        } else {
+            break;
+        }
+    }
+
+    if body.kind() != "array" && body.kind() != "block_sequence" {
+        return None;
+    }
+
+    let mut cursor = body.walk();
+    Some(
+        body.children(&mut cursor)
+            .filter(|c| c.is_named())
+            .collect(),
+    )
+}
+
+fn is_descendant_of(target: &Node, ancestor: &Node) -> bool {
+    let mut current = Some(*target);
+    while let Some(node) = current {
+        if node.id() == ancestor.id() {
+            return true;
+        }
+        current = node.parent();
+    }
+    false
+}
+
 /// Recursively find `target` in the tree and collect path segments.
 fn collect_path(
     config: &LanguageConfig,
@@ -1043,19 +1097,41 @@ fn collect_path(
             config.kind_to_shorthand(node.kind()),
             config.node_name(node, source),
         ) {
-            segments.push(format!("{short}.{}", parser::serialize_name(&name)));
+            segments.push(format_segment(short, &name, None));
             return true;
         }
         return false;
     }
 
+    if is_item_node(config, node)
+        && let Some(children) = sequence_children(config, node)
+    {
+        for (idx, child) in children.into_iter().enumerate() {
+            if !is_descendant_of(target, &child) {
+                continue;
+            }
+
+            let mut nested_segments = Vec::new();
+            if collect_path(config, &child, target, source, &mut nested_segments) {
+                if let (Some(short), Some(name)) = (
+                    config.kind_to_shorthand(node.kind()),
+                    config.node_name(node, source),
+                ) {
+                    segments.push(format_segment(short, &name, Some(idx)));
+                }
+                segments.extend(nested_segments);
+                return true;
+            }
+        }
+    }
+
     // Check children
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        let child_start = child.start_position().row;
-        let child_end = child.end_position().row;
-        let target_start = target.start_position().row;
-        let target_end = target.end_position().row;
+        let child_start = child.start_byte();
+        let child_end = child.end_byte();
+        let target_start = target.start_byte();
+        let target_end = target.end_byte();
 
         // Only descend into nodes that contain the target
         if child_start <= target_start
@@ -1069,7 +1145,7 @@ fn collect_path(
                     config.node_name(node, source),
                 )
             {
-                segments.insert(0, format!("{short}.{}", parser::serialize_name(&name)));
+                segments.insert(0, format_segment(short, &name, None));
             }
             return true;
         }
@@ -1801,20 +1877,7 @@ jobs:
 
     #[test]
     fn compute_injection_roundtrip() {
-        // Roundtrip test using a simpler fixture without array indexing,
-        // since YAML array indexes are not yet produced by build_path_to_node.
-        let yaml = r#"name: CI
-on: push
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    run: |
-      setup() {
-        echo "hello"
-      }
-      setup
-"#;
-        let lines: Vec<&str> = yaml.lines().collect();
+        let lines: Vec<&str> = SAMPLE_GHA_FUNC.lines().collect();
         let setup_line = lines
             .iter()
             .position(|l| l.contains("setup()"))
@@ -1829,7 +1892,7 @@ jobs:
             .expect("should find closing brace");
 
         let computed_path = compute_tree_path_injected(
-            yaml,
+            SAMPLE_GHA_FUNC,
             [setup_line, closing_line],
             Language::Yaml,
             Path::new(".github/workflows/ci.yml"),
@@ -1840,11 +1903,15 @@ jobs:
             "computed path should not be empty"
         );
         assert!(
+            computed_path.contains("key.steps[0]::key.run"),
+            "computed path should preserve the sequence index, got: {computed_path}"
+        );
+        assert!(
             computed_path.contains("//bash"),
             "computed path should contain //bash, got: {computed_path}"
         );
 
-        let resolved_span = resolve_tree_path(yaml, &computed_path, Language::Yaml);
+        let resolved_span = resolve_tree_path(SAMPLE_GHA_FUNC, &computed_path, Language::Yaml);
         assert!(
             resolved_span.is_some(),
             "resolve should succeed for computed path: {computed_path}"

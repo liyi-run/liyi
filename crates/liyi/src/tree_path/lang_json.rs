@@ -141,6 +141,25 @@ mod tests {
     }
 
     #[test]
+    fn compute_json_indexed_array_element() {
+        let sample = r#"{
+    "specs": [
+        {
+            "item": "foo",
+            "intent": "do foo"
+        },
+        {
+            "item": "bar",
+            "intent": "do bar"
+        }
+    ]
+}"#;
+        let span = resolve_tree_path(sample, "key.specs[1]::key.item", Language::Json).unwrap();
+        let path = compute_tree_path(sample, span, Language::Json);
+        assert_eq!(path, "key.specs[1]::key.item");
+    }
+
+    #[test]
     fn roundtrip_json_top_level() {
         let span = resolve_tree_path(SAMPLE_JSON, "key.name", Language::Json).unwrap();
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
@@ -155,6 +174,27 @@ mod tests {
         let path = compute_tree_path(SAMPLE_JSON, span, Language::Json);
         assert_eq!(path, "key.nested::key.deep");
         let re_resolved = resolve_tree_path(SAMPLE_JSON, &path, Language::Json).unwrap();
+        assert_eq!(re_resolved, span);
+    }
+
+    #[test]
+    fn roundtrip_json_indexed_array_element() {
+        let sample = r#"{
+    "specs": [
+        {
+            "item": "foo",
+            "intent": "do foo"
+        },
+        {
+            "item": "bar",
+            "intent": "do bar"
+        }
+    ]
+}"#;
+        let span = resolve_tree_path(sample, "key.specs[1]::key.item", Language::Json).unwrap();
+        let path = compute_tree_path(sample, span, Language::Json);
+        assert_eq!(path, "key.specs[1]::key.item");
+        let re_resolved = resolve_tree_path(sample, &path, Language::Json).unwrap();
         assert_eq!(re_resolved, span);
     }
 

@@ -198,6 +198,18 @@ metadata:
     }
 
     #[test]
+    fn compute_yaml_indexed_sequence_item() {
+        let span = resolve_tree_path(
+            SAMPLE_YAML,
+            "key.jobs::key.build::key.steps[1]::key.name",
+            Language::Yaml,
+        )
+        .unwrap();
+        let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
+        assert_eq!(path, "key.jobs::key.build::key.steps[1]::key.name");
+    }
+
+    #[test]
     fn roundtrip_yaml_top_level() {
         let span = resolve_tree_path(SAMPLE_YAML, "key.name", Language::Yaml).unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
@@ -211,6 +223,20 @@ metadata:
         let span = resolve_tree_path(SAMPLE_YAML, "key.jobs::key.build", Language::Yaml).unwrap();
         let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
         assert_eq!(path, "key.jobs::key.build");
+        let re_resolved = resolve_tree_path(SAMPLE_YAML, &path, Language::Yaml).unwrap();
+        assert_eq!(re_resolved, span);
+    }
+
+    #[test]
+    fn roundtrip_yaml_indexed_sequence_item() {
+        let span = resolve_tree_path(
+            SAMPLE_YAML,
+            "key.jobs::key.build::key.steps[2]::key.run",
+            Language::Yaml,
+        )
+        .unwrap();
+        let path = compute_tree_path(SAMPLE_YAML, span, Language::Yaml);
+        assert_eq!(path, "key.jobs::key.build::key.steps[2]::key.run");
         let re_resolved = resolve_tree_path(SAMPLE_YAML, &path, Language::Yaml).unwrap();
         assert_eq!(re_resolved, span);
     }

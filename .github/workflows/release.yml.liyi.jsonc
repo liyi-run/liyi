@@ -59,7 +59,7 @@
         44,
         48
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[2]::key.run",
       "source_hash": "sha256:53d3f3776031cd2a1de9c69d47a04405a586d455b4816654453563aee662c0b4",
       "source_anchor": "      - name: Install native musl tools"
     },
@@ -71,7 +71,7 @@
         50,
         56
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[3]::key.run",
       "source_hash": "sha256:f8258de5e2a775f28b6837a034c23142c802e840a645aae82feea016592e14c9",
       "source_anchor": "      - name: Install cross"
     },
@@ -83,7 +83,7 @@
         62,
         67
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[5]::key.run",
       "source_hash": "sha256:ad6da2aaa86f294126892da476be8e7255abd010ab6a7f1d3e1ac696cbab923e",
       "source_anchor": "      - name: Build release binary (native)"
     },
@@ -95,7 +95,7 @@
         69,
         73
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[6]::key.run",
       "source_hash": "sha256:f0516755de82a5ca1b26380cc0157a046918dc7a99005c5e2a8954ecfef9084d",
       "source_anchor": "      - name: Build release binary (cross)"
     },
@@ -107,7 +107,7 @@
         75,
         82
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[7]::key.run",
       "source_hash": "sha256:3e21374960929ccbaed4d37fc5b285dc0b4b77cf5c75bddfda431871b20374d1",
       "source_anchor": "      - name: Strip binary"
     },
@@ -119,7 +119,7 @@
         84,
         90
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[8]::key.run",
       "source_hash": "sha256:3e07ffc6ef6e4854235d2668749ade3536be6eece60e8c0f592244f701e506d5",
       "source_anchor": "      - name: Package binary"
     },
@@ -131,7 +131,7 @@
         92,
         96
       ],
-      "tree_path": "",
+      "tree_path": "key.jobs::key.build::key.steps[9]::key.with",
       "source_hash": "sha256:b53367295c966328cd1ed89adb45574227d5a1b28a929e9442f7fd7e86d994a5",
       "source_anchor": "      - name: Upload artifact"
     },
@@ -155,7 +155,6 @@
         105,
         110
       ],
-      "tree_path": "",
       "source_hash": "sha256:5cb97468bcd3e1686454133b658486b7359407a75637bd46c408dc622c757ea8",
       "source_anchor": "      - name: Download all artifacts"
     },
@@ -167,7 +166,6 @@
         114,
         123
       ],
-      "tree_path": "",
       "source_hash": "sha256:216ea36572f4dc28e5641bc4cc64b64e769140ce0517f9cd84a7483b914891c4",
       "source_anchor": "      - name: Create Release"
     }
