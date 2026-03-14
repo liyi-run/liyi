@@ -71,10 +71,10 @@ jobs:
         run: |
           # aarch64-unknown-linux-musl produces static binaries by default, but
           # loongarch64 and riscv64 musl targets require explicit flags
-          export CROSS_LOONGARCH64_UNKNOWN_LINUX_MUSL_LINKER=loongarch64-unknown-linux-musl-gcc
-          export CROSS_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER=riscv64-unknown-linux-musl-gcc
-          export CROSS_LOONGARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
-          export CROSS_RISCV64GC_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
+          export CARGO_TARGET_LOONGARCH64_UNKNOWN_LINUX_MUSL_LINKER=loongarch64-unknown-linux-musl-gcc
+          export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER=riscv64-unknown-linux-musl-gcc
+          export CARGO_TARGET_LOONGARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
+          export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_RUSTFLAGS='-C target-feature=+crt-static'
           cross build --release -p liyi-cli --target ${{ matrix.target }}
           ls -alF target/${{ matrix.target }}/release/
 
