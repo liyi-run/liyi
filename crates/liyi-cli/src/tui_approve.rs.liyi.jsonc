@@ -53,7 +53,7 @@
     },
     {
       "item": "draw_header",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the header bar with kind-aware label (UNREVIEWED, STALE, REQ CHANGED) and color-coded border (Cyan, Yellow, Magenta). Shows item counter, source file, item name, and span.",
       "source_span": [
         317,
@@ -65,7 +65,7 @@
     },
     {
       "item": "draw_intent",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Dispatch to the appropriate intent rendering function based on CandidateKind: draw_intent_unreviewed for Unreviewed, draw_intent_stale_reviewed for StaleReviewed, draw_intent_req_changed for ReqChanged.",
       "source_span": [
         413,
@@ -77,7 +77,7 @@
     },
     {
       "item": "draw_intent_unreviewed",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the intent pane for unreviewed candidates with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current; (3) 'Intent (changed)' — show word-level diff between previous and current intents using diff_spans. Handles =doc sentinel.",
       "source_span": [
         423,
@@ -89,7 +89,7 @@
     },
     {
       "item": "draw_intent_stale_reviewed",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the stale-reviewed intent pane showing the current intent text first, then a unified source diff (old → new) if both prev_source and current_source are available. Uses diff_spans for red/green word-level highlighting. Falls back to a message when old source is unavailable from git history. Yellow border.",
       "source_span": [
         518,
@@ -101,7 +101,7 @@
     },
     {
       "item": "draw_intent_req_changed",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the req-changed intent pane showing requirement name, requirement text diff (old → new) if available, and the item's current intent. Uses diff_spans for word-level highlighting. Falls back to message when requirement diff is unavailable. Magenta border.",
       "source_span": [
         596,
@@ -161,7 +161,7 @@
     },
     {
       "item": "edit_intent_in_editor",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, previous intent (if any), source diff for StaleReviewed candidates, and requirement diff for ReqChanged candidates. Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
       "source_span": [
         101,

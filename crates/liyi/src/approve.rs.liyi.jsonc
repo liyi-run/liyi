@@ -41,7 +41,7 @@
     },
     {
       "item": "CandidateKind",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Discriminant for the kind of review a candidate requires: Unreviewed (agent-inferred, no human confirmation), StaleReviewed (reviewed but source_hash mismatches), or ReqChanged (reviewed but a related requirement's text changed). Must derive PartialEq for filter comparisons.",
       "source_span": [
         57,
@@ -53,7 +53,7 @@
     },
     {
       "item": "ApproveFilter",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Filter enum controlling which candidate kinds to collect: All, UnreviewedOnly, StaleOnly, or ReqOnly. Must derive Copy for cheap passing.",
       "source_span": [
         71,
@@ -65,7 +65,7 @@
     },
     {
       "item": "ApprovalCandidate",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Structured representation of an approval candidate (unreviewed, stale-reviewed, or req-changed) with all context needed for TUI display: sidecar/source identity, spec index, item name, intent text, source span/lines, span offset/len, prev_intent from Git history, kind discriminant, previous and current source text (for StaleReviewed diffs), and old/new requirement text (for ReqChanged diffs). Decouples data gathering from presentation.",
       "source_span": [
         84,
@@ -89,7 +89,7 @@
     },
     {
       "item": "lookup_prev_source",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recover the source text at the time source_hash was valid, using a two-pass Git history strategy. Fast path: walk source file history with the current span (works pre-check-fix). Slow path: walk sidecar history to find the pre-shift span, then read source at that revision. Returns None when git history is unavailable. Handles the case where check --fix shifted the span after the function moved.",
       "source_span": [
         172,
@@ -101,7 +101,7 @@
     },
     {
       "item": "RequirementInfo",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         249,
@@ -113,7 +113,7 @@
     },
     {
       "item": "build_requirement_registry",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Build a global requirement registry by scanning all sidecars in the repo via discover(). For each RequirementSpec, reads the source file, computes a fresh hash from marker-delimited spans (falling back to sidecar span), and stores current text. Returns a HashMap mapping requirement name to RequirementInfo.",
       "source_span": [
         263,
@@ -125,7 +125,7 @@
     },
     {
       "item": "lookup_prev_requirement_text",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Recover the old text of a requirement by walking Git history, using the same two-pass strategy as lookup_prev_source (fast path with current span, slow path via sidecar history for pre-shift spans). Returns None when no matching revision is found.",
       "source_span": [
         318,
@@ -137,7 +137,7 @@
     },
     {
       "item": "collect_approval_candidates",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Resolve sidecar targets from paths, then collect approval candidates of all three kinds (unreviewed, stale-reviewed, req-changed) filtered by kind_filter and item_filter. Builds a global requirement registry for cross-sidecar ReqChanged detection. For unreviewed: gathers items without reviewed=true or @liyi:intent. For stale-reviewed: detects source_hash mismatches and recovers old source via lookup_prev_source. For req-changed: compares related edge hashes against freshly computed requirement hashes and populates old/new requirement text. Orders output: unreviewed first, then stale, then req-changed. Returns error if no targets found.",
       "source_span": [
         392,
@@ -153,7 +153,7 @@
     },
     {
       "item": "apply_approval_decisions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. Kind-aware behavior: For Unreviewed/StaleReviewed Yes: set reviewed=true and rehash. For ReqChanged Yes: refresh the related edge hash only (set to null for tool fill-in), do not touch reviewed/intent/source_hash. For Edit: update intent and rehash (all kinds); for ReqChanged also refresh the related edge. For No on Unreviewed: set reviewed=false. For No on StaleReviewed/ReqChanged: leave unchanged as todo marker. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
         587,
