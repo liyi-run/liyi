@@ -42,17 +42,18 @@ from classifying each field by its source of truth:
 | `source_hash` | Source file bytes in span | Re-derive |
 | `source_anchor` | First line of span | Re-derive |
 | `tree_path` | Tree-sitter parse of source | Re-derive (tool overwrites) |
-| `related` | `@liyi:related` markers in source + requirement registry | Re-derive |
+| `related` (edge keys) | `@liyi:related` markers in source | Re-derive |
+| `related` (stored hashes) | Human review gate | Three-way merge (see below) |
 | `_hints` | `liyi init` scaffold | Strip (ephemeral) |
 | `intent` | Agent or human | Merge heuristic / flag |
 | `reviewed` | Human gate | Merge heuristic / flag |
-| `confidence` | Agent | Take surviving side |
+| `confidence` | Agent | Conditional (see below) |
 | `item` / `requirement` | Identity key | Match key |
 | `version`, `source` | File-level metadata | Take post-merge value |
 
-The first six rows are fully derivable — conflicts in these fields are always
-auto-resolvable by re-derivation. Only `intent` and `reviewed` carry
-human-authored or human-gated semantics that require care.
+The first five rows are fully derivable — conflicts in these fields are always
+auto-resolvable by re-derivation. `related` hashes, `intent`, `reviewed`, and
+`confidence` carry human-authored or human-gated semantics that require care.
 
 ---
 
@@ -79,11 +80,25 @@ Any doubt defaults to `false`.
 
 <!-- @liyi:requirement merge-derived-fields-are-discarded -->
 **Derived fields are discarded, not merged.** `source_span`, `source_hash`,
-`source_anchor`, `tree_path`, `related`, and `_hints` from both sides of a
-conflict are discarded entirely. They are recomputed by the normal `--fix`
-pass that follows the merge phase. This eliminates the largest class of sidecar
+`source_anchor`, `tree_path`, and `_hints` from both sides of a conflict are
+discarded entirely. They are recomputed by the normal `--fix` pass that
+follows the merge phase. This eliminates the largest class of sidecar
 conflicts (span shifts, hash drift) and avoids propagating stale derivations.
 <!-- @liyi:end-requirement merge-derived-fields-are-discarded -->
+
+<!-- @liyi:requirement merge-preserves-related-hashes -->
+**Related edge keys are re-derived; stored hashes are review evidence.**
+The `related` field has two parts with different provenance. Edge *keys*
+(which requirement names appear) are derivable from `@liyi:related` markers
+in source — `--fix` re-discovers and re-populates them. Stored *hashes*
+(the requirement's `source_hash` at time of last review) are review evidence:
+they exist so that `ReqChanged` can fire when the requirement evolves.
+Discarding stored hashes during merge would silently clear ReqChanged
+without human approval, violating `reqchanged-demands-human-judgment`.
+Therefore, the merge phase applies three-way merge to hash values (see
+Stage 2) and `--fix` only re-derives edge keys (adding missing ones,
+leaving existing hashes intact).
+<!-- @liyi:end-requirement merge-preserves-related-hashes -->
 
 <!-- @liyi:requirement merge-is-pre-phase -->
 **Merge resolution is a pre-phase of `--fix`.** The conflict-resolution logic
@@ -112,9 +127,14 @@ existing `--fix --dry-run` contract.
 ## Conflict detection
 
 A sidecar file is considered conflicted if it contains Git conflict markers
-(`<<<<<<<`, `=======`, `>>>>>>>`). Detection is a byte-level scan — no JSON
-parsing is attempted on unresolved files. The merge phase extracts three
-regions:
+(`<<<<<<<`, `=======`, `>>>>>>>`). Detection uses a string/comment-aware
+scanner — markers that appear inside JSONC string literals or comments are
+not treated as conflict boundaries. This avoids false positives when, e.g.,
+a requirement's prose contains example conflict markers. The scanner does
+not attempt full JSON parsing; it tracks only whether the current byte
+position is inside a `"..."` string or `//`/`/* */` comment.
+
+The merge phase extracts three regions:
 
 - **Ours** — text between `<<<<<<<` and `=======`
 - **Theirs** — text between `=======` and `>>>>>>>`
@@ -175,10 +195,30 @@ a genuine conflict (intent removed vs. intent changed).
 For each matched spec pair, resolve fields individually:
 
 **Derived fields** (`source_span`, `source_hash`, `source_anchor`, `tree_path`,
-`related`, `_hints`):
+`_hints`):
 Discard both sides. Set `source_span` to whichever side's value parses (as a
 placeholder — `--fix` will recompute). Set all others to `null` / absent. The
 subsequent `--fix` pass re-derives them from source.
+
+**`related`** (two-part merge):
+- *Edge keys:* Discard both sides' key sets. `--fix` re-discovers them from
+  `@liyi:related` markers in the post-merge source. Missing keys are added
+  with `null` hashes (triggering the normal `--fix` hash-fill path).
+- *Stored hashes:* For edges that exist on both sides, apply three-way merge
+  on the hash value per-key:
+  - Both sides same hash → keep it.
+  - One side changed the hash (e.g., ran `liyi approve` on that branch) →
+    take the changed side.
+  - Both sides changed to different hashes → take the *more recent* hash
+    (i.e., the one matching the requirement's current `source_hash`). If
+    neither matches current, keep either and let `ReqChanged` fire — the
+    human must approve.
+  - One side has `null`, other has a hash → keep the hash (a `null` means
+    the edge was newly added and not yet reviewed; a hash means it was
+    reviewed at some point).
+
+  This preserves review evidence while ensuring that a merge cannot silently
+  clear a `ReqChanged` diagnostic that should require human judgment.
 
 **`intent`:**
 
@@ -202,11 +242,17 @@ Sentinel-to-sentinel changes (e.g., `=trivial` → `=doc`) are also conflicts.
 The only auto-resolvable case is when both sides agree on the same sentinel.
 
 **`@liyi:intent` in source:** When an item has `@liyi:intent` in the
-post-merge source file, the source marker is authoritative regardless of
-sidecar `intent` or `reviewed` values. The merge phase sets `intent` to
-`=doc` (or the marker's prose if inline) and `reviewed` to `true`, since
-source-level intent is definitionally reviewed. This takes precedence over
-the three-way table above.
+post-merge source file, the source marker conveys *effective review status*
+— the item is treated as reviewed for check/test-generation purposes. However,
+the merge phase does **not** rewrite the sidecar's `intent` text or force
+`reviewed` to `true`. The existing design allows source intent to differ from
+the sidecar's agent-inferred intent; source intent takes precedence for
+adversarial test generation, not for sidecar normalization. The merge phase
+uses source-intent presence only to inform the `reviewed` heuristic: if the
+post-merge source has `@liyi:intent`, the item is effectively reviewed
+regardless of the sidecar `reviewed` field, so a `reviewed: false` merge
+result does not block the item — it merely means the sidecar intent hasn't
+been human-confirmed, while the source intent has.
 
 **`reviewed`:**
 
@@ -217,9 +263,12 @@ the three-way table above.
     unreviewed)
 
 **`confidence`:**
-Take the side that changed `intent`. If neither or both changed, take the
-lower value (conservative). Absent beats present (conservative — no
-confidence claim is safer than an inherited one from a stale context).
+If the merged `reviewed` is `true`, drop `confidence` entirely — the main
+design treats these as mutually exclusive (confidence is removed once an item
+is reviewed). Otherwise: take the side that changed `intent`. If neither or
+both changed, take the lower value (conservative). Absent beats present
+(conservative — no confidence claim is safer than an inherited one from a
+stale context).
 
 ### Unresolvable conflicts
 
@@ -232,7 +281,7 @@ or delete-vs-modify), it:
    ```jsonc
    {
      "item": "process_payment",
-     "intent": null,
+     "intent": "<<<MERGE_CONFLICT>>>",
      "_merge_conflict": {
        "ours": "Must validate currency before processing",
        "theirs": "Must reject payments over the daily limit"
@@ -240,6 +289,12 @@ or delete-vs-modify), it:
      "source_span": [42, 58]
    }
    ```
+
+   The `intent` field retains a placeholder string (`<<<MERGE_CONFLICT>>>`)
+   rather than `null`, so the sidecar remains deserializable by the existing
+   parser (which requires `intent` to be a `String`). The checker treats
+   this sentinel as an error — no schema or parser changes are needed for
+   the core pipeline.
 
    **Schema compatibility:** `_merge_conflict` must be added to the
    `itemSpec` definition in `schema/liyi.schema.json` as an optional
@@ -256,15 +311,28 @@ or delete-vs-modify), it:
    }
    ```
 
+   **Pipeline impact:** Adding `_merge_conflict` requires:
+   - Schema: add optional field to `itemSpec` (like `_hints`)
+   - `sidecar.rs`: add `_merge_conflict` field to `ItemSpec` struct
+     (`Option<MergeConflict>` with `#[serde(skip_serializing_if)]`)
+   - `check.rs`: emit `Error` diagnostic when `_merge_conflict` is present;
+     strip it (along with the sentinel intent) once the human provides
+     real intent
+   - `prompt.rs` / triage consumers: skip items with `_merge_conflict`
+     or surface them as "blocked on merge resolution"
+
+   No changes needed to the core validation, approval, or hash-computation
+   paths — they already gate on `intent` content.
+
 3. Emits a diagnostic at `Error` severity so `liyi check` fails until the
    human resolves it. The diagnostic message references the item name and
    both candidate intents.
 
 4. `_merge_conflict` is orthogonal to the triage workflow
    (`.liyi/triage.json`). Triage handles stale-but-parseable specs; merge
-   conflicts are unparseable specs that block all downstream processing.
-   `liyi triage` should skip items with `_merge_conflict` and report them
-   as "blocked on merge resolution."
+   conflicts block intent-dependent processing. `liyi triage` should skip
+   items with `_merge_conflict` and report them as "blocked on merge
+   resolution."
 
 This avoids leaving raw Git conflict markers in JSONC (which would make the
 file unparseable) while still giving the human enough information to decide.
@@ -280,9 +348,13 @@ liyi check --fix
   ┌─────────────────────────────────────────────┐
   │ Pre-phase: Conflict resolution              │
   │  1. Scan sidecars for conflict markers       │
+  │     (string/comment-aware scanner)           │
   │  2. Parse ours/theirs (lenient JSONC)        │
   │  3. Structural merge (spec identity match)   │
-  │  4. Field-level merge (derivable → discard)  │
+  │  4. Field-level merge:                       │
+  │     - Derived fields → discard (spans, etc.) │
+  │     - Related hashes → three-way merge       │
+  │     - Intent/reviewed → heuristic merge      │
   │  5. Write resolved sidecar                   │
   │  6. Report: "Auto-resolved N specs, M need   │
   │     manual review"                           │
@@ -404,7 +476,7 @@ git commit
 
 | Aspect | Yarn / PNPM | liyi |
 |---|---|---|
-| Derived artifact | Lockfile (from package.json) | Sidecar spans, hashes, related edges (from source) |
+| Derived artifact | Lockfile (from package.json) | Sidecar spans, hashes, related edge keys (from source) |
 | Source of truth | `package.json` | Source file + `tree_path` + `@liyi:related` markers |
 | Human-authored fields | (none — lockfile is fully derived) | `intent`, `reviewed` |
 | Merge strategy | Accept either side, re-derive | Accept either side for derived fields; heuristic merge for human fields |
@@ -433,20 +505,23 @@ The three-way merge has high combinatorial complexity. Testing should cover:
 
 **Property-based tests** (following the existing `shift_proptest.rs` pattern):
 - Merge of arbitrary spec arrays preserves all non-conflicting specs
-- Derived fields in merge output are always null/placeholder (never
-  carried from either side)
+- Derived fields (spans, hashes, anchors) in merge output are always
+  null/placeholder (never carried from either side)
+- `related` stored hashes are never silently dropped — if both sides
+  had a non-null hash, the output has a non-null hash
 - `reviewed: true` in output implies identical intent on both sides
+- `reviewed: true` in output implies `confidence` is absent
 - Merge is deterministic (same inputs → same output)
 - Roundtrip: merge output parses as valid JSONC and passes schema
-  validation (except for `_merge_conflict` items, which fail at
-  `intent: null`)
+  validation (including `_merge_conflict` items, which use sentinel
+  intent string)
 
 **Conflict-marker fuzzing:**
 - Nested / malformed / partial conflict markers → graceful fallback
   (leave markers intact, emit diagnostic)
 - Multiple conflict regions in a single file
-- Conflict markers inside JSONC string values (must not be detected
-  as real conflicts)
+- Conflict markers inside JSONC string values and comments (must not
+  be detected as real conflicts — validates string/comment-aware scanner)
 
 ---
 
@@ -455,7 +530,8 @@ The three-way merge has high combinatorial complexity. Testing should cover:
 This document contains content from the following AI agents:
 
 * Claude Opus 4.6
+* GPT-5.4
 * Hunter Alpha
 
 The document is primarily authored by Claude Opus 4.6 with the human designer's input.
-Hunter Alpha did a round of design review and most of their suggestions were integrated.
+Hunter Alpha and GPT-5.4 each did a round of design review and most of their suggestions were integrated.
