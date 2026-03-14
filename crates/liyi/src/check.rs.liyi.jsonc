@@ -24,7 +24,7 @@
         347
       ],
       "tree_path": "fn.run_check",
-      "source_hash": "sha256:0e7bb66ac62c7f2104955a2706d12bb4bb724376a4e65d8d772486fd725f73f9",
+      "source_hash": "sha256:b246cdc61e31b25055daa3f15fc73de9b58d206f0369487df380c98b905e291d",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
@@ -34,14 +34,14 @@
     },
     {
       "item": "check_sidecar",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version, validate source_hash format (sha256:<hex> regex) on all item and requirement hashes including related edges, verify the source file exists, then for each spec check hash freshness (with shift detection, tree_path computation, hash-based sibling scan fallback, PastEof tree_path recovery, and --fix support), review status (sidecar reviewed flag or @liyi:intent marker), trivial/ignore source markers and sidecar =trivial sentinel (emitting Trivial info or ConflictingTriviality error when @liyi:nontrivial conflicts), and related-requirement edges (comparing against computed_hash to detect cascading staleness in one pass; including hash backfill: when --fix is active, fill null hash values in related edges from the requirements map, and insert new edges with the requirement's current hash). For requirements: marker-based span recovery from @liyi:requirement/@liyi:end-requirement blocks before hashing; PastEof tree_path recovery with pure-shift vs content-changed distinction. Each diagnostic carries a fixed flag set to true when --fix resolves it (pure shifts, missing hashes, missing related edges) or false for unfixable issues (structural errors). On semantic drift (tree_path resolves but content changed): for reviewed specs, update span but leave hash stale so the spec is flagged for intent review; for unreviewed specs, also rehash at the new location since no human judgment is at stake. When hash mismatches after tree_path resolution, try hash-based sibling scan before treating as drift or falling back to shift heuristic. When --fix fills a missing source_hash, reviewed is reset to false so a human must re-confirm intent. When --fix is active, strip _hints from all item specs (hints are transient scaffold aids). Write the sidecar back if --fix produced modifications.",
       "source_span": [
         356,
         1519
       ],
       "tree_path": "fn.check_sidecar",
-      "source_hash": "sha256:dd5826e2c97fff3e280ffd3247a6c4aeed96ce61e8a0c37c67df610a945b201c",
+      "source_hash": "sha256:e4a1f266342a52c840ebb07aa2c43ee221ac1e05363ec075d0a30842193c529e",
       "source_anchor": "fn check_sidecar(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
