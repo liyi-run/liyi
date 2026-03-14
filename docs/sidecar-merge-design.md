@@ -166,8 +166,10 @@ Resolution proceeds in two stages: structural merge, then field-level merge.
 
 ### Stage 1: Structural merge (spec-level)
 
-Parse ours and theirs as JSONC (lenient — tolerating trailing commas and
-comments). Match specs by identity key:
+Parse all three whole-file reconstructions — base, ours, and theirs — as JSONC
+(lenient — tolerating trailing commas and comments). When base is unavailable
+(no diff3 markers), two-way mode is used with reduced heuristic power (see
+Stage 2 fallbacks). Match specs across all three documents by identity key:
 
 - **Item specs:** matched by identity cascade:
   1. `(item, tree_path)` — preferred when both sides have `tree_path`.
