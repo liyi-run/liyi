@@ -5,7 +5,7 @@
 
 🌍: [简体中文（普通话）](README.zh.md) / English
 
-> ⚠️ **Work in progress** — the spec format and CLI are under active evolution. Expect breaking changes.
+> ⚠️ **v0.1** — the spec format and CLI are usable but still evolving. Expect breaking changes before 1.0.
 >
 > 🐕 **Bootstrapped — intent before execution:** we wrote the design doc first, then agents bootstrapped the entire project from it, following the full 立意 pattern before the first line of code. **Specs track code:** when source or requirements change, `liyi check` detects staleness and the agent resolves it automatically — code and intent stay in sync.
 
@@ -50,10 +50,27 @@ liyi check --root .
 ```
 liyi check [OPTIONS] [PATHS]...
     --fix                           Auto-correct shifted spans, fill missing hashes
+    --dry-run                       Preview --fix corrections without writing
     --fail-on-stale <true|false>    Fail on stale specs (default: true)
     --fail-on-unreviewed <true|false>  Fail on unreviewed specs (default: false)
     --fail-on-req-changed <true|false> Fail on changed requirements (default: true)
+    --fail-on-untracked <true|false>   Fail on untracked requirements (default: true)
     --root <PATH>                   Override repo root
+    -v, --verbose                   Show all diagnostics including current specs
+    --level <all|warning|error>     Minimum severity level (default: all)
+    --prompt                        Emit agent-consumable JSON for coverage gaps
+
+liyi init [SOURCE_FILE]
+    Scaffold AGENTS.md (no argument) or skeleton .liyi.jsonc sidecar
+    --force                         Overwrite existing files
+    --no-discover                   Skip tree-sitter item discovery
+    --trivial-threshold <N>         Line-count threshold for trivial items (default: 5)
+
+liyi approve [PATHS]...
+    Mark specs as reviewed by a human
+    --yes                           Approve all without prompting
+    --dry-run                       Preview without writing
+    --item <NAME>                   Filter to a specific item
 
 liyi migrate [FILE|DIR]...
     Upgrade sidecar schema version

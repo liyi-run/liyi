@@ -5,7 +5,7 @@
 
 🌍: 简体中文（普通话） / [English](README.md)
 
-> ⚠️ **开发中** — 《立意》的协议格式与 CLI 工具正在活跃演变过程中，我们预期会有破坏性变更。
+> ⚠️ **v0.1** — 《立意》的协议格式与 CLI 工具已可使用，但仍在演进中，1.0 之前预期会有破坏性变更。
 >
 > 🐕 **自举完成——意在笔先：** 我们首先撰写了《立意》设计文档，尔后以智能体从文档自举了整个项目，从项目伊始便遵照完全体的设计模式推进；**文随意转：** 源码或需求发生变更，`liyi check` 即刻察觉，驱动 Agent 自行解决——代码与意图始终同步。
 
@@ -51,10 +51,27 @@ liyi check --root .
 ```plain
 liyi check [OPTIONS] [PATHS]...
     --fix                           自动修正偏移的区间，填充缺失的哈希
+    --dry-run                       预览 --fix 修正结果，不写入文件
     --fail-on-stale <true|false>    对过时规格报错（默认：true）
     --fail-on-unreviewed <true|false>  对未复核规格报错（默认：false）
     --fail-on-req-changed <true|false> 对已变更需求报错（默认：true）
+    --fail-on-untracked <true|false>   对未追踪需求报错（默认：true）
     --root <PATH>                   覆盖仓库根目录
+    -v, --verbose                   显示全部诊断信息，包括当前规格
+    --level <all|warning|error>     最低严重级别（默认：all）
+    --prompt                        输出面向智能体的 JSON，供覆盖缺口分析
+
+liyi init [SOURCE_FILE]
+    生成 AGENTS.md（无参数）或骨架 .liyi.jsonc sidecar
+    --force                         覆盖已有文件
+    --no-discover                   跳过 tree-sitter 条目发现
+    --trivial-threshold <N>         trivial 条目行数阈值（默认：5）
+
+liyi approve [PATHS]...
+    将规格标记为已经人类复核
+    --yes                           无需确认，批量审批
+    --dry-run                       预览审批结果，不写入文件
+    --item <NAME>                   筛选特定条目
 
 liyi migrate [FILE|DIR]...
     升级 sidecar schema 版本
