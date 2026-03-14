@@ -179,4 +179,4 @@ The compliance practices described in this document are based on general softwar
 
 ## AIGC Disclaimer
 
-The "compliance as code" positioning originated from market analysis by Kimi K2.5 Thinking (web client). This document was authored by Claude Opus 4.6.
+The "compliance as code" positioning originated from market analysis by Kimi K2.5 (web client, thinking). This document was authored by Claude Opus 4.6.

@@ -179,4 +179,4 @@ liyi check --root .
 
 ## AIGC 声明
 
-"合规即代码"定位源自 Kimi K2.5 Thinking（web client）的市场分析。本文档由 Claude Opus 4.6 撰写。
+"合规即代码"定位源自 Kimi K2.5（Web 客户端，思考模式开）的市场分析。本文档由 Claude Opus 4.6 撰写。

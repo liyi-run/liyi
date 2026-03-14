@@ -2731,7 +2731,6 @@ This document contains content from the following AI agents:
 * Claude Sonnet 4.6
 * DeepSeek
 * GPT-5.2
-* Kimi K2.5 Instant
-* Kimi K2.5 Thinking
+* Kimi K2.5
 
 The document is primarily authored by Claude Opus 4.6, with the human designer's input, and multiple rounds of adversarial review.
