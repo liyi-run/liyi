@@ -29,6 +29,15 @@
       ],
       "source_hash": "sha256:30ba3f1eea4b3e68d6c5b3926c643cd41d753636d9420329934d9dd43ae14de5",
       "source_anchor": "<!-- @liyi:requirement reqchanged-demands-human-judgment -->"
+    },
+    {
+      "requirement": "stale-reviewed-demands-human-judgment",
+      "source_span": [
+        34,
+        36
+      ],
+      "source_hash": "sha256:0158af62360b393b12a0a34ed912c5fa7f75d313e1994536345e70910887d97a",
+      "source_anchor": "<!-- @liyi:requirement stale-reviewed-demands-human-judgment -->"
     }
   ]
 }

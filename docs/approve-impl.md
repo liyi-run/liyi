@@ -2,8 +2,8 @@
 
 # `liyi approve`: Implementation Plan
 
-**Status:** Partially implemented (unreviewed-item approval is shipped; requirement-change review is planned)
-**Design authority:** `docs/liyi-design.md` — *reviewed-semantics*, *fix-never-modifies-human-fields*
+**Status:** Partially implemented (unreviewed-item approval is shipped; requirement-change and stale-reviewed approval are planned)
+**Design authority:** `docs/liyi-design.md` — *reviewed-semantics*, *fix-never-modifies-human-fields*, *fix-semantic-drift-protection*
 
 ---
 
@@ -11,7 +11,7 @@
 
 <!-- @liyi:related reviewed-semantics -->
 
-`liyi approve` is the human review gate. Agents infer intent, but only a human can confirm that an intent description is correct or that a code item still satisfies a changed requirement. Without this gate, agent-inferred specs accumulate unchecked, and requirement changes propagate silently.
+`liyi approve` is the human review gate. Agents infer intent, but only a human can confirm that an intent description is correct, that a code item still satisfies a changed requirement, or that a previously reviewed item's intent still holds after the source code changed. Without this gate, agent-inferred specs accumulate unchecked, requirement changes propagate silently, and stale reviewed items linger with no structured path back to a clean state.
 
 ---
 
@@ -30,6 +30,10 @@ The following constraints are normative for the implementation.
 <!-- @liyi:requirement reqchanged-demands-human-judgment -->
 **ReqChanged always demands human judgment.** Even if a requirement change appears cosmetic (rewording with no semantic impact), the human must confirm. The point of liyi is that humans don't trust their own recall — "I'm sure this is fine" is exactly the failure mode liyi prevents. No auto-fix path exists for stale related edges; only `liyi approve` (or manual sidecar editing) can refresh them.
 <!-- @liyi:end-requirement reqchanged-demands-human-judgment -->
+
+<!-- @liyi:requirement stale-reviewed-demands-human-judgment -->
+**Stale reviewed specs always demand human judgment.** When a reviewed item's source code changes, `liyi check --fix` refuses to auto-rehash — the spec remains stale until a human confirms via `liyi approve` (or manual sidecar editing) that the declared intent still describes the changed code. This is the complement of the ReqChanged gate: ReqChanged guards against requirement drift; StaleReviewed guards against implementation drift. No auto-fix path exists for stale reviewed specs.
+<!-- @liyi:end-requirement stale-reviewed-demands-human-judgment -->
 
 ---
 
@@ -103,10 +107,11 @@ Extend `liyi approve` to surface **requirement-changed items** alongside unrevie
 
 #### Candidate types
 
-The `ApprovalCandidate` struct gains a discriminant (or a new sibling type) to distinguish two review modes:
+The `ApprovalCandidate` struct gains a discriminant (or a new sibling type) to distinguish three review modes:
 
 1. **Unreviewed** (existing): agent-inferred intent, no human confirmation yet
 2. **ReqChanged** (new): reviewed item whose related requirement text changed
+3. **StaleReviewed** (new): reviewed item whose source code changed (`source_hash` mismatch, flagged by `liyi check` as "not auto-rehashed — reviewed")
 
 For ReqChanged candidates, the candidate struct carries additional context:
 
@@ -153,13 +158,14 @@ liyi approve [paths...]
     --item NAME     Filter to specific item
     --req-only      Only show requirement-changed items (skip unreviewed)
     --unreviewed-only  Only show unreviewed items (current behavior)
+    --stale-only    Only show stale-reviewed items
 ```
 
-Without `--req-only` or `--unreviewed-only`, both kinds are interleaved (unreviewed first, then req-changed, or sorted by file). The progress bar shows the combined count.
+Without `--req-only`, `--unreviewed-only`, or `--stale-only`, all three kinds are interleaved (unreviewed first, then stale-reviewed, then req-changed). The progress bar shows the combined count.
 
 #### Ordering
 
-Present unreviewed items first (these are typically fewer and higher-priority), then ReqChanged items grouped by requirement (so all items affected by the same requirement change appear together, with the requirement diff shown once as a group header).
+Present unreviewed items first (these are typically fewer and higher-priority), then StaleReviewed items sorted by file (so the human walks through changed code in file order), then ReqChanged items grouped by requirement (so all items affected by the same requirement change appear together, with the requirement diff shown once as a group header).
 
 ### Implementation notes
 
@@ -173,6 +179,78 @@ Present unreviewed items first (these are typically fewer and higher-priority), 
 - **Multiple requirements changed for one item:** the item appears once per changed requirement, or once with all changed requirements listed. The latter is more ergonomic — show all requirement diffs in the intent pane, single Yes/No refreshes all related edges
 - **Requirement deleted:** this is already `UnknownRequirement` (error severity), not `ReqChanged`. `approve` doesn't handle it — the human must fix the `related` edge or the code
 - **Requirement renamed:** currently appears as UnknownRequirement (old name) plus MissingRelatedEdge (new name, if `@liyi:related` was updated in source). Not handled by `approve` — manual sidecar edit
+
+---
+
+## Planned: stale-reviewed approval
+
+### Problem
+
+When a reviewed item's source code changes, `liyi check --fix` updates the `source_span` (if the item shifted) but refuses to rehash `source_hash` — the "not auto-rehashed — reviewed" diagnostic. The spec remains stale until a human confirms the intent still holds. Currently the only resolution paths are:
+
+1. Manual sidecar editing (set `source_hash` to `null`, run `--fix`)
+2. Agent triage (write a triage report, run `liyi triage --apply` for cosmetic changes)
+
+Neither path provides the ergonomic, interactive review that `liyi approve` offers for unreviewed items. A human looking at `liyi check` output with several "not auto-rehashed — reviewed" warnings has no structured way to walk through each one, compare old code vs new code, and confirm or update the intent.
+
+### Design
+
+Extend `liyi approve` to surface **stale reviewed items** alongside unreviewed and ReqChanged items. The same TUI, same decision loop, broader scope.
+
+<!-- @liyi:related stale-reviewed-demands-human-judgment -->
+<!-- @liyi:related fix-semantic-drift-protection -->
+
+#### Candidate collection
+
+`collect_approval_candidates` gains a pass over `liyi check` diagnostics (or re-runs the check logic internally) to find `DiagnosticKind::Stale` items where `reviewed == true` (or `@liyi:intent` in source). For each, it collects:
+
+- **Item metadata:** name, intent text, source span, spec index
+- **Current source:** all lines, with the item's span highlighted
+- **Old source from Git:** the source lines at the span recorded in the stale `source_hash`, recovered via `git show <commit>:<file>` or by walking git history to find the commit whose content matches the recorded hash. This enables a source diff
+- **Current intent:** the human-reviewed intent that may or may not still apply
+
+#### TUI presentation for StaleReviewed
+
+The intent pane changes layout for StaleReviewed candidates:
+
+1. **Header:** item name, source file, line range, label "STALE — source changed since last review"
+2. **Source diff:** old source (at time of last hash) → new source (current span), word-level or line-level diff with red/green highlighting. This is the key information — the human needs to see *what changed* in the code
+3. **Intent pane:** the item's current intent text, displayed in full. The question is: "does this intent still describe the changed code?"
+4. **Source pane:** full syntax-highlighted source code of the item's current span, scrollable
+
+#### Decisions for StaleReviewed
+
+| Key | Meaning for StaleReviewed |
+|-----|---------------------------|
+| `y` | Confirm — the intent still describes the changed code. Rehash `source_hash` and `source_anchor` to current, keep `reviewed: true` |
+| `n` | Reject — the intent no longer holds. Leave stale as a todo marker |
+| `s` | Skip — defer |
+| `e` | Edit — update the intent to match the new code, then rehash. Set `reviewed: true` (the human authored the new intent directly) |
+
+#### Application logic
+
+<!-- @liyi:related fix-never-modifies-human-fields -->
+<!-- @liyi:related reviewed-semantics -->
+
+For StaleReviewed approvals:
+
+- **Yes:** recompute `source_hash` and `source_anchor` from the current source span. Keep `reviewed = true` and `intent` unchanged — the human confirmed the existing intent still holds
+- **Edit(text):** update `intent` to the new text, recompute `source_hash` and `source_anchor`, set `reviewed = true` (the human directly authored the replacement intent)
+- **No:** leave `source_hash` unchanged so `liyi check` continues to flag it as stale
+- **Skip:** no mutation
+
+### Implementation notes
+
+- Source diff recovery: `lookup_prev_source` (new function, parallel to `lookup_prev_intent`) walks git history to find the source file content at the commit where the item's `source_hash` last matched. Falls back to showing just the current source if git history is unavailable
+- The `similar` crate's line-level diff (already used for intent diffs) works for source diffs. Word-level diff may be too noisy for code; line-level with inline change highlighting is likely more readable
+- `edit_intent_in_editor` reuses the existing flow but includes the source diff and current intent in the comment block
+
+### Edge cases
+
+- **Item both stale and ReqChanged:** the item appears in both categories. Present it as StaleReviewed first (the source change is the more fundamental concern); if the human approves the intent, the ReqChanged review follows. Alternatively, combine into a single review showing both the source diff and the requirement diff — but this risks information overload. Presenting separately is safer
+- **`@liyi:intent` in source:** if the item has `@liyi:intent` in source (making it effectively reviewed), and the source changed, it should still surface as StaleReviewed. The source-level intent assertion may no longer match the code. `liyi check` already flags these as stale
+- **Stale but cosmetically:** the source hash changed but the behavioral semantics didn't (e.g., variable rename, comment edit). The human sees the diff, confirms it's cosmetic, and approves. No shortcut — the whole point is that the human judges, not the tool
+- **`--yes` batch mode:** allowed for consistency, but carries the same caution as ReqChanged batch approval — the human claims to have verified all stale intents still hold, which is a strong assertion
 
 ---
 
