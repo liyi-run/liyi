@@ -141,12 +141,18 @@ The merge phase extracts three regions:
 - **Base** — if diff3 markers are present (`|||||||`), the common ancestor;
   otherwise inferred from the two sides
 
-If multiple conflict regions exist in one file, each is extracted independently
-and the non-conflicting regions are preserved as-is. The concatenated result of
-all resolved regions must parse as valid JSONC before proceeding to the fix
-phase.
+If multiple conflict regions exist in one file, the implementation
+reconstructs full-file variants by splicing each region's ours/theirs/base
+text back into the shared non-conflicting text, producing complete `ours`,
+`theirs`, and `base` documents. Parsing and structural merge (Stage 1)
+operate on these whole-file reconstructions, not on individual conflict
+regions — per-region parsing would break spec identity matching, ordering,
+and duplicate detection across the file.
 
-**Failure handling:** If either side of a conflict region produces unparseable
+The reconstructed documents must each parse as valid JSONC before proceeding
+to the fix phase.
+
+**Failure handling:** If either reconstructed document produces unparseable
 JSONC, or the concatenated result is invalid, the merge phase does not write
 the file. It leaves the raw conflict markers intact and emits a diagnostic at
 `Error` severity instructing the human to resolve manually. The merge phase
