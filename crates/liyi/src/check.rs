@@ -10,7 +10,7 @@ use crate::hashing::{SpanError, hash_span};
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::schema::validate_version;
 use crate::shift::{ShiftResult, detect_shift};
-use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
+use crate::sidecar::{ItemSpec, Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{
     compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
 };
@@ -1152,221 +1152,27 @@ fn check_sidecar(
                 }
 
                 // b. Review status
-                let reviewed_in_sidecar = item.reviewed;
-                let has_intent_marker = source_markers.iter().any(|m| {
-                    if let SourceMarker::Intent { line, .. } = m {
-                        *line >= item.source_span[0] && *line <= item.source_span[1]
-                    } else {
-                        false
-                    }
-                });
-                if !reviewed_in_sidecar && !has_intent_marker {
-                    diagnostics.push(Diagnostic {
-                        file: entry.source_path.clone(),
-                        item_or_req: label.clone(),
-                        kind: DiagnosticKind::Unreviewed,
-                        severity: Severity::Warning,
-                        message: "not reviewed".into(),
-                        fix_hint: None,
-                        fixed: false,
-                        span_start: Some(item.source_span[0]),
-                        annotation_line: None,
-                        requirement_text: None,
-                        intent: Some(item.intent.clone()),
-                    });
-                }
+                check_review_status(
+                    &entry.source_path, &label, item, &source_markers, diagnostics,
+                );
 
-                // c. Trivial / ignore markers within or immediately before span
-                let span_start = item.source_span[0];
-                let span_end = item.source_span[1];
-                for m in &source_markers {
-                    match m {
-                        SourceMarker::Trivial { line }
-                            if *line >= span_start.saturating_sub(1) && *line <= span_end =>
-                        {
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label.clone(),
-                                kind: DiagnosticKind::Trivial,
-                                severity: Severity::Info,
-                                message: "marked \x40liyi:trivial".into(),
-                                fix_hint: None,
-                                fixed: false,
-                                span_start: Some(item.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                                intent: Some(item.intent.clone()),
-                            });
-                        }
-                        SourceMarker::Ignore { line, .. }
-                            if *line >= span_start.saturating_sub(1) && *line <= span_end =>
-                        {
-                            diagnostics.push(Diagnostic {
-                                file: entry.source_path.clone(),
-                                item_or_req: label.clone(),
-                                kind: DiagnosticKind::Ignored,
-                                severity: Severity::Info,
-                                message: "marked \x40liyi:ignore".into(),
-                                fix_hint: None,
-                                fixed: false,
-                                span_start: Some(item.source_span[0]),
-                                annotation_line: None,
-                                requirement_text: None,
-                                intent: Some(item.intent.clone()),
-                            });
-                        }
-                        _ => {}
-                    }
-                }
+                // c. Trivial / ignore markers and sidecar =trivial sentinel
+                check_trivial_ignore(
+                    &entry.source_path, &label, item, &source_markers, diagnostics,
+                );
 
-                // c2. Sidecar "=trivial" sentinel
-                if item.intent == "=trivial" {
-                    // Conflict: @liyi:nontrivial in source vs =trivial in sidecar
-                    let has_nontrivial = source_markers.iter().any(|m| {
-                        matches!(m, SourceMarker::Nontrivial { line }
-                            if *line >= span_start.saturating_sub(1) && *line <= span_end)
-                    });
-                    if has_nontrivial {
-                        diagnostics.push(Diagnostic {
-                            file: entry.source_path.clone(),
-                            item_or_req: label.clone(),
-                            kind: DiagnosticKind::ConflictingTriviality,
-                            severity: Severity::Error,
-                            message: "\x40liyi:nontrivial in source conflicts with \"=trivial\" in sidecar".into(),
-                            fix_hint: None,
-                            fixed: false,
-                            span_start: Some(item.source_span[0]),
-                            annotation_line: None,
-                            requirement_text: None,
-                        intent: Some(item.intent.clone()),
-                        });
-                    } else {
-                        diagnostics.push(Diagnostic {
-                            file: entry.source_path.clone(),
-                            item_or_req: label.clone(),
-                            kind: DiagnosticKind::Trivial,
-                            severity: Severity::Info,
-                            message: "intent \"=trivial\"".into(),
-                            fix_hint: None,
-                            fixed: false,
-                            span_start: Some(item.source_span[0]),
-                            annotation_line: None,
-                            requirement_text: None,
-                            intent: Some(item.intent.clone()),
-                        });
-                    }
-                }
-
-                // d. Related requirements
-                if let Some(ref related) = item.related {
-                    for (req_name, stored_hash) in related {
-                        match requirements.get(req_name) {
-                            None => {
-                                diagnostics.push(Diagnostic {
-                                    file: entry.source_path.clone(),
-                                    item_or_req: label.clone(),
-                                    kind: DiagnosticKind::UnknownRequirement {
-                                        name: req_name.clone(),
-                                    },
-                                    severity: Severity::Error,
-                                    message: format!(
-                                        "related requirement \"{req_name}\" not found"
-                                    ),
-                                    fix_hint: None,
-                                    fixed: false,
-                                    span_start: Some(item.source_span[0]),
-                                    annotation_line: None,
-                                    requirement_text: None,
-                                    intent: Some(item.intent.clone()),
-                                });
-                            }
-                            Some(rec) => {
-                                // Compare the item's stored related hash
-                                // against the requirement's *current* source
-                                // hash (computed_hash).  This surfaces
-                                // cascading staleness in one pass — even
-                                // before `--fix` updates the requirement's
-                                // sidecar hash.  Fall back to the sidecar
-                                // hash when computed_hash is unavailable.
-                                let current_req_hash =
-                                    rec.computed_hash.as_ref().or(rec.hash.as_ref());
-                                if let (Some(sh), Some(rh)) =
-                                    (stored_hash.as_ref(), current_req_hash)
-                                    && sh != rh
-                                {
-                                    // @liyi:related reqchanged-orthogonal-to-reviewed
-                                    // @liyi:related reqchanged-demands-human-judgment
-                                    diagnostics.push(Diagnostic {
-                                        file: entry.source_path.clone(),
-                                        item_or_req: label.clone(),
-                                        kind: DiagnosticKind::ReqChanged {
-                                            requirement: req_name.clone(),
-                                        },
-                                        severity: Severity::Warning,
-                                        message: format!("requirement \"{req_name}\" has changed"),
-                                        fix_hint: None,
-                                        fixed: false,
-                                        span_start: Some(item.source_span[0]),
-                                        annotation_line: None,
-                                        requirement_text: None,
-                                        intent: Some(item.intent.clone()),
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // e. Source related markers missing from sidecar
-                let span_start = item.source_span[0];
-                let span_end = item.source_span[1];
-                for m in &source_markers {
-                    if let SourceMarker::Related { name, line } = m {
-                        // Include doc-comment lines immediately before the span
-                        if *line >= span_start.saturating_sub(5) && *line <= span_end {
-                            let has_edge =
-                                item.related.as_ref().is_some_and(|r| r.contains_key(name));
-                            if !has_edge {
-                                if fix {
-                                    let related = item.related.get_or_insert_with(BTreeMap::new);
-                                    let hash_val =
-                                        requirements.get(name).and_then(|rec| rec.hash.clone());
-                                    related.insert(name.clone(), hash_val);
-                                    modified = true;
-                                }
-                                diagnostics.push(Diagnostic {
-                                    file: entry.source_path.clone(),
-                                    item_or_req: label.clone(),
-                                    kind: DiagnosticKind::MissingRelatedEdge {
-                                        name: name.clone(),
-                                    },
-                                    severity: Severity::Error,
-                                    message: format!(
-                                        "source has \x40liyi:related \"{name}\" but sidecar is missing the related edge"
-                                    ),
-                                fix_hint: None,
-                                fixed: fix,
-                                span_start: Some(item.source_span[0]),
-                                annotation_line: Some(*line),
-                                requirement_text: None,
-                        intent: Some(item.intent.clone()),
-                                });
-                            }
-                        }
-                    }
-                }
-
-                // f. Fill in null hashes on existing related edges
-                if fix && let Some(ref mut related) = item.related {
-                    for (req_name, hash_val) in related.iter_mut() {
-                        if hash_val.is_none()
-                            && let Some(rec) = requirements.get(req_name)
-                            && let Some(ref h) = rec.hash
-                        {
-                            *hash_val = Some(h.clone());
-                            modified = true;
-                        }
-                    }
+                // d. Related requirements + source related sync + null hash fill
+                let related_modified = check_related_edges(
+                    &entry.source_path,
+                    &label,
+                    item,
+                    &source_markers,
+                    requirements,
+                    fix,
+                    diagnostics,
+                );
+                if related_modified {
+                    modified = true;
                 }
             }
             Spec::Requirement(req) => {
@@ -1583,6 +1389,252 @@ fn check_sidecar(
         let output = write_sidecar(&sidecar);
         let _ = fs::write(sidecar_path, output);
     }
+}
+
+// ---------------------------------------------------------------------------
+// check_sidecar helpers — item sub-checks
+// ---------------------------------------------------------------------------
+
+/// Check review status: emit `Unreviewed` if neither `reviewed: true` in the
+/// sidecar nor `@liyi:intent` in source within the item's span.
+fn check_review_status(
+    file: &Path,
+    label: &str,
+    item: &ItemSpec,
+    source_markers: &[SourceMarker],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let reviewed_in_sidecar = item.reviewed;
+    let has_intent_marker = source_markers.iter().any(|m| {
+        if let SourceMarker::Intent { line, .. } = m {
+            *line >= item.source_span[0] && *line <= item.source_span[1]
+        } else {
+            false
+        }
+    });
+    if !reviewed_in_sidecar && !has_intent_marker {
+        diagnostics.push(Diagnostic {
+            file: file.to_path_buf(),
+            item_or_req: label.to_string(),
+            kind: DiagnosticKind::Unreviewed,
+            severity: Severity::Warning,
+            message: "not reviewed".into(),
+            fix_hint: None,
+            fixed: false,
+            span_start: Some(item.source_span[0]),
+            annotation_line: None,
+            requirement_text: None,
+            intent: Some(item.intent.clone()),
+        });
+    }
+}
+
+/// Check trivial/ignore source markers and the sidecar `=trivial` sentinel.
+fn check_trivial_ignore(
+    file: &Path,
+    label: &str,
+    item: &ItemSpec,
+    source_markers: &[SourceMarker],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let span_start = item.source_span[0];
+    let span_end = item.source_span[1];
+
+    for m in source_markers {
+        match m {
+            SourceMarker::Trivial { line }
+                if *line >= span_start.saturating_sub(1) && *line <= span_end =>
+            {
+                diagnostics.push(Diagnostic {
+                    file: file.to_path_buf(),
+                    item_or_req: label.to_string(),
+                    kind: DiagnosticKind::Trivial,
+                    severity: Severity::Info,
+                    message: "marked \x40liyi:trivial".into(),
+                    fix_hint: None,
+                    fixed: false,
+                    span_start: Some(span_start),
+                    annotation_line: None,
+                    requirement_text: None,
+                    intent: Some(item.intent.clone()),
+                });
+            }
+            SourceMarker::Ignore { line, .. }
+                if *line >= span_start.saturating_sub(1) && *line <= span_end =>
+            {
+                diagnostics.push(Diagnostic {
+                    file: file.to_path_buf(),
+                    item_or_req: label.to_string(),
+                    kind: DiagnosticKind::Ignored,
+                    severity: Severity::Info,
+                    message: "marked \x40liyi:ignore".into(),
+                    fix_hint: None,
+                    fixed: false,
+                    span_start: Some(span_start),
+                    annotation_line: None,
+                    requirement_text: None,
+                    intent: Some(item.intent.clone()),
+                });
+            }
+            _ => {}
+        }
+    }
+
+    // Sidecar "=trivial" sentinel
+    if item.intent == "=trivial" {
+        let has_nontrivial = source_markers.iter().any(|m| {
+            matches!(m, SourceMarker::Nontrivial { line }
+                if *line >= span_start.saturating_sub(1) && *line <= span_end)
+        });
+        if has_nontrivial {
+            diagnostics.push(Diagnostic {
+                file: file.to_path_buf(),
+                item_or_req: label.to_string(),
+                kind: DiagnosticKind::ConflictingTriviality,
+                severity: Severity::Error,
+                message: "\x40liyi:nontrivial in source conflicts with \"=trivial\" in sidecar"
+                    .into(),
+                fix_hint: None,
+                fixed: false,
+                span_start: Some(span_start),
+                annotation_line: None,
+                requirement_text: None,
+                intent: Some(item.intent.clone()),
+            });
+        } else {
+            diagnostics.push(Diagnostic {
+                file: file.to_path_buf(),
+                item_or_req: label.to_string(),
+                kind: DiagnosticKind::Trivial,
+                severity: Severity::Info,
+                message: "intent \"=trivial\"".into(),
+                fix_hint: None,
+                fixed: false,
+                span_start: Some(span_start),
+                annotation_line: None,
+                requirement_text: None,
+                intent: Some(item.intent.clone()),
+            });
+        }
+    }
+}
+
+/// Check related-requirement edges, sync source `@liyi:related` markers into
+/// sidecar, and fill null hashes on existing edges.  Returns true if fixups
+/// modified the item.
+fn check_related_edges(
+    file: &Path,
+    label: &str,
+    item: &mut ItemSpec,
+    source_markers: &[SourceMarker],
+    requirements: &HashMap<String, RequirementRecord>,
+    fix: bool,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> bool {
+    let mut modified = false;
+
+    // Validate existing related edges
+    if let Some(ref related) = item.related {
+        for (req_name, stored_hash) in related {
+            match requirements.get(req_name) {
+                None => {
+                    diagnostics.push(Diagnostic {
+                        file: file.to_path_buf(),
+                        item_or_req: label.to_string(),
+                        kind: DiagnosticKind::UnknownRequirement {
+                            name: req_name.clone(),
+                        },
+                        severity: Severity::Error,
+                        message: format!("related requirement \"{req_name}\" not found"),
+                        fix_hint: None,
+                        fixed: false,
+                        span_start: Some(item.source_span[0]),
+                        annotation_line: None,
+                        requirement_text: None,
+                        intent: Some(item.intent.clone()),
+                    });
+                }
+                Some(rec) => {
+                    // Compare against computed_hash (fresh from source) for
+                    // cascading staleness detection; fall back to sidecar hash.
+                    let current_req_hash = rec.computed_hash.as_ref().or(rec.hash.as_ref());
+                    if let (Some(sh), Some(rh)) = (stored_hash.as_ref(), current_req_hash)
+                        && sh != rh
+                    {
+                        // @liyi:related reqchanged-orthogonal-to-reviewed
+                        // @liyi:related reqchanged-demands-human-judgment
+                        diagnostics.push(Diagnostic {
+                            file: file.to_path_buf(),
+                            item_or_req: label.to_string(),
+                            kind: DiagnosticKind::ReqChanged {
+                                requirement: req_name.clone(),
+                            },
+                            severity: Severity::Warning,
+                            message: format!("requirement \"{req_name}\" has changed"),
+                            fix_hint: None,
+                            fixed: false,
+                            span_start: Some(item.source_span[0]),
+                            annotation_line: None,
+                            requirement_text: None,
+                            intent: Some(item.intent.clone()),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Source @liyi:related markers missing from sidecar
+    let span_start = item.source_span[0];
+    let span_end = item.source_span[1];
+    for m in source_markers {
+        if let SourceMarker::Related { name, line } = m {
+            // Include doc-comment lines immediately before the span
+            if *line >= span_start.saturating_sub(5) && *line <= span_end {
+                let has_edge = item.related.as_ref().is_some_and(|r| r.contains_key(name));
+                if !has_edge {
+                    if fix {
+                        let related = item.related.get_or_insert_with(BTreeMap::new);
+                        let hash_val = requirements.get(name).and_then(|rec| rec.hash.clone());
+                        related.insert(name.clone(), hash_val);
+                        modified = true;
+                    }
+                    diagnostics.push(Diagnostic {
+                        file: file.to_path_buf(),
+                        item_or_req: label.to_string(),
+                        kind: DiagnosticKind::MissingRelatedEdge {
+                            name: name.clone(),
+                        },
+                        severity: Severity::Error,
+                        message: format!(
+                            "source has \x40liyi:related \"{name}\" but sidecar is missing the related edge"
+                        ),
+                        fix_hint: None,
+                        fixed: fix,
+                        span_start: Some(span_start),
+                        annotation_line: Some(*line),
+                        requirement_text: None,
+                        intent: Some(item.intent.clone()),
+                    });
+                }
+            }
+        }
+    }
+
+    // Fill null hashes on existing related edges
+    if fix && let Some(ref mut related) = item.related {
+        for (req_name, hash_val) in related.iter_mut() {
+            if hash_val.is_none()
+                && let Some(rec) = requirements.get(req_name)
+                && let Some(ref h) = rec.hash
+            {
+                *hash_val = Some(h.clone());
+                modified = true;
+            }
+        }
+    }
+
+    modified
 }
 
 // ---------------------------------------------------------------------------
