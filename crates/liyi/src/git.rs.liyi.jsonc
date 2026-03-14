@@ -15,7 +15,7 @@
       "source_hash": "sha256:fd5366581f45d1d743884aab56b234ac70802901570874b2dfb8867d7df74c8c",
       "source_anchor": "pub fn git_show(repo_root: &Path, repo_relative_path: &str, revision: &str) -> Option<String> {",
       "related": {
-        "no-git2-dependency": "sha256:1d416fbf16511c6f1261d72c79ebd8bfb78e5840f33e6fb84ee4b85ed59ab3f1"
+        "no-git2-dependency": "sha256:032b561412cc12bd64862101c9d0e6c6ade77ace118136e7a9bb236706be08af"
       }
     },
     {
@@ -30,7 +30,7 @@
       "source_hash": "sha256:ab53bf36e433e9dfdd602602d2d79a4eff6deb24286365aca041e81dd108af63",
       "source_anchor": "pub fn git_log_revisions(repo_root: &Path, repo_relative_path: &str, limit: usize) -> Vec<String> {",
       "related": {
-        "no-git2-dependency": "sha256:1d416fbf16511c6f1261d72c79ebd8bfb78e5840f33e6fb84ee4b85ed59ab3f1"
+        "no-git2-dependency": "sha256:032b561412cc12bd64862101c9d0e6c6ade77ace118136e7a9bb236706be08af"
       }
     }
   ]

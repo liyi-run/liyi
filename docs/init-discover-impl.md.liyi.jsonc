@@ -52,16 +52,16 @@
       "requirement": "no-git2-dependency",
       "source_span": [
         43,
-        45
+        51
       ],
-      "source_hash": "sha256:1d416fbf16511c6f1261d72c79ebd8bfb78e5840f33e6fb84ee4b85ed59ab3f1",
+      "source_hash": "sha256:032b561412cc12bd64862101c9d0e6c6ade77ace118136e7a9bb236706be08af",
       "source_anchor": "<!-- @liyi:requirement no-git2-dependency -->"
     },
     {
       "requirement": "item-naming-uses-leaf-name",
       "source_span": [
-        47,
-        49
+        53,
+        55
       ],
       "source_hash": "sha256:6000a7d3bec019e78e75a8f54f7a28bb1d70f8f147ed3e58f07eb748331df91c",
       "source_anchor": "<!-- @liyi:requirement item-naming-uses-leaf-name -->"
@@ -69,8 +69,8 @@
     {
       "requirement": "reuse-kind-map-as-item-definition",
       "source_span": [
-        51,
-        53
+        57,
+        59
       ],
       "source_hash": "sha256:38de7a67a83d4cd205ed88cb67d1c91962fbe585291ccaa153a723dd04c8e2cc",
       "source_anchor": "<!-- @liyi:requirement reuse-kind-map-as-item-definition -->"
