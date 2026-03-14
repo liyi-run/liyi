@@ -39,6 +39,7 @@ Follow Conventional Commits: `<type>(<scope>): <summary>`
 - Types: `feat`, `fix`, `docs`, `refactor`, `build`, `ci`, `style`. Do **not** use `chore`.
 - Scopes: `linter`, `design`, `template`, `docs`, `policy`, `meta`.
 - One logical change per commit — do not combine unrelated changes.
+- For bug-fix or debugging commits, include a short rationale and root cause analysis in the commit body so reviewers can see why the change was necessary and what failure mode it corrects.
 - AIGC trailers required: `Original prompt:`, blank line, Markdown block quote of user prompts verbatim, blank line, `AI-assisted-by: Your model identity (Name of client used to interact with you)`.
 - Do **not** add `Signed-off-by` on behalf of the user.
 
