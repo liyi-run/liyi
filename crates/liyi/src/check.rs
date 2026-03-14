@@ -719,7 +719,7 @@ fn check_sidecar(
                                     });
                                 } else {
                                     // For reviewed specs (sidecar or
-                                    // @liyi:intent in source): update span
+                                    // `@liyi:intent` in source): update span
                                     // but do NOT rehash — the stale hash
                                     // signals that intent review is needed.
                                     // For unreviewed specs: rehash is safe
