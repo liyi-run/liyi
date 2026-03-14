@@ -1,11 +1,12 @@
+use std::collections::HashMap;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::discovery::{find_repo_root, resolve_sidecar_targets};
+use crate::discovery::{discover, find_repo_root, resolve_sidecar_targets};
 use crate::git::{git_log_revisions, git_show};
 use crate::hashing::hash_span;
-use crate::markers::{SourceMarker, scan_markers};
+use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
 
 /// Result of an approve operation on a single sidecar.
@@ -244,6 +245,145 @@ fn lookup_prev_source(
     None
 }
 
+/// Info about a requirement discovered from the global sidecar scan.
+struct RequirementInfo {
+    source_path: PathBuf,
+    sidecar_path: PathBuf,
+    source_span: [usize; 2],
+    current_hash: String,
+    current_text: String,
+}
+
+/// Build a global requirement registry by scanning all sidecars in the repo.
+///
+/// For each requirement spec, reads the source file, computes a fresh hash
+/// from the marker-delimited span (falling back to the sidecar span), and
+/// stores the current text. This mirrors the pass-1 logic in `check.rs`
+/// but is self-contained.
+fn build_requirement_registry(repo_root: &Path) -> HashMap<String, RequirementInfo> {
+    let disc = discover(repo_root, &[]);
+    let mut registry = HashMap::new();
+
+    for entry in &disc.sidecars {
+        let sc_content = match fs::read_to_string(&entry.sidecar_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        let sidecar = match parse_sidecar(&sc_content) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+
+        let source_content = fs::read_to_string(&entry.source_path).unwrap_or_default();
+        let markers = scan_markers(&source_content);
+        let spans = requirement_spans(&markers);
+        let all_lines: Vec<&str> = source_content.lines().collect();
+
+        for spec in &sidecar.specs {
+            if let Spec::Requirement(req) = spec {
+                // Prefer marker-delimited span (current truth) over sidecar span.
+                let current_span = spans
+                    .get(&req.requirement)
+                    .copied()
+                    .unwrap_or(req.source_span);
+
+                if let Ok((hash, _)) = hash_span(&source_content, current_span) {
+                    let start = current_span[0].saturating_sub(1);
+                    let end = current_span[1].min(all_lines.len());
+                    let text = all_lines[start..end].join("\n");
+
+                    registry.insert(
+                        req.requirement.clone(),
+                        RequirementInfo {
+                            source_path: entry.source_path.clone(),
+                            sidecar_path: entry.sidecar_path.clone(),
+                            source_span: current_span,
+                            current_hash: hash,
+                            current_text: text,
+                        },
+                    );
+                }
+            }
+        }
+    }
+
+    registry
+}
+
+/// Look up the old text of a requirement by walking Git history.
+///
+/// Uses the same two-pass strategy as `lookup_prev_source`: fast path on
+/// the source history with the current span, slow path via sidecar history
+/// to recover a pre-shift span.
+fn lookup_prev_requirement_text(
+    repo_root: &Path,
+    req_info: &RequirementInfo,
+    stored_hash: &str,
+    req_name: &str,
+) -> Option<String> {
+    let source_rel = req_info
+        .source_path
+        .strip_prefix(repo_root)
+        .ok()?
+        .to_str()?;
+
+    // Fast path: try source history with the current span.
+    let source_revisions = git_log_revisions(repo_root, source_rel, 20);
+    for rev in &source_revisions {
+        let content = match git_show(repo_root, source_rel, rev) {
+            Some(c) => c,
+            None => continue,
+        };
+        if let Ok((hash, _)) = hash_span(&content, req_info.source_span)
+            && hash == stored_hash
+        {
+            let lines: Vec<&str> = content.lines().collect();
+            let start = req_info.source_span[0].saturating_sub(1);
+            let end = req_info.source_span[1].min(lines.len());
+            return Some(lines[start..end].join("\n"));
+        }
+    }
+
+    // Slow path: walk sidecar history to find old span.
+    let sidecar_rel = req_info
+        .sidecar_path
+        .strip_prefix(repo_root)
+        .ok()?
+        .to_str()?;
+    let sidecar_revisions = git_log_revisions(repo_root, sidecar_rel, 20);
+    for rev in &sidecar_revisions {
+        let sidecar_content = match git_show(repo_root, sidecar_rel, rev) {
+            Some(c) => c,
+            None => continue,
+        };
+        let sidecar = match parse_sidecar(&sidecar_content) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        for spec in &sidecar.specs {
+            if let Spec::Requirement(req) = spec
+                && req.requirement == req_name
+                && req.source_span != req_info.source_span
+            {
+                let source_content = match git_show(repo_root, source_rel, rev) {
+                    Some(c) => c,
+                    None => continue,
+                };
+                if let Ok((hash, _)) = hash_span(&source_content, req.source_span)
+                    && hash == stored_hash
+                {
+                    let lines: Vec<&str> = source_content.lines().collect();
+                    let start = req.source_span[0].saturating_sub(1);
+                    let end = req.source_span[1].min(lines.len());
+                    return Some(lines[start..end].join("\n"));
+                }
+            }
+        }
+    }
+
+    None
+}
+
 /// Collect approval candidates matching the given filter.
 ///
 /// When `kind_filter` is `All`, collects unreviewed, stale-reviewed, and
@@ -272,6 +412,18 @@ pub fn collect_approval_candidates(
     let mut stale_candidates = Vec::new();
     let mut req_candidates = Vec::new();
 
+    // Build global requirement registry for ReqChanged detection.
+    // Requirements can live in any sidecar, so we scan the whole repo.
+    let req_registry: HashMap<String, RequirementInfo> = if collect_req {
+        if let Some(ref root) = repo_root {
+            build_requirement_registry(root)
+        } else {
+            HashMap::new()
+        }
+    } else {
+        HashMap::new()
+    };
+
     for sidecar_path in &targets {
         let sc_content = fs::read_to_string(sidecar_path)?;
         let sidecar = parse_sidecar(&sc_content).map_err(ApproveError::Parse)?;
@@ -287,24 +439,6 @@ pub fn collect_approval_candidates(
             .enumerate()
             .map(|(i, line)| (i + 1, line.to_string()))
             .collect();
-
-        // Build requirement hash registry from the same sidecar set for
-        // ReqChanged detection. Map requirement name → current source_hash.
-        let req_hashes: std::collections::HashMap<&str, Option<&str>> = if collect_req {
-            sidecar
-                .specs
-                .iter()
-                .filter_map(|s| {
-                    if let Spec::Requirement(r) = s {
-                        Some((r.requirement.as_str(), r.source_hash.as_deref()))
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        } else {
-            std::collections::HashMap::new()
-        };
 
         for (spec_index, spec) in sidecar.specs.iter().enumerate() {
             // @liyi:related approve-never-approves-requirements
@@ -393,16 +527,20 @@ pub fn collect_approval_candidates(
                     });
                 }
 
-                // ReqChanged: check related edges against requirement registry.
+                // ReqChanged: check related edges against global requirement registry.
                 if effectively_reviewed
                     && collect_req
                     && let Some(related) = &item.related
                 {
                     for (req_name, stored_hash) in related {
                         if let Some(stored_h) = stored_hash
-                            && let Some(Some(cur)) = req_hashes.get(req_name.as_str())
-                            && stored_h != cur
+                            && let Some(req_info) = req_registry.get(req_name)
+                            && *stored_h != req_info.current_hash
                         {
+                            let old_text = repo_root.as_deref().and_then(|root| {
+                                lookup_prev_requirement_text(root, req_info, stored_h, req_name)
+                            });
+
                             req_candidates.push(ApprovalCandidate {
                                 sidecar_path: sidecar_path.clone(),
                                 source_display: sidecar.source.clone(),
@@ -420,8 +558,8 @@ pub fn collect_approval_candidates(
                                 prev_source: None,
                                 current_source: None,
                                 changed_requirement: Some(req_name.clone()),
-                                old_requirement_text: None,
-                                new_requirement_text: None,
+                                old_requirement_text: old_text,
+                                new_requirement_text: Some(req_info.current_text.clone()),
                             });
                         }
                     }
@@ -451,8 +589,6 @@ pub fn apply_approval_decisions(
     decisions: &[Decision],
     dry_run: bool,
 ) -> Result<Vec<ApproveResult>, ApproveError> {
-    use std::collections::HashMap;
-
     // Group decisions by sidecar path, carrying the candidate kind.
     let mut per_sidecar: HashMap<&Path, Vec<(usize, &Decision, &CandidateKind)>> = HashMap::new();
     for (candidate, decision) in candidates.iter().zip(decisions.iter()) {
