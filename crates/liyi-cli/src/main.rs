@@ -67,6 +67,8 @@ fn main() {
                 process::exit(exit_code as i32);
             }
 
+            let github_actions = env::var("GITHUB_ACTIONS").is_ok_and(|v| v == "true");
+
             // Print summary first for immediate visibility
             let summary = liyi::diagnostics::format_summary(&diagnostics);
             println!("{summary}\n");
@@ -95,7 +97,14 @@ fn main() {
                         continue;
                     }
                 }
-                println!("{}", d.display_with_root(&repo_root));
+                if github_actions {
+                    println!(
+                        "{}",
+                        liyi::diagnostics::format_github_actions(d, &repo_root)
+                    );
+                } else {
+                    println!("{}", d.display_with_root(&repo_root));
+                }
             }
 
             process::exit(exit_code as i32);

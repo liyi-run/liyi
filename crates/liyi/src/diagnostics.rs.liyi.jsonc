@@ -92,6 +92,18 @@
       "related": {
         "liyi-check-exit-code": "sha256:2cb6ab36efd4724e3f7e7021bf36233633357e9fddbd1a231bc7b7ed07137d65"
       }
+    },
+    {
+      "item": "format_github_actions",
+      "reviewed": false,
+      "intent": "Format a single diagnostic as a GitHub Actions workflow command (::notice, ::warning, or ::error) with file, line, and title parameters. Maps severity to annotation level, strips the repo root from file paths, escapes %, \\r, \\n per the Actions toolkit spec, and uses the item name with a severity icon as the annotation title.",
+      "source_span": [
+        257,
+        294
+      ],
+      "tree_path": "fn.format_github_actions",
+      "source_hash": "sha256:478ebfaa7a3169cca907760fbf6b3fd5fb5a42e927165bba88156f935943d779",
+      "source_anchor": "pub fn format_github_actions(d: &Diagnostic, root: &std::path::Path) -> String {"
     }
   ]
 }

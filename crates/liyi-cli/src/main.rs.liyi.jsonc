@@ -17,14 +17,14 @@
     },
     {
       "item": "main",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
         26,
-        246
+        255
       ],
       "tree_path": "fn.main",
-      "source_hash": "sha256:600b1ce9423150de057f3c12c610117e6f0fcdf5eb372f87192d947b7075dc83",
+      "source_hash": "sha256:c25f23b022f91dcbf38da0d9b82de8eeaaa396dad70c42620b948f2963b5a960",
       "source_anchor": "fn main() {"
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        252,
-        254
+        261,
+        263
       ],
       "tree_path": "fn.is_tty",
       "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",

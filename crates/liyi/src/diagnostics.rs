@@ -249,3 +249,46 @@ pub fn format_summary(diagnostics: &[Diagnostic]) -> String {
         parts.join(", ")
     }
 }
+
+/// Format a diagnostic as a GitHub Actions workflow command.
+///
+/// Emits `::notice`, `::warning`, or `::error` with `file`, `line`, and
+/// `title` parameters so that annotations appear inline in PR diffs.
+pub fn format_github_actions(d: &Diagnostic, root: &std::path::Path) -> String {
+    let level = match d.severity {
+        Severity::Info => "notice",
+        Severity::Warning => "warning",
+        Severity::Error => "error",
+    };
+    let rel = d.file.strip_prefix(root).unwrap_or(&d.file);
+    let file = rel.display();
+
+    // Escape special characters per GitHub Actions workflow command spec:
+    // https://github.com/actions/toolkit/blob/main/packages/core/src/command.ts
+    let message = d
+        .message
+        .replace('%', "%25")
+        .replace('\r', "%0D")
+        .replace('\n', "%0A");
+
+    let title = if d.item_or_req.is_empty() {
+        "立意".to_string()
+    } else {
+        let icon = if d.fixed {
+            "✓"
+        } else {
+            Diagnostic::icon(&d.kind, d.severity)
+        };
+        format!("立意 {} {}", icon, d.item_or_req)
+    };
+
+    let display_line = d.span_start.or(d.annotation_line);
+    match display_line {
+        Some(line) => {
+            format!("::{level} file={file},line={line},title={title}::{message}")
+        }
+        None => {
+            format!("::{level} file={file},title={title}::{message}")
+        }
+    }
+}
