@@ -129,6 +129,50 @@ fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {
             content.push_str(&format!("#   {line}\n"));
         }
     }
+
+    // StaleReviewed: show source diff so the reviewer can see what changed.
+    if candidate.kind == CandidateKind::StaleReviewed
+        && let (Some(old), Some(new)) = (&candidate.prev_source, &candidate.current_source)
+    {
+        content.push_str("#\n# Source diff (old → new):\n");
+        for change in TextDiff::from_lines(old.as_str(), new.as_str()).iter_all_changes() {
+            let prefix = match change.tag() {
+                ChangeTag::Delete => "-",
+                ChangeTag::Insert => "+",
+                ChangeTag::Equal => " ",
+            };
+            content.push_str(&format!("# {prefix} {change}"));
+            if !change.as_str().unwrap_or_default().ends_with('\n') {
+                content.push('\n');
+            }
+        }
+    }
+
+    // ReqChanged: show requirement diff context.
+    if let CandidateKind::ReqChanged { requirement } = &candidate.kind {
+        content.push_str(&format!("#\n# Requirement \"{requirement}\" changed:\n"));
+        match (
+            &candidate.old_requirement_text,
+            &candidate.new_requirement_text,
+        ) {
+            (Some(old), Some(new)) => {
+                for change in TextDiff::from_lines(old.as_str(), new.as_str()).iter_all_changes() {
+                    let prefix = match change.tag() {
+                        ChangeTag::Delete => "-",
+                        ChangeTag::Insert => "+",
+                        ChangeTag::Equal => " ",
+                    };
+                    content.push_str(&format!("# {prefix} {change}"));
+                    if !change.as_str().unwrap_or_default().ends_with('\n') {
+                        content.push('\n');
+                    }
+                }
+            }
+            _ => {
+                content.push_str("#   (requirement diff unavailable)\n");
+            }
+        }
+    }
     content.push_str("#\n# Lines starting with '#' are ignored.\n");
     content.push_str("# An empty result (after stripping comments) cancels the edit.\n");
 

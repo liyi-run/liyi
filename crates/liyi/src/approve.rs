@@ -159,34 +159,88 @@ fn lookup_prev_intent(
 /// Look up the source text at the time when `source_hash` was last valid,
 /// by walking Git history on the source file.
 ///
-/// Returns the full source lines at the span from the historical version,
+/// Uses a two-pass strategy:
+/// 1. **Fast path:** walk source history with the current span. Works when
+///    the span hasn't been shifted by `check --fix`.
+/// 2. **Slow path:** walk sidecar history to recover the pre-shift span,
+///    then read the source at that revision. Handles the case where
+///    `check --fix` shifted the span after the function moved.
+///
+/// Returns the source lines at the span from the historical version,
 /// or `None` if git history is unavailable or no matching commit is found.
 fn lookup_prev_source(
     repo_root: Option<&Path>,
     source_path: &Path,
+    sidecar_path: &Path,
+    item_name: &str,
+    tree_path: &str,
     source_hash: &str,
     span: [usize; 2],
 ) -> Option<String> {
     let root = repo_root?;
-    let rel = source_path.strip_prefix(root).ok()?;
-    let rel_str = rel.to_str()?;
-    let revisions = git_log_revisions(root, rel_str, 20);
+    let source_rel = source_path.strip_prefix(root).ok()?.to_str()?;
 
-    for rev in &revisions {
-        let content = match git_show(root, rel_str, rev) {
+    // Fast path: try source history with the current span.
+    let source_revisions = git_log_revisions(root, source_rel, 20);
+    for rev in &source_revisions {
+        let content = match git_show(root, source_rel, rev) {
             Some(c) => c,
             None => continue,
         };
         if let Ok((hash, _)) = hash_span(&content, span)
             && hash == source_hash
         {
-            // Found the version — extract span lines.
             let lines: Vec<&str> = content.lines().collect();
             let start = span[0].saturating_sub(1);
             let end = span[1].min(lines.len());
             return Some(lines[start..end].join("\n"));
         }
     }
+
+    // Slow path: walk sidecar history to find the old span (before check --fix
+    // shifted it), then read the source at that revision.
+    let sidecar_rel = sidecar_path.strip_prefix(root).ok()?.to_str()?;
+    let sidecar_revisions = git_log_revisions(root, sidecar_rel, 20);
+    for rev in &sidecar_revisions {
+        let sidecar_content = match git_show(root, sidecar_rel, rev) {
+            Some(c) => c,
+            None => continue,
+        };
+        let sidecar = match parse_sidecar(&sidecar_content) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        for spec in &sidecar.specs {
+            if let Spec::Item(item) = spec {
+                let matched = if !tree_path.is_empty() && !item.tree_path.is_empty() {
+                    item.tree_path == tree_path
+                } else {
+                    item.item == item_name
+                };
+                if !matched {
+                    continue;
+                }
+                let old_span = item.source_span;
+                if old_span == span {
+                    continue; // same span — already tried in fast path
+                }
+                // Read source at this sidecar revision with the old span.
+                let source_content = match git_show(root, source_rel, rev) {
+                    Some(c) => c,
+                    None => continue,
+                };
+                if let Ok((hash, _)) = hash_span(&source_content, old_span)
+                    && hash == source_hash
+                {
+                    let lines: Vec<&str> = source_content.lines().collect();
+                    let start = old_span[0].saturating_sub(1);
+                    let end = old_span[1].min(lines.len());
+                    return Some(lines[start..end].join("\n"));
+                }
+            }
+        }
+    }
+
     None
 }
 
@@ -312,6 +366,9 @@ pub fn collect_approval_candidates(
                     let prev_src = lookup_prev_source(
                         repo_root.as_deref(),
                         &source_path,
+                        sidecar_path,
+                        &item.item,
+                        &item.tree_path,
                         stored_hash,
                         item.source_span,
                     );
