@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Enter raw mode and alternate screen on stderr, run the main event loop (draw frame, read key, dispatch action), then restore terminal state. Returns a Vec<Decision> parallel to candidates. Must cleanly restore terminal even on early quit. Keys: y=approve, n=reject, e=edit (leaves TUI for $EDITOR, approves with edited intent or cancels on empty result), s/Enter=skip, a=approve-all-remaining, b/Left=go-back, Right=go-forward, j/Down and k/Up=scroll source, PgUp/PgDn=page-scroll source, q/Esc=quit. The e key suspends raw mode and alternate screen, spawns the editor, then re-enters both, rebuilding the terminal.",
       "source_span": [
-        169,
-        247
+        213,
+        291
       ],
       "tree_path": "fn.run_tui",
       "source_hash": "sha256:b5d2b469ff3c37403da5902d5187f4c6bd2675abe2eefb7cde0875b052d5d6e2",
@@ -44,24 +44,72 @@
       "reviewed": true,
       "intent": "Compose the full-screen layout into five vertical regions (header, intent pane, source pane, progress gauge, keybinding footer) and delegate rendering to the per-region draw functions, passing the shared Highlighter to draw_source.",
       "source_span": [
-        249,
-        271
+        293,
+        315
       ],
       "tree_path": "fn.draw",
       "source_hash": "sha256:2d5de9dfd08ce60b1df40e5488a9e527055025afe98fee47c3b057b79b404ad4",
       "source_anchor": "fn draw(f: &mut ratatui::Frame, app: &ApproveTui) {"
     },
     {
-      "item": "draw_intent",
-      "reviewed": true,
-      "intent": "Render the intent pane with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current, show with reassuring title; (3) 'Intent (changed)' — show previous and current intents with word-level diff highlighting via diff_spans: removed words in white-on-red, inserted words in white-on-green, unchanged text in base red/green. Uses push_span_lines for newline-aware rendering. Handles =doc sentinel for all branches.",
+      "item": "draw_header",
+      "reviewed": false,
+      "intent": "Render the header bar with kind-aware label (UNREVIEWED, STALE, REQ CHANGED) and color-coded border (Cyan, Yellow, Magenta). Shows item counter, source file, item name, and span.",
       "source_span": [
-        356,
-        449
+        317,
+        349
+      ],
+      "tree_path": "fn.draw_header",
+      "source_hash": "sha256:5d189111b9d224042b60c3055c0b85055a05c720967032505c5512933a73f3d6",
+      "source_anchor": "fn draw_header("
+    },
+    {
+      "item": "draw_intent",
+      "reviewed": false,
+      "intent": "Dispatch to the appropriate intent rendering function based on CandidateKind: draw_intent_unreviewed for Unreviewed, draw_intent_stale_reviewed for StaleReviewed, draw_intent_req_changed for ReqChanged.",
+      "source_span": [
+        413,
+        421
       ],
       "tree_path": "fn.draw_intent",
-      "source_hash": "sha256:cda79be63c0fb3e2ff96301ed56e017cf585386242d4bee29dbddbc3ec5cb691",
+      "source_hash": "sha256:51a3b7ed71933dbe8d8190671c3e7e3321c79031ebe58e03c38014626f1df685",
       "source_anchor": "fn draw_intent(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {"
+    },
+    {
+      "item": "draw_intent_unreviewed",
+      "reviewed": false,
+      "intent": "Render the intent pane for unreviewed candidates with one of three modes based on prev_intent: (1) 'Intent (new)' — no prior approval, show current intent in white; (2) 'Intent (unchanged from last approval)' — previous matches current; (3) 'Intent (changed)' — show word-level diff between previous and current intents using diff_spans. Handles =doc sentinel.",
+      "source_span": [
+        423,
+        516
+      ],
+      "tree_path": "fn.draw_intent_unreviewed",
+      "source_hash": "sha256:9f46731e07b322db1a63654ee4f39ed541eb395354b51b5edc88d635948d01a6",
+      "source_anchor": "fn draw_intent_unreviewed(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {"
+    },
+    {
+      "item": "draw_intent_stale_reviewed",
+      "reviewed": false,
+      "intent": "Render the stale-reviewed intent pane showing the current intent text first, then a unified source diff (old → new) if both prev_source and current_source are available. Uses diff_spans for red/green word-level highlighting. Falls back to a message when old source is unavailable from git history. Yellow border.",
+      "source_span": [
+        518,
+        594
+      ],
+      "tree_path": "fn.draw_intent_stale_reviewed",
+      "source_hash": "sha256:602c82bc7625de14fc37d3f0208f56d894e3c1a75fa53bb96edb21ec487c95d5",
+      "source_anchor": "fn draw_intent_stale_reviewed(f: &mut ratatui::Frame, area: Rect, candidate: &ApprovalCandidate) {"
+    },
+    {
+      "item": "draw_intent_req_changed",
+      "reviewed": false,
+      "intent": "Render the req-changed intent pane showing requirement name, requirement text diff (old → new) if available, and the item's current intent. Uses diff_spans for word-level highlighting. Falls back to message when requirement diff is unavailable. Magenta border.",
+      "source_span": [
+        596,
+        674
+      ],
+      "tree_path": "fn.draw_intent_req_changed",
+      "source_hash": "sha256:d2f77dea7ef812504a6cf214260e15ca62374f3e26572bfbd972b8a43f210a1a",
+      "source_anchor": "fn draw_intent_req_changed("
     },
     {
       "item": "go_forward",
@@ -80,8 +128,8 @@
       "reviewed": true,
       "intent": "Return true if the source file is small enough for syntax highlighting (at most MAX_HIGHLIGHT_LINES lines). Files exceeding this threshold fall back to plain text to avoid UI lag.",
       "source_span": [
-        466,
-        468
+        691,
+        693
       ],
       "tree_path": "fn.file_highlight_enabled",
       "source_hash": "sha256:cfb2581067ccece845cd39e6edb2eacb5ee99fa8d2ffe3f1c8fbab7e96c3d159",
@@ -92,8 +140,8 @@
       "reviewed": true,
       "intent": "Return true if a single line is short enough for syntax highlighting (at most MAX_LINE_LEN bytes). Longer lines fall back to plain text to prevent the regex engine from stalling.",
       "source_span": [
-        472,
-        474
+        697,
+        699
       ],
       "tree_path": "fn.line_highlight_enabled",
       "source_hash": "sha256:fda70f9cb32977604fcf8ba20bf16348d61c4447e270d30ddaba859eaa8eba8d",
@@ -104,8 +152,8 @@
       "reviewed": true,
       "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line, and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
-        476,
-        570
+        701,
+        795
       ],
       "tree_path": "fn.draw_source",
       "source_hash": "sha256:ddd044516e2725481f30bb2f70008933076c589ef4b5cc21d567de3ae279e321",
@@ -113,14 +161,14 @@
     },
     {
       "item": "edit_intent_in_editor",
-      "reviewed": true,
-      "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, and previous intent (if any). Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
+      "reviewed": false,
+      "intent": "Open $VISUAL / $EDITOR / vi on a tempfile pre-populated with the current intent text followed by comment lines containing the item name, source location, previous intent (if any), source diff for StaleReviewed candidates, and requirement diff for ReqChanged candidates. Comment lines start with '#' and are stripped on read-back. Returns Some(edited_text) if non-empty after stripping, None if empty or editor exited with error. Deletes the tempfile after reading.",
       "source_span": [
         101,
-        165
+        209
       ],
       "tree_path": "fn.edit_intent_in_editor",
-      "source_hash": "sha256:ccd97544ce0adbee4e805e4e81d23b1b1fa7a6c21f34b50f439f6e437b2c927d",
+      "source_hash": "sha256:3161a08c08cb27ab70cd19585125b27cfc7bc2cf3ce5512d015b0e9605db413b",
       "source_anchor": "fn edit_intent_in_editor(candidate: &ApprovalCandidate) -> Option<String> {"
     },
     {
@@ -128,8 +176,8 @@
       "reviewed": true,
       "intent": "Produce styled ratatui Spans for one side of a word-level diff between old and new text. Uses similar::TextDiff with Patience algorithm. Equal segments get base_style; segments matching the selected side (Delete for previous, Insert for current) get highlight_style; the other side's changes are omitted.",
       "source_span": [
-        301,
-        326
+        358,
+        383
       ],
       "tree_path": "fn.diff_spans",
       "source_hash": "sha256:2dd68fc75281f00363cb33ef6931f6330e51e37e554a819450ea2e22badd5d90",
@@ -140,8 +188,8 @@
       "reviewed": true,
       "intent": "Convert a vec of styled Spans into indented display Lines, splitting on embedded newlines. Each logical line is prefixed with two-space indentation.",
       "source_span": [
-        330,
-        353
+        387,
+        410
       ],
       "source_hash": "sha256:9a84687e73c1fd72b0f754e1cc2cba35cdb4a04791b6825cc1a0ffa9de1ffea7",
       "source_anchor": "fn push_span_lines<'a>(spans: Vec<Span<'a>>, lines: &mut Vec<Line<'a>>) {"
@@ -151,8 +199,8 @@
       "reviewed": true,
       "intent": "Render the keybinding footer line showing all available keys: y (approve), n (reject), e (edit), s/Enter (skip), a (approve all), b/arrows (navigation), j/k (scroll), q/Esc (quit).",
       "source_span": [
-        588,
-        614
+        813,
+        839
       ],
       "tree_path": "fn.draw_keys",
       "source_hash": "sha256:32ce63aeded8af2046caa055e103f2ea680bba3d22013ece6b58caf4f7db4a3f",

@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Data structure returned per sidecar file reporting how many items were approved, skipped, and rejected during the approve operation.",
       "source_span": [
-        12,
-        17
+        14,
+        19
       ],
       "tree_path": "struct.ApproveResult",
       "source_hash": "sha256:3913960707101bc0724d6635156fa7d8cf607b34d8e21400cb445969b1a862a6",
@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Error type for approve operations with variants for I/O errors, parse failures, and no-targets-found. Must implement Display and From<io::Error>.",
       "source_span": [
-        21,
-        25
+        23,
+        27
       ],
       "tree_path": "enum.ApproveError",
       "source_hash": "sha256:79c540f91ede3129e555d35665d456f2311ce1523f309d9e2fb0c8a25b8fafd5",
@@ -32,23 +32,47 @@
       "reviewed": true,
       "intent": "Public enum representing a user's approval decision: Yes (approve and accept inferred intent), No (reject), Skip (defer), or Edit(String) (approve with human-overridden intent text). Used by both interactive TUI and batch workflows.",
       "source_span": [
-        45,
-        51
+        47,
+        53
       ],
       "tree_path": "enum.Decision",
       "source_hash": "sha256:4d2e7d98844f6022c103a3acc72977b14f29c16d236c40f55b68f635c98e6dd6",
       "source_anchor": "pub enum Decision {"
     },
     {
-      "item": "ApprovalCandidate",
-      "reviewed": true,
-      "intent": "Structured representation of a single unreviewed item with all context needed for display: sidecar path, source filename, spec index, item name, intent text, source span, all source file lines, span_offset (index into source_lines where the reviewed span begins), span_len (number of span lines), and prev_intent (the previously approved intent from Git history, if any). Decouples data gathering from presentation.",
+      "item": "CandidateKind",
+      "reviewed": false,
+      "intent": "Discriminant for the kind of review a candidate requires: Unreviewed (agent-inferred, no human confirmation), StaleReviewed (reviewed but source_hash mismatches), or ReqChanged (reviewed but a related requirement's text changed). Must derive PartialEq for filter comparisons.",
       "source_span": [
-        55,
-        76
+        57,
+        67
+      ],
+      "tree_path": "enum.CandidateKind",
+      "source_hash": "sha256:ffae12d4b8ae60efe28c99f78d9d21314820326857874ac4e8c6e170fab511a5",
+      "source_anchor": "pub enum CandidateKind {"
+    },
+    {
+      "item": "ApproveFilter",
+      "reviewed": false,
+      "intent": "Filter enum controlling which candidate kinds to collect: All, UnreviewedOnly, StaleOnly, or ReqOnly. Must derive Copy for cheap passing.",
+      "source_span": [
+        71,
+        80
+      ],
+      "tree_path": "enum.ApproveFilter",
+      "source_hash": "sha256:e0416c012b44e7e1eed460f1ff77b450515c1ec97c53c60fc4f2ee9e40a29d34",
+      "source_anchor": "pub enum ApproveFilter {"
+    },
+    {
+      "item": "ApprovalCandidate",
+      "reviewed": false,
+      "intent": "Structured representation of an approval candidate (unreviewed, stale-reviewed, or req-changed) with all context needed for TUI display: sidecar/source identity, spec index, item name, intent text, source span/lines, span offset/len, prev_intent from Git history, kind discriminant, previous and current source text (for StaleReviewed diffs), and old/new requirement text (for ReqChanged diffs). Decouples data gathering from presentation.",
+      "source_span": [
+        84,
+        117
       ],
       "tree_path": "struct.ApprovalCandidate",
-      "source_hash": "sha256:0650288d78027156ced022abc60b6d992e9f4c212664451dcb36302d61075702",
+      "source_hash": "sha256:55fef1dab9c0d9667c43f82583cefc9b88cc675f89229db78381fb2610643c4b",
       "source_anchor": "pub struct ApprovalCandidate {"
     },
     {
@@ -56,43 +80,93 @@
       "reviewed": true,
       "intent": "Walk Git history (up to 20 commits via git_log_revisions) to find the most recent commit where the item had reviewed=true in the sidecar. For each revision, retrieves the sidecar via git_show, parses it, and matches by tree_path (preferred) or item name. Returns Some(intent) from the first matching reviewed item. Returns None if repo_root is None, the path is not repo-relative, or no reviewed version exists in history.",
       "source_span": [
-        83,
-        117
+        124,
+        158
       ],
       "tree_path": "fn.lookup_prev_intent",
       "source_hash": "sha256:7e641a17f160781026ef2afe2999343e9b5b60d6609ba13fb1348ceaded0fd13",
       "source_anchor": "fn lookup_prev_intent("
     },
     {
-      "item": "collect_approval_candidates",
-      "reviewed": true,
-      "intent": "Resolve sidecar targets from paths, then collect all unreviewed items as ApprovalCandidate structs with the full source file for display. Derives source path by stripping .liyi.jsonc suffix. Applies item name filter if specified. Populates span_offset and span_len so the TUI can distinguish the reviewed span. Queries Git history via lookup_prev_intent to populate prev_intent for each candidate. Returns error if no targets found.",
+      "item": "lookup_prev_source",
+      "reviewed": false,
+      "intent": "Recover the source text at the time source_hash was valid, using a two-pass Git history strategy. Fast path: walk source file history with the current span (works pre-check-fix). Slow path: walk sidecar history to find the pre-shift span, then read source at that revision. Returns None when git history is unavailable. Handles the case where check --fix shifted the span after the function moved.",
       "source_span": [
-        120,
-        188
+        172,
+        246
+      ],
+      "tree_path": "fn.lookup_prev_source",
+      "source_hash": "sha256:4d98e7d46b43481f995217ca79ca4650ddd7be274d49e13b344126d3c43811e6",
+      "source_anchor": "fn lookup_prev_source("
+    },
+    {
+      "item": "RequirementInfo",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        249,
+        255
+      ],
+      "tree_path": "struct.RequirementInfo",
+      "source_hash": "sha256:c98ea3c19354724d40bde85dd2dfbd412db7cc3d75f7d8f0fda87dbfe1f8d78b",
+      "source_anchor": "struct RequirementInfo {"
+    },
+    {
+      "item": "build_requirement_registry",
+      "reviewed": false,
+      "intent": "Build a global requirement registry by scanning all sidecars in the repo via discover(). For each RequirementSpec, reads the source file, computes a fresh hash from marker-delimited spans (falling back to sidecar span), and stores current text. Returns a HashMap mapping requirement name to RequirementInfo.",
+      "source_span": [
+        263,
+        311
+      ],
+      "tree_path": "fn.build_requirement_registry",
+      "source_hash": "sha256:3b5ddc2d04c2c579aa25282f7ac504230a7c8080831c9e91c667054f94c05811",
+      "source_anchor": "fn build_requirement_registry(repo_root: &Path) -> HashMap<String, RequirementInfo> {"
+    },
+    {
+      "item": "lookup_prev_requirement_text",
+      "reviewed": false,
+      "intent": "Recover the old text of a requirement by walking Git history, using the same two-pass strategy as lookup_prev_source (fast path with current span, slow path via sidecar history for pre-shift spans). Returns None when no matching revision is found.",
+      "source_span": [
+        318,
+        385
+      ],
+      "tree_path": "fn.lookup_prev_requirement_text",
+      "source_hash": "sha256:87f30988a8c03b2e06b2850486cb2643370c3eb4669e39f737584030c0ed50aa",
+      "source_anchor": "fn lookup_prev_requirement_text("
+    },
+    {
+      "item": "collect_approval_candidates",
+      "reviewed": false,
+      "intent": "Resolve sidecar targets from paths, then collect approval candidates of all three kinds (unreviewed, stale-reviewed, req-changed) filtered by kind_filter and item_filter. Builds a global requirement registry for cross-sidecar ReqChanged detection. For unreviewed: gathers items without reviewed=true or @liyi:intent. For stale-reviewed: detects source_hash mismatches and recovers old source via lookup_prev_source. For req-changed: compares related edge hashes against freshly computed requirement hashes and populates old/new requirement text. Orders output: unreviewed first, then stale, then req-changed. Returns error if no targets found.",
+      "source_span": [
+        392,
+        577
       ],
       "tree_path": "fn.collect_approval_candidates",
-      "source_hash": "sha256:e2543ec1fc4d235c152d5e280a25dad2f6e657d0a8f5361b656e391fd2f253fe",
+      "source_hash": "sha256:b4e074761641e415b1540030fa11961558e878febdcf1f86a2c8278499abd547",
       "source_anchor": "pub fn collect_approval_candidates(",
       "related": {
-        "approve-never-approves-requirements": "sha256:c2b107468dd999e0802bd648e619c863f6769835468fe187cc49d3255168994b"
+        "approve-never-approves-requirements": "sha256:c2b107468dd999e0802bd648e619c863f6769835468fe187cc49d3255168994b",
+        "stale-reviewed-demands-human-judgment": "sha256:0158af62360b393b12a0a34ed912c5fa7f75d313e1994536345e70910887d97a"
       }
     },
     {
       "item": "apply_approval_decisions",
-      "reviewed": true,
-      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. For Yes: set reviewed=true and fill hashes. For Edit(text): update intent text, set reviewed=true, and fill hashes. For No: set reviewed=false. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
+      "reviewed": false,
+      "intent": "Apply a parallel slice of Decision values to the candidates, grouped by sidecar file. Kind-aware behavior: For Unreviewed/StaleReviewed Yes: set reviewed=true and rehash. For ReqChanged Yes: refresh the related edge hash only (set to null for tool fill-in), do not touch reviewed/intent/source_hash. For Edit: update intent and rehash (all kinds); for ReqChanged also refresh the related edge. For No on Unreviewed: set reviewed=false. For No on StaleReviewed/ReqChanged: leave unchanged as todo marker. For Skip: no mutation. Write back modified sidecars unless dry_run. Returns per-sidecar ApproveResult.",
       "source_span": [
-        197,
-        279
+        587,
+        710
       ],
       "tree_path": "fn.apply_approval_decisions",
-      "source_hash": "sha256:bfbe20536ff44961025d4090626a5fc5bf3adbd58dc77a81622aac93f39106c2",
+      "source_hash": "sha256:c398d3de6beb83aeadeb437ce0a4a3f2bcd1187f36d0ea8413a9bbc6918edfc3",
       "source_anchor": "pub fn apply_approval_decisions(",
       "related": {
         "reqchanged-demands-human-judgment": "sha256:30ba3f1eea4b3e68d6c5b3926c643cd41d753636d9420329934d9dd43ae14de5",
         "reqchanged-orthogonal-to-reviewed": "sha256:5c85639dd24c2cecdeb7c466e414319fdd40451d0abb896e495fcd13d63a78d8",
-        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0"
+        "reviewed-semantics": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0",
+        "stale-reviewed-demands-human-judgment": "sha256:0158af62360b393b12a0a34ed912c5fa7f75d313e1994536345e70910887d97a"
       }
     },
     {
@@ -100,8 +174,8 @@
       "reviewed": true,
       "intent": "Derive the source file path from a sidecar path by stripping the .liyi.jsonc suffix. Must reject paths that do not end with .liyi.jsonc.",
       "source_span": [
-        282,
-        293
+        713,
+        724
       ],
       "tree_path": "fn.source_path_from_sidecar",
       "source_hash": "sha256:490ac4b91d5418e093b852a804fb0c330b1642cd99af3035d3a43fb35429bfab",
