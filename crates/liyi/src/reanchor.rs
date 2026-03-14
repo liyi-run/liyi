@@ -2,11 +2,10 @@ use std::path::Path;
 
 use crate::hashing::hash_span;
 use crate::markers::{requirement_spans, scan_markers};
+use crate::recovery::recover_item_span;
 use crate::schema::migrate;
 use crate::sidecar::{Spec, parse_sidecar, write_sidecar};
-use crate::tree_path::{
-    compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
-};
+use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 /// Re-hash source spans in a sidecar file.
 ///
@@ -75,39 +74,17 @@ pub fn run_reanchor(
                 // language is supported, locate item by structural identity.
                 // If resolution fails (item renamed/deleted), keep the
                 // existing span — hash_span below will detect the mismatch.
-                if let (false, Some(l)) = (item.tree_path.is_empty(), lang) {
-                    if let Some(new_span) = resolve_tree_path(&source_content, &item.tree_path, l) {
-                        // Check if the resolved span's hash matches the
-                        // stored hash. If not, try sibling scan (array
-                        // element may have shifted index).
-                        let use_span = if let Some(ref old_hash) = item.source_hash
-                            && hash_span(&source_content, new_span)
-                                .map(|(h, _)| h != *old_hash)
-                                .unwrap_or(false)
-                            && let Some(sibling) = resolve_tree_path_sibling_scan(
-                                &source_content,
-                                &item.tree_path,
-                                l,
-                                old_hash,
-                            ) {
-                            item.tree_path = sibling.updated_tree_path;
-                            sibling.span
-                        } else {
-                            new_span
-                        };
-                        item.source_span = use_span;
-                    } else if let Some(ref old_hash) = item.source_hash
-                        && let Some(sibling) = resolve_tree_path_sibling_scan(
-                            &source_content,
-                            &item.tree_path,
-                            l,
-                            old_hash,
-                        )
-                    {
-                        // tree_path resolution failed (e.g., index out of
-                        // bounds) but sibling scan found the element.
-                        item.source_span = sibling.span;
-                        item.tree_path = sibling.updated_tree_path;
+                let recovery = recover_item_span(
+                    &source_content,
+                    item.source_span,
+                    &item.tree_path,
+                    lang,
+                    item.source_hash.as_deref(),
+                );
+                if let Some(new_span) = recovery.recovered_span() {
+                    item.source_span = new_span;
+                    if let Some(updated_tree_path) = recovery.updated_tree_path() {
+                        item.tree_path = updated_tree_path.to_string();
                     }
                 }
 

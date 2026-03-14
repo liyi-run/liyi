@@ -8,12 +8,10 @@ use crate::diagnostics::{
 use crate::discovery::{SidecarEntry, discover};
 use crate::hashing::{SpanError, hash_span, is_valid_hash};
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
+use crate::recovery::{ItemSpanRecovery, RecoveryMethod, recover_item_span};
 use crate::schema::validate_version;
-use crate::shift::{ShiftResult, detect_shift};
 use crate::sidecar::{ItemSpec, RequirementSpec, Spec, parse_sidecar, write_sidecar};
-use crate::tree_path::{
-    compute_tree_path, detect_language, resolve_tree_path, resolve_tree_path_sibling_scan,
-};
+use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -1033,127 +1031,39 @@ fn handle_hash_mismatch(
     item: &mut ItemSpec,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
-    let mut modified = false;
     let lang = detect_language(ctx.file);
+    let recovery = recover_item_span(
+        ctx.source_content,
+        item.source_span,
+        &item.tree_path,
+        lang,
+        item.source_hash.as_deref(),
+    );
 
-    // Try tree_path-based recovery, tracking why it may not be available.
-    let (tree_path_recovered, tree_path_note) = if item.tree_path.is_empty() {
-        (None, "no tree_path set")
-    } else if lang.is_none() {
-        (None, "no grammar for source language")
-    } else {
-        let resolved = resolve_tree_path(ctx.source_content, &item.tree_path, lang.unwrap());
-        if resolved.is_some() {
-            (resolved, "")
-        } else {
-            (None, "tree_path resolution failed")
+    match recovery {
+        ItemSpanRecovery::Failed { note } => {
+            let detail = if note.is_empty() {
+                "hash mismatch, could not relocate".to_string()
+            } else {
+                format!("hash mismatch, could not relocate ({note})")
+            };
+            diagnostics.push(Diagnostic {
+                file: ctx.file.to_path_buf(),
+                item_or_req: label.to_string(),
+                kind: DiagnosticKind::Stale,
+                severity: Severity::Warning,
+                message: detail,
+                fix_hint: None,
+                fixed: false,
+                span_start: Some(item.source_span[0]),
+                annotation_line: None,
+                requirement_text: None,
+                intent: Some(item.intent.clone()),
+            });
+            false
         }
-    };
-
-    if let Some(new_span) = tree_path_recovered {
-        modified |= handle_tree_path_resolved(ctx, label, item, new_span, lang, diagnostics);
-    } else if let Some(l) = lang
-        && let Some(sibling) = resolve_tree_path_sibling_scan(
-            ctx.source_content,
-            &item.tree_path,
-            l,
-            item.source_hash.as_ref().unwrap(),
-        )
-    {
-        // tree_path resolution failed but sibling scan found the element.
-        let old_span = item.source_span;
-        let delta = sibling.span[0] as i64 - old_span[0] as i64;
-        if ctx.fix {
-            item.source_span = sibling.span;
-            item.tree_path = sibling.updated_tree_path;
-            if let Ok((h, a)) = hash_span(ctx.source_content, sibling.span) {
-                item.source_hash = Some(h);
-                item.source_anchor = Some(a);
-            }
-            modified = true;
-        }
-        diagnostics.push(Diagnostic {
-            file: ctx.file.to_path_buf(),
-            item_or_req: label.to_string(),
-            kind: DiagnosticKind::Shifted {
-                from: old_span,
-                to: sibling.span,
-            },
-            severity: Severity::Warning,
-            message: format!(
-                "sibling scan matched, span shifted by {delta:+} → [{}, {}]",
-                sibling.span[0], sibling.span[1]
-            ),
-            fix_hint: Some("liyi check --fix".into()),
-            fixed: ctx.fix,
-            span_start: Some(item.source_span[0]),
-            annotation_line: None,
-            requirement_text: None,
-            intent: Some(item.intent.clone()),
-        });
-    } else {
-        // Fallback to shift heuristic
-        let expected = item.source_hash.as_ref().unwrap();
-        match detect_shift(ctx.source_content, item.source_span, expected) {
-            ShiftResult::Shifted { delta, new_span } => {
-                let old_span = item.source_span;
-                if ctx.fix {
-                    item.source_span = new_span;
-                    if let Ok((h, a)) = hash_span(ctx.source_content, new_span) {
-                        item.source_hash = Some(h);
-                        item.source_anchor = Some(a);
-                    }
-                    if let Some(l) = lang {
-                        let canonical = compute_tree_path(ctx.source_content, new_span, l);
-                        if !canonical.is_empty() {
-                            item.tree_path = canonical;
-                        }
-                    }
-                    modified = true;
-                }
-                diagnostics.push(Diagnostic {
-                    file: ctx.file.to_path_buf(),
-                    item_or_req: label.to_string(),
-                    kind: DiagnosticKind::Shifted {
-                        from: old_span,
-                        to: new_span,
-                    },
-                    severity: Severity::Warning,
-                    message: format!(
-                        "span shifted by {delta:+} → [{}, {}]",
-                        new_span[0], new_span[1]
-                    ),
-                    fix_hint: Some("liyi check --fix".into()),
-                    fixed: ctx.fix,
-                    span_start: Some(item.source_span[0]),
-                    annotation_line: None,
-                    requirement_text: None,
-                    intent: Some(item.intent.clone()),
-                });
-            }
-            ShiftResult::Stale => {
-                let detail = if tree_path_note.is_empty() {
-                    "hash mismatch, could not relocate".to_string()
-                } else {
-                    format!("hash mismatch, could not relocate ({tree_path_note})")
-                };
-                diagnostics.push(Diagnostic {
-                    file: ctx.file.to_path_buf(),
-                    item_or_req: label.to_string(),
-                    kind: DiagnosticKind::Stale,
-                    severity: Severity::Warning,
-                    message: detail,
-                    fix_hint: None,
-                    fixed: false,
-                    span_start: Some(item.source_span[0]),
-                    annotation_line: None,
-                    requirement_text: None,
-                    intent: Some(item.intent.clone()),
-                });
-            }
-        }
+        recovery => handle_tree_path_resolved(ctx, label, item, recovery, lang, diagnostics),
     }
-    modified
 }
 
 /// Handle tree_path-resolved span: pure shift vs content drift vs sibling.
@@ -1161,12 +1071,19 @@ fn handle_tree_path_resolved(
     ctx: &ItemCheckCtx<'_>,
     label: &str,
     item: &mut ItemSpec,
-    new_span: [usize; 2],
+    recovery: ItemSpanRecovery,
     lang: Option<crate::tree_path::Language>,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> bool {
     let mut modified = false;
     let old_span = item.source_span;
+    let new_span = recovery
+        .recovered_span()
+        .expect("recovery result must contain a span");
+    let recovery_method = recovery
+        .method()
+        .expect("recovery result must contain a method");
+    let updated_tree_path = recovery.updated_tree_path().map(str::to_owned);
     let old_hash = item.source_hash.as_ref().unwrap();
     let content_unchanged = hash_span(ctx.source_content, new_span)
         .map(|(h, _)| h == *old_hash)
@@ -1181,7 +1098,9 @@ fn handle_tree_path_resolved(
                 item.source_hash = Some(h);
                 item.source_anchor = Some(a);
             }
-            if let Some(l) = lang {
+            if let Some(updated_tree_path) = updated_tree_path.clone() {
+                item.tree_path = updated_tree_path;
+            } else if let Some(l) = lang {
                 let canonical = compute_tree_path(ctx.source_content, new_span, l);
                 if !canonical.is_empty() {
                     item.tree_path = canonical;
@@ -1197,44 +1116,7 @@ fn handle_tree_path_resolved(
                 to: new_span,
             },
             severity: Severity::Warning,
-            message: format!(
-                "tree_path resolved, span shifted by {delta:+} → [{}, {}]",
-                new_span[0], new_span[1]
-            ),
-            fix_hint: Some("liyi check --fix".into()),
-            fixed: ctx.fix,
-            span_start: Some(item.source_span[0]),
-            annotation_line: None,
-            requirement_text: None,
-            intent: Some(item.intent.clone()),
-        });
-    } else if let Some(l) = lang
-        && let Some(sibling) =
-            resolve_tree_path_sibling_scan(ctx.source_content, &item.tree_path, l, old_hash)
-    {
-        // Hash-based sibling scan found the element at a different array index.
-        let delta = sibling.span[0] as i64 - old_span[0] as i64;
-        if ctx.fix {
-            item.source_span = sibling.span;
-            item.tree_path = sibling.updated_tree_path;
-            if let Ok((h, a)) = hash_span(ctx.source_content, sibling.span) {
-                item.source_hash = Some(h);
-                item.source_anchor = Some(a);
-            }
-            modified = true;
-        }
-        diagnostics.push(Diagnostic {
-            file: ctx.file.to_path_buf(),
-            item_or_req: label.to_string(),
-            kind: DiagnosticKind::Shifted {
-                from: old_span,
-                to: sibling.span,
-            },
-            severity: Severity::Warning,
-            message: format!(
-                "sibling scan matched, span shifted by {delta:+} → [{}, {}]",
-                sibling.span[0], sibling.span[1]
-            ),
+            message: shifted_recovery_message(recovery_method, delta, new_span),
             fix_hint: Some("liyi check --fix".into()),
             fixed: ctx.fix,
             span_start: Some(item.source_span[0]),
@@ -1254,7 +1136,9 @@ fn handle_tree_path_resolved(
         if ctx.fix {
             if new_span != old_span {
                 item.source_span = new_span;
-                if let Some(l) = lang {
+                if let Some(updated_tree_path) = updated_tree_path {
+                    item.tree_path = updated_tree_path;
+                } else if let Some(l) = lang {
                     let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
@@ -1328,21 +1212,20 @@ fn handle_past_eof(
 ) -> bool {
     let mut modified = false;
     let lang = detect_language(ctx.file);
-    let (recovered, tp_note) = if item.tree_path.is_empty() {
-        (None, "no tree_path set")
-    } else if lang.is_none() {
-        (None, "no grammar for source language")
-    } else {
-        let r = resolve_tree_path(ctx.source_content, &item.tree_path, lang.unwrap());
-        if r.is_some() {
-            (r, "")
-        } else {
-            (None, "tree_path resolution failed")
-        }
-    };
+    let recovery = recover_item_span(
+        ctx.source_content,
+        item.source_span,
+        &item.tree_path,
+        lang,
+        item.source_hash.as_deref(),
+    );
 
-    if let Some(new_span) = recovered {
+    if let Some(new_span) = recovery.recovered_span() {
         let old_span = item.source_span;
+        let recovery_method = recovery
+            .method()
+            .expect("recovery result must contain a method");
+        let updated_tree_path = recovery.updated_tree_path().map(str::to_owned);
         let content_unchanged = item
             .source_hash
             .as_ref()
@@ -1361,7 +1244,9 @@ fn handle_past_eof(
                     item.source_hash = Some(h);
                     item.source_anchor = Some(a);
                 }
-                if let Some(l) = lang {
+                if let Some(updated_tree_path) = updated_tree_path.clone() {
+                    item.tree_path = updated_tree_path;
+                } else if let Some(l) = lang {
                     let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
@@ -1377,10 +1262,7 @@ fn handle_past_eof(
                     to: new_span,
                 },
                 severity: Severity::Warning,
-                message: format!(
-                    "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
-                    new_span[0], new_span[1]
-                ),
+                message: past_eof_recovery_message(recovery_method, end, total, delta, new_span),
                 fix_hint: Some("liyi check --fix".into()),
                 fixed: ctx.fix,
                 span_start: Some(item.source_span[0]),
@@ -1396,7 +1278,9 @@ fn handle_past_eof(
                 });
             if ctx.fix {
                 item.source_span = new_span;
-                if let Some(l) = lang {
+                if let Some(updated_tree_path) = updated_tree_path {
+                    item.tree_path = updated_tree_path;
+                } else if let Some(l) = lang {
                     let canonical = compute_tree_path(ctx.source_content, new_span, l);
                     if !canonical.is_empty() {
                         item.tree_path = canonical;
@@ -1446,10 +1330,12 @@ fn handle_past_eof(
             }
         }
     } else {
-        let detail = if tp_note.is_empty() {
-            format!("span end {end} exceeds file length {total}")
+        let detail = if let Some(note) = recovery.failure_note()
+            && !note.is_empty()
+        {
+            format!("span end {end} exceeds file length {total} ({note})")
         } else {
-            format!("span end {end} exceeds file length {total} ({tp_note})")
+            format!("span end {end} exceeds file length {total}")
         };
         diagnostics.push(Diagnostic {
             file: ctx.file.to_path_buf(),
@@ -1469,6 +1355,45 @@ fn handle_past_eof(
         });
     }
     modified
+}
+
+fn shifted_recovery_message(method: RecoveryMethod, delta: i64, span: [usize; 2]) -> String {
+    match method {
+        RecoveryMethod::TreePath => format!(
+            "tree_path resolved, span shifted by {delta:+} → [{}, {}]",
+            span[0], span[1]
+        ),
+        RecoveryMethod::SiblingScan => format!(
+            "sibling scan matched, span shifted by {delta:+} → [{}, {}]",
+            span[0], span[1]
+        ),
+        RecoveryMethod::ShiftHeuristic => {
+            format!("span shifted by {delta:+} → [{}, {}]", span[0], span[1])
+        }
+    }
+}
+
+fn past_eof_recovery_message(
+    method: RecoveryMethod,
+    end: usize,
+    total: usize,
+    delta: i64,
+    span: [usize; 2],
+) -> String {
+    match method {
+        RecoveryMethod::TreePath => format!(
+            "span past EOF (end {end} > {total}), tree_path resolved, shifted by {delta:+} → [{}, {}]",
+            span[0], span[1]
+        ),
+        RecoveryMethod::SiblingScan => format!(
+            "span past EOF (end {end} > {total}), sibling scan matched, shifted by {delta:+} → [{}, {}]",
+            span[0], span[1]
+        ),
+        RecoveryMethod::ShiftHeuristic => format!(
+            "span past EOF (end {end} > {total}), span shifted by {delta:+} → [{}, {}]",
+            span[0], span[1]
+        ),
+    }
 }
 
 // ---------------------------------------------------------------------------
