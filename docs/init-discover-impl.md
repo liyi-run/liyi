@@ -276,3 +276,15 @@ Support `"intent": "=trivial"` in `liyi check` and `liyi approve`.
 3. **Threshold for `_likely_trivial`.** The design doc suggests 3–5 lines. The `--trivial-threshold` flag makes this configurable; the default should match the most common convention. Current plan: default to 5.
 
 4. **Doc comment detection for macro-generated items.** Items produced by macro expansion may not have doc comments in the tree-sitter AST. This is acceptable — `_has_doc: false` is correct (the tool sees what tree-sitter sees).
+
+---
+
+## AIGC Disclaimer
+
+This document contains content from the following AI agents:
+
+* Claude Opus 4.6
+* Hunter Alpha
+
+The document is authored by Claude Opus 4.6 with the human designer's input.
+The `init-discovers-local-requirements` invariant is contributed by Hunter Alpha.
