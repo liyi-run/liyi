@@ -44,7 +44,7 @@
     },
     {
       "item": "init_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). Always scan the source file for @liyi:requirement markers and emit corresponding RequirementSpec entries regardless of file type or discover flag. When discover is false, emit only requirement specs (no items). If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
         101,

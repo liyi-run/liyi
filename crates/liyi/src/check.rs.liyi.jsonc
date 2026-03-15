@@ -29,7 +29,7 @@
     },
     {
       "item": "run_check",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Orchestrate the two-pass check by delegating to helpers: pass 1 calls discover_requirements, compute_requirement_hashes, collect_source_related_refs, enrich_requirements_from_sidecars to build the global requirement registry; pass 2 calls check_sidecar for each entry. Post-pass calls emit_untracked_requirements (which auto-creates sidecar entries when --fix is active), emit_unreferenced_requirements, detect_requirement_cycles, and emit_cycle_diagnostics. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
       "source_span": [
         47,
@@ -106,7 +106,7 @@
     },
     {
       "item": "emit_untracked_requirements",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Emit Untracked diagnostics for requirements found in source but absent from any sidecar. When --fix is active and not dry-run, create or update the co-located .liyi.jsonc sidecar for each source file with missing RequirementSpec entries, using the full requirement span from marker pairing and populating source_anchor from the source text.",
       "source_span": [
         321,
