@@ -338,7 +338,10 @@ fn emit_untracked_requirements(
     // Group by source file for batch sidecar updates.
     let mut by_file: HashMap<PathBuf, Vec<(&String, &RequirementRecord)>> = HashMap::new();
     for (name, rec) in &untracked {
-        by_file.entry(rec.file.clone()).or_default().push((name, rec));
+        by_file
+            .entry(rec.file.clone())
+            .or_default()
+            .push((name, rec));
     }
 
     for (name, rec) in &untracked {
@@ -424,9 +427,10 @@ fn emit_untracked_requirements(
             let mut modified = false;
             for (name, rec) in reqs {
                 // Check if already present (may have been added by a previous iteration).
-                let already_present = sidecar.specs.iter().any(|s| {
-                    matches!(s, Spec::Requirement(r) if r.requirement == **name)
-                });
+                let already_present = sidecar
+                    .specs
+                    .iter()
+                    .any(|s| matches!(s, Spec::Requirement(r) if r.requirement == **name));
                 if already_present {
                     continue;
                 }

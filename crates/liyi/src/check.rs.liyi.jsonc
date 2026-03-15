@@ -110,10 +110,10 @@
       "intent": "Emit Untracked diagnostics for requirements found in source but absent from any sidecar. When --fix is active and not dry-run, create or update the co-located .liyi.jsonc sidecar for each source file with missing RequirementSpec entries, using the full requirement span from marker pairing and populating source_anchor from the source text.",
       "source_span": [
         321,
-        463
+        467
       ],
       "tree_path": "fn.emit_untracked_requirements",
-      "source_hash": "sha256:f7b1a003fd5a98b3a38fac8016e9dbfb278182fb1c1ff56414a70e4122f7228d",
+      "source_hash": "sha256:0f40a8c8209c5983bf5405500c558d574098e48a16251a29cf636a4a0c1ae827",
       "source_anchor": "fn emit_untracked_requirements("
     },
     {
@@ -121,8 +121,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        467,
-        494
+        471,
+        498
       ],
       "tree_path": "fn.emit_unreferenced_requirements",
       "source_hash": "sha256:d0891b49f5cc3e0081d87578cc71d2f82c6f3ac7ef6310b119eb1d7f44310d44",
@@ -133,8 +133,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        497,
-        525
+        501,
+        529
       ],
       "tree_path": "fn.emit_cycle_diagnostics",
       "source_hash": "sha256:7d16344ccd0a1863a20f37ea1c2dff370c697110d78f31b59e9f589a289e48aa",
@@ -145,8 +145,8 @@
       "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version and source_hash format, verify the source file exists, then for each spec delegate to check_item_hash, check_review_status, check_trivial_ignore, check_related_edges (for items) or check_requirement_hash (for requirements, with marker-based span recovery first). When --fix is active, strip _hints from all item specs. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        534,
-        800
+        538,
+        804
       ],
       "tree_path": "fn.check_sidecar",
       "source_hash": "sha256:f441e617cc6e07ae6441a05503fea1c6774ccbcdc8b1fc7b14e18c49507ea525",
@@ -165,8 +165,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        808,
-        994
+        812,
+        998
       ],
       "tree_path": "fn.check_requirement_hash",
       "source_hash": "sha256:33b049164f163dcc79e1de3f27f216fffd3c93b7fbb1773914bef667584d44c8",
@@ -177,8 +177,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1003,
-        1050
+        1007,
+        1054
       ],
       "tree_path": "fn.check_item_hash",
       "source_hash": "sha256:dff7e649ac1d6489b89f3d746fc4cdc28505b28f63017e84b84d259c401a30a2",
@@ -189,8 +189,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1053,
-        1100
+        1057,
+        1104
       ],
       "tree_path": "fn.handle_missing_hash",
       "source_hash": "sha256:fbe4440b1e6f7310dba3cee4c57137a9e7a65878e1cc8e3949d1a2e300630e22",
@@ -201,8 +201,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1103,
-        1138
+        1107,
+        1142
       ],
       "tree_path": "fn.handle_hash_mismatch",
       "source_hash": "sha256:e33479af5622e2c1b19e9afceb7ecbb6226c3806a91f5300231267c34c5d7779",
@@ -216,8 +216,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1141,
-        1256
+        1145,
+        1260
       ],
       "tree_path": "fn.handle_tree_path_resolved",
       "source_hash": "sha256:bbb9af8f79b77415d9bf53392b0deb29f49dfba3c9ab83556aa224245bcd925f",
@@ -232,8 +232,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1260,
-        1389
+        1264,
+        1393
       ],
       "tree_path": "fn.handle_past_eof",
       "source_hash": "sha256:d6b1469814c4506c6026f22454cef036d3ac78dc5ed7a101644afd1c01b9837e",
@@ -248,8 +248,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1436,
-        1466
+        1440,
+        1470
       ],
       "tree_path": "fn.check_review_status",
       "source_hash": "sha256:62cd6e7a08df4bb831f0f4c860cb6cbaf41ec1483e53ed0bbb36894e93bf1eb0",
@@ -263,8 +263,8 @@
       "reviewed": true,
       "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
       "source_span": [
-        1469,
-        1556
+        1473,
+        1560
       ],
       "tree_path": "fn.check_trivial_ignore",
       "source_hash": "sha256:434e82e6c548233c1113313ec013030b349da1f922c4f5e8b9a5c5f2a6f4feb5",
@@ -275,8 +275,8 @@
       "reviewed": true,
       "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
       "source_span": [
-        1561,
-        1674
+        1565,
+        1678
       ],
       "tree_path": "fn.check_related_edges",
       "source_hash": "sha256:66f6a7ee8df06a18e9a4e29e19851b775ee70717bc5b01a179afc8738a00aa12",
@@ -291,8 +291,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1684,
-        1736
+        1688,
+        1740
       ],
       "tree_path": "fn.detect_requirement_cycles",
       "source_hash": "sha256:c7124f27dcaade014657e1b571274470d11511922c508ca2a3836d7df20e808d",
@@ -303,8 +303,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1739,
-        1750
+        1743,
+        1754
       ],
       "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",
