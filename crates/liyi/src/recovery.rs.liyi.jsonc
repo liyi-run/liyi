@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "RecoveryMethod",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         6,
@@ -17,7 +17,7 @@
     },
     {
       "item": "ItemSpanRecovery",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Represent the shared item span recovery result as unchanged, shifted, or failed, while preserving any updated tree_path emitted by sibling scan and the recovery method that produced the result.",
       "source_span": [
         13,
@@ -29,7 +29,7 @@
     },
     {
       "item": "recover_item_span",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Run the shared item span recovery cascade. Prefer tree_path resolution when available, fall back to sibling scan when the resolved content no longer matches the expected hash, then fall back to the hash-based shift heuristic. Return a structured recovery result and preserve a failure note describing why structural recovery was unavailable or failed.",
       "source_span": [
         66,

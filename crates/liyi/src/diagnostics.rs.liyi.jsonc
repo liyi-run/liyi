@@ -41,7 +41,7 @@
     },
     {
       "item": "impl Display for Diagnostic",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Construct standardized item diagnostics with shared defaults for current, stale, shifted, invalid-span, and past-EOF cases, and format diagnostics for terminal output. display_with_root shows a repo-relative file path with optional :line suffix (from span_start or annotation_line); for fixed diagnostics uses '✓ fixed' icon and suppresses fix hints, otherwise selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file:line: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
         65,

@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "run_reanchor",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Re-hash source spans in a sidecar file. If do_migrate is set, run schema migration and write back. If target_item and target_span are both provided, update only that item's span and rehash. Otherwise, for every item spec, run the shared recovery cascade over tree_path resolution, sibling scan, and the hash-based shift heuristic before recomputing hash/anchor and canonical tree_path. For requirements: use tree_path-based resolution if available, otherwise fall back to marker-based span recovery (@liyi:requirement/@liyi:end-requirement). Reject if only one of --item/--span is provided. Derive the source file path by stripping the .liyi.jsonc suffix from the sidecar path.",
       "source_span": [
         23,

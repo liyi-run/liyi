@@ -95,7 +95,7 @@
     },
     {
       "item": "validate_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Validate a parsed SidecarFile: check version is '0.1', source_span start >= 1 and start <= end for every spec, source_hash matches the shared sha256:<hex> validator, and related hashes match the same pattern. Return a list of all validation errors (empty means valid).",
       "source_span": [
         145,

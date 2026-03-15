@@ -35,7 +35,7 @@
     },
     {
       "item": "walk_git_history",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk up to `limit` revisions that touched a repo-relative path and return the first value produced by the callback. Stop early on the first Some(T) and return None when the file has no relevant history or the callback never matches.",
       "source_span": [
         62,

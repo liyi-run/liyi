@@ -17,7 +17,7 @@
     },
     {
       "item": "ItemCheckCtx",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Bundle the shared read-only item-check context: the current source file path, source text, scanned source markers, and the active --fix mode. This lets check-sidecar logic thread one context object through item hash checking helpers instead of re-passing each field separately.",
       "source_span": [
         30,
@@ -142,7 +142,7 @@
     },
     {
       "item": "check_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version and source_hash format, verify the source file exists, then for each spec delegate to check_item_hash, check_review_status, check_trivial_ignore, check_related_edges (for items) or check_requirement_hash (for requirements, with marker-based span recovery first). When --fix is active, strip _hints from all item specs. Write the sidecar back if --fix produced modifications.",
       "source_span": [
         436,
@@ -174,7 +174,7 @@
     },
     {
       "item": "check_item_hash",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         905,
@@ -186,7 +186,7 @@
     },
     {
       "item": "handle_missing_hash",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         955,
@@ -198,7 +198,7 @@
     },
     {
       "item": "handle_hash_mismatch",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1005,
@@ -213,7 +213,7 @@
     },
     {
       "item": "handle_tree_path_resolved",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1043,
@@ -229,7 +229,7 @@
     },
     {
       "item": "handle_past_eof",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         1162,
