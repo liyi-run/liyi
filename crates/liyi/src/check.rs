@@ -10,7 +10,7 @@ use crate::hashing::{SpanError, hash_span, is_valid_hash};
 use crate::markers::{SourceMarker, requirement_spans, scan_markers};
 use crate::recovery::{ItemSpanRecovery, RecoveryMethod, recover_item_span};
 use crate::schema::validate_version;
-use crate::sidecar::{ItemSpec, RequirementSpec, Spec, parse_sidecar, write_sidecar};
+use crate::sidecar::{ItemSpec, RequirementSpec, SidecarFile, Spec, parse_sidecar, write_sidecar};
 use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 // ---------------------------------------------------------------------------
@@ -95,6 +95,8 @@ pub fn run_check(
         &requirements,
         &requirements_with_sidecar,
         &mut source_cache,
+        fix,
+        dry_run,
         &mut diagnostics,
     );
     emit_unreferenced_requirements(
@@ -320,46 +322,142 @@ fn emit_untracked_requirements(
     requirements: &HashMap<String, RequirementRecord>,
     requirements_with_sidecar: &HashSet<String>,
     source_cache: &mut HashMap<PathBuf, String>,
+    fix: bool,
+    dry_run: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     const MAX_REQ_TEXT_CHARS: usize = 4096;
-    for (name, rec) in requirements {
-        if !requirements_with_sidecar.contains(name) {
-            let req_text = read_cached(source_cache, &rec.file).and_then(|content| {
-                let markers = scan_markers(&content);
-                let spans = requirement_spans(&markers);
-                spans.get(name).map(|span| {
-                    let lines: Vec<&str> = content.lines().collect();
-                    let start = span[0].saturating_sub(1);
-                    let end = span[1].min(lines.len());
-                    let text = lines[start..end].join("\n");
-                    if text.chars().count() > MAX_REQ_TEXT_CHARS {
-                        let boundary = text
-                            .char_indices()
-                            .nth(MAX_REQ_TEXT_CHARS)
-                            .map_or(text.len(), |(i, _)| i);
-                        format!("{}\u{2026}[truncated]", &text[..boundary])
-                    } else {
-                        text
-                    }
-                })
-            });
-            diagnostics.push(Diagnostic {
-                file: rec.file.clone(),
-                item_or_req: name.clone(),
-                kind: DiagnosticKind::Untracked,
-                severity: Severity::Warning,
-                message: format!(
-                    "\x40liyi:requirement \"{name}\" at line {} has no sidecar entry",
-                    rec.line,
-                ),
-                fix_hint: None,
-                fixed: false,
-                span_start: None,
-                annotation_line: Some(rec.line),
-                requirement_text: req_text,
-                intent: None,
-            });
+    // Collect untracked requirements grouped by source file for batch fix.
+    let mut untracked: Vec<(&String, &RequirementRecord)> = requirements
+        .iter()
+        .filter(|(name, _)| !requirements_with_sidecar.contains(*name))
+        .collect();
+    // Sort by file for deterministic output.
+    untracked.sort_by(|a, b| a.1.file.cmp(&b.1.file).then_with(|| a.0.cmp(b.0)));
+
+    // Group by source file for batch sidecar updates.
+    let mut by_file: HashMap<PathBuf, Vec<(&String, &RequirementRecord)>> = HashMap::new();
+    for (name, rec) in &untracked {
+        by_file.entry(rec.file.clone()).or_default().push((name, rec));
+    }
+
+    for (name, rec) in &untracked {
+        let req_text = read_cached(source_cache, &rec.file).and_then(|content| {
+            let markers = scan_markers(&content);
+            let spans = requirement_spans(&markers);
+            spans.get(*name).map(|span| {
+                let lines: Vec<&str> = content.lines().collect();
+                let start = span[0].saturating_sub(1);
+                let end = span[1].min(lines.len());
+                let text = lines[start..end].join("\n");
+                if text.chars().count() > MAX_REQ_TEXT_CHARS {
+                    let boundary = text
+                        .char_indices()
+                        .nth(MAX_REQ_TEXT_CHARS)
+                        .map_or(text.len(), |(i, _)| i);
+                    format!("{}\u{2026}[truncated]", &text[..boundary])
+                } else {
+                    text
+                }
+            })
+        });
+        diagnostics.push(Diagnostic {
+            file: rec.file.clone(),
+            item_or_req: (*name).clone(),
+            kind: DiagnosticKind::Untracked,
+            severity: Severity::Warning,
+            message: format!(
+                "\x40liyi:requirement \"{name}\" at line {} has no sidecar entry",
+                rec.line,
+            ),
+            fix_hint: None,
+            fixed: fix && !dry_run,
+            span_start: None,
+            annotation_line: Some(rec.line),
+            requirement_text: req_text,
+            intent: None,
+        });
+    }
+
+    // When --fix, create or update sidecars with the missing RequirementSpec entries.
+    if fix && !dry_run {
+        for (source_file, reqs) in &by_file {
+            let sidecar_path = source_file.with_file_name(format!(
+                "{}.liyi.jsonc",
+                source_file
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+            ));
+
+            let mut sidecar = if sidecar_path.is_file() {
+                match fs::read_to_string(&sidecar_path)
+                    .ok()
+                    .and_then(|c| parse_sidecar(&c).ok())
+                {
+                    Some(sc) => sc,
+                    None => continue,
+                }
+            } else {
+                // Create a new sidecar for this source file.
+                let source_name = source_file
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
+                SidecarFile {
+                    version: "0.1".to_string(),
+                    source: source_name,
+                    specs: Vec::new(),
+                }
+            };
+
+            let source_content = match read_cached(source_cache, source_file) {
+                Some(c) => c,
+                None => continue,
+            };
+
+            // Get full requirement spans (pairs @liyi:requirement with @liyi:end-requirement).
+            let markers = scan_markers(&source_content);
+            let req_spans = requirement_spans(&markers);
+
+            let mut modified = false;
+            for (name, rec) in reqs {
+                // Check if already present (may have been added by a previous iteration).
+                let already_present = sidecar.specs.iter().any(|s| {
+                    matches!(s, Spec::Requirement(r) if r.requirement == **name)
+                });
+                if already_present {
+                    continue;
+                }
+
+                // Use the full span from marker pairing if available,
+                // otherwise fall back to the single marker line.
+                let span = req_spans
+                    .get(*name)
+                    .copied()
+                    .unwrap_or([rec.line, rec.line]);
+                let anchor_line = source_content
+                    .lines()
+                    .nth(span[0].saturating_sub(1))
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+
+                sidecar.specs.push(Spec::Requirement(RequirementSpec {
+                    requirement: (*name).clone(),
+                    source_span: span,
+                    tree_path: String::new(),
+                    source_hash: None,
+                    source_anchor: Some(anchor_line),
+                }));
+                modified = true;
+            }
+
+            if modified {
+                let output = write_sidecar(&sidecar);
+                let _ = fs::write(&sidecar_path, output);
+            }
         }
     }
 }

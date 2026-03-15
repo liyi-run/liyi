@@ -1,0 +1,70 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "sidecar-merge-design.md",
+  "specs": [
+    {
+      "requirement": "merge-preserves-related-hashes",
+      "source_span": [
+        89,
+        101
+      ],
+      "source_hash": "sha256:187fd68777db780d23a65883243d85618e66c75dd0ee88c752092830349989e2",
+      "source_anchor": "<!-- @liyi:requirement merge-preserves-related-hashes -->"
+    },
+    {
+      "requirement": "merge-preserves-review-gate",
+      "source_span": [
+        73,
+        79
+      ],
+      "source_hash": "sha256:dfd8a222dee400c78b233d70521096915b1f00d63ebfc20bbc5534591a04e2f6",
+      "source_anchor": "<!-- @liyi:requirement merge-preserves-review-gate -->"
+    },
+    {
+      "requirement": "merge-is-pre-phase",
+      "source_span": [
+        103,
+        109
+      ],
+      "source_hash": "sha256:e57a21af408b61773dff47e908f105d2372924bf30daaacef642e57c9797a1da",
+      "source_anchor": "<!-- @liyi:requirement merge-is-pre-phase -->"
+    },
+    {
+      "requirement": "merge-never-invents-intent",
+      "source_span": [
+        64,
+        71
+      ],
+      "source_hash": "sha256:63cadde821ffa7eac748026ad32d16fe27564b317e595e42f50f368acacabc2c",
+      "source_anchor": "<!-- @liyi:requirement merge-never-invents-intent -->"
+    },
+    {
+      "requirement": "merge-refuses-cross-version",
+      "source_span": [
+        111,
+        116
+      ],
+      "source_hash": "sha256:7731d1a7c972d45c40d5e13ea0740ae3f53311f35612e716131880f203d69796",
+      "source_anchor": "<!-- @liyi:requirement merge-refuses-cross-version -->"
+    },
+    {
+      "requirement": "merge-respects-dry-run",
+      "source_span": [
+        118,
+        123
+      ],
+      "source_hash": "sha256:0e05c6a62fc3e200028e270792f9ae9a07632cc756446f9a4f0eeb72a41dc695",
+      "source_anchor": "<!-- @liyi:requirement merge-respects-dry-run -->"
+    },
+    {
+      "requirement": "merge-derived-fields-are-discarded",
+      "source_span": [
+        81,
+        87
+      ],
+      "source_hash": "sha256:050356f33a34d05b4d72a348aaa54eabb7c5a7f33b409326bc3c331c2b4da6db",
+      "source_anchor": "<!-- @liyi:requirement merge-derived-fields-are-discarded -->"
+    }
+  ]
+}
