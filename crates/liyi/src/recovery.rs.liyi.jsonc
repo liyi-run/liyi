@@ -41,7 +41,7 @@
     },
     {
       "item": "to_recovery",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Construct an ItemSpanRecovery result by comparing the recovered span to the current span. If they match, return Unchanged with the span, updated tree_path, and recovery method. If they differ, return Shifted recording both the original and recovered spans along with the updated tree_path and method.",
       "source_span": [
         130,
