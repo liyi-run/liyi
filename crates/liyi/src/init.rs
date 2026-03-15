@@ -1,7 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::sidecar::{ItemSpec, SidecarFile, Spec, write_sidecar};
+use crate::markers::{requirement_spans, scan_markers};
+use crate::sidecar::{ItemSpec, RequirementSpec, SidecarFile, Spec, write_sidecar};
 use crate::tree_path::{detect_language, discover_items};
 
 /// The agent instruction block appended to AGENTS.md by `liyi init`.
@@ -122,9 +123,11 @@ pub fn init_sidecar(
         .to_string_lossy()
         .to_string();
 
-    let specs = if discover {
+    let source_content = fs::read_to_string(source_file)?;
+
+    // Item discovery via tree-sitter (when language is supported).
+    let mut specs: Vec<Spec> = if discover {
         if let Some(lang) = detect_language(source_file) {
-            let source_content = fs::read_to_string(source_file)?;
             let discovered = discover_items(&source_content, lang);
             discovered
                 .into_iter()
@@ -161,6 +164,25 @@ pub fn init_sidecar(
     } else {
         Vec::new()
     };
+
+    // Requirement discovery via marker scanning (any file type).
+    let markers = scan_markers(&source_content);
+    let req_spans = requirement_spans(&markers);
+    for (name, span) in &req_spans {
+        let anchor_line = source_content
+            .lines()
+            .nth(span[0] - 1)
+            .unwrap_or("")
+            .trim()
+            .to_string();
+        specs.push(Spec::Requirement(RequirementSpec {
+            requirement: name.clone(),
+            source_span: *span,
+            tree_path: String::new(),
+            source_hash: None,
+            source_anchor: Some(anchor_line),
+        }));
+    }
 
     let sidecar = SidecarFile {
         version: "0.1".to_string(),
