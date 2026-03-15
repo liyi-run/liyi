@@ -58,6 +58,10 @@ Secondary considerations (real but not decisive on their own): a single git stra
 **`kind_map` is the sole definition of "item".** An AST node is an item if and only if `LanguageConfig::kind_to_shorthand()` returns `Some`. No parallel list, no ad-hoc node-kind checks. This ensures that adding a new item kind to a language is a single-point change.
 <!-- @liyi:end-requirement reuse-kind-map-as-item-definition -->
 
+<!-- @liyi:requirement init-discovers-local-requirements -->
+**`liyi init` discovers requirement markers in the target file.** When initializing a sidecar for a file that contains `@liyi:requirement` blocks, the scaffold must include corresponding `RequirementSpec` entries. This applies to any file type — source code, markdown design docs, or other formats. The use case is "author a document with invariants, then scaffold its sidecar"; the author only cares about the requirements they just created in that file, not project-global ones. Requirement discovery uses the same marker scanner as `liyi check` pass 1, scoped to the single file being initialized.
+<!-- @liyi:end-requirement init-discovers-local-requirements -->
+
 ---
 
 ## Scope
@@ -74,6 +78,7 @@ Secondary considerations (real but not decisive on their own): a single git stra
 - `--hints` flag to opt in to VCS signals.
 - `--trivial-threshold <N>` flag (default: 5).
 - Golden test fixture for scaffold output.
+- Requirement marker discovery in `liyi init`: scan the target file for `@liyi:requirement` blocks and emit `RequirementSpec` entries in the scaffolded sidecar.
 
 ### Out of scope
 
@@ -81,6 +86,7 @@ Secondary considerations (real but not decisive on their own): a single git stra
 - Content extraction from doc comments (the tool detects *presence*, not *text*).
 - `liyi init <directory>` batch mode — deferred; the current CLI accepts one file.
 - `_hints` in `liyi check --prompt` output — deferred.
+- Project-global requirement discovery in `liyi init` — out of scope by design; `liyi check` pass 1 handles cross-file requirement coverage.
 
 ---
 

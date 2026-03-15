@@ -74,6 +74,15 @@
       ],
       "source_hash": "sha256:38de7a67a83d4cd205ed88cb67d1c91962fbe585291ccaa153a723dd04c8e2cc",
       "source_anchor": "<!-- @liyi:requirement reuse-kind-map-as-item-definition -->"
+    },
+    {
+      "requirement": "init-discovers-local-requirements",
+      "source_span": [
+        61,
+        63
+      ],
+      "source_hash": "sha256:165ffdcacc48900fb0b25fc18836af8608c567380744de27bc57f2d946fc1dc6",
+      "source_anchor": "<!-- @liyi:requirement init-discovers-local-requirements -->"
     }
   ]
 }
