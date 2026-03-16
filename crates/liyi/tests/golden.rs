@@ -586,54 +586,46 @@ fn prompt_mixed_gaps() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    assert_eq!(output.version, "0.1");
     assert_eq!(output.exit_code, 1);
 
-    // Should have all three gap types.
-    let types: Vec<&str> = output
-        .items
-        .iter()
-        .map(|item| match item {
-            liyi::prompt::PromptItem::MissingRequirementSpec { .. } => "missing_requirement_spec",
-            liyi::prompt::PromptItem::MissingRelatedEdge { .. } => "missing_related_edge",
-            liyi::prompt::PromptItem::ReqNoRelated { .. } => "req_no_related",
-            liyi::prompt::PromptItem::StaleSpec { .. } => "stale_spec",
-            liyi::prompt::PromptItem::ShiftedSpan { .. } => "shifted_span",
-            liyi::prompt::PromptItem::UnreviewedSpec { .. } => "unreviewed_spec",
-        })
-        .collect();
+    // Should have all three gap types as groups.
+    let types: Vec<&str> = output.groups.iter().map(|g| g.prompt_type).collect();
 
     assert!(
         types.contains(&"missing_requirement_spec"),
-        "expected missing_requirement_spec in prompt items, got: {types:?}"
+        "expected missing_requirement_spec group, got: {types:?}"
     );
     assert!(
         types.contains(&"missing_related_edge"),
-        "expected missing_related_edge in prompt items, got: {types:?}"
+        "expected missing_related_edge group, got: {types:?}"
     );
     assert!(
         types.contains(&"req_no_related"),
-        "expected req_no_related in prompt items, got: {types:?}"
+        "expected req_no_related group, got: {types:?}"
     );
 
-    // Verify requirement_text is populated for missing_requirement_spec.
-    for item in &output.items {
-        if let liyi::prompt::PromptItem::MissingRequirementSpec {
-            requirement_text, ..
-        } = item
-        {
-            assert!(
-                requirement_text.is_some(),
-                "expected requirement_text to be populated"
-            );
-        }
+    // Verify requirement_text is populated for missing_requirement_spec items.
+    let mrs_group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "missing_requirement_spec")
+        .unwrap();
+    for item in &mrs_group.items {
+        assert!(
+            item.get("requirement_text").is_some(),
+            "expected requirement_text to be populated"
+        );
+    }
+
+    // Verify each group has count matching items length.
+    for group in &output.groups {
+        assert_eq!(group.count, group.items.len());
     }
 
     // Verify output serializes to valid JSON.
     let json = serde_json::to_string_pretty(&output).expect("failed to serialize");
     let parsed: serde_json::Value = serde_json::from_str(&json).expect("invalid JSON");
-    assert_eq!(parsed["version"], "0.1");
-    assert!(parsed["items"].is_array());
+    assert!(parsed["groups"].is_array());
 }
 
 #[test]
@@ -644,11 +636,10 @@ fn prompt_clean() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    assert_eq!(output.version, "0.1");
     assert!(
-        output.items.is_empty(),
-        "expected no items, got: {:?}",
-        output.items
+        output.groups.is_empty(),
+        "expected no groups, got: {:?}",
+        output.groups
     );
     assert_eq!(output.exit_code, 0);
 }
@@ -661,11 +652,11 @@ fn prompt_errors_only() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    // Error-class diagnostics produce exit_code 2 but no coverage-gap items.
+    // Error-class diagnostics produce exit_code 2 but no groups.
     assert!(
-        output.items.is_empty(),
-        "expected no items for error-only, got: {:?}",
-        output.items
+        output.groups.is_empty(),
+        "expected no groups for error-only, got: {:?}",
+        output.groups
     );
     assert_eq!(output.exit_code, 2);
 }
@@ -685,22 +676,12 @@ fn prompt_multi_file() {
 
     assert_eq!(output.exit_code, 1);
 
-    // Should have gaps from both files.
+    // Should have gaps from both files across all groups.
     let source_files: Vec<&str> = output
-        .items
+        .groups
         .iter()
-        .map(|item| match item {
-            liyi::prompt::PromptItem::MissingRequirementSpec { source_file, .. } => {
-                source_file.as_str()
-            }
-            liyi::prompt::PromptItem::MissingRelatedEdge { source_file, .. } => {
-                source_file.as_str()
-            }
-            liyi::prompt::PromptItem::ReqNoRelated { source_file, .. } => source_file.as_str(),
-            liyi::prompt::PromptItem::StaleSpec { source_file, .. } => source_file.as_str(),
-            liyi::prompt::PromptItem::ShiftedSpan { source_file, .. } => source_file.as_str(),
-            liyi::prompt::PromptItem::UnreviewedSpec { source_file, .. } => source_file.as_str(),
-        })
+        .flat_map(|g| g.items.iter())
+        .filter_map(|item| item["source_file"].as_str())
         .collect();
 
     assert!(
@@ -711,8 +692,10 @@ fn prompt_multi_file() {
         source_files.contains(&"beta.rs"),
         "expected gaps from beta.rs, got: {source_files:?}"
     );
+
+    let total_items: usize = output.groups.iter().map(|g| g.count).sum();
     assert!(
-        output.items.len() >= 2,
+        total_items >= 2,
         "expected at least 2 gap items across files"
     );
 }
@@ -730,25 +713,19 @@ fn prompt_shifted_span() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    let shifted = output.items.iter().find_map(|item| match item {
-        liyi::prompt::PromptItem::ShiftedSpan {
-            item,
-            old_span,
-            new_span,
-            instruction,
-            ..
-        } => Some((item, old_span, new_span, instruction)),
-        _ => None,
-    });
+    let group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "shifted_span")
+        .expect("expected shifted_span group");
 
-    let Some((item, old_span, new_span, instruction)) = shifted else {
-        panic!("expected shifted_span prompt item, got: {:?}", output.items);
-    };
+    assert!(group.template.contains("auto-correct the span"));
+    assert_eq!(group.count, group.items.len());
 
-    assert_eq!(item, "compute");
-    assert_eq!(*old_span, [1, 3]);
-    assert_eq!(*new_span, [4, 6]);
-    assert!(instruction.template.contains("auto-correct the span"));
+    let item = &group.items[0];
+    assert_eq!(item["item"], "compute");
+    assert_eq!(item["old_span"], serde_json::json!([1, 3]));
+    assert_eq!(item["new_span"], serde_json::json!([4, 6]));
 }
 
 #[test]
@@ -765,28 +742,18 @@ fn prompt_unreviewed_spec() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    let unreviewed = output.items.iter().find_map(|item| match item {
-        liyi::prompt::PromptItem::UnreviewedSpec {
-            item,
-            source_line,
-            intent_text,
-            instruction,
-            ..
-        } => Some((item, source_line, intent_text, instruction)),
-        _ => None,
-    });
+    let group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "unreviewed_spec")
+        .expect("expected unreviewed_spec group");
 
-    let Some((item, source_line, intent_text, instruction)) = unreviewed else {
-        panic!(
-            "expected unreviewed_spec prompt item, got: {:?}",
-            output.items
-        );
-    };
+    assert!(group.template.contains("liyi approve"));
 
-    assert_eq!(item, "multiply");
-    assert_eq!(*source_line, 1);
-    assert_eq!(intent_text.as_deref(), Some("Multiply two integers"));
-    assert!(instruction.template.contains("liyi approve"));
+    let item = &group.items[0];
+    assert_eq!(item["item"], "multiply");
+    assert_eq!(item["source_line"], 1);
+    assert_eq!(item["intent_text"], "Multiply two integers");
     assert_eq!(output.exit_code, 0);
 }
 
@@ -803,25 +770,18 @@ fn prompt_stale_reviewed_spec() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    let stale = output.items.iter().find_map(|item| match item {
-        liyi::prompt::PromptItem::StaleSpec {
-            item,
-            source_line,
-            intent_text,
-            instruction,
-            ..
-        } => Some((item, source_line, intent_text, instruction)),
-        _ => None,
-    });
+    let group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "stale_spec")
+        .expect("expected stale_spec group");
 
-    let Some((item, source_line, intent_text, instruction)) = stale else {
-        panic!("expected stale_spec prompt item, got: {:?}", output.items);
-    };
+    assert!(group.template.contains("update the intent"));
 
-    assert_eq!(item, "compute");
-    assert_eq!(*source_line, 1);
-    assert_eq!(intent_text.as_deref(), Some("Compute 2x+1"));
-    assert!(instruction.template.contains("update the intent"));
+    let item = &group.items[0];
+    assert_eq!(item["item"], "compute");
+    assert_eq!(item["source_line"], 1);
+    assert_eq!(item["intent_text"], "Compute 2x+1");
     assert_eq!(output.exit_code, 0);
 }
 
@@ -838,23 +798,14 @@ fn prompt_stale_unreviewed_spec_is_fixable() {
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
 
-    let stale = output.items.iter().find_map(|item| match item {
-        liyi::prompt::PromptItem::StaleSpec { instruction, .. } => Some(instruction),
-        _ => None,
-    });
+    let group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "stale_spec" && g.template.contains("Run {fix_command}"))
+        .expect("expected fixable stale_spec group");
 
-    let Some(instruction) = stale else {
-        panic!("expected stale_spec prompt item, got: {:?}", output.items);
-    };
-
-    assert!(instruction.template.contains("Run {fix_command}"));
-    assert_eq!(
-        instruction
-            .context
-            .get("fix_command")
-            .and_then(|v| v.as_str()),
-        Some("liyi check --fix")
-    );
+    let item = &group.items[0];
+    assert_eq!(item["fix_command"], "liyi check --fix");
 }
 
 // ---------------------------------------------------------------------------
