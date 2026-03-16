@@ -597,6 +597,9 @@ fn prompt_mixed_gaps() {
             liyi::prompt::PromptItem::MissingRequirementSpec { .. } => "missing_requirement_spec",
             liyi::prompt::PromptItem::MissingRelatedEdge { .. } => "missing_related_edge",
             liyi::prompt::PromptItem::ReqNoRelated { .. } => "req_no_related",
+            liyi::prompt::PromptItem::StaleSpec { .. } => "stale_spec",
+            liyi::prompt::PromptItem::ShiftedSpan { .. } => "shifted_span",
+            liyi::prompt::PromptItem::UnreviewedSpec { .. } => "unreviewed_spec",
         })
         .collect();
 
@@ -635,11 +638,8 @@ fn prompt_mixed_gaps() {
 
 #[test]
 fn prompt_clean() {
-    let (_tmp, root) = fixture_in_tmp("prompt_output/clean");
+    let (_tmp, root) = fixture_in_tmp("basic_pass");
     let flags = default_flags();
-
-    // Fix hashes first.
-    let _ = run_check(&root, &[], true, false, &flags);
 
     let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
     let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
@@ -697,6 +697,9 @@ fn prompt_multi_file() {
                 source_file.as_str()
             }
             liyi::prompt::PromptItem::ReqNoRelated { source_file, .. } => source_file.as_str(),
+            liyi::prompt::PromptItem::StaleSpec { source_file, .. } => source_file.as_str(),
+            liyi::prompt::PromptItem::ShiftedSpan { source_file, .. } => source_file.as_str(),
+            liyi::prompt::PromptItem::UnreviewedSpec { source_file, .. } => source_file.as_str(),
         })
         .collect();
 
@@ -711,6 +714,146 @@ fn prompt_multi_file() {
     assert!(
         output.items.len() >= 2,
         "expected at least 2 gap items across files"
+    );
+}
+
+#[test]
+fn prompt_shifted_span() {
+    let (_tmp, root) = fixture_in_tmp("shifted_span");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    let shifted = output.items.iter().find_map(|item| match item {
+        liyi::prompt::PromptItem::ShiftedSpan {
+            item,
+            old_span,
+            new_span,
+            instruction,
+            ..
+        } => Some((item, old_span, new_span, instruction)),
+        _ => None,
+    });
+
+    let Some((item, old_span, new_span, instruction)) = shifted else {
+        panic!("expected shifted_span prompt item, got: {:?}", output.items);
+    };
+
+    assert_eq!(item, "compute");
+    assert_eq!(*old_span, [1, 3]);
+    assert_eq!(*new_span, [4, 6]);
+    assert!(instruction.template.contains("auto-correct the span"));
+}
+
+#[test]
+fn prompt_unreviewed_spec() {
+    let (_tmp, root) = fixture_in_tmp("unreviewed");
+    let flags = CheckFlags {
+        fail_on_stale: true,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+        fail_on_untracked: true,
+    };
+
+    let _ = run_check(&root, &[], true, false, &flags);
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    let unreviewed = output.items.iter().find_map(|item| match item {
+        liyi::prompt::PromptItem::UnreviewedSpec {
+            item,
+            source_line,
+            intent_text,
+            instruction,
+            ..
+        } => Some((item, source_line, intent_text, instruction)),
+        _ => None,
+    });
+
+    let Some((item, source_line, intent_text, instruction)) = unreviewed else {
+        panic!(
+            "expected unreviewed_spec prompt item, got: {:?}",
+            output.items
+        );
+    };
+
+    assert_eq!(item, "multiply");
+    assert_eq!(*source_line, 1);
+    assert_eq!(intent_text.as_deref(), Some("Multiply two integers"));
+    assert!(instruction.template.contains("liyi approve"));
+    assert_eq!(output.exit_code, 0);
+}
+
+#[test]
+fn prompt_stale_reviewed_spec() {
+    let (_tmp, root) = fixture_in_tmp("semantic_drift");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+        fail_on_untracked: true,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    let stale = output.items.iter().find_map(|item| match item {
+        liyi::prompt::PromptItem::StaleSpec {
+            item,
+            source_line,
+            intent_text,
+            instruction,
+            ..
+        } => Some((item, source_line, intent_text, instruction)),
+        _ => None,
+    });
+
+    let Some((item, source_line, intent_text, instruction)) = stale else {
+        panic!("expected stale_spec prompt item, got: {:?}", output.items);
+    };
+
+    assert_eq!(item, "compute");
+    assert_eq!(*source_line, 1);
+    assert_eq!(intent_text.as_deref(), Some("Compute 2x+1"));
+    assert!(instruction.template.contains("update the intent"));
+    assert_eq!(output.exit_code, 0);
+}
+
+#[test]
+fn prompt_stale_unreviewed_spec_is_fixable() {
+    let (_tmp, root) = fixture_in_tmp("semantic_drift_unreviewed");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: true,
+        fail_on_untracked: true,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    let stale = output.items.iter().find_map(|item| match item {
+        liyi::prompt::PromptItem::StaleSpec { instruction, .. } => Some(instruction),
+        _ => None,
+    });
+
+    let Some(instruction) = stale else {
+        panic!("expected stale_spec prompt item, got: {:?}", output.items);
+    };
+
+    assert!(instruction.template.contains("Run {fix_command}"));
+    assert_eq!(
+        instruction
+            .context
+            .get("fix_command")
+            .and_then(|v| v.as_str()),
+        Some("liyi check --fix")
     );
 }
 

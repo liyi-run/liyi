@@ -29,26 +29,26 @@
     },
     {
       "item": "PromptItem",
-      "reviewed": true,
-      "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union with exactly three variants (missing_requirement_spec, missing_related_edge, req_no_related), each carrying the fields required by the prompt schema. The instruction field is an Instruction struct (template/context separation) instead of an interpolated string.",
+      "reviewed": false,
+      "intent": "Tagged enum serialized as {\"type\": \"...\"} discriminated union covering actionable prompt-mode diagnostics. It must include coverage-gap variants (missing_requirement_spec, missing_related_edge, req_no_related) plus stale_spec, shifted_span, and unreviewed_spec, with each variant carrying the fields required by schema/prompt.schema.json. The instruction field is an Instruction struct (template/context separation) instead of an interpolated string.",
       "source_span": [
         32,
-        60
+        89
       ],
       "tree_path": "enum.PromptItem",
-      "source_hash": "sha256:4e8a7499047a6e7fbb9338bbe08bcaba620ea4371b26c33174fdfe0a1b43fd64",
+      "source_hash": "sha256:7c72d9e2492f0e299fe134d9c2e839892a35f691914739a05d78de37d9c71744",
       "source_anchor": "pub enum PromptItem {"
     },
     {
       "item": "build_prompt_output",
-      "reviewed": true,
-      "intent": "Convert a diagnostic slice into PromptOutput by filtering to coverage-gap kinds (Untracked, MissingRelatedEdge, ReqNoRelated), skipping fixed diagnostics, and generating per-item structured instructions with template/context separation (no interpolation — templates are compile-time constants, context carries untrusted values). Includes a security_notice declaring trust levels. Non-coverage diagnostics are excluded from items but their effect on exit_code is preserved.",
+      "reviewed": false,
+      "intent": "Convert a diagnostic slice into PromptOutput by filtering to actionable kinds (coverage gaps plus Stale, Shifted, and Unreviewed), skipping fixed diagnostics, and generating per-item structured instructions with template/context separation. Coverage gaps use annotation_line-based context; stale and unreviewed specs use the item's source line and current intent when available; shifted spans expose both old_span and new_span. Error-only diagnostics remain excluded from items but still influence exit_code.",
       "source_span": [
-        82,
-        185
+        132,
+        339
       ],
       "tree_path": "fn.build_prompt_output",
-      "source_hash": "sha256:e80895ecb3693c86ff7fe759497329100e6dd3d31d49ebedb87300c5424e6f70",
+      "source_hash": "sha256:b7c10ddf029a90ee25cb4857d1283a7683334f91d13852452ab63d0e67e6ec35",
       "source_anchor": "pub fn build_prompt_output("
     }
   ]
