@@ -231,6 +231,49 @@ fn preceded_by_quote(line: &str, byte_pos: usize) -> bool {
     }
 }
 
+/// Returns true if `byte_pos` falls inside a quoted span.
+///
+/// This intentionally tracks only quote forms that are unlikely to appear as
+/// apostrophes in prose: ASCII double quotes plus paired typographic/CJK
+/// double-quote forms. Single-quote mentions are still handled by the
+/// immediate-preceding-quote suppression above.
+fn is_in_quoted_span(line: &str, byte_pos: usize) -> bool {
+    let mut close_quote: Option<char> = None;
+    let mut escaped = false;
+
+    for (i, ch) in line.char_indices() {
+        if i >= byte_pos {
+            break;
+        }
+
+        if let Some(close) = close_quote {
+            if close == '"' && escaped {
+                escaped = false;
+                continue;
+            }
+            if close == '"' && ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if ch == close {
+                close_quote = None;
+            }
+            continue;
+        }
+
+        close_quote = match ch {
+            '"' => Some('"'),
+            '\u{201C}' => Some('\u{201D}'),
+            '\u{2018}' => Some('\u{2019}'),
+            '\u{300C}' => Some('\u{300D}'),
+            '\u{00AB}' => Some('\u{00BB}'),
+            _ => None,
+        };
+    }
+
+    close_quote.is_some()
+}
+
 /// Returns true if a trimmed line opens or closes a fenced code block.
 // @liyi:related markdown-fenced-block-skip
 fn is_fence_delimiter(line: &str) -> bool {
@@ -242,9 +285,9 @@ fn is_fence_delimiter(line: &str) -> bool {
 /// Line numbers are 1-indexed.
 ///
 /// Markers are suppressed (not returned) when they appear inside fenced
-/// code blocks, inside inline backtick spans, or immediately after a
-/// quotation-mark character.  See *Self-hosting and the quine problem*
-/// in the design doc.
+/// code blocks, inside inline backtick spans, inside quoted spans, or
+/// immediately after a quotation-mark character.  See *Self-hosting and the
+/// quine problem* in the design doc.
 // @liyi:related markdown-fenced-block-skip
 // @liyi:related quine-escape-in-source
 pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
@@ -272,6 +315,12 @@ pub fn scan_markers(content: &str) -> Vec<SourceMarker> {
 
         // NL-quoting suppression: inline backtick span.
         if is_in_inline_code(&normalized, match_start) {
+            continue;
+        }
+
+        // NL-quoting suppression: marker appears later inside a quoted span
+        // such as a JSON string value or quoted prose.
+        if is_in_quoted_span(&normalized, match_start) {
             continue;
         }
 
@@ -618,6 +667,28 @@ Exit codes: 0 = clean, 1 = failures.\n\
             m.is_empty(),
             "marker preceded by curly quote should be suppressed"
         );
+    }
+
+    #[test]
+    fn marker_inside_json_string_is_suppressed() {
+        let input = concat!(
+            "  \"description\": ",
+            "\"Repo-relative path to the source file containing the ",
+            "\x40liyi:requirement annotation.\"\n"
+        );
+        let m = scan_markers(input);
+        assert!(
+            m.is_empty(),
+            "marker inside JSON string value should be suppressed"
+        );
+    }
+
+    #[test]
+    fn marker_after_quoted_span_still_found() {
+        let input = "quoted \"\x40liyi:intent\" mention // \x40liyi:module\n";
+        let m = scan_markers(input);
+        assert_eq!(m.len(), 1);
+        assert!(matches!(&m[0], SourceMarker::Module { line: 1 }));
     }
 
     #[test]

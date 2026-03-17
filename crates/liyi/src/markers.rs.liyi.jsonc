@@ -109,12 +109,24 @@
       "confidence": 0.95
     },
     {
+      "item": "is_in_quoted_span",
+      "reviewed": false,
+      "intent": "Return true if a byte position falls inside a quoted span on the current line. Track ASCII double-quoted strings with backslash escapes plus paired typographic and CJK quote forms so documentary mentions later inside quoted prose or JSON strings are suppressed.",
+      "source_span": [
+        240,
+        275
+      ],
+      "tree_path": "fn.is_in_quoted_span",
+      "source_hash": "sha256:815a18dab70edc31877e950fc6d71a6f9cbef3eb78743a0a9440d73667b8ba97",
+      "source_anchor": "fn is_in_quoted_span(line: &str, byte_pos: usize) -> bool {"
+    },
+    {
       "item": "is_fence_delimiter",
       "reviewed": true,
       "intent": "Return true if a line (after stripping leading whitespace) starts with ``` or ~~~, indicating a Markdown fenced code block boundary.",
       "source_span": [
-        236,
-        239
+        279,
+        282
       ],
       "tree_path": "fn.is_fence_delimiter",
       "source_hash": "sha256:785d829b2997ba79b8f15786fc0bef393d4af727496c44b9027b5ece867ab32f",
@@ -150,14 +162,14 @@
     },
     {
       "item": "scan_markers",
-      "reviewed": true,
-      "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, or immediately after quotation marks are suppressed (NL-quoting). Handles =doc and =文档 sentinels for intent markers.",
+      "reviewed": false,
+      "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, quoted spans, or immediately after quotation marks are suppressed (NL-quoting). Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
-        250,
-        353
+        293,
+        402
       ],
       "tree_path": "fn.scan_markers",
-      "source_hash": "sha256:407964abfa8381c7931bcf3b27187f0a179789e77be7f4097c5a8b451ca2935b",
+      "source_hash": "sha256:882dc8ffe044cfd565123f41aa19ad94b6ec641f829f96a3c7b02565beb43de3",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
       "related": {
         "markdown-fenced-block-skip": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
