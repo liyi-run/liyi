@@ -5,25 +5,32 @@ use crate::markers::{requirement_spans, scan_markers};
 use crate::sidecar::{ItemSpec, RequirementSpec, SidecarFile, Spec, write_sidecar};
 use crate::tree_path::{detect_language, discover_items};
 
-/// The agent instruction block appended to AGENTS.md by `liyi init`.
-/// Note that 立意 directives in the string must be quine-escaped to
-/// avoid mis-identification.
-/// <!-- @立意:有关 quine-escape -->
-const AGENTS_MD_BLOCK: &str = "\n\
-## 立意 (Intent Specs)\n\
-\n\
-When writing or modifying code:\n\
-\n\
-1. For each non-trivial item, infer what it SHOULD do. Write intent to `<source>.liyi.jsonc`. \
-Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` \
-— the tool fills them in. Use `\"intent\": \"=doc\"` only when the docstring contains \
-behavioral requirements. For trivial items, annotate with `\x40liyi:trivial` \
-or use `\"intent\": \"=trivial\"` in the sidecar.\n\
-2. When module-level invariants are apparent, write an `\x40liyi:module` block.\n\
-3. If a source item has `\x40liyi:related <name>`, record `\"related\": {\"<name>\": null}` in the sidecar.\n\
-4. For each `\x40liyi:requirement <name>` block, ensure it has a sidecar entry.\n\
-5. Only generate adversarial tests from items with `\x40liyi:intent` or `\"reviewed\": true`.\n\
-6. Skip items annotated with `\x40liyi:ignore` or `\x40liyi:trivial`, and files matched by `.liyiignore`.\n";
+/// The full content of the repo's own AGENTS.md, included at compile time
+/// so that `liyi init` can extract the portable template block.
+const AGENTS_MD_FULL: &str = include_str!("../../../AGENTS.md");
+
+const TEMPLATE_START: &str = "<!-- liyi:template:start -->\n";
+const TEMPLATE_END: &str = "\n<!-- liyi:template:end -->";
+
+/// Extract the portable agent instruction block from the repo's AGENTS.md.
+///
+/// The block is delimited by `<!-- liyi:template:start -->` and
+/// `<!-- liyi:template:end -->` HTML comment markers.  Panics at
+/// runtime (not compile time) if the markers are missing — but since
+/// the content is baked in via `include_str!`, this is effectively a
+/// build-time guarantee: any AGENTS.md without markers won't produce
+/// a working binary.
+fn agents_md_block() -> &'static str {
+    let start = AGENTS_MD_FULL
+        .find(TEMPLATE_START)
+        .expect("AGENTS.md missing <!-- liyi:template:start --> marker")
+        + TEMPLATE_START.len();
+    let end = start
+        + AGENTS_MD_FULL[start..]
+            .find(TEMPLATE_END)
+            .expect("AGENTS.md missing <!-- liyi:template:end --> marker");
+    &AGENTS_MD_FULL[start..end]
+}
 
 /// Error type for init operations.
 #[derive(Debug)]
@@ -67,12 +74,15 @@ pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
             return Err(InitError::AlreadyExists(agents_path));
         }
         // Append the block
+        let block = agents_md_block();
         let mut new_content = content;
-        new_content.push_str(AGENTS_MD_BLOCK);
+        new_content.push('\n');
+        new_content.push_str(block);
         fs::write(&agents_path, new_content)?;
     } else {
         // Create new file
-        let content = format!("# AGENTS.md\n{AGENTS_MD_BLOCK}");
+        let block = agents_md_block();
+        let content = format!("# AGENTS.md\n\n{block}");
         fs::write(&agents_path, content)?;
     }
 
@@ -194,4 +204,40 @@ pub fn init_sidecar(
     fs::write(&sidecar_path, content)?;
 
     Ok(sidecar_path)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn agents_md_block_extracts_valid_template() {
+        let block = agents_md_block();
+
+        // Must start with the section heading.
+        assert!(
+            block.starts_with("## 立意"),
+            "extracted block must start with ## 立意 heading"
+        );
+
+        // Key invariants: the block contains the sidecar schema and
+        // the triage schema — ensuring both rules and schemas are
+        // included in the portable template.
+        assert!(
+            block.contains(".liyi.jsonc"),
+            "template must reference .liyi.jsonc"
+        );
+        assert!(
+            block.contains("source_span"),
+            "template must reference source_span"
+        );
+        assert!(
+            block.contains("liyi.schema.json"),
+            "template must include the sidecar JSON schema"
+        );
+        assert!(
+            block.contains("triage.schema.json"),
+            "template must include the triage JSON schema"
+        );
+    }
 }

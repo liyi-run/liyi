@@ -4,27 +4,60 @@
   "source": "crates/liyi/src/init.rs",
   "specs": [
     {
-      "item": "AGENTS_MD_BLOCK",
-      "reviewed": true,
-      "intent": "Constant containing the agent instruction block that liyi init appends to AGENTS.md. Must enumerate the six canonical agent rules for sidecar spec management.",
+      "item": "AGENTS_MD_FULL",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        10,
+        10
+      ],
+      "tree_path": "const.AGENTS_MD_FULL",
+      "source_hash": "sha256:0d04241eb3594b6d5a172200daa545512961ff6b6c9da3b80499cc695cfe391f",
+      "source_anchor": "const AGENTS_MD_FULL: &str = include_str!(\"../../../AGENTS.md\");"
+    },
+    {
+      "item": "TEMPLATE_START",
+      "reviewed": false,
+      "intent": "=trivial",
       "source_span": [
         12,
-        26
+        12
       ],
-      "tree_path": "const.AGENTS_MD_BLOCK",
-      "source_hash": "sha256:09e12b925d998b7cf1283e022ff44e7d15a471fe03a34bdd06a9a53827b8167a",
-      "source_anchor": "const AGENTS_MD_BLOCK: &str = \"\\n\\",
-      "related": {
-        "quine-escape": "sha256:ac85f34cac9e83819a35acf3d369997e64ad08dc755bba9e5b74d32649a36ad0"
-      }
+      "tree_path": "const.TEMPLATE_START",
+      "source_hash": "sha256:a2bb1acca95830bc995d5334ba98ad79cb29cf0cbeadb78bf5276b6fff08250b",
+      "source_anchor": "const TEMPLATE_START: &str = \"<!-- liyi:template:start -->\\n\";"
+    },
+    {
+      "item": "TEMPLATE_END",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        13,
+        13
+      ],
+      "tree_path": "const.TEMPLATE_END",
+      "source_hash": "sha256:b27d30cac4bea8226105bc507779eb865acb57718a13e9f72bd7d834147c942e",
+      "source_anchor": "const TEMPLATE_END: &str = \"\\n<!-- liyi:template:end -->\";"
+    },
+    {
+      "item": "agents_md_block",
+      "reviewed": false,
+      "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md by finding text between <!-- liyi:template:start --> and <!-- liyi:template:end --> markers. Must panic if either marker is missing.",
+      "source_span": [
+        23,
+        33
+      ],
+      "tree_path": "fn.agents_md_block",
+      "source_hash": "sha256:d872315f683788bef2aa149d652ee2b1ee73dc57b0d0920fcab6233fbcc6c9e9",
+      "source_anchor": "fn agents_md_block() -> &'static str {"
     },
     {
       "item": "InitError",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
       "source_span": [
-        30,
-        35
+        37,
+        42
       ],
       "tree_path": "enum.InitError",
       "source_hash": "sha256:90a3bd7254f7d5a74ce2d55135699a5d8a0caedb42a3866f1ab9d5629676210e",
@@ -32,23 +65,23 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": true,
-      "intent": "If AGENTS.md does not exist, create it with a heading and the agent block. If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
+      "reviewed": false,
+      "intent": "If AGENTS.md does not exist, create it with a heading and the agent block extracted from the repo's own AGENTS.md via agents_md_block(). If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
       "source_span": [
-        61,
-        80
+        68,
+        90
       ],
       "tree_path": "fn.init_agents_md",
-      "source_hash": "sha256:7e668c93658d46630ba4331d6a0424e03f4971d64024f798eda390eb24c19d90",
+      "source_hash": "sha256:71c4198c9e3243a50ecc0e95de56c2d05dc1d6829747f5071859468533b557f7",
       "source_anchor": "pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {"
     },
     {
       "item": "init_sidecar",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). Always scan the source file for @liyi:requirement markers and emit corresponding RequirementSpec entries regardless of file type or discover flag. When discover is false, emit only requirement specs (no items). If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
-        101,
-        197
+        111,
+        207
       ],
       "tree_path": "fn.init_sidecar",
       "source_hash": "sha256:bc2c80e5d18b5780374676c330ec4ff2cc2304ed41be1cb350529fd56d8b3eb6",
