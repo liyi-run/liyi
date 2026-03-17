@@ -58,6 +58,7 @@ See the contributing guide for full details and examples.
 
 ---
 
+<!-- liyi:template:start -->
 ## 立意 (Intent Specs)
 
 When writing or modifying code:
@@ -376,3 +377,4 @@ When `liyi check` reports stale items, the agent assesses each and writes the re
   }
 }
 ```
+<!-- liyi:template:end -->
