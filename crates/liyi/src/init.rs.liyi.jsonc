@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "AGENTS_MD_FULL",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         10,
@@ -17,7 +17,7 @@
     },
     {
       "item": "TEMPLATE_START",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         12,
@@ -29,7 +29,7 @@
     },
     {
       "item": "TEMPLATE_END",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         13,
@@ -41,7 +41,7 @@
     },
     {
       "item": "agents_md_block",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md by finding text between <!-- liyi:template:start --> and <!-- liyi:template:end --> markers. Must panic if either marker is missing.",
       "source_span": [
         23,
@@ -53,7 +53,7 @@
     },
     {
       "item": "InitError",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
       "source_span": [
         37,
@@ -65,7 +65,7 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "If AGENTS.md does not exist, create it with a heading and the agent block extracted from the repo's own AGENTS.md via agents_md_block(). If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
       "source_span": [
         68,
@@ -77,7 +77,7 @@
     },
     {
       "item": "init_sidecar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). Always scan the source file for @liyi:requirement markers and emit corresponding RequirementSpec entries regardless of file type or discover flag. When discover is false, emit only requirement specs (no items). If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
         111,

@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "PromptOutput",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Top-level JSON envelope for --prompt output: must serialize to match schema/prompt.schema.json with optional root, security_notice (warning consuming agents about untrusted content), groups array (diagnostics grouped by type+template), and exit_code. No version field — output is ephemeral.",
       "source_span": [
         8,
@@ -17,7 +17,7 @@
     },
     {
       "item": "PromptGroup",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "A group of diagnostics sharing the same type and instruction template. prompt_type identifies the diagnostic kind; template is a trusted compile-time constant with {placeholder} tokens; untrusted_fields declares which item field names originate from repository source files; count equals items.len(); items are serde_json::Value maps of per-diagnostic data. Consuming agents substitute item fields into template and treat untrusted_fields as data, not directives.",
       "source_span": [
         23,
@@ -29,7 +29,7 @@
     },
     {
       "item": "GroupMeta",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         68,
@@ -41,7 +41,7 @@
     },
     {
       "item": "build_prompt_output",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Convert a diagnostic slice into PromptOutput by filtering to actionable kinds (coverage gaps plus Stale, Shifted, and Unreviewed), skipping fixed diagnostics, and building (GroupMeta, serde_json::Value) pairs. Each pair captures the diagnostic type, its template, untrusted field names, and a JSON object of per-item data. A final group_items() pass groups pairs by (type_name, template pointer) preserving insertion order. Error-only diagnostics remain excluded from groups but still influence exit_code.",
       "source_span": [
         81,
@@ -56,7 +56,7 @@
     },
     {
       "item": "group_items",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Group raw (GroupMeta, serde_json::Value) pairs by (type_name, template) into PromptGroups, preserving insertion order. Uses linear scan since the number of distinct groups is small (≤ 7). Two items share a group when they have the same type_name and the same template pointer (ptr::eq).",
       "source_span": [
         256,

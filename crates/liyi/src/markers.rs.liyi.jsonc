@@ -102,7 +102,7 @@
     },
     {
       "item": "is_in_quoted_span",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return true if a byte position falls inside a quoted span on the current line. Track ASCII double-quoted strings with backslash escapes plus paired typographic and CJK quote forms so documentary mentions later inside quoted prose or JSON strings are suppressed.",
       "source_span": [
         233,
@@ -125,7 +125,7 @@
       "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
       "confidence": 0.95,
       "related": {
-        "markdown-fenced-block-skip": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc"
+        "markdown-fenced-block-skip": null
       }
     },
     {
@@ -154,7 +154,7 @@
     },
     {
       "item": "scan_markers",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, quoted spans, or immediately after quotation marks are suppressed (NL-quoting). Handles =doc and =文档 sentinels for intent markers.",
       "source_span": [
         286,
@@ -164,8 +164,8 @@
       "source_hash": "sha256:882dc8ffe044cfd565123f41aa19ad94b6ec641f829f96a3c7b02565beb43de3",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
       "related": {
-        "markdown-fenced-block-skip": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
-        "quine-escape-in-source": "sha256:90808714d1e072184b7e0bcac6f7f1cc70658a0b40855919a51e74fb584ccaa6"
+        "markdown-fenced-block-skip": null,
+        "quine-escape-in-source": null
       }
     }
   ]
