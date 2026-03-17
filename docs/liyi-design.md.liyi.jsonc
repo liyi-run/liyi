@@ -142,16 +142,16 @@
       "requirement": "markdown-fenced-block-skip",
       "source_span": [
         1318,
-        1324
+        1326
       ],
-      "source_hash": "sha256:382e02a962a04afdb555ca5faec74390e72d9e417a2d300230572d4e231315fc",
+      "source_hash": "sha256:0bdd7d1ad747e2a826adfe2eca5652c7a9f382e1089ff12dd2c9b8d88f3920b7",
       "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
     },
     {
       "requirement": "fix-never-modifies-human-fields",
       "source_span": [
-        1533,
-        1535
+        1535,
+        1537
       ],
       "source_hash": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
       "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
@@ -159,8 +159,8 @@
     {
       "requirement": "fix-semantic-drift-protection",
       "source_span": [
-        1537,
-        1539
+        1539,
+        1541
       ],
       "source_hash": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
       "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
