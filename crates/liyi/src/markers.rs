@@ -67,9 +67,9 @@ pub fn normalize_line(line: &str) -> String {
 // data.  Use `\x40` (Rust) or `\u0040` (JSON) to spell the `@` so the
 // scanner does not self-trigger.  In documentation files, the scanner
 // additionally suppresses markers inside fenced code blocks, inline
-// backtick spans, and markers preceded by quotation marks — see
-// *Self-hosting and the quine problem* in the design doc.  Actual marker
-// comments (like this one) are the sole exception.
+// backtick spans, quoted strings, and markers preceded by quotation
+// marks — see *Self-hosting and the quine problem* in the design doc.
+// Actual marker comments (like this one) are the sole exception.
 const CANON_IGNORE: &str = "\x40liyi:ignore";
 const CANON_TRIVIAL: &str = "\x40liyi:trivial";
 const CANON_NONTRIVIAL: &str = "\x40liyi:nontrivial";
