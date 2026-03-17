@@ -91,7 +91,7 @@ Actual marker comments (e.g. `// @liyi:intent =doc`) must keep the literal `@` â
 
 **In documentation files** (Markdown, READMEs, design docs), the scanner suppresses markers that appear inside fenced code blocks, inline backtick spans, quoted strings, or immediately after a quotation mark. When *mentioning* a marker in prose, backtick it: `` `@liyi:module` ``. When *using* a marker as a real directive, leave it bare: `<!-- @liyi:requirement(name) -->`. See *Self-hosting and the quine problem* in the design doc for details.
 
-This invariant is enforced as `@liyi:requirement(quine-escape)` in `src/markers.rs`.
+This invariant is documented as `@liyi:requirement quine-escape-in-source` in the design doc.
 
 ### Chinese writing style
 

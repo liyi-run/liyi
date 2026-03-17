@@ -77,6 +77,7 @@ struct GroupMeta {
 /// shifted, and unreviewed specs), converts each to a JSON value, then
 /// groups items by `(type, template)` so that consuming agents see a
 /// deduplicated instruction per group rather than per item.
+// @liyi:related quine-escape-in-source
 pub fn build_prompt_output(
     diagnostics: &[Diagnostic],
     exit_code: LiyiExitCode,

@@ -91,7 +91,7 @@
 
 **在文档文件中**（Markdown、README、设计文档），扫描器会抑制出现在围栏代码块内部、行内反引号内部、引号字符串内部或紧跟引号字符之后的标记。在行文中*提到*标记时，请使用反引号：`` `@liyi:module` ``。*使用*标记作为真实指令时，保持其裸写形式：`<!-- @liyi:requirement(name) -->`。详见设计文档中的*自托管与自引用问题*一节。
 
-此不变量以 `@liyi:requirement(quine-escape)` 形式记录在 `src/markers.rs` 中。
+此不变量以 `@liyi:requirement quine-escape-in-source` 形式记录在设计文档中。
 
 ### 中文写作风格
 

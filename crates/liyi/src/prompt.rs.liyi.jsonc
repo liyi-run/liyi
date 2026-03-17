@@ -44,20 +44,23 @@
       "reviewed": false,
       "intent": "Convert a diagnostic slice into PromptOutput by filtering to actionable kinds (coverage gaps plus Stale, Shifted, and Unreviewed), skipping fixed diagnostics, and building (GroupMeta, serde_json::Value) pairs. Each pair captures the diagnostic type, its template, untrusted field names, and a JSON object of per-item data. A final group_items() pass groups pairs by (type_name, template pointer) preserving insertion order. Error-only diagnostics remain excluded from groups but still influence exit_code.",
       "source_span": [
-        80,
-        252
+        81,
+        253
       ],
       "tree_path": "fn.build_prompt_output",
       "source_hash": "sha256:4b58abb88e8267fb636eae6727230d6f4c90fdaab97f0125c916e5a55985851e",
-      "source_anchor": "pub fn build_prompt_output("
+      "source_anchor": "pub fn build_prompt_output(",
+      "related": {
+        "quine-escape-in-source": null
+      }
     },
     {
       "item": "group_items",
       "reviewed": false,
       "intent": "Group raw (GroupMeta, serde_json::Value) pairs by (type_name, template) into PromptGroups, preserving insertion order. Uses linear scan since the number of distinct groups is small (≤ 7). Two items share a group when they have the same type_name and the same template pointer (ptr::eq).",
       "source_span": [
-        255,
-        280
+        256,
+        281
       ],
       "tree_path": "fn.group_items",
       "source_hash": "sha256:62e8c05770642c453f9bbfe2e62d1981f3b8b6542d9cf9018a98feeae47988cb",

@@ -60,16 +60,8 @@ pub fn normalize_line(line: &str) -> String {
 /// Canonical marker keywords (without the leading `@`).
 ///
 /// NOTE: The `@` is escaped as `\x40` to avoid the linter's own marker
-/// scanner matching these string constants — the classic quine-escape problem.
-// @liyi:requirement(quine-escape)
-// The linter's own source files must not contain literal `@liyi:*` (or any
-// alias) marker strings inside string constants, format strings, or test
-// data.  Use `\x40` (Rust) or `\u0040` (JSON) to spell the `@` so the
-// scanner does not self-trigger.  In documentation files, the scanner
-// additionally suppresses markers inside fenced code blocks, inline
-// backtick spans, quoted strings, and markers preceded by quotation
-// marks — see *Self-hosting and the quine problem* in the design doc.
-// Actual marker comments (like this one) are the sole exception.
+/// scanner matching these string constants — see *Self-hosting and the
+/// quine problem* in the design doc.
 const CANON_IGNORE: &str = "\x40liyi:ignore";
 const CANON_TRIVIAL: &str = "\x40liyi:trivial";
 const CANON_NONTRIVIAL: &str = "\x40liyi:nontrivial";
@@ -81,6 +73,7 @@ const CANON_INTENT: &str = "\x40liyi:intent";
 
 /// (alias, canonical) pairs.  Order does not matter.
 // @liyi:related marker-normalization
+// @liyi:related quine-escape-in-source
 const ALIAS_TABLE: &[(&str, &str)] = &[
     // ignore
     (CANON_IGNORE, CANON_IGNORE),

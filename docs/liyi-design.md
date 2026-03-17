@@ -1310,7 +1310,7 @@ This is strictly more robust than the alternative (doubling every regex to accep
 **Two mechanisms, two domains.**
 
 <!-- @liyi:requirement quine-escape-in-source -->
-In **source code**, the `@` character is escaped in string constants: `\x40` in Rust, `\u0040` in JSON. This is invisible to the reader (it's inside a string literal) and prevents the scanner from matching constants in the alias table, format strings, and test data. The `@liyi:requirement(quine-escape)` in `markers.rs` enforces this invariant.
+In **source code**, the `@` character is escaped in string constants: `\x40` in Rust, `\u0040` in JSON. This is invisible to the reader (it's inside a string literal) and prevents the scanner from matching constants in the alias table, format strings, and test data.
 <!-- @liyi:end-requirement quine-escape-in-source -->
 
 In **documentation and prose** — Markdown files, design docs, READMEs, contributing guides — character escapes are unacceptable. A design document that writes `\x40liyi:module` instead of `@liyi:module` is unreadable. The scanner instead uses **natural-language context** to distinguish real markers from mentions:
