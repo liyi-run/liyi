@@ -56,8 +56,8 @@ const TMPL_STALE_SPEC_FIXABLE: &str = "Run {fix_command} to refresh the \
     reviewed spec, unset \"reviewed\".";
 
 const TMPL_SHIFTED_SPAN: &str = "Run `liyi check --fix` to auto-correct the \
-    span for \"{item}\" in {expected_sidecar} from [{old_start}, \
-    {old_end}] to [{new_start}, {new_end}].";
+    span for \"{item}\" in {expected_sidecar} from {old_span} \
+    to {new_span}.";
 
 const TMPL_UNREVIEWED_SPEC: &str = "Verify that the intent for \"{item}\" \
     in {expected_sidecar} matches the source at {source_file}:{source_line}, \
