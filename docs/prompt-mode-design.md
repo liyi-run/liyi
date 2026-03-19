@@ -198,6 +198,7 @@ Option B is cleaner — keeps formatting concerns out of the core check logic.
 - `DiagnosticKind::Stale` → `stale_spec` (two templates: fixable vs manual)
 - `DiagnosticKind::Shifted` → `shifted_span`
 - `DiagnosticKind::Unreviewed` → `unreviewed_spec`
+- `DiagnosticKind::ReqChanged` → `req_changed`
 
 A final `group_items()` pass groups them by `(type_name, template pointer)`, preserving insertion order. Error-class diagnostics (`ParseError`, `OrphanedSource`, etc.) are excluded from groups but still affect `exit_code`.
 
@@ -209,7 +210,7 @@ A final `group_items()` pass groups them by `(type_name, template pointer)`, pre
 
 1. `liyi check --prompt` on a fixture with gaps produces valid JSON matching `schema/prompt.schema.json`.
 2. `liyi check --prompt` on a clean repo produces `{"groups": [], "exit_code": 0, ...}`.
-3. The JSON includes groups for all six diagnostic types: `missing_requirement_spec`, `missing_related_edge`, `req_no_related`, `stale_spec`, `shifted_span`, and `unreviewed_spec`.
+3. The JSON includes groups for all seven diagnostic types: `missing_requirement_spec`, `missing_related_edge`, `req_no_related`, `stale_spec`, `shifted_span`, `unreviewed_spec`, and `req_changed`.
 4. `--prompt` will be mutually exclusive with `--json` (when implemented).
 5. Exit code behavior is identical to default mode (respects all `--fail-on-*` flags).
 6. When error-class diagnostics are present, `exit_code` is `2` even if `groups` is empty.
@@ -232,7 +233,7 @@ A final `group_items()` pass groups them by `(type_name, template pointer)`, pre
 
 ## Resolved Questions
 
-1. **Should `--prompt` include non-coverage diagnostics?** Yes — all actionable diagnostic types (Untracked, MissingRelatedEdge, ReqNoRelated, Stale, Shifted, Unreviewed) are included as groups. Error-class diagnostics are excluded but affect `exit_code`.
+1. **Should `--prompt` include non-coverage diagnostics?** Yes — all actionable diagnostic types (Untracked, MissingRelatedEdge, ReqNoRelated, Stale, Shifted, Unreviewed, ReqChanged) are included as groups. Error-class diagnostics are excluded but affect `exit_code`.
 
 2. **Should we include the actual requirement text in `missing_requirement_spec`?** Yes. The cognitive load inversion principle argues for including all context the tool already has, so agents need not re-read files. Added as optional `requirement_text` field.
 
