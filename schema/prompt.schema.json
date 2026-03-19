@@ -51,7 +51,8 @@
             "req_no_related",
             "stale_spec",
             "shifted_span",
-            "unreviewed_spec"
+            "unreviewed_spec",
+            "req_changed"
           ],
           "description": "Diagnostic type shared by all items in this group."
         },
@@ -103,8 +104,44 @@
         {
           "if": { "properties": { "type": { "const": "unreviewed_spec" } }, "required": ["type"] },
           "then": { "properties": { "items": { "items": { "$ref": "#/$defs/unreviewedSpecItem" } } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "req_changed" } }, "required": ["type"] },
+          "then": { "properties": { "items": { "items": { "$ref": "#/$defs/reqChangedItem" } } } }
         }
       ]
+    },
+    "reqChangedItem": {
+      "type": "object",
+      "required": ["item", "requirement", "source_file", "source_line", "expected_sidecar"],
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "type": "string",
+          "description": "Name of the item whose related edge has a stale requirement hash (untrusted)."
+        },
+        "requirement": {
+          "type": "string",
+          "description": "Name of the requirement that changed (untrusted)."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "Repo-relative path to the source file containing the item."
+        },
+        "source_line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed start line of the item in the source file."
+        },
+        "expected_sidecar": {
+          "type": "string",
+          "description": "Repo-relative path to the sidecar file containing the itemSpec with the stale related edge."
+        },
+        "intent_text": {
+          "type": "string",
+          "description": "Current intent text recorded in the sidecar, when available (untrusted)."
+        }
+      }
     },
     "missingRequirementSpecItem": {
       "type": "object",
