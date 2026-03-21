@@ -43,7 +43,7 @@
       "source_anchor": "const ALIAS_TABLE: &[(&str, &str)] = &[",
       "related": {
         "marker-normalization": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306",
-        "quine-escape-in-source": null
+        "quine-escape-in-source": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81"
       }
     },
     {
@@ -125,7 +125,7 @@
       "source_anchor": "fn is_fence_delimiter(line: &str) -> bool {",
       "confidence": 0.95,
       "related": {
-        "markdown-fenced-block-skip": null
+        "markdown-fenced-block-skip": "sha256:0bdd7d1ad747e2a826adfe2eca5652c7a9f382e1089ff12dd2c9b8d88f3920b7"
       }
     },
     {
@@ -164,8 +164,8 @@
       "source_hash": "sha256:882dc8ffe044cfd565123f41aa19ad94b6ec641f829f96a3c7b02565beb43de3",
       "source_anchor": "pub fn scan_markers(content: &str) -> Vec<SourceMarker> {",
       "related": {
-        "markdown-fenced-block-skip": null,
-        "quine-escape-in-source": null
+        "markdown-fenced-block-skip": "sha256:0bdd7d1ad747e2a826adfe2eca5652c7a9f382e1089ff12dd2c9b8d88f3920b7",
+        "quine-escape-in-source": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81"
       }
     }
   ]
