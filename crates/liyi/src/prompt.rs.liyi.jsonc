@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "=trivial",
       "source_span": [
-        68,
-        72
+        73,
+        77
       ],
       "tree_path": "struct.GroupMeta",
       "source_hash": "sha256:949b255735ad374171b0742fb9981747e0c5adb8cabf1ec4fca07078696579f2",
@@ -42,13 +42,13 @@
     {
       "item": "build_prompt_output",
       "reviewed": true,
-      "intent": "Convert a diagnostic slice into PromptOutput by filtering to actionable kinds (coverage gaps plus Stale, Shifted, and Unreviewed), skipping fixed diagnostics, and building (GroupMeta, serde_json::Value) pairs. Each pair captures the diagnostic type, its template, untrusted field names, and a JSON object of per-item data. A final group_items() pass groups pairs by (type_name, template pointer) preserving insertion order. Error-only diagnostics remain excluded from groups but still influence exit_code.",
+      "intent": "Convert a diagnostic slice into PromptOutput by filtering to actionable kinds (coverage gaps plus Stale, Shifted, Unreviewed, and ReqChanged), skipping fixed diagnostics, and building (GroupMeta, serde_json::Value) pairs. Each pair captures the diagnostic type, its template, untrusted field names, and a JSON object of per-item data. A final group_items() pass groups pairs by (type_name, template pointer) preserving insertion order. Error-only diagnostics remain excluded from groups but still influence exit_code.",
       "source_span": [
-        81,
-        253
+        86,
+        282
       ],
       "tree_path": "fn.build_prompt_output",
-      "source_hash": "sha256:4b58abb88e8267fb636eae6727230d6f4c90fdaab97f0125c916e5a55985851e",
+      "source_hash": "sha256:496e2e08e42fff85a266aef7e978d4a53deb461a9b183cc680c620f7202ab014",
       "source_anchor": "pub fn build_prompt_output(",
       "related": {
         "quine-escape-in-source": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81"
@@ -57,10 +57,10 @@
     {
       "item": "group_items",
       "reviewed": true,
-      "intent": "Group raw (GroupMeta, serde_json::Value) pairs by (type_name, template) into PromptGroups, preserving insertion order. Uses linear scan since the number of distinct groups is small (≤ 7). Two items share a group when they have the same type_name and the same template pointer (ptr::eq).",
+      "intent": "Group raw (GroupMeta, serde_json::Value) pairs by (type_name, template) into PromptGroups, preserving insertion order. Uses linear scan since the number of distinct groups is small (≤ 8). Two items share a group when they have the same type_name and the same template pointer (ptr::eq).",
       "source_span": [
-        256,
-        281
+        285,
+        310
       ],
       "tree_path": "fn.group_items",
       "source_hash": "sha256:62e8c05770642c453f9bbfe2e62d1981f3b8b6542d9cf9018a98feeae47988cb",
