@@ -39,6 +39,39 @@ fn kotlin_node_name(node: &Node, source: &str) -> Option<String> {
 }
 
 /// Kotlin language configuration.
+/// Detect Kotlin doc comments (`/** ... */` and `/// ...`).
+///
+/// Kotlin's tree-sitter-grammar distinguishes `block_comment` (for `/* */`
+/// and `/** */`) from `line_comment` (for `//` and `///`). We check for
+/// `/**` in block_comment and `///` in line_comment. `modifiers` and
+/// `annotation` siblings are skipped since they may appear between the
+/// doc comment and the declaration.
+fn kotlin_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        match s.kind() {
+            "block_comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("/**") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "line_comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("///") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "modifiers" | "annotation" | "annotation_list" => {
+                sibling = s.prev_sibling();
+            }
+            _ => break,
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_kotlin_ng::LANGUAGE.into(),
     extensions: &["kt", "kts"],
@@ -53,7 +86,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body", "class_body"],
     custom_name: Some(kotlin_node_name),
-    doc_comment_detector: None,
+    doc_comment_detector: Some(kotlin_has_doc_comment),
     transparent_kinds: &[],
 };
 
