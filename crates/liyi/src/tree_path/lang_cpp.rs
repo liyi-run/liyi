@@ -41,6 +41,30 @@ fn cpp_node_name(node: &Node, source: &str) -> Option<String> {
 }
 
 /// C++ language configuration.
+/// Detect C++ doc comments (`/** ... */` and `/// ...`).
+///
+/// C++'s tree-sitter grammar uses a uniform `comment` kind. We distinguish
+/// doc comments by prefix: `/**` for block doc and `///` for line doc.
+/// Skips `access_specifier` siblings (public/private/protected).
+fn cpp_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        match s.kind() {
+            "comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("/**") || text.starts_with("///") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "access_specifier" => {
+                sibling = s.prev_sibling();
+            }
+            _ => break,
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_cpp::LANGUAGE.into(),
     extensions: &["cpp", "cc", "cxx", "h", "hpp", "hh", "hxx", "h++", "c++"],
@@ -58,7 +82,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body", "declaration_list"],
     custom_name: Some(cpp_node_name),
-    doc_comment_detector: None,
+    doc_comment_detector: Some(cpp_has_doc_comment),
     transparent_kinds: &[],
 };
 
