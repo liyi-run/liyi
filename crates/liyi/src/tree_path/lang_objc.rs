@@ -68,6 +68,25 @@ fn objc_node_name(node: &Node, source: &str) -> Option<String> {
 }
 
 /// Objective-C language configuration.
+/// Detect Objective-C doc comments (`/** ... */` and `/// ...`).
+///
+/// ObjC's tree-sitter grammar uses a uniform `comment` kind. We check for
+/// `/**` (HeaderDoc/Javadoc) and `///` (Doxygen) prefixes.
+fn objc_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        if s.kind() == "comment" {
+            let text = &source[s.byte_range()];
+            if text.starts_with("/**") || text.starts_with("///") {
+                return true;
+            }
+            sibling = s.prev_sibling();
+        } else {
+            break;
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_objc::LANGUAGE.into(),
     extensions: &["m", "mm"],
@@ -86,7 +105,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: Some(objc_node_name),
-    doc_comment_detector: None,
+    doc_comment_detector: Some(objc_has_doc_comment),
     transparent_kinds: &[],
 };
 
