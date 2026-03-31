@@ -1,6 +1,34 @@
 use super::LanguageConfig;
 
+use tree_sitter::Node;
+
 /// C# language configuration.
+/// Detect C# XML doc comments (`/// ...`).
+///
+/// C#'s tree-sitter grammar uses a uniform `comment` kind. The C# convention
+/// is `///` for XML documentation comments. We also check for `/**` as some
+/// projects use Javadoc-style. `attribute_list` and `modifier` siblings are
+/// skipped since attributes and access modifiers may appear between the doc
+/// comment and the declaration.
+fn csharp_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        match s.kind() {
+            "comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("///") || text.starts_with("/**") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "attribute_list" | "modifier" => {
+                sibling = s.prev_sibling();
+            }
+            _ => break,
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_c_sharp::LANGUAGE.into(),
     extensions: &["cs"],
@@ -20,7 +48,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
-    doc_comment_detector: None,
+    doc_comment_detector: Some(csharp_has_doc_comment),
     transparent_kinds: &[],
 };
 
