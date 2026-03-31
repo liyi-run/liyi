@@ -1932,4 +1932,206 @@ jobs:
         );
         assert_eq!(base, injected);
     }
+
+    // ---------------------------------------------------------------
+    // Doc comment detection tests
+    // ---------------------------------------------------------------
+
+    /// Helper: parse source, find the item-level node at the resolved
+    /// tree_path span, and call `has_doc_comment`.
+    fn check_doc_comment(source: &str, tree_path: &str, lang: Language) -> Option<bool> {
+        let span = resolve_tree_path(source, tree_path, lang)?;
+        let config = lang.config();
+        let mut parser = make_parser(lang);
+        let tree = parser.parse(source, None)?;
+        let root = tree.root_node();
+        fn find_item_node<'a>(
+            node: tree_sitter::Node<'a>,
+            span: [usize; 2],
+            config: &LanguageConfig,
+        ) -> Option<tree_sitter::Node<'a>> {
+            let node_start = node.start_position().row + 1;
+            let node_end = node.end_position().row + 1;
+            if node_start == span[0]
+                && node_end == span[1]
+                && config.kind_to_shorthand(node.kind()).is_some()
+            {
+                return Some(node);
+            }
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                if let Some(found) = find_item_node(child, span, config) {
+                    return Some(found);
+                }
+            }
+            None
+        }
+        let node = find_item_node(root, span, config)?;
+        config.has_doc_comment(&node, source)
+    }
+
+    #[test]
+    fn doc_comment_kotlin_kdoc_block() {
+        let src = "/** Adds two numbers */\nfun add(a: Int, b: Int): Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Kotlin),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_kotlin_triple_slash() {
+        let src = "/// Adds two numbers\nfun add(a: Int, b: Int): Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Kotlin),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_kotlin_regular_not_doc() {
+        let src = "// regular comment\nfun add(a: Int, b: Int): Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Kotlin),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn doc_comment_swift_triple_slash() {
+        let src = "/// Adds two numbers\nfunc add(a: Int, b: Int) -> Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Swift),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_swift_multiline_doc() {
+        let src = "/** Adds two numbers */\nfunc add(a: Int, b: Int) -> Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Swift),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_swift_regular_not_doc() {
+        let src = "// regular\nfunc add(a: Int, b: Int) -> Int { return a + b }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.add", Language::Swift),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn doc_comment_c_block_doc() {
+        let src = "/** Process input */\nvoid process(int x) { return; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.process", Language::C),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_c_triple_slash() {
+        let src = "/// Process input\nvoid process(int x) { return; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.process", Language::C),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_c_regular_not_doc() {
+        let src = "// regular\nvoid process(int x) { return; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.process", Language::C),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn doc_comment_cpp_block_doc() {
+        let src = "/** Standalone function */\nvoid standalone() {}\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.standalone", Language::Cpp),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_cpp_triple_slash() {
+        let src = "/// Standalone function\nvoid standalone() {}\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.standalone", Language::Cpp),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_csharp_triple_slash() {
+        let src = "class Foo {\n    /// Adds two numbers\n    int Add(int a, int b) { return a + b; }\n}\n";
+        assert_eq!(
+            check_doc_comment(src, "class.Foo::fn.Add", Language::CSharp),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_csharp_regular_not_doc() {
+        let src = "class Foo {\n    // regular\n    int Add(int a, int b) { return a + b; }\n}\n";
+        assert_eq!(
+            check_doc_comment(src, "class.Foo::fn.Add", Language::CSharp),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn doc_comment_php_phpdoc() {
+        let src = "/** Find a user */\nfunction findUser(int $id): ?User { return null; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.findUser", Language::Php),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_php_regular_not_doc() {
+        let src = "// regular\nfunction findUser(int $id): ?User { return null; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.findUser", Language::Php),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn doc_comment_objc_block_doc() {
+        let src = "/** Helper function */\nvoid helper(void) { return; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.helper", Language::ObjectiveC),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_objc_triple_slash() {
+        let src = "/// Helper function\nvoid helper(void) { return; }\n";
+        assert_eq!(
+            check_doc_comment(src, "fn.helper", Language::ObjectiveC),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn doc_comment_zig_triple_slash() {
+        let src = "/// Add two numbers\nfn add(a: i32, b: i32) i32 { return a + b; }\n";
+        assert_eq!(check_doc_comment(src, "fn.add", Language::Zig), Some(true));
+    }
+
+    #[test]
+    fn doc_comment_zig_regular_not_doc() {
+        let src = "// regular comment\nfn add(a: i32, b: i32) i32 { return a + b; }\n";
+        assert_eq!(check_doc_comment(src, "fn.add", Language::Zig), Some(false));
+    }
 }
