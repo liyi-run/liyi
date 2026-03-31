@@ -1,6 +1,40 @@
 use super::LanguageConfig;
 
+use tree_sitter::Node;
+
 /// Swift language configuration.
+/// Detect Swift doc comments (`/// ...` and `/** ... */`).
+///
+/// Swift's tree-sitter grammar uses `comment` for line comments (both `//`
+/// and `///`) and `multiline_comment` for block comments (both `/* */` and
+/// `/** */`). We check for `///` prefix in `comment` and `/**` prefix in
+/// `multiline_comment`. `modifiers` siblings are skipped.
+fn swift_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        match s.kind() {
+            "comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("///") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "multiline_comment" => {
+                let text = &source[s.byte_range()];
+                if text.starts_with("/**") {
+                    return true;
+                }
+                sibling = s.prev_sibling();
+            }
+            "modifiers" => {
+                sibling = s.prev_sibling();
+            }
+            _ => break,
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_swift::LANGUAGE.into(),
     extensions: &["swift"],
@@ -17,7 +51,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     name_overrides: &[],
     body_fields: &["body"],
     custom_name: None,
-    doc_comment_detector: None,
+    doc_comment_detector: Some(swift_has_doc_comment),
     transparent_kinds: &[],
 };
 
