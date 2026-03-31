@@ -59,6 +59,26 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
 }
 
 /// Zig language configuration.
+/// Detect Zig doc comments (`/// ...`).
+///
+/// Zig's tree-sitter grammar uses a uniform `comment` kind for all comments
+/// (`//`, `///`, `//!`). The doc comment convention is `///` before a
+/// declaration. We check for `///` prefix.
+fn zig_has_doc_comment(node: &Node, source: &str) -> bool {
+    let mut sibling = node.prev_sibling();
+    while let Some(s) = sibling {
+        if s.kind() == "comment" {
+            let text = &source[s.byte_range()];
+            if text.starts_with("///") {
+                return true;
+            }
+            sibling = s.prev_sibling();
+        } else {
+            break;
+        }
+    }
+    false
+}
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_zig::LANGUAGE.into(),
     extensions: &["zig"],
@@ -73,7 +93,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     // container for struct-as-namespace contents (methods, fields).
     body_fields: &["block", "struct_declaration"],
     custom_name: Some(zig_node_name),
-    doc_comment_detector: None,
+    doc_comment_detector: Some(zig_has_doc_comment),
     transparent_kinds: &[],
 };
 
