@@ -1802,11 +1802,34 @@ For unsupported languages (no tree-sitter grammar), `liyi init` falls back to th
 
 The scaffold uses two deterministic AST signals to help the agent prioritize which items need intent specs:
 
-**1. Doc comment attachment.** Items with doc comments attached are almost certainly non-trivial — someone wrote prose about them. The scaffold detects this per-language:
-- Rust: `///` / `//!` doc comments as sibling `line_comment` nodes immediately preceding the item.
-- Python: docstrings as `expression_statement > string` children of the function/class body.
-- Go: `//` comments immediately preceding the function/type declaration.
-- Other languages: similar language-specific patterns via tree-sitter node adjacency.
+**1. Doc comment attachment.** Items with doc comments attached are almost certainly non-trivial — someone wrote prose about them. The scaffold detects this per-language via the `doc_comment_detector` callback in `LanguageConfig`:
+
+| Language | Detector | Strategy |
+|---|---|---|
+| Rust | `rust_has_doc_comment` | Walks `prev_sibling` chain, checks `line_comment` for `///`/`//!`, `block_comment` for `/**`; skips `attribute_item` siblings |
+| Python | `python_has_doc_comment` | Checks first `expression_statement > string` child of the item's body for `"""` or `'''` |
+| Go | `go_has_doc_comment` | Checks `prev_sibling` for `comment` kind (Go convention: any `//` comment before a declaration is a doc comment) |
+| Java | `java_has_doc_comment` | Walks `prev_sibling` chain, checks `block_comment` for `/**` prefix; skips `modifiers` siblings |
+| JavaScript | `js_has_doc_comment` | Checks `prev_sibling` for `comment` kind with `/**` prefix |
+| TypeScript/TSX | Reuses `js_has_doc_comment` | Same as JavaScript |
+| Dart | `dart_has_doc_comment` | Checks `prev_sibling` for `documentation_block_comment` or `comment` with `///` prefix |
+| Kotlin | `kotlin_has_doc_comment` | Walks `prev_sibling` chain, checks `block_comment` for `/**`, `line_comment` for `///`; skips `modifiers`/`annotation` siblings |
+| Swift | `swift_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `///` prefix, `multiline_comment` for `/**` prefix; skips `modifiers` |
+| C | `c_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `/**` or `///` prefix; skips non-comment siblings |
+| C++ | `cpp_has_doc_comment` | Same strategy as C; additionally skips `access_specifier` siblings |
+| C# | `csharp_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `///` prefix (XML doc comment convention); skips `attribute_list` and `modifier` siblings |
+| PHP | `php_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `/**` prefix (PHPDoc convention); skips `attribute_list` and `modifier` siblings |
+| Objective-C | `objc_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `/**` or `///` prefix; skips non-comment siblings |
+| Zig | `zig_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `///` prefix (Zig doc comment convention) |
+| Ruby | `None` (not feasible) | All comments are uniform `comment` kind with no unambiguous doc syntax convention |
+| Bash | `None` (not feasible) | All comments are uniform `comment` kind with no unambiguous doc syntax convention |
+| JSON/TOML/YAML | `None` (not applicable) | Data file grammars; doc comments are not a language-level concept |
+
+**Feasibility analysis (2026-03-31).** Probed each tree-sitter grammar's comment node kinds:
+- Grammars that distinguish comment types by node kind: Rust (`line_comment`/`block_comment`/`doc_comment`), Java (`line_comment`/`block_comment`), Kotlin (`line_comment`/`block_comment`), Swift (`comment`/`multiline_comment`)
+- Grammars with uniform `comment` kind but unambiguous doc prefix conventions: Go (`//` before declaration), JavaScript/TypeScript (`/**`), C (`/**`/`///`), C++ (`/**`/`///`), C# (`///` XML doc), PHP (`/**` PHPDoc), Objective-C (`/**`/`///`), Zig (`///`)
+- Grammars with uniform `comment` kind and no unambiguous doc syntax: Ruby (no community-standard doc comment form beyond RDoc/YARD which aren't distinguishable at the AST level), Bash (no doc comment convention)
+- Python: docstrings are `string` nodes inside the body, not comment nodes — handled by the existing `python_has_doc_comment`
 
 Items with doc comments get `"_has_doc": true` in their `_hints`, signaling the agent that `"intent": "=doc"` may be appropriate if the docstring contains behavioral requirements.
 
