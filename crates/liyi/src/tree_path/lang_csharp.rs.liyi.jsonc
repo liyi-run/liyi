@@ -12,7 +12,7 @@
         53
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:6c0a47b592b0b8db93bcf44a875e7e2ba199ecbf1dbf767894797972b290398b",
+      "source_hash": "sha256:c95d3244ecb954bd82a2f3df065dda6f2d58c18a11c277fd9600990ef4127b48",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
