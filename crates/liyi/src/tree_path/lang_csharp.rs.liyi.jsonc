@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Define the C# language configuration for tree_path resolution: register tree-sitter-c-sharp grammar, .cs extension, kind mappings for fn/class/interface/enum/struct/namespace/constructor/property/record/delegate, using standard name field with no custom name extraction and no doc comment detector.",
       "source_span": [
-        4,
-        25
+        32,
+        53
       ],
       "tree_path": "static.CONFIG",
       "source_hash": "sha256:6c0a47b592b0b8db93bcf44a875e7e2ba199ecbf1dbf767894797972b290398b",

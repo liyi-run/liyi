@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Define the Objective-C language configuration for tree_path resolution: register tree-sitter-objc grammar, .m/.mm extensions, kind mappings for fn/class/impl/protocol/method/method_decl/struct/enum/typedef, wire the custom objc_node_name callback, and no doc comment detector.",
       "source_span": [
-        71,
-        91
+        90,
+        110
       ],
       "tree_path": "static.CONFIG",
       "source_hash": "sha256:34d6d1ac114bde885324b53fac1aaf04e217c62dac9f14c49c31582a51461770",

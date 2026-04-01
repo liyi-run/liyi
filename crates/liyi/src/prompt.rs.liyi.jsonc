@@ -51,7 +51,7 @@
       "source_hash": "sha256:4b58abb88e8267fb636eae6727230d6f4c90fdaab97f0125c916e5a55985851e",
       "source_anchor": "pub fn build_prompt_output(",
       "related": {
-        "quine-escape-in-source": null
+        "quine-escape-in-source": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81"
       }
     },
     {

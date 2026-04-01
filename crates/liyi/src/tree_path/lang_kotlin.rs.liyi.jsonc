@@ -20,8 +20,8 @@
       "reviewed": true,
       "intent": "Define the Kotlin language configuration for tree_path resolution: register tree-sitter-kotlin-ng grammar, .kt/.kts extensions, kind mappings for fn/class/object/property/typealias, wire the custom kotlin_node_name callback, and no doc comment detector.",
       "source_span": [
-        42,
-        58
+        75,
+        91
       ],
       "tree_path": "static.CONFIG",
       "source_hash": "sha256:c44502301bfedb32c49eb543da976a65e3dbe9b4c4d5fc7323a8c6541fe64423",
