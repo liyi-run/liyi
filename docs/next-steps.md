@@ -3,7 +3,7 @@
 
 # Prioritized Next Steps
 
-**As of**: 2026-03-17 · **Baseline**: v0.1.0, 275 specs current, 9 trivial, all tests and clippy clean.
+**As of**: 2026-04-01 · **Baseline**: v0.1.0, doc-comment detection complete for all feasible languages.
 
 This document synthesizes the existing roadmaps (liyi-design.md, lsp-design.md,
 approve-impl.md, init-discover-impl.md, prompt-mode-design.md,
@@ -20,7 +20,7 @@ These can each be done in a single focused session without new design work.
 | # | Item | Source | Why now |
 |---|------|--------|---------|
 | 1.1 | **Extend `--prompt` to stale/shifted/unreviewed diagnostics** | prompt-mode-design.md | The prompt-mode infra is shipped for coverage gaps; extending it to remaining diagnostic types is additive code, no new architecture. Greatly improves agent UX for the most common workflow. |
-| 1.2 | **Doc-comment detection for remaining languages** | init-discover-impl.md (Phase 2 gap) | `_has_doc` hint works for 10/21 languages. Adding the remaining 11 (Ruby, Kotlin, Swift, Bash, Zig, …) is mechanical tree-sitter query work. Improves `liyi init` quality across ecosystems. |
+| 1.2 | ~~**Doc-comment detection for remaining languages**~~ | init-discover-impl.md (Phase 2 gap) | ✅ Done — 15/21 languages now have `doc_comment_detector`. Remaining 5 (Bash, Ruby not feasible; JSON/TOML/YAML not applicable). |
 
 > **Note on the 14 unreferenced requirements:** `liyi check` currently reports
 > 7 requirements from lsp-design.md and 7 from sidecar-merge-design.md with no
@@ -116,7 +116,6 @@ Not designed in detail; captured for completeness.
 
 ```
 Now          Tier 1.1  (prompt-mode expansion)
-             Tier 1.2  (doc-comment languages)
                 │
 Near-term    Tier 2A   (approval flows)  ─── can parallelize ─── Tier 2C (VCS hints)
              Tier 2B   (lib refactor)
