@@ -58,27 +58,22 @@ fn zig_node_name(node: &Node, source: &str) -> Option<String> {
     }
 }
 
-/// Zig language configuration.
 /// Detect Zig doc comments (`/// ...`).
 ///
 /// Zig's tree-sitter grammar uses a uniform `comment` kind for all comments
-/// (`//`, `///`, `//!`). The doc comment convention is `///` before a
-/// declaration. We check for `///` prefix.
+/// (`//`, `///`, `//!`). A declaration should only count as documented when its
+/// immediately preceding comment sibling is a `///` doc comment; a plain `//`
+/// comment right above the declaration should not inherit an earlier doc block.
 fn zig_has_doc_comment(node: &Node, source: &str) -> bool {
-    let mut sibling = node.prev_sibling();
-    while let Some(s) = sibling {
-        if s.kind() == "comment" {
-            let text = &source[s.byte_range()];
-            if text.starts_with("///") {
-                return true;
-            }
-            sibling = s.prev_sibling();
-        } else {
-            break;
-        }
+    if let Some(s) = node.prev_sibling()
+        && s.kind() == "comment"
+    {
+        return source[s.byte_range()].starts_with("///");
     }
     false
 }
+
+/// Zig language configuration.
 pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ts_language: || tree_sitter_zig::LANGUAGE.into(),
     extensions: &["zig"],
@@ -217,5 +212,81 @@ test "add function" {
             detect_language(Path::new("lib/foo.zig")),
             Some(Language::Zig)
         );
+    }
+
+    #[test]
+    fn detect_zig_doc_comment_function() {
+        use super::zig_has_doc_comment;
+
+        let source = r#"/// Adds two numbers.
+pub fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+// Regular comment
+fn noop() void {}
+"#;
+        let tree = parse_tree(source, Language::Zig).unwrap();
+        let root = tree.root_node();
+
+        let mut cursor = root.walk();
+        let functions: Vec<_> = root
+            .children(&mut cursor)
+            .filter(|c| c.kind() == "function_declaration")
+            .collect();
+
+        assert_eq!(functions.len(), 2, "expected two function declarations");
+        assert!(
+            zig_has_doc_comment(&functions[0], source),
+            "should detect doc comment for add"
+        );
+        assert!(
+            !zig_has_doc_comment(&functions[1], source),
+            "should not detect doc comment for noop"
+        );
+    }
+
+    #[test]
+    fn detect_zig_doc_comment_struct() {
+        use super::zig_has_doc_comment;
+
+        let source = r#"/// A point in 2D space.
+const Point = struct {
+    x: i32,
+    y: i32,
+};
+
+// Regular struct comment
+const Config = struct {};
+"#;
+        let tree = parse_tree(source, Language::Zig).unwrap();
+        let root = tree.root_node();
+
+        let mut cursor = root.walk();
+        let declarations: Vec<_> = root
+            .children(&mut cursor)
+            .filter(|c| c.kind() == "variable_declaration")
+            .collect();
+
+        assert_eq!(declarations.len(), 2, "expected two variable declarations");
+        assert!(
+            zig_has_doc_comment(&declarations[0], source),
+            "should detect doc comment for Point"
+        );
+        assert!(
+            !zig_has_doc_comment(&declarations[1], source),
+            "should not detect doc comment for Config"
+        );
+    }
+
+    /// Parse source into a tree-sitter tree for testing doc comment detection.
+    fn parse_tree(source: &str, lang: Language) -> Option<tree_sitter::Tree> {
+        let mut parser = tree_sitter::Parser::new();
+        let ts_lang = match lang {
+            Language::Zig => tree_sitter_zig::LANGUAGE.into(),
+            _ => return None,
+        };
+        parser.set_language(&ts_lang).ok()?;
+        parser.parse(source, None)
     }
 }
