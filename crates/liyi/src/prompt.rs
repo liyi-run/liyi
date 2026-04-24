@@ -56,13 +56,18 @@ const TMPL_STALE_SPEC_FIXABLE: &str = "Run {fix_command} to refresh the \
     reviewed spec, unset \"reviewed\".";
 
 const TMPL_SHIFTED_SPAN: &str = "Run `liyi check --fix` to auto-correct the \
-    span for \"{item}\" in {expected_sidecar} from [{old_start}, \
-    {old_end}] to [{new_start}, {new_end}].";
+    span for \"{item}\" in {expected_sidecar} from {old_span} \
+    to {new_span}.";
 
 const TMPL_UNREVIEWED_SPEC: &str = "Verify that the intent for \"{item}\" \
     in {expected_sidecar} matches the source at {source_file}:{source_line}, \
     then run `liyi approve {expected_sidecar} --item {item}` or set \
     \"reviewed\": true in the sidecar.";
+
+const TMPL_REQ_CHANGED: &str = "Requirement \"{requirement}\" has changed. \
+    Run `liyi approve {expected_sidecar} --item {item}` to update the \
+    stored hash for the related edge, or manually set \"related\": \
+    {{\"{requirement}\": null}} in the sidecar to trigger re-approval.";
 
 /// Metadata for each diagnostic type: `(type_name, template, untrusted_fields)`.
 struct GroupMeta {
@@ -229,6 +234,30 @@ pub fn build_prompt_output(
                         type_name: "unreviewed_spec",
                         template: TMPL_UNREVIEWED_SPEC,
                         untrusted_fields: &["item", "intent_text"],
+                    },
+                    item,
+                ));
+            }
+            DiagnosticKind::ReqChanged { requirement } => {
+                let Some(source_line) = d.span_start else {
+                    continue;
+                };
+                let item_name = &d.item_or_req;
+                let mut item = serde_json::json!({
+                    "item": item_name,
+                    "requirement": requirement,
+                    "source_file": source_rel,
+                    "source_line": source_line,
+                    "expected_sidecar": expected_sidecar,
+                });
+                if let Some(text) = &d.intent {
+                    item["intent_text"] = serde_json::Value::String(text.clone());
+                }
+                raw.push((
+                    GroupMeta {
+                        type_name: "req_changed",
+                        template: TMPL_REQ_CHANGED,
+                        untrusted_fields: &["item", "requirement", "intent_text"],
                     },
                     item,
                 ));

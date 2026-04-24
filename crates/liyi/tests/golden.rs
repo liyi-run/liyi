@@ -808,6 +808,34 @@ fn prompt_stale_unreviewed_spec_is_fixable() {
     assert_eq!(item["fix_command"], "liyi check --fix");
 }
 
+#[test]
+fn prompt_req_changed() {
+    let (_tmp, root) = fixture_in_tmp("req_changed");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+    let output = liyi::prompt::build_prompt_output(&diagnostics, exit_code, &root);
+
+    let group = output
+        .groups
+        .iter()
+        .find(|g| g.prompt_type == "req_changed")
+        .expect("expected req_changed group");
+
+    assert!(group.template.contains("liyi approve"));
+    assert_eq!(group.count, group.items.len());
+
+    let item = &group.items[0];
+    assert_eq!(item["item"], "add");
+    assert_eq!(item["requirement"], "no-overflow");
+    assert_eq!(item["source_line"], 2);
+}
+
 // ---------------------------------------------------------------------------
 // =trivial sidecar sentinel tests
 // ---------------------------------------------------------------------------
