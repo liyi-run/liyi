@@ -2766,9 +2766,11 @@ escaped_char := '\\' ( '"' | '\\' | 'n' | ':' | '.' )
 This document contains content from the following AI agents:
 
 * Claude Opus 4.6
+* Claude Opus 4.8
 * Claude Sonnet 4.6
-* DeepSeek
+* DeepSeek V4 Pro (an unidentified preview version of it)
 * GPT-5.2
 * Kimi K2.5
+* Xiaomi MiMo-V2-Pro
 
 The document is primarily authored by Claude Opus 4.6, with the human designer's input, and multiple rounds of adversarial review.
