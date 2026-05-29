@@ -1355,7 +1355,32 @@ fn standalone() -> i32 {
     }
 
     #[test]
-    fn resolve_impl_block() {
+    fn resolve_nonexistent_returns_none() {
+        let span = resolve_tree_path(SAMPLE_RUST, "fn.nonexistent", Language::Rust);
+        assert!(span.is_none());
+    }
+
+    /// Source with an inherent impl and a trait impl on the same type, to
+    /// verify the two are addressable by distinct tree_paths.
+    const SAMPLE_RUST_IMPLS: &str = r#"pub struct Widget {
+    id: u32,
+}
+
+impl Widget {
+    pub fn new(id: u32) -> Self {
+        Self { id }
+    }
+}
+
+impl std::fmt::Display for Widget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Widget({})", self.id)
+    }
+}
+"#;
+
+    #[test]
+    fn resolve_inherent_impl_block() {
         let span = resolve_tree_path(SAMPLE_RUST, "impl.Money", Language::Rust);
         assert!(span.is_some(), "should resolve impl.Money");
         let [start, _end] = span.unwrap();
@@ -1368,9 +1393,67 @@ fn standalone() -> i32 {
     }
 
     #[test]
-    fn resolve_nonexistent_returns_none() {
-        let span = resolve_tree_path(SAMPLE_RUST, "fn.nonexistent", Language::Rust);
-        assert!(span.is_none());
+    fn inherent_and_trait_impl_resolve_to_distinct_blocks() {
+        let lines: Vec<&str> = SAMPLE_RUST_IMPLS.lines().collect();
+
+        let inherent = resolve_tree_path(SAMPLE_RUST_IMPLS, "impl.Widget", Language::Rust)
+            .expect("should resolve inherent impl.Widget");
+        assert!(
+            lines[inherent[0] - 1].contains("impl Widget"),
+            "inherent span should start at `impl Widget`, got: {}",
+            lines[inherent[0] - 1]
+        );
+
+        let trait_impl = resolve_tree_path(
+            SAMPLE_RUST_IMPLS,
+            "impl.\"std::fmt::Display for Widget\"",
+            Language::Rust,
+        )
+        .expect("should resolve trait impl by quoted name");
+        assert!(
+            lines[trait_impl[0] - 1].contains("impl std::fmt::Display for Widget"),
+            "trait span should start at the Display impl, got: {}",
+            lines[trait_impl[0] - 1]
+        );
+
+        assert_ne!(
+            inherent, trait_impl,
+            "inherent and trait impls must resolve to different spans"
+        );
+    }
+
+    #[test]
+    fn compute_trait_impl_path_is_distinct_from_inherent() {
+        let lines: Vec<&str> = SAMPLE_RUST_IMPLS.lines().collect();
+
+        // Inherent impl span.
+        let in_start = lines.iter().position(|l| *l == "impl Widget {").unwrap() + 1;
+        let in_end = in_start
+            + lines[in_start..]
+                .iter()
+                .position(|l| *l == "}")
+                .map(|i| i + 1)
+                .unwrap();
+        let inherent_path =
+            compute_tree_path(SAMPLE_RUST_IMPLS, [in_start, in_end], Language::Rust);
+        assert_eq!(inherent_path, "impl.Widget");
+
+        // Trait impl span.
+        let tr_start = lines
+            .iter()
+            .position(|l| l.contains("impl std::fmt::Display for Widget"))
+            .unwrap()
+            + 1;
+        let tr_end = tr_start
+            + lines[tr_start..]
+                .iter()
+                .position(|l| *l == "}")
+                .map(|i| i + 1)
+                .unwrap();
+        let trait_path = compute_tree_path(SAMPLE_RUST_IMPLS, [tr_start, tr_end], Language::Rust);
+        assert_eq!(trait_path, "impl.\"std::fmt::Display for Widget\"");
+
+        assert_ne!(inherent_path, trait_path);
     }
 
     #[test]

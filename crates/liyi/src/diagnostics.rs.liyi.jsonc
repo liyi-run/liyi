@@ -59,7 +59,7 @@
         236,
         256
       ],
-      "tree_path": "impl.Diagnostic",
+      "tree_path": "impl.\"fmt::Display for Diagnostic\"",
       "source_hash": "sha256:3171b1a756796c160823f3a1edeaa9291663b8ab94309c268be0b8495f5bd73f",
       "source_anchor": "impl fmt::Display for Diagnostic {"
     },

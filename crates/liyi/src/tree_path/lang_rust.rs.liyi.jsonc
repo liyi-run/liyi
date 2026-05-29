@@ -4,15 +4,27 @@
   "source": "crates/liyi/src/tree_path/lang_rust.rs",
   "specs": [
     {
-      "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Rust language configuration for tree_path resolution: register tree-sitter-rust grammar, .rs extension, kind mappings for fn/struct/enum/impl/trait/mod/const/static/type/macro, with impl_item using the type field for name extraction via name_overrides, no custom name callback, and rust_has_doc_comment detector for ///|//!|/** doc comments.",
+      "item": "rust_node_name",
+      "reviewed": false,
+      "intent": "Custom tree_path name extraction for Rust impl blocks: for an impl_item node carrying a `trait` field (a trait impl), return `\"<trait> for <type>\"` using the verbatim source text of both fields, so trait impls and the inherent impl on the same type get distinct tree_path names; return None for any other node kind and for inherent impls (no `trait` field) so they fall through to the default type-field name.",
       "source_span": [
-        37,
-        58
+        13,
+        23
+      ],
+      "tree_path": "fn.rust_node_name",
+      "source_hash": "sha256:86897a4cedb530033f8395195e1f1e12b06cac5a37fac45a68fe09de7b192e28",
+      "source_anchor": "fn rust_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Rust language configuration for tree_path resolution: register tree-sitter-rust grammar, .rs extension, kind mappings for fn/struct/enum/impl/trait/mod/const/static/type/macro, with impl_item names resolved by the rust_node_name custom callback (trait impls encode \"<trait> for <type>\", inherent impls fall back to the type field via name_overrides), and the rust_has_doc_comment detector for ///|//!|/** doc comments.",
+      "source_span": [
+        57,
+        78
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:a5e3dca0f94dcd24752e06e1ba82f425acd14b52bcd130ac1dfcacb88bd8a6c4",
+      "source_hash": "sha256:8a1becbfd5351570ccd24555502601e75a55695b992a162f5a2e95b3ee12e18d",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
