@@ -21,6 +21,7 @@ These can each be done in a single focused session without new design work.
 |---|------|--------|---------|
 | 1.1 | **Extend `--prompt` to stale/shifted/unreviewed diagnostics** | prompt-mode-design.md | The prompt-mode infra is shipped for coverage gaps; extending it to remaining diagnostic types is additive code, no new architecture. Greatly improves agent UX for the most common workflow. |
 | 1.2 | ~~**Doc-comment detection for remaining languages**~~ | init-discover-impl.md (Phase 2 gap) | ✅ Done — 15/21 languages now have `doc_comment_detector`. Remaining 5 (Bash, Ruby not feasible; JSON/TOML/YAML not applicable). |
+| 1.3 | ~~**Disambiguate Rust trait impls & ObjC categories in tree_path**~~ | tree_path resolver audit | ✅ Done — `impl Trait for Foo` now encodes as `impl."Trait for Foo"` (distinct from inherent `impl.Foo`); ObjC `@interface Foo (Cat)` encodes as `class."Foo (Cat)"`. Root cause of a mislabeled sidecar spec where two distinct impl blocks shared one tree_path. See item 2.8 for the remaining collision classes. |
 
 > **Note on the 14 unreferenced requirements:** `liyi check` currently reports
 > 7 requirements from lsp-design.md and 7 from sidecar-merge-design.md with no
@@ -66,6 +67,46 @@ de-risks the v0.2 timeline.
 cancelled." VCS hints significantly improve cold-start triage by telling agents
 which items have churn or bug-fix history. The `git log -L` approach avoids the
 git2 dependency. Can be worked in parallel with Tier 2A/2B.
+
+### 2D. Resolve remaining tree_path name collisions
+
+| # | Item | Source |
+|---|------|--------|
+| 2.8 | **Disambiguate same-named code siblings (overloads, reopened scopes)** | tree_path resolver audit |
+
+**Background**: `resolve_segments` returns the *first* AST node matching a
+`kind.name` pair, so any two sibling items that produce the same tree_path are
+indistinguishable — the second is unaddressable and silently resolves to the
+first. This was the root cause of a mislabeled sidecar spec (an inherent
+`impl Diagnostic` carrying a trait impl's intent). The Rust trait-impl and
+Objective-C category cases are fixed (item 1.3); a full audit of all 20 language
+configs found these remaining collision classes:
+
+| Language(s) | Collision | Frequency |
+|---|---|---|
+| C++, C#, Java, TypeScript | **Method/function overloading** — `add(int)` and `add(double)` both → `fn.add` | Medium — common in C++/Java/C# |
+| C++ | **Reopened namespaces** — `namespace math {}` declared twice → `namespace.math` ×2 | Low–medium |
+| Ruby | **Reopened classes/modules** (monkey-patching) → `class.Foo` ×2 | Low–medium |
+| C# | **Partial classes** within one file → `class.Foo` ×2 | Low (rare in a single file) |
+
+**Not affected**: Go and Ruby singleton methods already encode the receiver
+type into the name; Python, JS/TS, Java, PHP, Kotlin, C, and the data-file
+languages have unique names within scope.
+
+**Design decision needed**: two viable approaches —
+1. **Signature encoding** in `node_name` (the pattern used for Go receivers,
+   Ruby singletons, Rust traits, ObjC categories): fold a disambiguating
+   suffix (parameter types, namespace path, category) into the item name.
+   Self-describing tree_paths, but the encoding is per-language and verbose.
+2. **Sibling indexing**: extend the existing `name[N]` index syntax (currently
+   data-file-only) to disambiguate same-named code siblings by position.
+   Uniform across languages, but positional indices are brittle under edits
+   and the existing reanchor logic would need to handle them.
+
+Until resolved, overloaded/reopened items remain a latent mislabel risk. A
+cheaper interim mitigation: have `liyi check` *detect and warn* when two specs
+(or two discovered items) share a tree_path, surfacing the ambiguity even if it
+can't auto-resolve it.
 
 ## Tier 3 — v0.2 headline: LSP server
 
@@ -128,3 +169,5 @@ Post-MVP     Tier 4 items by opportunity             ← 4.2 resolves 7 unrefere
 Tier 1 items are independent of each other and can be tackled in any order or
 in parallel. Tier 2A and 2C are independent of each other but 2B must precede
 Tier 3. Within Tier 4, items 4.1–4.3 are independent; 4.4 depends on Tier 3.
+Tier 2D is independent of all other Tier 2 work and can be scheduled whenever a
+design decision is made.
