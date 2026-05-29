@@ -53,7 +53,7 @@
     },
     {
       "item": "impl fmt::Display for Diagnostic",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Implement std::fmt::Display for Diagnostic to render a diagnostic as a single line without repo-root stripping: use the '✓ fixed' icon when fixed, otherwise the severity×kind icon from Self::icon; write 'file: icon message' when item_or_req is empty, otherwise 'file: item: icon message'.",
       "source_span": [
         236,
