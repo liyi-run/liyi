@@ -40,7 +40,7 @@
       "source_anchor": "pub struct Diagnostic {"
     },
     {
-      "item": "impl Display for Diagnostic",
+      "item": "impl Diagnostic",
       "reviewed": true,
       "intent": "Construct standardized item diagnostics with shared defaults for current, stale, shifted, invalid-span, and past-EOF cases, and format diagnostics for terminal output. display_with_root shows a repo-relative file path with optional :line suffix (from span_start or annotation_line); for fixed diagnostics uses '✓ fixed' icon and suppresses fix hints, otherwise selects an icon via the icon helper (✓/·/↕/⚠/✗ by severity×kind), formats as 'file:line: item: icon message', and appends a 'fix: …' line when a fix_hint is present.",
       "source_span": [
@@ -50,6 +50,18 @@
       "tree_path": "impl.Diagnostic",
       "source_hash": "sha256:8e7890f21c46a4608e0bb9f16ac1d0cf154e31275eebd34e41047b1487e3bd81",
       "source_anchor": "impl Diagnostic {"
+    },
+    {
+      "item": "impl fmt::Display for Diagnostic",
+      "reviewed": false,
+      "intent": "Implement std::fmt::Display for Diagnostic to render a diagnostic as a single line without repo-root stripping: use the '✓ fixed' icon when fixed, otherwise the severity×kind icon from Self::icon; write 'file: icon message' when item_or_req is empty, otherwise 'file: item: icon message'.",
+      "source_span": [
+        236,
+        256
+      ],
+      "tree_path": "impl.Diagnostic",
+      "source_hash": "sha256:3171b1a756796c160823f3a1edeaa9291663b8ab94309c268be0b8495f5bd73f",
+      "source_anchor": "impl fmt::Display for Diagnostic {"
     },
     {
       "item": "CheckFlags",
