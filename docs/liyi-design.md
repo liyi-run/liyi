@@ -1659,7 +1659,7 @@ Two instances of this pattern exist in the current design:
 
 Both follow the same principle: the tool knows the protocol; the agent just needs to know which command to run.
 
-**`--prompt` as operational contract.** The `--prompt` pattern extends beyond coverage gaps: stale items, shifted spans, unreviewed specs, and requirement-changed items have `--prompt` counterparts with per-item resolution instructions. The same pattern can close gaps for any other actionable diagnostics, keeping `--prompt` as the operational contract while the behavioral rules remain human-facing documentation.
+**`--prompt` as operational contract.** This pattern extends beyond coverage gaps to every actionable diagnostic (see *`--prompt` scope* above for the full set), keeping `--prompt` as the operational contract that tells budget models *what* to do while the behavioral rules remain human-facing documentation of *why*.
 
 **Tiered instruction design.** The AGENTS.md instruction should be reorganized into tiers that degrade gracefully across model capability:
 
