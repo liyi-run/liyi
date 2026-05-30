@@ -968,7 +968,7 @@ This gives agents a DRY option: well-documented code gets `"intent": "=doc"` ins
 
 ### `"=trivial"` in the sidecar — the triviality sentinel
 
-The `@liyi:trivial` source annotation tells agents and the linter to skip an item entirely. But it requires modifying source, and produces no sidecar entry — the item becomes invisible to coverage tracking and audit trails. The `"=trivial"` sentinel fills this gap by expressing triviality in the sidecar:
+The `@liyi:trivial` source annotation tells agents and the linter to skip an item entirely, but it requires modifying source and leaves no sidecar entry. The `"=trivial"` sentinel expresses triviality in the sidecar instead:
 
 ```jsonc
 {
