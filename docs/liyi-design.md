@@ -2445,7 +2445,7 @@ The risk that absorption *prevents* the open convention from thriving — by pul
 
 The project's value proposition relies on agents following the AGENTS.md instruction. Empirical evidence shows a wide reliability spectrum: frontier models (Claude Opus 4.6) follow the full 11-rule protocol with high fidelity; budget models (Kimi K2.5, Gemini Flash) routinely forget AIGC trailers, skip sidecar updates, and ignore edge-case rules. This is not a positioning gap or a tooling gap — it is a fundamental characteristic of the current model landscape.
 
-**This observation validates the project rather than undermining it.** If every model perfectly followed instructions, you wouldn't need a linter, a CI gate, or a triage workflow — you'd just trust the output. The entire tooling layer (schema validation, staleness detection, coverage gap enforcement) exists precisely because agent output cannot be blindly trusted. `liyi check` catches what the agent forgets. Unreliable agents make the linter *more* valuable, not less.
+**This observation validates the project rather than undermining it.** The entire tooling layer (schema validation, staleness detection, coverage gap enforcement) exists precisely because agent output cannot be blindly trusted — `liyi check` catches what the agent forgets, so unreliable agents make the linter *more* valuable, not less (argued in full in *The cognitive load inversion: tool-guided agents*).
 
 **However, the observation does reveal that the AGENTS.md instruction is poorly optimized for weaker models.** Specific problems:
 
