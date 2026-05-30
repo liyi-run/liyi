@@ -6,8 +6,8 @@
     {
       "requirement": "liyi-sidecar-naming-convention",
       "source_span": [
-        352,
-        354
+        350,
+        352
       ],
       "source_hash": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38",
       "source_anchor": "<!-- @liyi:requirement liyi-sidecar-naming-convention -->"
@@ -15,17 +15,17 @@
     {
       "requirement": "version-field-required",
       "source_span": [
-        386,
-        388
+        384,
+        386
       ],
-      "source_hash": "sha256:dff782ba62e3c427a203eedcef593a038eebc2e45692977eb4750d7fb52e4ec6",
+      "source_hash": "sha256:361fd9e237617e9cf0e80df99dd31b06274eca55e15e33384fb4a8f745d07fb9",
       "source_anchor": "<!-- @liyi:requirement version-field-required -->"
     },
     {
       "requirement": "reviewed-semantics",
       "source_span": [
-        412,
-        414
+        410,
+        412
       ],
       "source_hash": "sha256:eabc16cfe83d7ed5b52779d4771a04f9ba6fee37c24e4493f2577d907afbd9e0",
       "source_anchor": "<!-- @liyi:requirement reviewed-semantics -->"
@@ -33,17 +33,17 @@
     {
       "requirement": "source-span-semantics",
       "source_span": [
-        436,
-        438
+        434,
+        436
       ],
-      "source_hash": "sha256:e2f20ce6bab4d5fc48b49fe8cdd63498258c65fd419ae15983ca532579bc0a58",
+      "source_hash": "sha256:879d23ea45fef5ded8141bbaf784171a02ab9be65cf003c6be11c08fa735d20b",
       "source_anchor": "<!-- @liyi:requirement source-span-semantics -->"
     },
     {
       "requirement": "tool-managed-fields",
       "source_span": [
-        440,
-        442
+        438,
+        440
       ],
       "source_hash": "sha256:b1b5caaebc89ce62a3b2e59f7468b813a67caf784a6fe03209c46ab67a2f7dbc",
       "source_anchor": "<!-- @liyi:requirement tool-managed-fields -->"
@@ -51,17 +51,17 @@
     {
       "requirement": "span-shift-heuristic",
       "source_span": [
-        452,
-        454
+        450,
+        452
       ],
-      "source_hash": "sha256:cc7a9a7504471c3fd6c59b59b6b1d0acd61afc5de1052b03b5859fa36d37dcd1",
+      "source_hash": "sha256:f51dc7ced1fa6597e05d2c82b7878a20babcbf31d09960978a68918fcc1075cf",
       "source_anchor": "<!-- @liyi:requirement span-shift-heuristic -->"
     },
     {
       "requirement": "tree-path-fix-behavior",
       "source_span": [
-        478,
-        481
+        476,
+        479
       ],
       "source_hash": "sha256:1f5c710fae63a2d2466bcc01a45b30b1f85ab4a22bfb19f961958b1167d47d0c",
       "source_anchor": "<!-- @liyi:requirement tree-path-fix-behavior -->"
@@ -69,8 +69,8 @@
     {
       "requirement": "sibling-scan-recovery",
       "source_span": [
-        483,
-        506
+        481,
+        504
       ],
       "source_hash": "sha256:9f3c1ac03a88188f97c3ea850988d5f55f7a2f78c34b28104f47da67ba0f64e7",
       "source_anchor": "<!-- @liyi:requirement sibling-scan-recovery -->"
@@ -78,8 +78,8 @@
     {
       "requirement": "tree-path-empty-fallback",
       "source_span": [
-        510,
-        518
+        508,
+        516
       ],
       "source_hash": "sha256:93c0520e982193e67ecef00b351b6967775bfcb9d989290fe51795b747decceb",
       "source_anchor": "<!-- @liyi:requirement tree-path-empty-fallback -->"
@@ -87,8 +87,8 @@
     {
       "requirement": "requirement-name-uniqueness",
       "source_span": [
-        670,
-        672
+        668,
+        670
       ],
       "source_hash": "sha256:fc329b7eb4016b20e9baa89b14470f2953aa6bad5311aa5d4867702994d94f32",
       "source_anchor": "<!-- @liyi:requirement requirement-name-uniqueness -->"
@@ -96,8 +96,8 @@
     {
       "requirement": "cycle-detection",
       "source_span": [
-        809,
-        811
+        807,
+        809
       ],
       "source_hash": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
       "source_anchor": "<!-- @liyi:requirement cycle-detection -->"
@@ -105,8 +105,8 @@
     {
       "requirement": "requirement-discovery-global",
       "source_span": [
-        1140,
-        1142
+        1138,
+        1140
       ],
       "source_hash": "sha256:8fdcf5001d02d4622dd7c8a5bd89090119e35cd2aedf7b8d9d7243d5f4cff359",
       "source_anchor": "<!-- @liyi:requirement requirement-discovery-global -->"
@@ -114,8 +114,8 @@
     {
       "requirement": "liyi-check-exit-code",
       "source_span": [
-        1265,
-        1271
+        1263,
+        1269
       ],
       "source_hash": "sha256:2cb6ab36efd4724e3f7e7021bf36233633357e9fddbd1a231bc7b7ed07137d65",
       "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
@@ -123,8 +123,8 @@
     {
       "requirement": "marker-normalization",
       "source_span": [
-        1298,
-        1300
+        1296,
+        1298
       ],
       "source_hash": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306",
       "source_anchor": "<!-- @liyi:requirement marker-normalization -->"
@@ -132,8 +132,8 @@
     {
       "requirement": "quine-escape-in-source",
       "source_span": [
-        1312,
-        1314
+        1310,
+        1312
       ],
       "source_hash": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81",
       "source_anchor": "<!-- @liyi:requirement quine-escape-in-source -->"
@@ -141,8 +141,8 @@
     {
       "requirement": "markdown-fenced-block-skip",
       "source_span": [
-        1318,
-        1326
+        1316,
+        1324
       ],
       "source_hash": "sha256:0bdd7d1ad747e2a826adfe2eca5652c7a9f382e1089ff12dd2c9b8d88f3920b7",
       "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
@@ -150,8 +150,8 @@
     {
       "requirement": "fix-never-modifies-human-fields",
       "source_span": [
-        1535,
-        1537
+        1533,
+        1535
       ],
       "source_hash": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
       "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
@@ -159,8 +159,8 @@
     {
       "requirement": "fix-semantic-drift-protection",
       "source_span": [
-        1539,
-        1541
+        1537,
+        1539
       ],
       "source_hash": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
       "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
