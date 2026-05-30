@@ -33,6 +33,28 @@ cacheable requirement registry API before starting the LSP crate.
 The important observation: this is less of a large refactor and more of a
 public API extraction around already-separated helper functions.
 
+### Duplication to be aware of (out of scope, but motivating)
+
+`crates/liyi/src/approve.rs` independently reimplements the same pass-1
+pipeline. Its private `build_requirement_registry()` returns
+`HashMap<String, RequirementInfo>` and its own doc comment states it
+"mirrors the pass-1 logic in `check.rs` but is self-contained." The two
+registries carry **different field sets** for different needs:
+
+- `check.rs` `RequirementRecord`: `{ file, line, hash, computed_hash }`
+  (staleness comparison via stored-vs-computed hash).
+- `approve.rs` `RequirementInfo`: `{ source_path, sidecar_path,
+  source_span, current_hash, current_text }` (richer display + git
+  history lookup for previous requirement text).
+
+Unifying these is **explicitly deferred** (see API design notes), but the
+public `RequirementRegistry` should be designed so the approve side can
+eventually adopt it. In practice that means the eventual unified record is
+a *superset* of both shapes, exposed through accessors rather than public
+fields, so adding `source_span` / `current_text` later does not break
+call sites. This is the real long-term payoff of the extraction: one
+requirement registry instead of two drifting copies.
+
 ## Proposed public API shape
 
 Add public types in `liyi::check` first, without changing CLI behavior:
@@ -43,9 +65,28 @@ pub struct RequirementRegistry {
     requirements_with_sidecar: HashSet<String>,
     requirements_referenced: HashSet<String>,
     source_related_refs: HashSet<String>,
+    // Dependency graph retained alongside the precomputed cycles: the graph
+    // is the input to detect_requirement_cycles(); cycles are its output.
+    // Keep both — the graph may be needed for future incremental rechecks.
+    req_dep_graph: HashMap<String, Vec<String>>,
     requirement_cycles: Vec<Vec<String>>,
 }
+```
 
+Note how the post-pass emitters consume these collections in specific
+combinations — do not collapse them during the move:
+
+- `emit_untracked_requirements()` needs `requirements` +
+  `requirements_with_sidecar`.
+- `emit_unreferenced_requirements()` needs **both**
+  `requirements_referenced` *and* `source_related_refs` (a requirement is
+  "referenced" if either an item's `related` edge or a source-level
+  `@liyi:related` marker points at it). Merging these two sets would
+  change diagnostics.
+- `emit_cycle_diagnostics()` needs `requirement_cycles` + `requirements`
+  (for the file path of the first node in each cycle).
+
+```rust
 pub struct RequirementRecord {
     pub file: PathBuf,
     pub line: usize,
@@ -92,8 +133,11 @@ and compute the existing exit code.
      `build_requirement_registry()`.
    - Return duplicate-requirement diagnostics from discovery through the
      function's diagnostic vector.
-   - Store cycles in `RequirementRegistry`; do not emit cycle diagnostics yet
-     if post-pass emission needs the final registry context.
+   - Store both the dependency graph and the precomputed cycles in
+     `RequirementRegistry`; the graph is the input to
+     `detect_requirement_cycles()` and the cycles are its output. Do not
+     emit cycle diagnostics yet if post-pass emission needs the final
+     registry context.
 
 3. **Extract pass 2.**
    - Rename the private `check_sidecar()` helper to avoid a public/private name
@@ -127,8 +171,12 @@ and compute the existing exit code.
 - `source_cache` should remain caller-owned. This matches the LSP design, where
   the workspace state owns cached source text.
 - Do not move approval-specific requirement registry code from
-  `crates/liyi/src/approve.rs` in this refactor. It has different display needs
-  for previous requirement text and can be unified later.
+  `crates/liyi/src/approve.rs` in this refactor. Its `RequirementInfo`
+  carries `source_span` and `current_text` for git-history display that
+  `check.rs` does not need today, so forcing a shared shape now would
+  bloat the check path. Unify later, once the public `RequirementRegistry`
+  has real LSP call sites and the superset of fields is justified. Track
+  this as the follow-up to next-steps 2.3/2.4.
 
 ## Risks
 
