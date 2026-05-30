@@ -1,4 +1,4 @@
-# 立意 (Lìyì) — Design v8.12
+# 立意 (Lìyì) — Design
 
 Establish intent before execution · 2026-03-12
 
@@ -1215,7 +1215,7 @@ Three output modes share the same detection engine:
 
 The `--prompt` flag is a *formatter*, not a different check. All modes exit nonzero when gaps exist. The flags (`--fail-on-stale`, `--fail-on-untracked`, etc.) control which conditions are failures in all modes.
 
-**Generalization update (v0.1.x).** `--prompt` is no longer limited to coverage gaps. The shipped formatter now covers the original coverage-gap kinds plus stale items, shifted spans, unreviewed specs, and requirement-changed items, each with per-item resolution instructions. This makes `--prompt` a broader agent interface in practice; future work is to extend the same pattern to any remaining actionable diagnostics rather than only coverage-specific ones.
+**`--prompt` scope.** `--prompt` is not limited to coverage gaps. The formatter covers the coverage-gap kinds plus stale items, shifted spans, unreviewed specs, and requirement-changed items, each with per-item resolution instructions. This makes `--prompt` a broad agent interface; the same pattern can extend to any remaining actionable diagnostics rather than only coverage-specific ones.
 
 **Paired AGENTS.md directive.** The coverage checks are deterministic; the resolution is the agent's responsibility. An additional AGENTS.md rule closes the loop:
 
@@ -1661,7 +1661,7 @@ Two instances of this pattern exist in the current design:
 
 Both follow the same principle: the tool knows the protocol; the agent just needs to know which command to run.
 
-**Generalization update.** The `--prompt` pattern has already extended beyond coverage gaps: stale items, shifted spans, unreviewed specs, and requirement-changed items now have shipped `--prompt` counterparts with per-item resolution instructions. The remaining direction is to close gaps for any other actionable diagnostics and keep `--prompt` as the operational contract, while the behavioral rules remain human-facing documentation.
+**`--prompt` as operational contract.** The `--prompt` pattern extends beyond coverage gaps: stale items, shifted spans, unreviewed specs, and requirement-changed items have `--prompt` counterparts with per-item resolution instructions. The same pattern can close gaps for any other actionable diagnostics, keeping `--prompt` as the operational contract while the behavioral rules remain human-facing documentation.
 
 **Tiered instruction design.** The AGENTS.md instruction should be reorganized into tiers that degrade gracefully across model capability:
 
@@ -1825,7 +1825,7 @@ The scaffold uses two deterministic AST signals to help the agent prioritize whi
 | Bash | `None` (not feasible) | All comments are uniform `comment` kind with no unambiguous doc syntax convention |
 | JSON/TOML/YAML | `None` (not applicable) | Data file grammars; doc comments are not a language-level concept |
 
-**Feasibility analysis (2026-03-31).** Probed each tree-sitter grammar's comment node kinds:
+**Feasibility analysis.** Probed each tree-sitter grammar's comment node kinds:
 - Grammars that distinguish comment types by node kind: Rust (`line_comment`/`block_comment`/`doc_comment`), Java (`line_comment`/`block_comment`), Kotlin (`line_comment`/`block_comment`), Swift (`comment`/`multiline_comment`)
 - Grammars with uniform `comment` kind but unambiguous doc prefix conventions: Go (`//` before declaration), JavaScript/TypeScript (`/**`), C (`/**`/`///`), C++ (`/**`/`///`), C# (`///` XML doc), PHP (`/**` PHPDoc), Objective-C (`/**`/`///`), Zig (`///`)
 - Grammars with uniform `comment` kind and no unambiguous doc syntax: Ruby (no community-standard doc comment form beyond RDoc/YARD which aren't distinguishable at the AST level), Bash (no doc comment convention)
@@ -2352,7 +2352,7 @@ The design doc is lengthy and detailed. The deliverable is a JSONC sidecar conve
 
 The one-paragraph pitch should lead with the *gap* — what frameworks can't declare — rather than the *mechanism* — sidecar files and hashing. "立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable" is a stronger hook than "write specs for everything." The progressive adoption ladder does this structurally — each level has a clear "what you do / what you get" — but the pitch needs to land on first contact. The project competes for attention against tools with flashier architecture and larger scope. Simplicity is the design's strength; it must also be the pitch's strength, not its liability.
 
-### 2. Platform competition (updated 2026-03-06)
+### 2. Platform competition
 
 This risk is no longer speculative. Three concrete incumbents now occupy overlapping territory:
 
@@ -2391,7 +2391,7 @@ The gap between "adversarial design review with a skilled interlocutor" and "aut
 - **The refinement loop (explicit intent → adversarial examination → discovery of gaps) is empirically validated** at the design level by this project's own development.
 - **Automated adversarial test generation from code-level specs is a hypothesis** that requires validation: does `"Must reject mismatched currencies with an error"` reliably generate a test that catches a subtle implementation bug like silently converting currencies at a stale exchange rate?
 
-**Empirical grounding for the mechanism (added 2026-05-29).** The *underlying* mechanism — "a different model, reading a claim it didn't author, catches errors the original missed" — is no longer only architectural reasoning. A growing body of work substantiates each link in the chain (collected in [adversarial-testing-evidences.md](adversarial-testing-evidences.md)):
+**Empirical grounding for the mechanism.** The *underlying* mechanism — "a different model, reading a claim it didn't author, catches errors the original missed" — is no longer only architectural reasoning. A growing body of work substantiates each link in the chain (collected in [adversarial-testing-evidences.md](adversarial-testing-evidences.md)):
 
 - **Correlated errors are real and capability-scaling.** Kim et al., *Correlated Errors in Large Language Models* (ICML 2025, arXiv:2506.07962), document that LLMs agree ~60% of the time *when both are wrong*, with correlation increasing as models get more capable. A model reviewing its own (or a same-family sibling's) output shares the failure mode — self-review provides weak evidence of correctness. This is the precise failure 立意 routes around by recommending a different model for test generation than the one that wrote the code (AGENTS.md rule 9).
 - **Output diversity collapses within a model.** Wu et al., *Generative Monoculture in Large Language Models* (arXiv:2407.02209), show LLM outputs narrow sharply relative to their training distribution, and that alignment tuning (RLHF) exacerbates the narrowing. A single model is structurally unlikely to generate a test that challenges an assumption it already baked into the code.
@@ -2407,13 +2407,13 @@ The success criterion remains: at least one team reports catching a real defect 
 
 Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi check --fix` handles non-uniform shifts when `tree_path` is available.
 
-**v8.4 update:** This risk prompted the introduction of `tree_path` in 0.1 (see *Structural identity via `tree_path`*). When `tree_path` is populated, span recovery is deterministic — the tool locates the item by AST identity regardless of how lines shifted. The span-shift heuristic remains as a fallback for items without a `tree_path` (macros, generated code, unsupported languages).
+This risk prompted the introduction of `tree_path` in 0.1 (see *Structural identity via `tree_path`*). When `tree_path` is populated, span recovery is deterministic — the tool locates the item by AST identity regardless of how lines shifted. The span-shift heuristic remains as a fallback for items without a `tree_path` (macros, generated code, unsupported languages).
 
 The remaining friction for items without `tree_path`: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless. For supported languages (Rust in 0.1), `tree_path` eliminates this friction entirely.
 
 **Mitigation in 0.1:** `tree_path` structural anchoring (primary), span-shift auto-correction (fallback), `liyi check --fix`, agent re-inference on next pass.
 
-### 5. Convention absorption and licensing (added 2026-03-06)
+### 5. Convention absorption and licensing
 
 A well-funded competitor (Augment Code, with their Intent product) can absorb the 立意 convention into a proprietary offering without contributing back. The absorption path is straightforward:
 
@@ -2443,7 +2443,7 @@ Copyleft (GPL, AGPL, MPL) would protect the **linter binary** from being embedde
 
 The risk that absorption *prevents* the open convention from thriving — by pulling potential adopters into a proprietary implementation — is real but mitigated by the same dynamics that keep `.editorconfig` alive despite every IDE having its own formatting settings: the open tool is simpler, works everywhere, and has no vendor lock-in. The bet is that simplicity and universality outweigh product polish.
 
-### 6. Agent reliability spectrum (added 2026-03-11)
+### 6. Agent reliability spectrum
 
 The project's value proposition relies on agents following the AGENTS.md instruction. Empirical evidence shows a wide reliability spectrum: frontier models (Claude Opus 4.6) follow the full 11-rule protocol with high fidelity; budget models (Kimi K2.5, Gemini Flash) routinely forget AIGC trailers, skip sidecar updates, and ignore edge-case rules. This is not a positioning gap or a tooling gap — it is a fundamental characteristic of the current model landscape.
 
