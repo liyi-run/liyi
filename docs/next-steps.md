@@ -3,7 +3,7 @@
 
 # Prioritized Next Steps
 
-**As of**: 2026-04-01 · **Baseline**: v0.1.0, doc-comment detection complete for all feasible languages.
+**As of**: 2026-05-30 · **Baseline**: v0.1.0, prompt-mode expansion and approval workflow shipped; doc-comment detection complete for all feasible languages.
 
 This document synthesizes the existing roadmaps (liyi-design.md, lsp-design.md,
 approve-impl.md, init-discover-impl.md, prompt-mode-design.md,
@@ -19,7 +19,7 @@ These can each be done in a single focused session without new design work.
 
 | # | Item | Source | Why now |
 |---|------|--------|---------|
-| 1.1 | **Extend `--prompt` to stale/shifted/unreviewed diagnostics** | prompt-mode-design.md | The prompt-mode infra is shipped for coverage gaps; extending it to remaining diagnostic types is additive code, no new architecture. Greatly improves agent UX for the most common workflow. |
+| 1.1 | ~~**Extend `--prompt` to stale/shifted/unreviewed diagnostics**~~ | prompt-mode-design.md | ✅ Done — `liyi check --prompt` now groups actionable diagnostics for `Stale`, `Shifted`, `Unreviewed`, and `ReqChanged` in addition to the original coverage-gap kinds. |
 | 1.2 | ~~**Doc-comment detection for remaining languages**~~ | init-discover-impl.md (Phase 2 gap) | ✅ Done — 15/21 languages now have `doc_comment_detector`. Remaining 5 (Bash, Ruby not feasible; JSON/TOML/YAML not applicable). |
 | 1.3 | ~~**Disambiguate Rust trait impls & ObjC categories in tree_path**~~ | tree_path resolver audit | ✅ Done — `impl Trait for Foo` now encodes as `impl."Trait for Foo"` (distinct from inherent `impl.Foo`); ObjC `@interface Foo (Cat)` encodes as `class."Foo (Cat)"`. Root cause of a mislabeled sidecar spec where two distinct impl blocks shared one tree_path. See item 2.8 for the remaining collision classes. |
 
@@ -32,17 +32,20 @@ These can each be done in a single focused session without new design work.
 
 ## Tier 2 — Next milestones (moderate effort, unlocks downstream value)
 
-### 2A. Complete the approval workflow (v0.1.x scope)
+### 2A. Approval workflow follow-through (v0.1.x scope)
 
 | # | Item | Source |
 |---|------|--------|
-| 2.1 | **StaleReviewed approval flow** | approve-impl.md |
-| 2.2 | **ReqChanged approval flow** | approve-impl.md |
+| 2.1 | ~~**StaleReviewed approval flow**~~ | approve-impl.md |
+| 2.2 | ~~**ReqChanged approval flow**~~ | approve-impl.md |
 
-**Rationale**: These are the two remaining approval paths documented in
-approve-impl.md. Without them, `"reviewed": true` items that drift have no
-supported re-approval path. Both are fully designed; implementation is scoped to
-approve.rs + TUI changes.
+**Status**: ✅ Done — `liyi approve` now surfaces unreviewed, stale-reviewed,
+and requirement-changed items; the TUI shows source diffs for stale-reviewed
+items and requirement diffs for req-changed items, and the CLI exposes
+`--unreviewed-only`, `--stale-only`, and `--req-only` filters.
+
+**Rationale**: This milestone is complete; keep it here as a shipped v0.1.x
+checkpoint because later roadmap items build on the same review model.
 
 ### 2B. Library refactoring for LSP (Step 0)
 
@@ -66,7 +69,7 @@ de-risks the v0.2 timeline.
 **Rationale**: Phase 3 is fully designed and was explicitly "deferred, not
 cancelled." VCS hints significantly improve cold-start triage by telling agents
 which items have churn or bug-fix history. The `git log -L` approach avoids the
-git2 dependency. Can be worked in parallel with Tier 2A/2B.
+git2 dependency. Can be worked in parallel with Tier 2B/2D.
 
 ### 2D. Resolve remaining tree_path name collisions
 
@@ -132,7 +135,7 @@ by opportunity.
 |---|------|--------|-------|
 | 4.1 | **Triage workflow** (`liyi triage`) | liyi-design.md | Prompt assembly, validation, apply, summary. Zero LLM calls in binary. |
 | 4.2 | **Sidecar auto-merge** | sidecar-merge-design.md | Three-way merge + field re-derivation. Becomes urgent once multi-contributor repos adopt liyi at scale. |
-| 4.3 | **Additional injection profiles** (GitLab CI, K8s) | injection-impl.md | Mechanical once the framework is proven with GitHub Actions. Prioritize GitLab CI — second-largest CI platform. |
+| 4.3 | **Additional injection profiles** (GitLab CI, K8s) | injection-impl.md | Core injection framework and GitHub Actions profile are already shipped; the remaining work is adding more profiles. Prioritize GitLab CI — second-largest CI platform. |
 | 4.4 | **Challenge mode** | liyi-design.md | On-demand semantic verification. Blocked on LSP foundation (Tier 3). |
 | 4.5 | **`liyi check --coverage`** | liyi-design.md | Compare discovered items vs existing specs. Infra exists; feature is deferred. |
 | 4.6 | **`--json` output mode** | prompt-mode-design.md | Machine-readable output for dashboards and integrations. |
@@ -156,18 +159,14 @@ Not designed in detail; captured for completeness.
 ## Suggested sequencing
 
 ```
-Now          Tier 1.1  (prompt-mode expansion)
-                │
-Near-term    Tier 2A   (approval flows)  ─── can parallelize ─── Tier 2C (VCS hints)
-             Tier 2B   (lib refactor)
+Now          Tier 2B   (LSP library refactor)
+             Tier 2C   (VCS hints)          ─── can parallelize ─── Tier 2D (tree_path collision work)
                 │
 v0.2         Tier 3.1 → 3.2 → 3.3  (LSP)          ← resolves 7 unreferenced lsp-design requirements
                 │
 Post-MVP     Tier 4 items by opportunity             ← 4.2 resolves 7 unreferenced merge-design requirements
 ```
 
-Tier 1 items are independent of each other and can be tackled in any order or
-in parallel. Tier 2A and 2C are independent of each other but 2B must precede
-Tier 3. Within Tier 4, items 4.1–4.3 are independent; 4.4 depends on Tier 3.
-Tier 2D is independent of all other Tier 2 work and can be scheduled whenever a
-design decision is made.
+Tier 1 is complete. Within Tier 2, 2B must precede Tier 3, while 2C and 2D are
+independent of the LSP refactor and can be scheduled in parallel. Within Tier
+4, items 4.1–4.3 are independent; 4.4 depends on Tier 3.

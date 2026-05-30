@@ -2,7 +2,7 @@
 
 # `liyi approve`: Implementation Plan
 
-**Status:** Partially implemented (unreviewed-item approval is shipped; requirement-change and stale-reviewed approval are planned)
+**Status:** ✅ Implemented (unreviewed-item, stale-reviewed, and requirement-change approval flows are shipped)
 **Design authority:** `docs/liyi-design.md` — *reviewed-semantics*, *fix-never-modifies-human-fields*, *fix-semantic-drift-protection*
 
 ---
@@ -41,17 +41,25 @@ The following constraints are normative for the implementation.
 
 ### What gets surfaced
 
-`liyi approve` currently surfaces **unreviewed items** — specs where `reviewed` is `false` (or absent) and no `@liyi:intent` marker exists in source. These are typically agent-inferred intents that no human has confirmed.
+`liyi approve` now surfaces three candidate kinds:
+
+1. **Unreviewed** — specs where `reviewed` is `false` (or absent) and no `@liyi:intent` marker exists in source
+2. **StaleReviewed** — reviewed items whose `source_hash` no longer matches the current source span
+3. **ReqChanged** — reviewed items whose stored related-edge hash no longer matches the current hash of a referenced requirement
+
+These are the three review queues the design calls for: first-time human confirmation, implementation drift, and requirement drift.
 
 ### Candidate collection (`approve.rs`)
 
-`collect_approval_candidates` walks the specified paths, resolves sidecar targets, and collects every `Spec::Item` where `reviewed == false`. For each candidate it gathers:
+`collect_approval_candidates` walks the specified paths, resolves sidecar targets, and collects `Spec::Item` entries matching the selected filter (`All`, `UnreviewedOnly`, `StaleOnly`, or `ReqOnly`). For each candidate it gathers:
 
 - **Item metadata:** name, intent text, source span, spec index
 - **Full source file:** all lines, with span offset and length computed so the TUI can highlight the relevant section
-- **Previous intent from Git:** `lookup_prev_intent` walks up to 20 commits via `git log` to find the most recent version where the item had `reviewed: true`, enabling diff display
+- **Previous intent from Git:** `lookup_prev_intent` walks up to 20 commits via `git log` to find the most recent version where the item had `reviewed: true`, enabling diff display for unreviewed items with prior history
+- **Previous source text:** `lookup_prev_source` walks Git history to find the last version matching the stored `source_hash`, enabling old→new source diffs for `StaleReviewed`
+- **Requirement registry + previous requirement text:** `build_requirement_registry` discovers current requirement hashes repo-wide, and `lookup_prev_requirement_text` recovers the old requirement text for `ReqChanged` diff display
 
-An optional `--item` filter restricts candidates to a single item name.
+An optional `--item` filter restricts candidates to a single item name, and CLI flags (`--unreviewed-only`, `--stale-only`, `--req-only`) select a single queue when desired.
 
 ### TUI (`tui_approve.rs`)
 

@@ -1215,7 +1215,7 @@ Three output modes share the same detection engine:
 
 The `--prompt` flag is a *formatter*, not a different check. All modes exit nonzero when gaps exist. The flags (`--fail-on-stale`, `--fail-on-untracked`, etc.) control which conditions are failures in all modes.
 
-**Generalization target (v8.10).** The initial `--prompt` scope covers coverage gaps only (Untracked, MissingRelatedEdge). The cognitive load inversion principle (see *The cognitive load inversion: tool-guided agents*) argues for extending `--prompt` to all diagnostics — stale items, shifted spans, unreviewed specs — each with per-item resolution instructions. This makes `--prompt` the universal agent interface: every problem `liyi check` can detect comes with a machine-readable instruction for how to fix it. The detailed design for non-coverage diagnostics in `--prompt` is deferred to a future revision of `docs/prompt-mode-design.md`.
+**Generalization update (v0.1.x).** `--prompt` is no longer limited to coverage gaps. The shipped formatter now covers the original coverage-gap kinds plus stale items, shifted spans, unreviewed specs, and requirement-changed items, each with per-item resolution instructions. This makes `--prompt` a broader agent interface in practice; future work is to extend the same pattern to any remaining actionable diagnostics rather than only coverage-specific ones.
 
 **Paired AGENTS.md directive.** The coverage checks are deterministic; the resolution is the agent's responsibility. An additional AGENTS.md rule closes the loop:
 
@@ -1661,7 +1661,7 @@ Two instances of this pattern exist in the current design:
 
 Both follow the same principle: the tool knows the protocol; the agent just needs to know which command to run.
 
-**Generalization target.** The `--prompt` pattern should extend beyond coverage gaps and triage. Every diagnostic `liyi check` can emit should have a `--prompt` counterpart with per-item resolution instructions: stale items ("re-read lines X–Y, update intent"), shifted spans ("span was auto-corrected, verify"), unreviewed specs ("run `liyi approve`"). This makes the 11 behavioral rules largely redundant for budget models — the rules become documentation for humans and frontier models, while `--prompt` output is the operational contract.
+**Generalization update.** The `--prompt` pattern has already extended beyond coverage gaps: stale items, shifted spans, unreviewed specs, and requirement-changed items now have shipped `--prompt` counterparts with per-item resolution instructions. The remaining direction is to close gaps for any other actionable diagnostics and keep `--prompt` as the operational contract, while the behavioral rules remain human-facing documentation.
 
 **Tiered instruction design.** The AGENTS.md instruction should be reorganized into tiers that degrade gracefully across model capability:
 
