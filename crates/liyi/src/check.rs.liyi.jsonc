@@ -9,19 +9,31 @@
       "intent": "Hold the file path, line number, sidecar hash, and freshly computed source hash of a discovered @liyi:requirement. The computed_hash enables cascading staleness detection in a single check pass without needing --fix first.",
       "source_span": [
         21,
-        28
+        30
       ],
       "tree_path": "struct.RequirementRecord",
       "source_hash": "sha256:4a938b349644222f5387b748f99750302de0d71c7c0e528025bff26d2533497b",
       "source_anchor": "struct RequirementRecord {"
     },
     {
+      "item": "RequirementRegistry",
+      "reviewed": false,
+      "intent": "Bundle the project-global pass-1 requirement state into one value: the requirements map plus the side-collections (requirements_with_sidecar, requirements_referenced, source_related_refs), the requirement dependency graph, and the precomputed cycles. Lets pass 2 and the post-pass emitters consume a single registry instead of loose maps and sets, and lets an LSP build it once from a cached file set and reuse it across edits.",
+      "source_span": [
+        41,
+        57
+      ],
+      "tree_path": "struct.RequirementRegistry",
+      "source_hash": "sha256:0a6777419c7231d4e2c1f1bb17e7eede041211a853409ad29bc42aa187c46380",
+      "source_anchor": "pub struct RequirementRegistry {"
+    },
+    {
       "item": "ItemCheckCtx",
       "reviewed": true,
       "intent": "Bundle the shared read-only item-check context: the current source file path, source text, scanned source markers, and the active --fix mode. This lets check-sidecar logic thread one context object through item hash checking helpers instead of re-passing each field separately.",
       "source_span": [
-        30,
-        35
+        59,
+        64
       ],
       "tree_path": "struct.ItemCheckCtx",
       "source_hash": "sha256:5bf334d473c3ae421d430680d21cdae7f803bded1ad3fd8eafa9d45b906a2424",
@@ -29,14 +41,14 @@
     },
     {
       "item": "run_check",
-      "reviewed": true,
-      "intent": "Orchestrate the two-pass check by delegating to helpers: pass 1 calls discover_requirements, compute_requirement_hashes, collect_source_related_refs, enrich_requirements_from_sidecars to build the global requirement registry; pass 2 calls check_sidecar for each entry. Post-pass calls emit_untracked_requirements (which auto-creates sidecar entries when --fix is active), emit_unreferenced_requirements, detect_requirement_cycles, and emit_cycle_diagnostics. Return sorted diagnostics and the appropriate exit code based on CheckFlags.",
+      "reviewed": false,
+      "intent": "Orchestrate the two-pass check as the CLI convenience wrapper: discover the repo, surface ambiguous-sidecar warnings, then call build_requirement_registry (pass 1), check_sidecars (pass 2), and emit_registry_diagnostics (post-pass), threading a shared source-content cache. Sort the collected diagnostics by file then item/requirement name and return them with the exit code computed from CheckFlags.",
       "source_span": [
-        47,
-        120
+        76,
+        126
       ],
       "tree_path": "fn.run_check",
-      "source_hash": "sha256:88948f92628a77b7d083d374eef32f9e3c9a4b65f35c6b9e8b8f9f55ce0ec06f",
+      "source_hash": "sha256:633bf42963aee1b6a4726ec0abe7f2ea03f3b868a45fe911681f75faba2105e0",
       "source_anchor": "pub fn run_check(",
       "related": {
         "cycle-detection": "sha256:e8af30a5974fcccf038c0d07eb98c279b57c9671dad032123424aa041d1262ec",
@@ -45,12 +57,48 @@
       }
     },
     {
+      "item": "build_requirement_registry",
+      "reviewed": false,
+      "intent": "Pass 1, reusable by an LSP: build the project-global RequirementRegistry from a discovered file set and sidecar list. Scan all source files for @liyi:requirement markers, compute fresh requirement hashes, collect source-level @liyi:related references, enrich records with stored sidecar hashes, and detect dependency cycles. Return the registry plus any duplicate-requirement diagnostics produced during discovery. The root parameter is accepted for API symmetry and future use but is not consulted by current pass-1 logic.",
+      "source_span": [
+        143,
+        169
+      ],
+      "tree_path": "fn.build_requirement_registry",
+      "source_hash": "sha256:cc4605100dda96b8ffe5f52a73f8d25e5ee597aff40324d49e0b9d86ab47f2c0",
+      "source_anchor": "pub fn build_requirement_registry("
+    },
+    {
+      "item": "check_sidecars",
+      "reviewed": false,
+      "intent": "Pass 2, reusable by an LSP: check each discovered sidecar against the prebuilt requirement registry and return the per-sidecar diagnostics. The registry is read-only here. When fix is set and dry_run is not, sidecars are written back with rehashed spans, recovered spans, filled null related hashes, and stripped _hints.",
+      "source_span": [
+        177,
+        198
+      ],
+      "tree_path": "fn.check_sidecars",
+      "source_hash": "sha256:1c629838b103e9a866e23d5e04b69ffc108b3741d67ebdcedc89f8d94730b159",
+      "source_anchor": "pub fn check_sidecars("
+    },
+    {
+      "item": "emit_registry_diagnostics",
+      "reviewed": false,
+      "intent": "Post-pass: emit the registry-derived diagnostics by delegating to emit_untracked_requirements (which auto-creates sidecar entries when --fix is active), emit_unreferenced_requirements, and emit_cycle_diagnostics, passing the corresponding registry fields.",
+      "source_span": [
+        202,
+        229
+      ],
+      "tree_path": "fn.emit_registry_diagnostics",
+      "source_hash": "sha256:32c13a166cad5302412d26b6df3a67ff0c0a10f6cfbbac34550cd402de55a430",
+      "source_anchor": "fn emit_registry_diagnostics("
+    },
+    {
       "item": "emit_ambiguous_sidecar_warnings",
       "reviewed": true,
       "intent": "Convert discovery warning strings into AmbiguousSidecar diagnostics.",
       "source_span": [
-        126,
-        149
+        235,
+        258
       ],
       "tree_path": "fn.emit_ambiguous_sidecar_warnings",
       "source_hash": "sha256:455a2dcba2cc18e683f10bfe99645ba444e883bef6815a392fb7ab87348de072",
@@ -61,8 +109,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        153,
-        203
+        262,
+        312
       ],
       "tree_path": "fn.discover_requirements",
       "source_hash": "sha256:3bd591e5b058e23ff286ce8a0cc6fe6e1d54f103210a8819d056040c67c57a40",
@@ -73,8 +121,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        207,
-        227
+        316,
+        336
       ],
       "tree_path": "fn.compute_requirement_hashes",
       "source_hash": "sha256:a6776f9aa98c59c5f85f1a63f896c49e6a9db52c0c851b3701b8bbdecbb94734",
@@ -85,8 +133,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        231,
-        248
+        340,
+        357
       ],
       "tree_path": "fn.collect_source_related_refs",
       "source_hash": "sha256:f664ab1dd3f4d52d90bed14d9d670e13a0b9a50396e6162e5b82f76cf3cf2636",
@@ -97,8 +145,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        253,
-        317
+        362,
+        426
       ],
       "tree_path": "fn.enrich_requirements_from_sidecars",
       "source_hash": "sha256:81fbdbe3165852809ddce49dfd7bb304944eb5b1a901d548745deca7b63d6d03",
@@ -109,8 +157,8 @@
       "reviewed": true,
       "intent": "Emit Untracked diagnostics for requirements found in source but absent from any sidecar. When --fix is active and not dry-run, create or update the co-located .liyi.jsonc sidecar for each source file with missing RequirementSpec entries, using the full requirement span from marker pairing and populating source_anchor from the source text.",
       "source_span": [
-        321,
-        467
+        430,
+        576
       ],
       "tree_path": "fn.emit_untracked_requirements",
       "source_hash": "sha256:0f40a8c8209c5983bf5405500c558d574098e48a16251a29cf636a4a0c1ae827",
@@ -121,8 +169,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        471,
-        498
+        580,
+        607
       ],
       "tree_path": "fn.emit_unreferenced_requirements",
       "source_hash": "sha256:d0891b49f5cc3e0081d87578cc71d2f82c6f3ac7ef6310b119eb1d7f44310d44",
@@ -133,22 +181,22 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        501,
-        529
+        610,
+        638
       ],
       "tree_path": "fn.emit_cycle_diagnostics",
       "source_hash": "sha256:7d16344ccd0a1863a20f37ea1c2dff370c697110d78f31b59e9f589a289e48aa",
       "source_anchor": "fn emit_cycle_diagnostics("
     },
     {
-      "item": "check_sidecar",
+      "item": "check_one_sidecar",
       "reviewed": true,
       "intent": "For a single sidecar entry: parse the sidecar, validate its version and source_hash format, verify the source file exists, then for each spec delegate to check_item_hash, check_review_status, check_trivial_ignore, check_related_edges (for items) or check_requirement_hash (for requirements, with marker-based span recovery first). When --fix is active, strip _hints from all item specs. Write the sidecar back if --fix produced modifications.",
       "source_span": [
-        538,
-        804
+        647,
+        913
       ],
-      "tree_path": "fn.check_sidecar",
+      "tree_path": "fn.check_one_sidecar",
       "source_hash": "sha256:f441e617cc6e07ae6441a05503fea1c6774ccbcdc8b1fc7b14e18c49507ea525",
       "source_anchor": "fn check_sidecar(",
       "related": {
@@ -165,8 +213,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        812,
-        998
+        921,
+        1107
       ],
       "tree_path": "fn.check_requirement_hash",
       "source_hash": "sha256:33b049164f163dcc79e1de3f27f216fffd3c93b7fbb1773914bef667584d44c8",
@@ -177,8 +225,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1007,
-        1054
+        1116,
+        1163
       ],
       "tree_path": "fn.check_item_hash",
       "source_hash": "sha256:dff7e649ac1d6489b89f3d746fc4cdc28505b28f63017e84b84d259c401a30a2",
@@ -189,8 +237,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1057,
-        1104
+        1166,
+        1213
       ],
       "tree_path": "fn.handle_missing_hash",
       "source_hash": "sha256:fbe4440b1e6f7310dba3cee4c57137a9e7a65878e1cc8e3949d1a2e300630e22",
@@ -201,8 +249,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1107,
-        1142
+        1216,
+        1251
       ],
       "tree_path": "fn.handle_hash_mismatch",
       "source_hash": "sha256:e33479af5622e2c1b19e9afceb7ecbb6226c3806a91f5300231267c34c5d7779",
@@ -216,8 +264,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1145,
-        1260
+        1254,
+        1369
       ],
       "tree_path": "fn.handle_tree_path_resolved",
       "source_hash": "sha256:bbb9af8f79b77415d9bf53392b0deb29f49dfba3c9ab83556aa224245bcd925f",
@@ -232,8 +280,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1264,
-        1393
+        1373,
+        1502
       ],
       "tree_path": "fn.handle_past_eof",
       "source_hash": "sha256:d6b1469814c4506c6026f22454cef036d3ac78dc5ed7a101644afd1c01b9837e",
@@ -248,8 +296,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1440,
-        1470
+        1549,
+        1579
       ],
       "tree_path": "fn.check_review_status",
       "source_hash": "sha256:62cd6e7a08df4bb831f0f4c860cb6cbaf41ec1483e53ed0bbb36894e93bf1eb0",
@@ -263,8 +311,8 @@
       "reviewed": true,
       "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
       "source_span": [
-        1473,
-        1560
+        1582,
+        1669
       ],
       "tree_path": "fn.check_trivial_ignore",
       "source_hash": "sha256:434e82e6c548233c1113313ec013030b349da1f922c4f5e8b9a5c5f2a6f4feb5",
@@ -275,8 +323,8 @@
       "reviewed": true,
       "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
       "source_span": [
-        1565,
-        1678
+        1674,
+        1787
       ],
       "tree_path": "fn.check_related_edges",
       "source_hash": "sha256:66f6a7ee8df06a18e9a4e29e19851b775ee70717bc5b01a179afc8738a00aa12",
@@ -291,8 +339,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1688,
-        1740
+        1797,
+        1849
       ],
       "tree_path": "fn.detect_requirement_cycles",
       "source_hash": "sha256:c7124f27dcaade014657e1b571274470d11511922c508ca2a3836d7df20e808d",
@@ -303,8 +351,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1743,
-        1754
+        1852,
+        1863
       ],
       "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",

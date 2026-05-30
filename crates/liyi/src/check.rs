@@ -14,17 +14,46 @@ use crate::sidecar::{ItemSpec, RequirementSpec, SidecarFile, Spec, parse_sidecar
 use crate::tree_path::{compute_tree_path, detect_language, resolve_tree_path};
 
 // ---------------------------------------------------------------------------
-// Internal types
+// Public registry types
 // ---------------------------------------------------------------------------
 
 /// A requirement discovered during pass 1.
-struct RequirementRecord {
-    file: PathBuf,
-    line: usize,
+pub struct RequirementRecord {
+    /// Source file containing the `@liyi:requirement` marker.
+    pub file: PathBuf,
+    /// 1-indexed line of the `@liyi:requirement` marker.
+    pub line: usize,
     /// Hash stored in the sidecar (may be stale).
-    hash: Option<String>,
+    pub hash: Option<String>,
     /// Hash freshly computed from the current source span.
-    computed_hash: Option<String>,
+    pub computed_hash: Option<String>,
+}
+
+/// Project-global requirement state produced by pass 1.
+///
+/// This bundles the requirement registry and its associated side-collections
+/// so that pass 2 (`check_sidecars`) and the post-pass emitters can consume a
+/// single value instead of a handful of loose maps and sets. An LSP server can
+/// build this once from a cached file set and reuse it across edits.
+///
+/// Fields are intentionally private for now; add read accessors only when a
+/// concrete call site (e.g. the LSP) needs them.
+pub struct RequirementRegistry {
+    /// All requirements discovered in source, keyed by name.
+    requirements: HashMap<String, RequirementRecord>,
+    /// Requirements that have a `RequirementSpec` entry in some sidecar.
+    requirements_with_sidecar: HashSet<String>,
+    /// Requirements referenced by an item's `related` edge in some sidecar.
+    requirements_referenced: HashSet<String>,
+    /// Requirements referenced by a source-level `@liyi:related` marker.
+    source_related_refs: HashSet<String>,
+    /// Requirement dependency graph: definer -> referenced requirements.
+    /// Retained as the input to cycle detection; kept alongside the
+    /// precomputed cycles for potential future incremental rechecks.
+    #[allow(dead_code)]
+    req_dep_graph: HashMap<String, Vec<String>>,
+    /// Cycles detected in `req_dep_graph` (output of cycle detection).
+    requirement_cycles: Vec<Vec<String>>,
 }
 
 struct ItemCheckCtx<'a> {
@@ -63,50 +92,27 @@ pub fn run_check(
     // ------------------------------------------------------------------
     // Pass 1 — Requirement discovery (project-global)
     // ------------------------------------------------------------------
-    let mut requirements =
-        discover_requirements(&disc.all_files, &mut source_cache, &mut diagnostics);
-    compute_requirement_hashes(&disc.all_files, &mut source_cache, &mut requirements);
-    let source_related_refs = collect_source_related_refs(&disc.all_files, &mut source_cache);
-    let (requirements_with_sidecar, requirements_referenced, req_dep_graph) =
-        enrich_requirements_from_sidecars(&disc.sidecars, &mut requirements);
-
-    // Detect cycles in the requirement dependency graph using DFS.
-    let cycles = detect_requirement_cycles(&req_dep_graph);
+    let (registry, mut pass1_diagnostics) =
+        build_requirement_registry(root, &disc.all_files, &disc.sidecars, &mut source_cache);
+    diagnostics.append(&mut pass1_diagnostics);
 
     // ------------------------------------------------------------------
     // Pass 2 — Item / requirement checking (scoped to discovered sidecars)
     // ------------------------------------------------------------------
-    for entry in &disc.sidecars {
-        check_sidecar(
-            entry,
-            &mut diagnostics,
-            &mut source_cache,
-            &requirements,
-            root,
-            fix,
-            dry_run,
-        );
-    }
+    let mut pass2_diagnostics = check_sidecars(
+        root,
+        &disc.sidecars,
+        &registry,
+        &mut source_cache,
+        fix,
+        dry_run,
+    );
+    diagnostics.append(&mut pass2_diagnostics);
 
     // ------------------------------------------------------------------
     // Post-pass diagnostics
     // ------------------------------------------------------------------
-    emit_untracked_requirements(
-        &requirements,
-        &requirements_with_sidecar,
-        &mut source_cache,
-        fix,
-        dry_run,
-        &mut diagnostics,
-    );
-    emit_unreferenced_requirements(
-        &requirements_with_sidecar,
-        &requirements_referenced,
-        &source_related_refs,
-        &requirements,
-        &mut diagnostics,
-    );
-    emit_cycle_diagnostics(&cycles, &requirements, &mut diagnostics);
+    emit_registry_diagnostics(&registry, &mut source_cache, fix, dry_run, &mut diagnostics);
 
     // Sort by file path, then by item/requirement name.
     diagnostics.sort_by(|a, b| {
@@ -117,6 +123,109 @@ pub fn run_check(
 
     let exit_code = compute_exit_code(&diagnostics, flags);
     (diagnostics, exit_code)
+}
+
+// ---------------------------------------------------------------------------
+// Public pass entry points (reusable by an LSP workspace)
+// ---------------------------------------------------------------------------
+
+/// Pass 1 — build the project-global requirement registry from a discovered
+/// file set and sidecar list.
+///
+/// Scans all source files for `@liyi:requirement` markers, computes fresh
+/// requirement hashes, collects source-level `@liyi:related` references,
+/// enriches records with stored sidecar hashes, and detects dependency
+/// cycles. Returns the registry plus any duplicate-requirement diagnostics
+/// produced during discovery.
+///
+/// `root` is accepted for API symmetry with `check_sidecars` and future use;
+/// pass-1 logic is currently path-relative and does not consult it.
+pub fn build_requirement_registry(
+    _root: &Path,
+    all_files: &[PathBuf],
+    sidecars: &[SidecarEntry],
+    source_cache: &mut HashMap<PathBuf, String>,
+) -> (RequirementRegistry, Vec<Diagnostic>) {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    let mut requirements = discover_requirements(all_files, source_cache, &mut diagnostics);
+    compute_requirement_hashes(all_files, source_cache, &mut requirements);
+    let source_related_refs = collect_source_related_refs(all_files, source_cache);
+    let (requirements_with_sidecar, requirements_referenced, req_dep_graph) =
+        enrich_requirements_from_sidecars(sidecars, &mut requirements);
+
+    // Detect cycles in the requirement dependency graph using DFS.
+    let requirement_cycles = detect_requirement_cycles(&req_dep_graph);
+
+    let registry = RequirementRegistry {
+        requirements,
+        requirements_with_sidecar,
+        requirements_referenced,
+        source_related_refs,
+        req_dep_graph,
+        requirement_cycles,
+    };
+    (registry, diagnostics)
+}
+
+/// Pass 2 — check each discovered sidecar against the prebuilt requirement
+/// registry, returning the per-sidecar diagnostics.
+///
+/// When `fix` is set and `dry_run` is not, sidecars are written back with
+/// rehashed spans, recovered spans, filled null related hashes, and stripped
+/// `_hints`. The registry is read-only here.
+pub fn check_sidecars(
+    root: &Path,
+    sidecars: &[SidecarEntry],
+    registry: &RequirementRegistry,
+    source_cache: &mut HashMap<PathBuf, String>,
+    fix: bool,
+    dry_run: bool,
+) -> Vec<Diagnostic> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for entry in sidecars {
+        check_one_sidecar(
+            entry,
+            &mut diagnostics,
+            source_cache,
+            &registry.requirements,
+            root,
+            fix,
+            dry_run,
+        );
+    }
+    diagnostics
+}
+
+/// Post-pass — emit the registry-derived diagnostics: untracked requirements
+/// (auto-tracked under `--fix`), unreferenced requirements, and cycles.
+fn emit_registry_diagnostics(
+    registry: &RequirementRegistry,
+    source_cache: &mut HashMap<PathBuf, String>,
+    fix: bool,
+    dry_run: bool,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    emit_untracked_requirements(
+        &registry.requirements,
+        &registry.requirements_with_sidecar,
+        source_cache,
+        fix,
+        dry_run,
+        diagnostics,
+    );
+    emit_unreferenced_requirements(
+        &registry.requirements_with_sidecar,
+        &registry.requirements_referenced,
+        &registry.source_related_refs,
+        &registry.requirements,
+        diagnostics,
+    );
+    emit_cycle_diagnostics(
+        &registry.requirement_cycles,
+        &registry.requirements,
+        diagnostics,
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -535,7 +644,7 @@ fn emit_cycle_diagnostics(
 // @liyi:related reviewed-semantics
 // @liyi:related fix-semantic-drift-protection
 // @liyi:related fix-never-modifies-human-fields
-fn check_sidecar(
+fn check_one_sidecar(
     entry: &SidecarEntry,
     diagnostics: &mut Vec<Diagnostic>,
     source_cache: &mut HashMap<PathBuf, String>,
