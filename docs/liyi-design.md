@@ -6,9 +6,7 @@ Establish intent before execution · 2026-03-12
 
 ## The Idea
 
-AI writes your code. You can't read it all. 立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable. The tool doesn't compete with what your framework already declares; it captures what your framework *can't*.
-
-AI agents write most code. Humans review it but can't read it all. Intent is ephemeral — it lives in prompts, PR descriptions, Slack threads, context windows. When a different agent or human touches the code six months later, the intent is gone. The code is a fact; what it was *meant* to do is a memory.
+AI agents write most of your code, and you can't read it all. Intent is ephemeral — it lives in prompts, PR descriptions, Slack threads, and context windows; when a different agent or human touches the code six months later, the intent is gone. The code is a fact; what it was *meant* to do is a memory. 立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable. The tool doesn't compete with what your framework already declares; it captures what your framework *can't*.
 
 But this is not only an AI-era problem. Even before agents wrote code, intent decayed through organizational entropy: knowledge systems are replaced (Redmine → JIRA, wiki migrations that lose history), documentation becomes read-only when its owners leave the company, design documents are superseded by newer ones without cross-links, and departments restructure in ways that scramble permissions and institutional memory. The code outlives all of these. Git is the longest-lived artifact store in most organizations — repositories survive team turnover, tool migrations, and organizational restructuring that makes every other knowledge system unreliable. Intent that lives in the repository has the same lifespan as the code it describes. Intent that lives anywhere else has a shorter one.
 
