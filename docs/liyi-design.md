@@ -211,7 +211,7 @@ This works with the existing mechanism, no schema or linter changes required:
 **Residual gap.** Even with shared requirements, there is no mechanism to verify that a downstream repo *has* `@liyi:related` edges for requirements it should satisfy — only that the edges it *does* have are checked for staleness. Discovering which requirements apply to which repos is an organizational process, not a linter feature. Complementary tools (contract testing, API schema validation, integration tests) address parts of this from a different angle; 立意 doesn’t replace them and isn’t replaced by them.
 
 
-#### Future direction: workspace-aware requirement queries
+#### Deferred (speculative): workspace-aware requirement queries
 
 The submodule pattern gives each repo staleness detection against shared requirements, but querying across repos ("which services implement `pci-card-tokenization`?") requires manual grep across a workspace. A future workspace-aware mode could walk sibling repos under a mandated workspace layout and aggregate requirement graphs — not modeling API call flows or data dependencies, but simply surfacing which items across the organization claim `@liyi:related` edges to the same named requirement. This is a shared label namespace with cross-repo visibility, not a distributed dependency graph. The discovery is new; the staleness mechanism is unchanged. Each repo's `liyi check` still runs independently against its own checkout; the workspace query is a read-only aggregation layer for onboarding, auditing, and impact analysis.
 
@@ -340,7 +340,7 @@ Go 1.19+ doc comments support `#` headings. Since godoc has no markup comment sy
 
 The `@liyi:module` string is the only thing the linter looks for. Everything else — heading style, file choice, comment syntax — is team preference.
 
-The linter only checks for the *presence* of `@liyi:module` in a directory's files. It does not parse or consume the intent prose — that text is for humans, agents, and code review; the linter just confirms it exists. Post-MVP, a closing `/@liyi:module` tag may be supported for mechanical extraction of module intent prose from long files; the 0.1 linter does not look for it.
+The linter only checks for the *presence* of `@liyi:module` in a directory's files. It does not parse or consume the intent prose — that text is for humans, agents, and code review; the linter just confirms it exists. A closing `/@liyi:module` tag for mechanical extraction of module intent prose from long files is deferred; the linter does not look for it.
 
 - Optional. Not every directory needs one. The agent infers it when cross-function invariants are apparent.
 - The linter can report directories that have `.liyi.jsonc` files but no `@liyi:module` marker (informational, not a failure by default).
@@ -384,7 +384,7 @@ The `source` path is relative to the repository root — the same path you'd pas
 `source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi check --fix`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
 
 <!-- @liyi:requirement version-field-required -->
-`"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, structured fields in post-0.1). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi migrate` will upgrade sidecar files in place.
+`"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, or deferred structured fields). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *Appendix: JSON Schema* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi migrate` will upgrade sidecar files in place.
 <!-- @liyi:end-requirement version-field-required -->
 
 **`liyi migrate` behavior.** When the schema version changes (e.g., 0.1 → 0.2), `--migrate` reads each `.liyi.jsonc`, adds any newly required fields with default values, removes deprecated fields, updates `"version"` to the new version, and writes the file back. It is idempotent — running it twice produces the same output. It does not re-hash spans or re-infer intent; it only transforms the schema envelope. Migration is always additive in 0.x: no field present in 0.1 will change meaning, only new fields may appear.
@@ -422,7 +422,7 @@ The testing agent reads NL. It doesn't need `preconditions`, `postconditions`, `
 - Is sufficient for adversarial test generation (the testing agent extracts what it needs from prose).
 - Can contain structured information if the author wants ("Must be commutative" is a property; "Rate must be positive" is a precondition) — but doesn't mandate it.
 
-Structured fields can come later (0.2+) if tooling demands them.
+Structured fields can be deferred until tooling demands them.
 
 ### Why JSONC for item specs, not Markdown?
 
@@ -434,7 +434,7 @@ Item-level intent carries machine metadata → JSONC wins.
 ### Per-item staleness via `source_span`
 
 <!-- @liyi:requirement source-span-semantics -->
-`source_span` is a closed interval of 1-indexed line numbers: `[42, 58]` means lines 42 through 58, inclusive. This matches editor line numbers, `git blame` output, and coincidentally the mathematical convention for closed intervals. `source_hash` is always `sha256:<hex>` — the SHA-256 digest of those lines after normalizing line endings to `\n` (LF), with a trailing `\n` appended after the last line. This ensures cross-platform consistency: a Windows developer with `core.autocrlf=true` and a Linux CI runner produce identical hashes for identical content. The trailing `\n` means the digest matches `sed -n 'start,end p' file | sha256sum`, which is the UNIX-standard behavior for extracting lines. No other hash algorithm is supported in 0.1. `source_anchor` is the literal text of the first line of the span — used by the linter for efficient shift detection (see below).
+`source_span` is a closed interval of 1-indexed line numbers: `[42, 58]` means lines 42 through 58, inclusive. This matches editor line numbers, `git blame` output, and coincidentally the mathematical convention for closed intervals. `source_hash` is always `sha256:<hex>` — the SHA-256 digest of those lines after normalizing line endings to `\n` (LF), with a trailing `\n` appended after the last line. This ensures cross-platform consistency: a Windows developer with `core.autocrlf=true` and a Linux CI runner produce identical hashes for identical content. The trailing `\n` means the digest matches `sed -n 'start,end p' file | sha256sum`, which is the UNIX-standard behavior for extracting lines. No other hash algorithm is supported. `source_anchor` is the literal text of the first line of the span — used by the linter for efficient shift detection (see below).
 <!-- @liyi:end-requirement source-span-semantics -->
 
 <!-- @liyi:requirement tool-managed-fields -->
@@ -450,7 +450,7 @@ The correct mitigation is language-aware span anchoring — resolving spec posit
 Without a `tree_path`, the fallback is: batch false positives on any line-shifting edit, corrected on the next agent inference pass. The damage is transient and mechanical — the agent re-reads the file, re-records spans, re-hashes — but noisy in CI until it does. Still fewer false positives than file-level hashing (where a docstring typo marks every spec in the file stale with no way to distinguish which items actually changed).
 
 <!-- @liyi:requirement span-shift-heuristic -->
-**Span-shift detection (included in 0.1).** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi check --fix`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
+**Span-shift detection.** When the linter detects a hash mismatch and no `tree_path` is available (or tree-sitter has no grammar for the language), it falls back to scanning ±100 lines for content matching the recorded hash. If the same content appears at an offset (e.g., shifted down by 3 lines because an import was added), the linter reports `SHIFTED` rather than `STALE`. With `--fix`, the span is auto-corrected in the sidecar; without `--fix`, the linter reports the shift but does not write. Once a delta is established for one item, subsequent items in the same file are adjusted by the same delta before checking — so a single import insertion resolves in one probe, not twenty. If no match is found within the window, the linter gives up and reports `STALE` as usual. This is the same heuristic `patch(1)` uses with a fuzz factor — a linear scan over a bounded window, ~50 lines, no parser. Combined with `liyi check --fix`, this eliminates the most common source of false positives (line-shifting edits) without language-specific tooling. For files with `tree_path` populated, tree-sitter-based anchoring supersedes this heuristic entirely — see the next section.
 <!-- @liyi:end-requirement span-shift-heuristic -->
 
 ### Structural identity via `tree_path`
@@ -534,7 +534,7 @@ The shorthand vocabulary (`fn`, `struct`, `class`, `mod`, `impl`, `trait`, `enum
 
 All languages are built-in — the binary ships with every supported tree-sitter grammar. The binary-size cost is modest relative to the universality benefit; Python, Go, JavaScript, and TypeScript codebases vastly outnumber Rust codebases, and requiring users to opt in per language would hinder adoption of a tool whose value proposition is universality.
 
-**Built-in languages (21 in 0.1):**
+**Built-in languages:**
 
 | Language | Grammar crate | Notes |
 |---|---|---|
@@ -574,7 +574,7 @@ All languages are built-in — the binary ships with every supported tree-sitter
 The linter handles malformed or outdated specs defensively. Every case below produces a clear diagnostic; none silently passes.
 
 - **`source_span` past EOF.** The source file was truncated or shortened below the span's range. Report as stale — the source changed. Message: `source_span [42, 58] extends past end of file (37 lines)`.
-- **Source file deleted or renamed.** The `"source"` path no longer exists. Report as error — the spec is orphaned. The `.liyi.jsonc` should be deleted or renamed to match. Fails `--fail-on-stale`. (The linter could detect and suggest renames via content matching post-MVP; for 0.1, it only reports the orphan.)
+- **Source file deleted or renamed.** The `"source"` path no longer exists. Report as error — the spec is orphaned. The `.liyi.jsonc` should be deleted or renamed to match. Fails `--fail-on-stale`. (Detecting and suggesting renames via content matching is deferred; currently the linter only reports the orphan.)
 - **Inverted or zero-length `source_span`.** `start > end` or `start == end`. Report as error — `invalid source_span [58, 42]` or `empty source_span [42, 42]`. A zero-length span hashes nothing, which is never a useful staleness check.
 - **Malformed `source_hash`.** Doesn't match the expected format (`sha256:<hex>`). Report as error — `malformed source_hash`. This is a data integrity issue, distinct from staleness.
 - **Overlapping `source_span` ranges.** Two specs in the same file claim overlapping lines. Allowed — an `impl` block and one of its methods may legitimately overlap, or a macro invocation may be the intent site for multiple logical items. The linter hashes each span independently.
@@ -616,7 +616,7 @@ This is an inherent limitation of per-item staleness (tests have it too — a pa
 - **Module-level intent** (`@liyi:module`) captures cross-cutting invariants (“all serialization must round-trip cleanly,” “no endpoint is accessible without authentication”). These invariants remain valid and testable regardless of where the change happened.
 - **Adversarial testing** is the designed safety net for semantic drift. A test generated from “must reject unauthenticated requests” will catch a change to `require_auth`’s behavior even though the specced function’s `source_hash` didn’t change.
 
-**Future direction: code-level dependency graph.** Beyond requirement edges, specs could optionally declare code-level dependencies: `"depends_on": ["src/auth/middleware.rs:require_auth"]`. If any dependency's hash changes, the dependent spec is also flagged stale. The agent is the natural thing to populate this (it already understands call graphs); the linter just follows the edges. This is not in scope for 0.1 — the combination of local staleness + requirement tracking + module invariants + adversarial testing covers most real cases — but it's the shape of a tighter answer for teams with highly interconnected code.
+**Deferred (speculative): code-level dependency graph.** Beyond requirement edges, specs could optionally declare code-level dependencies: `"depends_on": ["src/auth/middleware.rs:require_auth"]`. If any dependency's hash changes, the dependent spec is also flagged stale. The agent is the natural thing to populate this (it already understands call graphs); the linter just follows the edges. This is deferred — the combination of local staleness + requirement tracking + module invariants + adversarial testing covers most real cases — but it's the shape of a tighter answer for teams with highly interconnected code.
 
 ---
 
@@ -859,7 +859,7 @@ This is a *human decision*, not an inference — the annotation says "I want thi
 
 **Why this matters for adoption.** Without this convention, the first experience for a typical microservice team is: run `liyi init`, get specs for 50 endpoints each with 5–6 infrastructure `related` edges, auth middleware changes, 50 items go stale, triage report is huge. The tool transitions from "nice to have" to "actively annoying" on day 3. By directing infrastructure edges to middleware items, a middleware change makes 1 item stale (the middleware itself), not 50 endpoints. The blast radius stays manageable, and the intent specs surface what actually matters: business logic that no framework declares.
 
-**Gap: middleware application tracking.** The current schema has no way to express "item X is *protected by* middleware Y" — only "item X is *related to* requirement Z." If the router removes auth middleware from a route, nothing in the spec detects this unless the endpoint has a direct `related` edge. A future `guarded_by` field could address this, but for 0.1 the convention-based approach (infrastructure edges on middleware, business edges on items) is sufficient.
+**Gap: middleware application tracking.** The current schema has no way to express "item X is *protected by* middleware Y" — only "item X is *related to* requirement Z." If the router removes auth middleware from a route, nothing in the spec detects this unless the endpoint has a direct `related` edge. A `guarded_by` field could address this (deferred, speculative), but the convention-based approach (infrastructure edges on middleware, business edges on items) is sufficient.
 
 ### Review scaling and complexity
 
@@ -1076,7 +1076,7 @@ fn name(&self) -> &str { &self.name }
 
 The linter treats `@liyi:ignore` and `@liyi:trivial` the same: no spec required. The distinction is for humans and agents — `@liyi:trivial` is an intentional classification (“I looked at this and it’s not worth speccing”), `@liyi:ignore` is an opt-out (“this doesn’t participate”).
 
-**Justification convention.** `@liyi:ignore` accepts an optional reason after the colon: `@liyi:ignore: <reason>`. The linter does not enforce this in 0.1, but teams are encouraged to include one — without a reason, `@liyi:ignore` is a black hole for future readers. `liyi check --require-ignore-reason` can enforce non-empty justifications in a later release.
+**Justification convention.** `@liyi:ignore` accepts an optional reason after the colon: `@liyi:ignore: <reason>`. The linter does not enforce this, but teams are encouraged to include one — without a reason, `@liyi:ignore` is a black hole for future readers. `liyi check --require-ignore-reason` can enforce non-empty justifications (deferred).
 
 During inference, the agent should annotate trivial items with `@liyi:trivial` rather than silently skipping them. This makes the classification visible and reviewable. If a reviewer disagrees, they replace it with `@liyi:nontrivial` — the agent then infers a spec on the next pass and won’t override with `@liyi:trivial`. The linter treats `@liyi:nontrivial` the same as an unannotated item: a spec is required.
 
@@ -1145,14 +1145,14 @@ This handles the common case without configuration. `.gitignore` already exclude
 
 ### Scope: staleness and review, not coverage
 
-In 0.1, the linter checks the *quality* of existing specs, not the *coverage* of the codebase:
+The linter checks the *quality* of existing specs, not the *coverage* of the codebase:
 
 - **Staleness**: for each spec, hash the source lines at `source_span` and compare against `source_hash`. Mismatch → stale.
 - **Requirement tracking**: discover `@liyi:requirement` markers, hash their content, resolve `"related"` edges in `.liyi.jsonc`. If a requirement's hash changed, all specs with edges to it are flagged.
 - **Review status**: report specs where the item has neither a `@liyi:intent` annotation in source nor `"reviewed": true` in the sidecar — the item is unreviewed. Optionally fail CI via `--fail-on-unreviewed`.
 - **Exclusion**: respect `@liyi:ignore`, `@liyi:trivial` annotations and `.liyiignore` patterns.
 
-What it does *not* do in 0.1: detect items that have no spec and no annotation at *check time*. The linter enforces quality of what the agent wrote, not completeness of what exists. However, `liyi init` now uses tree-sitter to discover all items in supported languages and pre-populate sidecar entries (see *Tree-sitter item discovery in scaffold*). This shifts the coverage problem from check-time detection to init-time discovery: if `liyi init` ran on a file, every item has a spec entry; the agent fills in intent or marks items `"=trivial"`. A future `liyi check --coverage` mode could compare the set of tree-sitter-discovered items against existing sidecar entries to report missing specs — the infrastructure exists, only the check-time wiring is deferred.
+What it does *not* do: detect items that have no spec and no annotation at *check time*. The linter enforces quality of what the agent wrote, not completeness of what exists. However, `liyi init` now uses tree-sitter to discover all items in supported languages and pre-populate sidecar entries (see *Tree-sitter item discovery in scaffold*). This shifts the coverage problem from check-time detection to init-time discovery: if `liyi init` ran on a file, every item has a spec entry; the agent fills in intent or marks items `"=trivial"`. A future `liyi check --coverage` mode could compare the set of tree-sitter-discovered items against existing sidecar entries to report missing specs — the infrastructure exists, only the check-time wiring is deferred.
 
 This limitation applies to *item coverage* — detecting unlabeled code definitions that lack specs. A narrower and mechanically solvable gap exists: *annotation coverage* — ensuring that every explicit `@liyi:requirement` and `@liyi:related` marker in source has a corresponding entry in the co-located sidecar. See *Annotation coverage* below.
 
@@ -1210,7 +1210,7 @@ Three output modes share the same detection engine:
 | Mode | Audience | Format |
 |---|---|---|
 | `liyi check` (default) | Human (terminal) | One-line diagnostics with icons |
-| `liyi check --json` | CI, dashboards, scripts | Machine-readable JSON (post-MVP) |
+| `liyi check --json` | CI, dashboards, scripts | Machine-readable JSON (deferred to 0.2.0) |
 | `liyi check --prompt` | Agent (AGENTS.md workflow) | Structured JSON with resolution instructions |
 
 The `--prompt` flag is a *formatter*, not a different check. All modes exit nonzero when gaps exist. The flags (`--fail-on-stale`, `--fail-on-untracked`, etc.) control which conditions are failures in all modes.
@@ -1333,7 +1333,7 @@ Together, these four checks cover every conventional way that prose references a
 
 **The self-reference is not accidental — it is inherent.** The convention is a fixpoint of its own application: applying 立意 ("establish intent before execution") to the development of 立意 yields 立意. The design document contains `@liyi:requirement` blocks that the linter's code tracks via `@liyi:related` edges; CI runs `liyi check` on its own source; the AGENTS.md instruction that agents follow to write specs is itself a spec of how specs should be written; the intent-first orchestration pattern (see *Adoption Story*) is 立意 applied to its own development task. Every 立意-enabled workflow inherently bootstraps the same cycle — state what you intend, persist it, verify against it — because the convention occupies this fixpoint. This explains why dogfooding works naturally rather than requiring special-casing, and why teams adopting the convention discover the same recursive structure regardless of their starting point.
 
-### Post-MVP: `liyi triage` — agent-driven staleness assessment
+### Deferred to 0.2.0: `liyi triage` — agent-driven staleness assessment
 
 When `liyi check` reports stale items, the next question is: *does it matter?* A variable rename is cosmetic; a new code path is semantic; a contradiction to declared intent is a bug. Answering that question requires LLM reasoning — but `liyi` itself never calls an LLM.
 
@@ -1546,7 +1546,7 @@ The shift heuristic (non-`tree_path` fallback) is inherently safe — it only ma
 
 Two Rust crates (`liyi` library + `liyi-cli` binary), organized as a Cargo workspace under `crates/`. Core check logic, tree-sitter-based span recovery, CLI, diagnostics, span-shift detection, `--fix` write-back, marker normalization, `migrate`, and `approve`. Dependencies: `serde`, `serde_json`, `sha2`, `ignore`, `regex`, `tree-sitter`, `tree-sitter-rust` (library); `clap` (CLI).
 
-No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are a post-MVP consideration.
+No config file reader. `.liyiignore` handles file exclusion; config-based ignore patterns are deferred.
 
 **Two-pass design.** The `"related"` hash-comparison model requires the linter to resolve requirement names globally. The linter cannot validate `"related"` edges in a single pass — it must first discover all `@liyi:requirement` markers and hash them, then validate edges in item specs on a second pass (or a deferred validation queue). This is straightforward but means naive single-pass implementations won't work.
 
@@ -1566,7 +1566,7 @@ Every diagnostic the linter can emit, with its severity, audience, exit code con
 | `agent` | Fixable by agent re-inference or sidecar editing — requires reading source but no human judgment | STALE (content changed), UNTRACKED, MISSING RELATED |
 | `human` | Requires human judgment — review, approval, or design decision | unreviewed, intent-violation, unknown requirement |
 
-This distinction was motivated by dogfooding experience: an AI agent maintaining sidecars during interactive editing found `liyi check` output dominated by 75 "not reviewed" diagnostics (human-required) that buried 2 actionable errors (tool-fixable). Without audience tagging, agents must grep and filter manually. The `--json` output (post-MVP) will include the audience field; the terminal output uses `--level` filtering as a pragmatic proxy.
+This distinction was motivated by dogfooding experience: an AI agent maintaining sidecars during interactive editing found `liyi check` output dominated by 75 "not reviewed" diagnostics (human-required) that buried 2 actionable errors (tool-fixable). Without audience tagging, agents must grep and filter manually. The `--json` output (deferred to 0.2.0) will include the audience field; the terminal output uses `--level` filtering as a pragmatic proxy.
 
 | Condition | Severity | Audience | Exit code | Message template | Fix hint |
 |---|---|---|---|---|---|
@@ -1702,7 +1702,7 @@ This cheatsheet belongs in AGENTS.md (for agents) and in the README or a man pag
 
 ---
 
-## Post-MVP: IDE and Agent Integration
+## Deferred to 0.2.0: IDE and Agent Integration
 
 The file-based convention (`.liyi.jsonc`, annotation markers, `liyi check` CLI) is the foundation and works without additional tooling. IDE and agent integrations are UX layers that make the workflow faster — not prerequisites.
 
@@ -2011,9 +2011,9 @@ Tree-sitter signals (`_body_lines`, `_has_doc`, `_likely_trivial`) are always pr
 
 **Graceful degradation.** When not in a git repository, `--hints` omits VCS-derived signals but retains tree-sitter signals. For unsupported languages (no grammar), `liyi init` produces an empty `"specs": []` array — the agent creates entries from scratch, as before.
 
-### Challenge: on-demand semantic verification (post-MVP)
+### Challenge: on-demand semantic verification (deferred to 0.2.0)
 
-> **Note:** Challenge is explicitly deferred to post-0.1. The `liyi approve` workflow must be established first — challenge verifies edges that only exist after humans have reviewed intent.
+> **Note:** Challenge is explicitly deferred to 0.2.0. The `liyi approve` workflow must be established first — challenge verifies edges that only exist after humans have reviewed intent.
 
 Challenge is a human- or agent-initiated action that asks a model to verify whether an artifact satisfies its upstream — code against intent, intent against requirement, or requirement against parent requirement. Like triage, challenge follows the same architectural principle: `liyi` provides the context; the agent does the reasoning; the verdict is structured output.
 
@@ -2146,10 +2146,10 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 - A **CI linter** — `liyi check` + `liyi check --fix`, with tree-sitter-based span recovery. The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
-- A **triage protocol** (post-MVP) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
+- A **triage protocol** (deferred to 0.2.0) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
 - **Agent instructions** — 10 behavioral rules + two JSON schemas in AGENTS.md (~300 lines; the schemas are machine-consumed reference, not human-read).
 - A **practice** — establish intent before (or alongside) execution.
-- A **challenge mechanism** (post-MVP) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
+- A **challenge mechanism** (deferred to 0.2.0) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
 
 ## What This Is Not
 
@@ -2280,7 +2280,7 @@ The spec-driven development space is no longer hypothetical — Augment Intent, 
 - **Self-contained.** The linter is a single binary with tree-sitter grammars built in, no runtime dependencies.
 - **No lock-in.** `.liyi.jsonc` files are plain JSONC. `@liyi:module` markers are comments. Delete them and nothing breaks.
 - **Any programming language.** The checking process doesn't parse source code — it reads line ranges from `source_span`, hashes them, compares. `.liyi.jsonc` is JSONC. `@liyi:module` markers use whatever comment syntax the host format already provides. Works with any language, any framework, any build system, any design pattern.
-- **Hardware RTL too.** The convention applies at the RTL level (Verilog, SystemVerilog, VHDL, Chisel) with no design changes — sidecars co-locate with `.v`/`.vhd`/`.scala` files, `source_span` and `source_hash` work on any text, and tree-sitter grammars exist for Verilog and VHDL. In hardware domains where requirements traceability is a compliance obligation (DO-254, ISO 26262, IEC 61508), 立意 functions as a lightweight shim between a requirements management system and RTL source: a `liyi import-reqif` command (post-MVP) can consume ReqIF — the open OMG standard (ReqIF 1.2, `formal/2016-07-01`) that DOORS, Polarion, and other tools export — and emit `@liyi:requirement` blocks, connecting managed requirements to RTL implementations with hash-based staleness detection. The tool doesn't replace DOORS; it fills the last mile that DOORS doesn't cover.
+- **Hardware RTL too.** The convention applies at the RTL level (Verilog, SystemVerilog, VHDL, Chisel) with no design changes — sidecars co-locate with `.v`/`.vhd`/`.scala` files, `source_span` and `source_hash` work on any text, and tree-sitter grammars exist for Verilog and VHDL. In hardware domains where requirements traceability is a compliance obligation (DO-254, ISO 26262, IEC 61508), 立意 functions as a lightweight shim between a requirements management system and RTL source: a `liyi import-reqif` command (deferred, speculative) can consume ReqIF — the open OMG standard (ReqIF 1.2, `formal/2016-07-01`) that DOORS, Polarion, and other tools export — and emit `@liyi:requirement` blocks, connecting managed requirements to RTL implementations with hash-based staleness detection. The tool doesn't replace DOORS; it fills the last mile that DOORS doesn't cover.
 - **Any human language.** Intent prose is natural language — write it in your team’s working language. Annotation markers accept aliases in any supported language (`@liyi:ignore` / `@立意:忽略` / `@liyi:ignorar`). No locale configuration; the linter accepts all aliases from a static table. The project’s Chinese cultural origin isn’t a barrier — it’s an invitation.
 
 ### Who this is for
