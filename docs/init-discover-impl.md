@@ -71,18 +71,18 @@ Secondary considerations (real but not decisive on their own): a single git stra
 - `discover_items()` function: full-file AST traversal returning all items with span, tree_path, and name.
 - Tree-sitter hints: `_body_lines`, `_has_doc`, `_likely_trivial`.
 - VCS hints (behind `--hints`): `commits`, `fix_commits`, `has_tests`, `last_modified_days`.
-- Doc comment detection for the 6 highest-traffic languages (Rust, Python, Go, JavaScript, TypeScript, Java).
+- Doc comment detection for all currently feasible languages (15/21 total: Rust, Python, Go, JavaScript, TypeScript, Java, C, C++, C#, PHP, Objective-C, Kotlin, Swift, Zig, and one additional supported grammar where detection is feasible).
 - `_hints` field on `ItemSpec` (as `serde_json::Value`).
 - `_hints` stripping in `liyi check --fix`.
 - `--no-discover` flag to opt out of item discovery.
-- `--hints` flag to opt in to VCS signals.
+- `--hints` flag to opt in to VCS signals (planned, not yet implemented).
 - `--trivial-threshold <N>` flag (default: 5).
 - Golden test fixture for scaffold output.
 - Requirement marker discovery in `liyi init`: scan the target file for `@liyi:requirement` blocks and emit `RequirementSpec` entries in the scaffolded sidecar.
 
 ### Out of scope
 
-- Doc comment detection for remaining languages (C, C++, C#, PHP, Objective-C, Kotlin, Swift, Bash, Ruby, Zig) — deferred; `_has_doc` is simply absent for these until implemented.
+- Doc comment detection for unsupported / not-useful cases only (Bash, Ruby not feasible; JSON/TOML/YAML not applicable).
 - Content extraction from doc comments (the tool detects *presence*, not *text*).
 - `liyi init <directory>` batch mode — deferred; the current CLI accepts one file.
 - `_hints` in `liyi check --prompt` output — deferred.
