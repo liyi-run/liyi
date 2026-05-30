@@ -2401,15 +2401,11 @@ The success criterion remains: at least one team reports catching a real defect 
 
 **Action:** After shipping the linter, run the adversarial testing experiment on a real codebase (the project's own, or a volunteer's) and publish the results — including null results if the hypothesis doesn't hold. Honest reporting of a null result would still be a contribution to the field.
 
-### 4. `source_span` brittleness in 0.1 (mitigated by `tree_path`)
+### 4. `source_span` brittleness (mitigated by `tree_path`)
 
-Line-number-based spans mean that any edit changing line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. The span-shift heuristic (±100-line scan, delta propagation) handles uniform shifts — the most common case — and reports `SHIFTED` (auto-corrected) rather than `STALE`. `liyi check --fix` handles non-uniform shifts when `tree_path` is available.
+Line-number-based spans mean any edit that changes line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. This is mitigated in layers: `tree_path` structural anchoring resolves spans by AST identity regardless of how lines shifted (primary), the span-shift heuristic auto-corrects uniform shifts and reports `SHIFTED` rather than `STALE` (fallback), and `liyi check --fix` plus agent re-inference clean up the rest. The mechanics are detailed in *Per-item staleness via `source_span`* and *Structural identity via `tree_path`*.
 
-This risk prompted the introduction of `tree_path` in 0.1 (see *Structural identity via `tree_path`*). When `tree_path` is populated, span recovery is deterministic — the tool locates the item by AST identity regardless of how lines shifted. The span-shift heuristic remains as a fallback for items without a `tree_path` (macros, generated code, unsupported languages).
-
-The remaining friction for items without `tree_path`: between agent sessions, manual edits that shift lines without an agent re-inference will produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless. For supported languages (Rust in 0.1), `tree_path` eliminates this friction entirely.
-
-**Mitigation in 0.1:** `tree_path` structural anchoring (primary), span-shift auto-correction (fallback), `liyi check --fix`, agent re-inference on next pass.
+The residual friction is for items without a `tree_path` (macros, generated code, languages without a tree-sitter grammar): between agent sessions, manual edits that shift lines without a re-inference produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless.
 
 ### 5. Convention absorption and licensing
 
