@@ -2144,7 +2144,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 - A **CI linter** — `liyi check` + `liyi check --fix`, with tree-sitter-based span recovery. The enforcement mechanism.
 - A **spec convention** — `@liyi:module` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
-- A **triage protocol** (deferred to 0.2.0) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline; the LLM reasoning lives in the agentic workflow.
+- A **triage protocol** (deferred to 0.2.0) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline (see *`liyi` is infrastructure; the agent is the brain*).
 - **Agent instructions** — 10 behavioral rules + two JSON schemas in AGENTS.md (~300 lines; the schemas are machine-consumed reference, not human-read).
 - A **practice** — establish intent before (or alongside) execution.
 - A **challenge mechanism** (deferred to 0.2.0) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
