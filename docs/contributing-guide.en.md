@@ -48,6 +48,16 @@ As the project grows, expect additional top-level directories for implementation
 - The design document (`docs/liyi-design.md`) is the authoritative specification. Changes to it should be deliberate and well-motivated.
 - When proposing design changes, explain the rationale in the commit body.
 
+### Planning major changes
+
+For any **major feature or refactoring work** (anything beyond a localized fix or a single-file edit), follow this workflow:
+
+1. **Discussion.** Agree on scope and approach before touching code or specs.
+2. **English-only throwaway roadmap.** Capture the plan in a temporary planning note named `docs/throwaway-*.md`. It records the milestone model, the ordered list of logical changes, and the intended commit sequence. These notes are English-only (they are working artifacts, exempt from the bilingual requirement) and carry an SPDX header plus a `**Status:**` line stating they are temporary and will be deleted or folded into a permanent doc once the work lands.
+3. **Implementation.** Work through the roadmap **one commit per logical change**, then delete the throwaway note (or fold it into `docs/next-steps.md` / the relevant design doc).
+
+This keeps large changes reviewable, makes the plan inspectable before execution, and prevents half-finished planning prose from leaking into the published design.
+
 ### Agent skill template
 
 - The agent skill template is a deliverable of this project — a set of files (AGENTS.md, contributing guides, AIGC policy) that downstream repositories can adopt and customize.
