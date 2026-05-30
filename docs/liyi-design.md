@@ -892,7 +892,7 @@ This is the genuine scaling story: per-item review is ~10× cheaper than reading
 
 Review in 立意 has two paths: a quick sidecar approval (`"reviewed": true`) for when the agent got it right, and source-level `@liyi:intent` annotations for when the human wants to state intent explicitly. The linter considers an item reviewed if **either** path is satisfied.
 
-The sidecar path is the default for ergonomics — zero source noise. The source path is the override for safety and precision — conspicuous in code review, with the human's own words. Teams choose their default based on trust model.
+The sidecar path is the default for ergonomics — zero source noise. The source path is the override for safety and precision — conspicuous in code review, with the human's own words. Teams choose their default based on trust model (see *Security Model → Two paths, two trust profiles* for the friction/conspicuousness analysis and the forgery threat model).
 
 ### `@liyi:intent` — source-level intent (the explicit override)
 
