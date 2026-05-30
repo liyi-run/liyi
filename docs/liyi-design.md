@@ -2221,7 +2221,7 @@ flowchart TD
 
 **Greenfield** is straightforward: `liyi init` scaffolds the agent instruction into `AGENTS.md`, and every file the agent writes from that point forward gets specs alongside code. The codebase conforms from day one.
 
-**Brownfield** adds a bootstrapping step. `liyi init <source>` creates skeleton sidecars populated with tree-sitter-derived signals (`_hints`) — body line count, docstring presence, and a trivial-item suggestion (controlled by `--trivial-threshold`). The agent reads these hints to prioritize where to invest inference effort: a large function with a docstring warrants deeper investigation; a one-liner can be inferred from source alone or marked trivial. VCS-derived signals (commit count, bug-fix frequency) are planned for a future release. Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
+**Brownfield** adds a bootstrapping step: `liyi init <source>` creates skeleton sidecars populated with tree-sitter-derived `_hints` — cheap, deterministic signals (body size, docstring presence, churn) that let the agent prioritize where to invest inference effort, a large documented function warranting deeper investigation than a one-liner (see *`liyi init`* and *`_hints` — cold-start inference aids* for the signal set and lifecycle). Specs start unreviewed; the team reviews incrementally — on first touch, by directory, or by criticality. The linter is immediately useful after bootstrap as a progress tracker.
 
 ### Intent-first orchestration
 
