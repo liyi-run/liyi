@@ -2176,7 +2176,7 @@ Meanwhile, the same model writes the tests. Same training data, same blind spots
 
 ### The pitch
 
-立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable. The tool doesn't compete with what your framework already declares; it captures what your framework *can't*. The review compression and staleness detection keep this captured intent alive as the code evolves. Once intent is persistent, a different AI can read it and try to break the code.
+立意 makes that intent — business requirements, domain invariants, implicit assumptions — persistent, structured, and adversarially testable. Review compression and staleness detection keep the captured intent alive as the code evolves. Once intent is persistent, a different AI can read it and try to break the code.
 
 ### Progressive adoption
 
