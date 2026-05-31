@@ -203,5 +203,4 @@ Before finalizing a commit, verify:
 
 For Rust code, additionally verify:
 
-- `cargo clippy` passes.
-- `cargo fmt --check` passes.
+- `make lint` passes (rustfmt check, Clippy, and the linter's own self-check).

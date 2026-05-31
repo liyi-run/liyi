@@ -25,10 +25,9 @@ structure, code style, commit conventions, and the AIGC policy.
 1. **Open an issue first** for non-trivial changes so we can discuss scope.
 2. Keep PRs small and focused — one logical change per PR.
 3. Ensure `cargo test --workspace` passes.
-4. Ensure `cargo clippy --workspace -- -D warnings` is clean.
-5. Ensure `cargo run -p liyi-cli -- check --root .` passes (the project
-   dogfoods its own linter).
-6. Follow the [AIGC policy](docs/aigc-policy.en.md) if using AI assistance.
+4. Ensure `make lint` passes (rustfmt check, Clippy, and the project's own
+   linter — it dogfoods itself).
+5. Follow the [AIGC policy](docs/aigc-policy.en.md) if using AI assistance.
 
 ## License
 

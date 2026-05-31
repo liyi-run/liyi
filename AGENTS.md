@@ -20,10 +20,8 @@ For Rust code:
 - Conform to official rustfmt style.
 - Keep free from Clippy lints.
 
-Before committing, ensure:
-
-- `cargo fmt --check` passes.
-- `cargo clippy` passes.
+Before committing, run `make lint` (rustfmt check, Clippy, and the linter's
+own self-check) and ensure it passes.
 
 See the contributing guide for full details.
 

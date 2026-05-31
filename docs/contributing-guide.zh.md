@@ -200,5 +200,4 @@ Signed-off-by: Contributor Name <contributor@example.com>
 
 对于 Rust 代码，请额外检查：
 
-- `cargo clippy` 通过。
-- `cargo fmt --check` 通过。
+- `make lint` 通过（rustfmt 检查、Clippy 以及 linter 自身的自检）。
