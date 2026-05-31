@@ -387,14 +387,12 @@ mod tests {
         source: &str,
         key: &str,
     ) -> Option<tree_sitter::Node<'a>> {
-        if node.kind() == "block_mapping_pair" {
-            if let Some(key_node) = node.child_by_field_name("key") {
-                if let Some(text) = super::super::lang_yaml::leaf_text_pub(&key_node, source) {
-                    if text == key {
-                        return Some(*node);
-                    }
-                }
-            }
+        if node.kind() == "block_mapping_pair"
+            && let Some(key_node) = node.child_by_field_name("key")
+            && let Some(text) = super::super::lang_yaml::leaf_text_pub(&key_node, source)
+            && text == key
+        {
+            return Some(*node);
         }
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
