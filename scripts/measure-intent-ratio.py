@@ -7,9 +7,15 @@ sidecars, then reports line counts, byte counts, spec counts, and the
 resulting review-compression ratio.
 
 Usage:
-    python3 scripts/measure-intent-ratio.py [ROOT]
+    python3 scripts/measure-intent-ratio.py [ROOT] [--display-width]
 
 ROOT defaults to the current directory.
+
+--display-width estimates prose lines by terminal display columns rather
+than raw character count: CJK wide / fullwidth characters occupy two
+columns, so for intent written in Chinese (or other East Asian scripts)
+the raw character count understates the on-screen review surface by
+roughly 1.5x. Use this mode for CJK-heavy intent.
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -38,6 +45,18 @@ SKIP_DIRS: set[str] = {"target", "node_modules", ".git", "__pycache__", ".mypy_c
 # Estimated characters per line for prose (used to convert character counts
 # to a human-comparable "lines of prose" figure).
 CHARS_PER_LINE = 80
+
+
+def display_width(text: str) -> int:
+    """Terminal display columns of *text*.
+
+    East Asian wide (W) and fullwidth (F) characters occupy two columns;
+    everything else occupies one. This matches how CJK intent prose
+    actually renders in a fixed-width terminal.
+    """
+    return sum(
+        2 if unicodedata.east_asian_width(c) in ("W", "F") else 1 for c in text
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +125,7 @@ def file_metrics(path: str) -> dict:
     return {"lines": content.count("\n"), "bytes": len(content.encode("utf-8"))}
 
 
-def measure(root: Path) -> dict:
+def measure(root: Path, use_display_width: bool = False) -> dict:
     sources, sidecars = collect_files(root)
 
     src_metrics = {fp: file_metrics(fp) for fp in sources}
@@ -121,6 +140,7 @@ def measure(root: Path) -> dict:
     total_specs = 0
     prose_count = 0
     prose_chars = 0
+    prose_cols = 0
     doc_count = 0
     trivial_count = 0
     reviewed_count = 0
@@ -141,6 +161,7 @@ def measure(root: Path) -> dict:
             else:
                 prose_count += 1
                 prose_chars += len(intent)
+                prose_cols += display_width(intent)
             if spec.get("reviewed", False):
                 reviewed_count += 1
 
@@ -172,9 +193,12 @@ def measure(root: Path) -> dict:
         modules[mod]["src"] += entry["src_lines"]
         modules[mod]["spec"] += entry["spec_lines"]
 
-    intent_prose_lines = prose_chars / CHARS_PER_LINE if prose_chars else 0
+    prose_units = prose_cols if use_display_width else prose_chars
+    intent_prose_lines = prose_units / CHARS_PER_LINE if prose_units else 0
 
     return {
+        "use_display_width": use_display_width,
+        "prose_cols": prose_cols,
         "source_files": len(sources),
         "sidecar_files": len(sidecars),
         "total_src_lines": total_src_lines,
@@ -242,7 +266,9 @@ def report(m: dict) -> None:
 
     # Review compression
     ipl = m["intent_prose_lines"]
+    basis = "display columns" if m.get("use_display_width") else "characters"
     print(f"\n## Review compression\n")
+    print(f"Prose-line basis:          {basis}")
     if m["total_src_lines"] and ipl:
         compression_lines = ipl / m["total_src_lines"]
         compression_bytes = m["prose_chars"] / m["total_src_bytes"] if m["total_src_bytes"] else 0
@@ -272,13 +298,22 @@ def report(m: dict) -> None:
 
 
 def main() -> None:
-    root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
+    args = sys.argv[1:]
+    use_display_width = False
+    positional: list[str] = []
+    for arg in args:
+        if arg in ("--display-width", "-w"):
+            use_display_width = True
+        else:
+            positional.append(arg)
+
+    root = Path(positional[0]) if positional else Path(".")
     root = root.resolve()
 
     if not (root / "AGENTS.md").exists():
         print(f"warning: {root} does not look like a liyi-annotated repo", file=sys.stderr)
 
-    data = measure(root)
+    data = measure(root, use_display_width=use_display_width)
     report(data)
 
 
