@@ -153,7 +153,24 @@ fn main() {
         } => match source_file {
             Some(src) => {
                 match liyi::init::init_sidecar(&src, force, !no_discover, trivial_threshold) {
-                    Ok(path) => println!("Created: {}", path.display()),
+                    Ok(path) => {
+                        println!("Created: {}", path.display());
+                        // When discovery was requested but the file's extension
+                        // maps to no supported grammar, item discovery silently
+                        // yields nothing. Surface that so an empty scaffold is not
+                        // mistaken for a fully-covered file.
+                        if !no_discover && liyi::tree_path::detect_language(&src).is_none() {
+                            let ext = src
+                                .extension()
+                                .and_then(|e| e.to_str())
+                                .map(|e| format!(" (.{e})"))
+                                .unwrap_or_default();
+                            println!(
+                                "note: unsupported file format{ext}; no items discovered \
+                                 — wrote an empty scaffold for manual authoring"
+                            );
+                        }
+                    }
                     Err(e) => {
                         eprintln!("Error: {e}");
                         process::exit(1);
