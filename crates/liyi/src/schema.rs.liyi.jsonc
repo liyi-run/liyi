@@ -15,7 +15,7 @@
       "source_hash": "sha256:eb13a8e5c419c2fd0a1bc441fe4eaa5b8cd52ec411cb425c9fb0ca622d5ee96c",
       "source_anchor": "pub fn validate_version(version: &str) -> Result<(), String> {",
       "related": {
-        "version-field-required": null
+        "version-field-required": "sha256:361fd9e237617e9cf0e80df99dd31b06274eca55e15e33384fb4a8f745d07fb9"
       }
     },
     {
