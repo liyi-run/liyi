@@ -51,12 +51,19 @@ checkpoint because later roadmap items build on the same review model.
 
 | # | Item | Source |
 |---|------|--------|
-| 2.3 | **Extract `build_requirement_registry()` as public API** | lsp-design.md Step 0 |
-| 2.4 | **Export `RequirementRegistry` / `RequirementRecord`** | lsp-design.md Step 0 |
+| 2.3 | ~~**Extract `build_requirement_registry()` as public API**~~ | lsp-design.md Step 0 |
+| 2.4 | ~~**Export `RequirementRegistry` / `RequirementRecord`**~~ | lsp-design.md Step 0 |
 
-**Rationale**: This is the *prerequisite* gate for all LSP work. It's a pure
-refactor with no behavioral change — low risk, high leverage. Doing it now
-de-risks the v0.2 timeline.
+**Status**: ✅ Done — `liyi::check` now exposes public `RequirementRegistry`
+and `RequirementRecord`, plus `build_requirement_registry()` (pass 1) and
+`check_sidecars()` (pass 2) that accept a prebuilt registry. `run_check()`
+remains the CLI wrapper and is behavior-compatible. The
+`lsp-check-refactor-exposes-registry` requirement is now referenced by
+`build_requirement_registry`.
+
+**Rationale**: This was the *prerequisite* gate for all LSP work — a pure
+refactor with no behavioral change. With it landed, the LSP crate can cache
+the registry across edits instead of re-scanning the project.
 
 ### 2C. VCS hints (Phase 3 of init-discover)
 
