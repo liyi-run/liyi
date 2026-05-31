@@ -12,12 +12,12 @@
         30
       ],
       "tree_path": "struct.RequirementRecord",
-      "source_hash": "sha256:4a938b349644222f5387b748f99750302de0d71c7c0e528025bff26d2533497b",
-      "source_anchor": "struct RequirementRecord {"
+      "source_hash": "sha256:5ae7021d934238ef91b0d9fcc6e92260b2b2e16490383d73ca34c54316a7ea79",
+      "source_anchor": "pub struct RequirementRecord {"
     },
     {
       "item": "RequirementRegistry",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Bundle the project-global pass-1 requirement state into one value: the requirements map plus the side-collections (requirements_with_sidecar, requirements_referenced, source_related_refs), the requirement dependency graph, and the precomputed cycles. Lets pass 2 and the post-pass emitters consume a single registry instead of loose maps and sets, and lets an LSP build it once from a cached file set and reuse it across edits.",
       "source_span": [
         41,
@@ -41,7 +41,7 @@
     },
     {
       "item": "run_check",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Orchestrate the two-pass check as the CLI convenience wrapper: discover the repo, surface ambiguous-sidecar warnings, then call build_requirement_registry (pass 1), check_sidecars (pass 2), and emit_registry_diagnostics (post-pass), threading a shared source-content cache. Sort the collected diagnostics by file then item/requirement name and return them with the exit code computed from CheckFlags.",
       "source_span": [
         76,
@@ -58,7 +58,7 @@
     },
     {
       "item": "build_requirement_registry",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Pass 1, reusable by an LSP: build the project-global RequirementRegistry from a discovered file set and sidecar list. Scan all source files for @liyi:requirement markers, compute fresh requirement hashes, collect source-level @liyi:related references, enrich records with stored sidecar hashes, and detect dependency cycles. Return the registry plus any duplicate-requirement diagnostics produced during discovery. The root parameter is accepted for API symmetry and future use but is not consulted by current pass-1 logic.",
       "source_span": [
         143,
@@ -70,7 +70,7 @@
     },
     {
       "item": "check_sidecars",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Pass 2, reusable by an LSP: check each discovered sidecar against the prebuilt requirement registry and return the per-sidecar diagnostics. The registry is read-only here. When fix is set and dry_run is not, sidecars are written back with rehashed spans, recovered spans, filled null related hashes, and stripped _hints.",
       "source_span": [
         177,
@@ -82,7 +82,7 @@
     },
     {
       "item": "emit_registry_diagnostics",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Post-pass: emit the registry-derived diagnostics by delegating to emit_untracked_requirements (which auto-creates sidecar entries when --fix is active), emit_unreferenced_requirements, and emit_cycle_diagnostics, passing the corresponding registry fields.",
       "source_span": [
         202,
@@ -197,8 +197,8 @@
         913
       ],
       "tree_path": "fn.check_one_sidecar",
-      "source_hash": "sha256:f441e617cc6e07ae6441a05503fea1c6774ccbcdc8b1fc7b14e18c49507ea525",
-      "source_anchor": "fn check_sidecar(",
+      "source_hash": "sha256:341f0409b64e30be86f724baeff2d638340eb8d0310233b0a122324c63607f56",
+      "source_anchor": "fn check_one_sidecar(",
       "related": {
         "fix-never-modifies-human-fields": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
         "fix-semantic-drift-protection": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",

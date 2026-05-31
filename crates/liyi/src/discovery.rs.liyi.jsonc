@@ -74,7 +74,7 @@
     },
     {
       "item": "resolve_sidecar_targets",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Expand a list of file/directory paths into concrete sidecar paths. For a directory, walk it recursively (respecting .gitignore and .liyiignore) and collect every .liyi.jsonc file. For a file that is itself a sidecar (ends in .liyi.jsonc), include it directly. For any other file, treat it as a source file and map it to its canonical co-located <filename>.liyi.jsonc sidecar, erroring if that sidecar does not exist. Error if a path does not exist. Return the deduplicated, sorted target list. A source file must never be returned verbatim, so that downstream parse_sidecar never receives source code.",
       "source_span": [
         231,
@@ -86,7 +86,7 @@
     },
     {
       "item": "sidecar_path_for_source",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Map a source file path to its canonical co-located sidecar path by appending the .liyi.jsonc suffix to the file name (e.g. money.rs -> money.rs.liyi.jsonc), preserving the parent directory. Must produce the same naming the rest of the tool reads and writes, so resolving a source file finds the sidecar that init/check create.",
       "source_span": [
         281,
