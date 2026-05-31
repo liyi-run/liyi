@@ -221,6 +221,67 @@ exactly the files where skipping the spec would be most dangerous.
 
 ---
 
+## Threats to validity: this is a best case, not a typical one
+
+The 30.5× figure is real, but it is measured on the most favorable
+possible subject. liyi's own codebase is not a representative sample of
+the repositories that would adopt the convention — it is the *ceiling*
+the convention can reach when intent exists before the code. Three
+confounds make it an outlier, and each one runs in the optimistic
+direction.
+
+**1. Reverse causality — the code was compiled from the intent.** This
+codebase was bootstrapped from a polished design document; much of the
+source is, in effect, an LLM "compilation" of prose that already
+existed. The intent specs therefore do not *summarize* the code — the
+code is a *projection of* the intent. Specs compress cleanly because
+they sit upstream of the source, not because they were archaeologically
+recovered from it. A brownfield project inverts this entirely: the code
+is ground truth, and intent must be reconstructed after the fact, often
+when the original reasoning was never written down and its author is
+long gone. The inflation files (CI permissions, the version contract)
+are precisely where that original rationale is *least* likely to have
+survived in anyone's memory — so the brownfield versions of those specs
+will be slower to write, longer, and lower-confidence.
+
+**2. Greenfield 100%-reviewed is a luxury.** The breakdown shows
+173/173 specs reviewed — full human approval. That is achievable only
+because the specs were authored as the code was written, by someone who
+held the design in their head. A brownfield repository's realistic
+steady state is a small reviewed core surrounded by a large
+un-reviewed (inferred-or-nothing) periphery. The clean, short average
+intent (278 characters) reflects an author who *knew* each invariant;
+the brownfield equivalent — a maintainer guessing at the intent of a
+years-old function whose author has left — produces longer, hedged,
+lower-confidence prose.
+
+**3. Bootstrapping cost is excluded entirely.** This measurement
+captures the value of the intent ledger *once it exists*. It says
+nothing about the cost of building one. For greenfield that cost is
+near zero because intent is written alongside code; for brownfield it
+is the dominant cost — and it is the entire concern of the audience
+most often cited for this tooling (burned-out maintainers triaging
+AI-generated contributions). The compression payoff is real but
+*deferred*: it accrues only after enough inference-and-promotion cycles
+have built a reviewed core covering the hot paths. The greenfield
+number cannot be borrowed to advertise the brownfield experience,
+because greenfield skipped the very cost that dominates brownfield —
+writing the first doc.
+
+**What this means.** This document measures the value of the ledger
+once it exists; it does not measure the cost of bootstrapping one, and
+bootstrapping cost is the whole question for an existing project. The
+honest claim is narrow: *when intent is captured before or alongside
+code, the review surface compresses by roughly 30× on this codebase.*
+The experiment that would speak to brownfield adoption is different in
+kind — take a real repository with no intent docs, run LLM inference
+plus incremental human promotion across many pull requests, and measure
+how many cycles pass before the reviewed core covers the hot paths and
+compression begins to bite. That number is not in this document, and it
+should not be inferred from the one that is.
+
+---
+
 ## Reproducing
 
 ```sh
