@@ -1,0 +1,31 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "crates/liyi/src/tree_path/lang_proto.rs",
+  "specs": [
+    {
+      "item": "proto_node_name",
+      "reviewed": false,
+      "intent": "Extract the declared name from a Protobuf item node: for message/enum/service/rpc return the text of the dedicated message_name/enum_name/service_name/rpc_name child; for field/enum_field/map_field/oneof/oneof_field return the text of the first identifier child (the declaration name, which follows the type node). Return None for any other node kind.",
+      "source_span": [
+        23,
+        34
+      ],
+      "tree_path": "fn.proto_node_name",
+      "source_hash": "sha256:c238cd506e91b6a0e7ed4775795d0e1d35a1cd8579c8ae2532e692cf2d816a1d",
+      "source_anchor": "fn proto_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Protobuf language configuration for tree_path resolution: register the tree-sitter-proto grammar and .proto extension; map shorthands to node kinds (message, enum, service, rpc, field, map→map_field, oneof, oneof_field, enum_field); use the self-as-body (\".\") sentinel so item nodes act as their own body container; mark message_body and enum_body transparent so the resolver descends into nested members; supply proto_node_name for name extraction and proto_has_doc_comment for doc-comment detection.",
+      "source_span": [
+        50,
+        70
+      ],
+      "tree_path": "static.CONFIG",
+      "source_hash": "sha256:92c1548116759aa48fc822dd96975c0efd9a42f1462e68d02111cc889e8e6d6a",
+      "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
+    }
+  ]
+}

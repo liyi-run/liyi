@@ -22,6 +22,7 @@ mod lang_json;
 mod lang_kotlin;
 mod lang_objc;
 mod lang_php;
+mod lang_proto;
 mod lang_python;
 mod lang_ruby;
 mod lang_rust;
@@ -197,6 +198,7 @@ pub enum Language {
     Toml,
     Json,
     Yaml,
+    Proto,
 }
 
 impl Language {
@@ -224,6 +226,7 @@ impl Language {
             Language::Toml => &lang_toml::CONFIG,
             Language::Json => &lang_json::CONFIG,
             Language::Yaml => &lang_yaml::CONFIG,
+            Language::Proto => &lang_proto::CONFIG,
         }
     }
 
@@ -244,7 +247,7 @@ impl Language {
 /// If two languages share an extension (unlikely with built-in languages),
 /// the first match in the following order is returned:
 /// Bash → Dart → Rust → Ruby → Python → Go → JavaScript → TypeScript → TSX → C → C++ →
-/// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig → TOML → JSON → YAML.
+/// Java → C# → PHP → Objective-C → Kotlin → Swift → Zig → TOML → JSON → YAML → Proto.
 // @liyi:related graceful-degradation
 pub fn detect_language(path: &Path) -> Option<Language> {
     let ext = path.extension()?.to_str()?;
@@ -320,6 +323,9 @@ pub fn detect_language(path: &Path) -> Option<Language> {
     }
     if lang_yaml::CONFIG.matches_extension(ext) {
         return Some(Language::Yaml);
+    }
+    if lang_proto::CONFIG.matches_extension(ext) {
+        return Some(Language::Proto);
     }
 
     None
@@ -487,6 +493,7 @@ fn language_from_name(name: &str) -> Option<Language> {
         "toml" => Some(Language::Toml),
         "json" => Some(Language::Json),
         "yaml" | "yml" => Some(Language::Yaml),
+        "proto" => Some(Language::Proto),
         _ => None,
     }
 }
@@ -959,6 +966,7 @@ fn language_to_name(lang: Language) -> &'static str {
         Language::Toml => "toml",
         Language::Json => "json",
         Language::Yaml => "yaml",
+        Language::Proto => "proto",
     }
 }
 
@@ -1017,9 +1025,15 @@ fn find_item_in_range<'a>(
 }
 
 /// Check if a node is an item type we track in tree_path.
+///
+/// Only *named* nodes qualify.  Some grammars (e.g. Protobuf) emit anonymous
+/// keyword tokens whose `kind()` collides with a named node kind — the `'rpc'`
+/// keyword token reports `kind() == "rpc"`, the same as the named `rpc` node.
+/// Requiring `is_named()` prevents those zero-width keyword tokens from being
+/// mistaken for the item they introduce.
 // @liyi:related reuse-kind-map-as-item-definition
 fn is_item_node(config: &LanguageConfig, node: &Node) -> bool {
-    config.kind_to_shorthand(node.kind()).is_some()
+    node.is_named() && config.kind_to_shorthand(node.kind()).is_some()
 }
 
 /// Build the tree_path string for a given target node by walking from root.
