@@ -140,6 +140,7 @@ pub fn run_check(
 ///
 /// `root` is accepted for API symmetry with `check_sidecars` and future use;
 /// pass-1 logic is currently path-relative and does not consult it.
+// @liyi:related lsp-check-refactor-exposes-registry
 pub fn build_requirement_registry(
     _root: &Path,
     all_files: &[PathBuf],
