@@ -205,3 +205,9 @@ Signed-off-by: Contributor Name <contributor@example.com>
   并在全部通过时打印成功横幅（`lint: all gates passed` / `verify: all gates
   passed`）；这一行横幅即为全部通过的标志，无需再去查看退出码或把输出重定向到
   日志中。
+
+> **面向 AI 代理：** 请优先使用安静变体 `make lint-short` 与 `make verify-short`。
+> 它们运行同样的各项检查，但抑制正常输出以节省上下文：成功时只打印一行横幅，
+> 失败时打印出错环节的少量末尾输出，并附上可重跑以获取完整诊断的完整
+> `make <gate>` 目标。需要细节时再重跑该完整目标。不要再手写
+> `make lint >log 2>&1; echo $?` 之类的管道——短变体已经封装了这一模式。

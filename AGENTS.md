@@ -27,6 +27,15 @@ suite. Both gates abort at the first failure and end with a success banner
 success by the final line — no need to capture the exit code or redirect
 output to a log.
 
+**If you are an AI agent, prefer the quiet variants `make lint-short` and
+`make verify-short`.** They run the exact same gates but suppress normal
+output to conserve your context window: on success they print only a banner
+(`lint-short: all gates passed` / `verify-short: all gates passed`), and on
+failure they print a short tail of the failing gate's output plus the full
+`make <gate>` target to re-run for complete diagnostics. Run that full target
+when you need to see everything. Do **not** hand-roll `make lint >log 2>&1;
+echo $?` pipelines — the short variants already do this correctly.
+
 See the contributing guide for full details.
 
 ## Commit conventions (quick reference)

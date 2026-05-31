@@ -209,3 +209,11 @@ For Rust code, additionally verify:
   (`lint: all gates passed` / `verify: all gates passed`); the banner is the
   signal that every gate passed, so there is no need to inspect the exit code
   or redirect output to a log.
+
+> **For AI agents:** prefer the quiet variants `make lint-short` and
+> `make verify-short`. They run the same gates but suppress normal output to
+> conserve context: on success they print only a banner, and on failure they
+> print a short tail of the failing gate plus the full `make <gate>` target to
+> re-run for complete diagnostics. Re-run that full target when you need the
+> details. Do not hand-roll `make lint >log 2>&1; echo $?` pipelines — the
+> short variants already encapsulate that pattern.

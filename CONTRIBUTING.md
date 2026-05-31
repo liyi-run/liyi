@@ -28,6 +28,9 @@ structure, code style, commit conventions, and the AIGC policy.
    Clippy, and the project's own linter, which dogfoods itself) plus
    `cargo test --workspace`, aborting at the first failure and ending with a
    `verify: all gates passed` banner. (`make lint` runs just the lint gates.)
+   AI agents should prefer the quiet `make verify-short` / `make lint-short`
+   variants, which suppress output and point back to the full target on
+   failure.
 4. Follow the [AIGC policy](docs/aigc-policy.en.md) if using AI assistance.
 
 ## License
