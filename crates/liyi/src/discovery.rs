@@ -224,7 +224,10 @@ fn source_name_from_sidecar(sidecar: &Path) -> String {
 /// Expand a list of file/directory paths into concrete `.liyi.jsonc` file
 /// paths. If a path is a directory, walk it recursively (respecting
 /// `.gitignore` and `.liyiignore`) and collect all sidecar files found.
-/// If a path is a file, include it directly.
+/// If a path is a sidecar file (ends in `.liyi.jsonc`), include it directly.
+/// If a path is any other file, treat it as a source file and map it to its
+/// co-located `<filename>.liyi.jsonc` sidecar, erroring if that sidecar does
+/// not exist.
 pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     let mut result: Vec<PathBuf> = Vec::new();
     for p in paths {
@@ -243,7 +246,26 @@ pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String
                 }
             }
         } else if p.is_file() {
-            result.push(p.clone());
+            let is_sidecar = p
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.ends_with(SIDECAR_SUFFIX));
+            if is_sidecar {
+                result.push(p.clone());
+            } else {
+                // Treat a non-sidecar file as a source file and map it to the
+                // canonical co-located sidecar `<filename>.liyi.jsonc`.
+                let sidecar = sidecar_path_for_source(p);
+                if sidecar.is_file() {
+                    result.push(sidecar);
+                } else {
+                    return Err(format!(
+                        "no sidecar found for source file {} (expected {})",
+                        p.display(),
+                        sidecar.display()
+                    ));
+                }
+            }
         } else {
             return Err(format!("path does not exist: {}", p.display()));
         }
@@ -251,6 +273,17 @@ pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String
     result.sort();
     result.dedup();
     Ok(result)
+}
+
+/// Map a source file path to its canonical co-located sidecar path by
+/// appending the `.liyi.jsonc` suffix to the file name (e.g. `money.rs` ->
+/// `money.rs.liyi.jsonc`).
+fn sidecar_path_for_source(source: &Path) -> PathBuf {
+    let name = source
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    source.with_file_name(format!("{name}{SIDECAR_SUFFIX}"))
 }
 
 /// Compute `path` relative to `base` using pure lexical processing.
@@ -385,5 +418,45 @@ mod tests {
         assert_eq!(result.sidecars[0].repo_relative_source, "keep.rs");
         // The ignored files should not appear in all_files
         assert!(!result.all_files.iter().any(|f| f.starts_with(&ignored_dir)));
+    }
+
+    #[test]
+    fn resolve_targets_passes_sidecar_through() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let sidecar = root.join("foo.rs.liyi.jsonc");
+        fs::write(&sidecar, "{}").unwrap();
+
+        let targets = resolve_sidecar_targets(std::slice::from_ref(&sidecar)).unwrap();
+        assert_eq!(targets, vec![sidecar]);
+    }
+
+    // Regression: passing a *source* file to approve/migrate used to push the
+    // source path verbatim, which then failed in parse_sidecar with
+    // "expected value at line 1 column 1". A source file must resolve to its
+    // co-located sidecar instead.
+    #[test]
+    fn resolve_targets_maps_source_file_to_sidecar() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let source = root.join("foo.rs");
+        let sidecar = root.join("foo.rs.liyi.jsonc");
+        fs::write(&source, "fn main() {}").unwrap();
+        fs::write(&sidecar, "{}").unwrap();
+
+        let targets = resolve_sidecar_targets(std::slice::from_ref(&source)).unwrap();
+        assert_eq!(targets, vec![sidecar]);
+    }
+
+    #[test]
+    fn resolve_targets_errors_when_source_has_no_sidecar() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let source = root.join("foo.rs");
+        fs::write(&source, "fn main() {}").unwrap();
+
+        let err = resolve_sidecar_targets(std::slice::from_ref(&source)).unwrap_err();
+        assert!(err.contains("no sidecar found"), "got: {err}");
+        assert!(err.contains("foo.rs.liyi.jsonc"), "got: {err}");
     }
 }

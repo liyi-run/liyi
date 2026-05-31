@@ -71,6 +71,30 @@
       "related": {
         "liyi-sidecar-naming-convention": "sha256:f66886d1514f6ae487df359eae7411d29155ea5bf0e5acefb5391959fd3c9f38"
       }
+    },
+    {
+      "item": "resolve_sidecar_targets",
+      "reviewed": false,
+      "intent": "Expand a list of file/directory paths into concrete sidecar paths. For a directory, walk it recursively (respecting .gitignore and .liyiignore) and collect every .liyi.jsonc file. For a file that is itself a sidecar (ends in .liyi.jsonc), include it directly. For any other file, treat it as a source file and map it to its canonical co-located <filename>.liyi.jsonc sidecar, erroring if that sidecar does not exist. Error if a path does not exist. Return the deduplicated, sorted target list. A source file must never be returned verbatim, so that downstream parse_sidecar never receives source code.",
+      "source_span": [
+        231,
+        276
+      ],
+      "tree_path": "fn.resolve_sidecar_targets",
+      "source_hash": "sha256:4c1ff382866cde93b19a0fca11d955ce45c75d48a36200d1ad5f1766f9e7a4a3",
+      "source_anchor": "pub fn resolve_sidecar_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
+    },
+    {
+      "item": "sidecar_path_for_source",
+      "reviewed": false,
+      "intent": "Map a source file path to its canonical co-located sidecar path by appending the .liyi.jsonc suffix to the file name (e.g. money.rs -> money.rs.liyi.jsonc), preserving the parent directory. Must produce the same naming the rest of the tool reads and writes, so resolving a source file finds the sidecar that init/check create.",
+      "source_span": [
+        281,
+        287
+      ],
+      "tree_path": "fn.sidecar_path_for_source",
+      "source_hash": "sha256:552d2551c532e7542d3d3bce735fcc3715b9af100b67481f282a74df37e49b2c",
+      "source_anchor": "fn sidecar_path_for_source(source: &Path) -> PathBuf {"
     }
   ]
 }
