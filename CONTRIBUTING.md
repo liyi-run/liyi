@@ -24,10 +24,11 @@ structure, code style, commit conventions, and the AIGC policy.
 
 1. **Open an issue first** for non-trivial changes so we can discuss scope.
 2. Keep PRs small and focused — one logical change per PR.
-3. Ensure `cargo test --workspace` passes.
-4. Ensure `make lint` passes (rustfmt check, Clippy, and the project's own
-   linter — it dogfoods itself).
-5. Follow the [AIGC policy](docs/aigc-policy.en.md) if using AI assistance.
+3. Ensure `make verify` passes — it runs the lint gates (rustfmt check,
+   Clippy, and the project's own linter, which dogfoods itself) plus
+   `cargo test --workspace`, aborting at the first failure and ending with a
+   `verify: all gates passed` banner. (`make lint` runs just the lint gates.)
+4. Follow the [AIGC policy](docs/aigc-policy.en.md) if using AI assistance.
 
 ## License
 

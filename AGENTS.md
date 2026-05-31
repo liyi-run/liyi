@@ -21,7 +21,11 @@ For Rust code:
 - Keep free from Clippy lints.
 
 Before committing, run `make lint` (rustfmt check, Clippy, and the linter's
-own self-check) and ensure it passes.
+own self-check) and ensure it passes, or `make verify` to also run the test
+suite. Both gates abort at the first failure and end with a success banner
+(`lint: all gates passed` / `verify: all gates passed`), so you can confirm
+success by the final line — no need to capture the exit code or redirect
+output to a log.
 
 See the contributing guide for full details.
 

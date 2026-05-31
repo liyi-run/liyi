@@ -200,4 +200,8 @@ Signed-off-by: Contributor Name <contributor@example.com>
 
 对于 Rust 代码，请额外检查：
 
-- `make lint` 通过（rustfmt 检查、Clippy 以及 linter 自身的自检）。
+- `make lint` 通过（rustfmt 检查、Clippy 以及 linter 自身的自检），或运行
+  `make verify` 在 lint 各项之外再跑测试套件。两者都会在第一个失败的环节中止，
+  并在全部通过时打印成功横幅（`lint: all gates passed` / `verify: all gates
+  passed`）；这一行横幅即为全部通过的标志，无需再去查看退出码或把输出重定向到
+  日志中。

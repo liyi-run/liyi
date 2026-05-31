@@ -203,4 +203,9 @@ Before finalizing a commit, verify:
 
 For Rust code, additionally verify:
 
-- `make lint` passes (rustfmt check, Clippy, and the linter's own self-check).
+- `make lint` passes (rustfmt check, Clippy, and the linter's own self-check),
+  or `make verify` to run the lint gates plus the test suite. Both abort at the
+  first failing gate and print a success banner on completion
+  (`lint: all gates passed` / `verify: all gates passed`); the banner is the
+  signal that every gate passed, so there is no need to inspect the exit code
+  or redirect output to a log.
