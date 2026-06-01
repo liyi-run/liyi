@@ -149,7 +149,7 @@
     },
     {
       "item": "draw_source",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line (after expanding tabs to 4 spaces to work around ratatui ≥0.30 filtering control characters), and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
         701,
