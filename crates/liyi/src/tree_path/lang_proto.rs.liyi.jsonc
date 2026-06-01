@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "proto_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the declared name from a Protobuf item node: for message/enum/service/rpc return the text of the dedicated message_name/enum_name/service_name/rpc_name child; for field/enum_field/map_field/oneof/oneof_field return the text of the first identifier child (the declaration name, which follows the type node). Return None for any other node kind.",
       "source_span": [
         23,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Protobuf language configuration for tree_path resolution: register the tree-sitter-proto grammar and .proto extension; map shorthands to node kinds (message, enum, service, rpc, field, map→map_field, oneof, oneof_field, enum_field); use the self-as-body (\".\") sentinel so item nodes act as their own body container; mark message_body and enum_body transparent so the resolver descends into nested members; supply proto_node_name for name extraction and proto_has_doc_comment for doc-comment detection.",
       "source_span": [
         50,

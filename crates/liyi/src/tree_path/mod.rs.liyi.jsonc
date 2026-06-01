@@ -17,7 +17,7 @@
     },
     {
       "item": "detect_language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         252,
@@ -32,7 +32,7 @@
     },
     {
       "item": "Language",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all built-in tree-sitter languages for tree_path operations: Bash, Dart, Rust, Ruby, Python, Go, JavaScript, TypeScript, TSX, C, C++, Java, C#, PHP, Objective-C, Kotlin, Swift, Zig, TOML, JSON, YAML, and Protobuf. Each variant maps to a static LanguageConfig via config().",
       "source_span": [
         179,
@@ -216,7 +216,7 @@
     },
     {
       "item": "language_from_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Map an injection marker language string (e.g., 'bash', 'py', 'rs') to a Language enum variant. Supports common aliases. Returns None for unknown languages.",
       "source_span": [
         473,
@@ -280,7 +280,7 @@
     },
     {
       "item": "language_to_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Map a Language enum variant to its canonical injection marker string. Inverse of language_from_name (using canonical names only, no aliases).",
       "source_span": [
         946,
