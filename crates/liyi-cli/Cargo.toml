@@ -2,7 +2,7 @@
 name = "liyi-cli"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 authors = ["WANG Xuerui <git@xen0n.name>"]
 description = "CLI for 立意 (liyi) — the intent linter"
 license = "Apache-2.0 OR MIT"
