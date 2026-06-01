@@ -29,3 +29,6 @@ syntect = { version = "5", default-features = false, features = [
 ] }
 
 liyi = { path = "../liyi" }
+
+[dev-dependencies]
+tempfile = "3"
