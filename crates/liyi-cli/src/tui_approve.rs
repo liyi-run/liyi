@@ -746,9 +746,15 @@ fn draw_source(
             };
             spans.push(Span::styled(format!(" {lineno:>4} │ "), gutter_style));
 
+            // Expand tabs to spaces before rendering. Ratatui ≥0.30
+            // filters control characters (including \t) in
+            // Span::styled_graphemes, which would silently drop all
+            // leading indentation from tab-indented source files.
+            let visible = content.replace('\t', "    ");
+
             if use_highlighting && line_highlight_enabled(content) {
                 let ranges = h
-                    .highlight_line(content, &hl.syntax_set)
+                    .highlight_line(&visible, &hl.syntax_set)
                     .unwrap_or_default();
 
                 for (style, text) in &ranges {
@@ -776,7 +782,7 @@ fn draw_source(
                 } else {
                     Style::default()
                 };
-                spans.push(Span::styled(content.as_str(), s));
+                spans.push(Span::styled(visible, s));
             }
 
             Line::from(spans)

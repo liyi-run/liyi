@@ -149,14 +149,14 @@
     },
     {
       "item": "draw_source",
-      "reviewed": true,
-      "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line, and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
+      "reviewed": false,
+      "intent": "Render the source code pane with syntect-based syntax highlighting, gated by file_highlight_enabled and line_highlight_enabled. Resolves a syntax definition from the source file extension (falling back to plain text), runs HighlightLines over each eligible line (after expanding tabs to 4 spaces to work around ratatui ≥0.30 filtering control characters), and maps syntect styles to ratatui Span styles. Span lines receive a subtle background highlight (SPAN_BG) to distinguish them from surrounding file content. Prepends a line-number gutter. Supports vertical scrolling.",
       "source_span": [
         701,
-        795
+        801
       ],
       "tree_path": "fn.draw_source",
-      "source_hash": "sha256:ddd044516e2725481f30bb2f70008933076c589ef4b5cc21d567de3ae279e321",
+      "source_hash": "sha256:050763d7b53769bfe991157cfe9eb01af22d64a9f157406034c18a79f9be5845",
       "source_anchor": "fn draw_source("
     },
     {
@@ -199,8 +199,8 @@
       "reviewed": true,
       "intent": "Render the keybinding footer line showing all available keys: y (approve), n (reject), e (edit), s/Enter (skip), a (approve all), b/arrows (navigation), j/k (scroll), q/Esc (quit).",
       "source_span": [
-        813,
-        839
+        819,
+        845
       ],
       "tree_path": "fn.draw_keys",
       "source_hash": "sha256:32ce63aeded8af2046caa055e103f2ea680bba3d22013ece6b58caf4f7db4a3f",
