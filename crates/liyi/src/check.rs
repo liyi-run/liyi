@@ -972,14 +972,14 @@ fn check_requirement_hash(
             let lang = detect_language(file);
             let (recovered, tp_note) = if req.tree_path.is_empty() {
                 (None, "no tree_path set")
-            } else if lang.is_none() {
-                (None, "no grammar for source language")
             } else {
-                let r = resolve_tree_path(source_content, &req.tree_path, lang.unwrap());
-                if r.is_some() {
-                    (r, "")
+                if let Some(lang) = lang {
+                    match resolve_tree_path(source_content, &req.tree_path, lang) {
+                        Some(r) => (Some(r), ""),
+                        None => (None, "tree_path resolution failed"),
+                    }
                 } else {
-                    (None, "tree_path resolution failed")
+                    (None, "no grammar for source language")
                 }
             };
 

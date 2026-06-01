@@ -72,30 +72,37 @@ pub fn recover_item_span(
 ) -> ItemSpanRecovery {
     let tree_path_note = if tree_path.is_empty() {
         "no tree_path set"
-    } else if lang.is_none() {
-        "no grammar for source language"
     } else {
-        let language = lang.unwrap();
-        if let Some(resolved_span) = resolve_tree_path(source_content, tree_path, language) {
-            if let Some(old_hash) = expected_hash
-                && hash_span(source_content, resolved_span)
-                    .map(|(hash, _)| hash != old_hash)
-                    .unwrap_or(false)
-                && let Some(sibling) =
-                    resolve_tree_path_sibling_scan(source_content, tree_path, language, old_hash)
-            {
-                return to_recovery(
-                    current_span,
-                    sibling.span,
-                    Some(sibling.updated_tree_path),
-                    RecoveryMethod::SiblingScan,
-                );
+        match lang {
+            Some(l) => {
+                if let Some(resolved_span) = resolve_tree_path(source_content, tree_path, l) {
+                    if let Some(old_hash) = expected_hash
+                        && hash_span(source_content, resolved_span)
+                            .map(|(hash, _)| hash != old_hash)
+                            .unwrap_or(false)
+                        && let Some(sibling) =
+                            resolve_tree_path_sibling_scan(source_content, tree_path, l, old_hash)
+                    {
+                        return to_recovery(
+                            current_span,
+                            sibling.span,
+                            Some(sibling.updated_tree_path),
+                            RecoveryMethod::SiblingScan,
+                        );
+                    }
+
+                    return to_recovery(
+                        current_span,
+                        resolved_span,
+                        None,
+                        RecoveryMethod::TreePath,
+                    );
+                }
+
+                "tree_path resolution failed"
             }
-
-            return to_recovery(current_span, resolved_span, None, RecoveryMethod::TreePath);
+            None => "no grammar for source language",
         }
-
-        "tree_path resolution failed"
     };
 
     if let (Some(language), Some(old_hash)) = (lang, expected_hash)

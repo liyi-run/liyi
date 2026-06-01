@@ -33,7 +33,7 @@
       "intent": "Run the shared item span recovery cascade. Prefer tree_path resolution when available, fall back to sibling scan when the resolved content no longer matches the expected hash, then fall back to the hash-based shift heuristic. Return a structured recovery result and preserve a failure note describing why structural recovery was unavailable or failed.",
       "source_span": [
         66,
-        128
+        135
       ],
       "tree_path": "fn.recover_item_span",
       "source_hash": "sha256:9ac0f8cab5e1bfb4be92523d4d09134c75532aafc671f41f96860737888a73a7",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "Construct an ItemSpanRecovery result by comparing the recovered span to the current span. If they match, return Unchanged with the span, updated tree_path, and recovery method. If they differ, return Shifted recording both the original and recovered spans along with the updated tree_path and method.",
       "source_span": [
-        130,
-        150
+        137,
+        157
       ],
       "tree_path": "fn.to_recovery",
       "source_hash": "sha256:5a71c6d51c738ce29306e75d74d12be0723ce1843322766011abe5f401d11fa8",
