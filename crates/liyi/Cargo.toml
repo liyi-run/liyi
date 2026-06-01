@@ -2,7 +2,7 @@
 name = "liyi"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 authors = ["WANG Xuerui <git@xen0n.name>"]
 description = "立意 — make intent explicit, persistent, and reviewable in AI-assisted development"
 license = "Apache-2.0 OR MIT"
