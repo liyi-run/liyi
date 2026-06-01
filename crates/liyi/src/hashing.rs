@@ -60,14 +60,27 @@ pub fn hash_span(source_content: &str, span: [usize; 2]) -> Result<(String, Stri
     }
 
     let selected = &lines[start - 1..end];
-    let mut joined = selected.join("\n");
-    joined.push('\n');
-
-    let hash = Sha256::digest(joined.as_bytes());
-    let hex = format!("sha256:{hash:x}");
     let anchor = selected[0].to_owned();
 
-    Ok((hex, anchor))
+    // stream the selected lines into the hasher, normalizing line endings to LF
+    //
+    // equivalent original implementation with excessive copying:
+    // let mut joined = selected.join("\n");
+    // joined.push('\n');
+    // let hash = Sha256::digest(joined.as_bytes());
+    let mut hasher = Sha256::new();
+    for line in selected {
+        hasher.update(line.as_bytes());
+        hasher.update(b"\n");
+    }
+    let mut buf: [u8; 64 + 7] = [0; 64 + 7]; // len("sha256:") + 32 * 2
+    buf[..7].copy_from_slice(b"sha256:");
+    // unwrap safety: the output buffer is exactly sized for the hex representation
+    base16ct::lower::encode_str(&hasher.finalize_reset(), &mut buf[7..]).unwrap();
+    // SAFETY: the output of base16 encoding is always valid ASCII, which is valid UTF-8
+    let buf: String = unsafe { String::from_utf8_unchecked(buf.into()) };
+
+    Ok((buf, anchor))
 }
 
 #[cfg(test)]
