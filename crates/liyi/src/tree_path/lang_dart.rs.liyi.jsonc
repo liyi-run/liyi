@@ -29,14 +29,14 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Dart language configuration for tree_path resolution: register tree-sitter-dart grammar, .dart extension, kind mappings for fn (function_signature), class (class_declaration), mixin, extension, extension_type, enum, getter, setter, constructor (4 variants), wire custom dart_node_name and dart_has_doc_comment callbacks, and declare class_member/method_signature/declaration as transparent wrapper kinds so resolve_segments can find inner signature nodes nested inside class bodies.",
+      "reviewed": false,
+      "intent": "Define the Dart language configuration for tree_path resolution: register tree-sitter-dart grammar, .dart extension, kind mappings for fn (function_signature), class (class_declaration), mixin, extension, extension_type, enum, getter, setter, constructor (4 variants). Use class_body, extension_body, enum_body body fields for container descent. Wire custom dart_node_name and dart_has_doc_comment callbacks. Declare class_member, method_signature, declaration, method_declaration, function_declaration, getter_declaration, and setter_declaration as transparent wrapper kinds so resolve_segments can see through tree-sitter-dart 0.2.0's added declaration wrapper layers to find inner signature nodes.",
       "source_span": [
         54,
-        81
+        88
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:1800150e1e349c0de6221496d22f92d74ca0c139140ca56c2f438600269922fe",
+      "source_hash": "sha256:bd7157650e183a0233bbb3ab72c6abd14f9980776829ab9602c56ad885ee3d5e",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]

@@ -73,10 +73,18 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     ],
     name_field: "name",
     name_overrides: &[],
-    body_fields: &["body"],
+    body_fields: &["class_body", "extension_body", "enum_body"],
     custom_name: Some(dart_node_name),
     doc_comment_detector: Some(dart_has_doc_comment),
-    transparent_kinds: &["class_member", "method_signature", "declaration"],
+    transparent_kinds: &[
+        "class_member",
+        "method_signature",
+        "declaration",
+        "method_declaration",
+        "function_declaration",
+        "getter_declaration",
+        "setter_declaration",
+    ],
 };
 
 #[cfg(test)]
