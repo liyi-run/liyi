@@ -3,7 +3,7 @@
 
 # `@liyi:note`: The Context Primitive
 
-**Status:** 🔵 Proposed (pending implementation)
+**Status:** ✅ Implemented (MVP: marker scanner + `liyi context <path>[:line]` resolver)
 **Target:** v0.2
 **Design authority:** this document
 **Supersedes:** `docs/liyi-design.md` — *Module-level: `@liyi:module` marker*

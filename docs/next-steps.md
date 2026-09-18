@@ -139,7 +139,7 @@ authority: `docs/file-directive-design.md` (requirements `file-directive-namespa
 
 | # | Item | Source |
 |---|------|--------|
-| 2.10 | **Hard-rename `@liyi:module` → `@liyi:note`; add `@liyi:end-note`, `@liyi:see`; `liyi context <path:line>` MVP** | `docs/note-context-design.md` |
+| 2.10 | ~~**Hard-rename `@liyi:module` → `@liyi:note`; add `@liyi:end-note`, `@liyi:see`; `liyi context <path:line>` MVP**~~ | `docs/note-context-design.md` — ✅ Done — `@liyi:module` removed from the scanner; `Note`/`EndNote`/`See` markers land in `markers.rs`; the live retrieval-graph resolver (directory scope + shadowing, `@liyi:see`, `=none` opt-out) ships in `context.rs`; `liyi context <path>[:line]` is wired in the CLI. Item-precise `@liyi:see` (tree-sitter) stays file-scoped for now; LSP/MCP context surfaces (Tier 3) and challenge mode (Tier 4.4) remain deferred. |
 
 Replaces the presence-only `@liyi:module` marker with a marker-only, untracked
 **context primitive**: notes carry governing prose injected into a reader's
