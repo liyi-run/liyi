@@ -75,7 +75,7 @@
       "source_hash": "sha256:1c387d164ec989d5bc3e678c7353c574d389a93606a0d6b756526e42f2c5b41d",
       "source_anchor": "fn is_note_file(name: &str) -> bool {",
       "related": {
-        "note-directory-scope": null
+        "note-directory-scope": "sha256:288cb675a9beb1ac864f5208171df3a2788dd3e06e47f153d1d9681f76e8be1d"
       }
     },
     {
@@ -138,7 +138,7 @@
       "source_hash": "sha256:c68ff66e5cc4fcee312fadc016364211642d2fde914bde1b91cb3f28a1f9d277",
       "source_anchor": "pub fn collect_notes(root: &Path) -> Vec<Note> {",
       "related": {
-        "note-is-untracked": null
+        "note-is-untracked": "sha256:60d2cd16faf066360e7c4d7814aedcdc4728fe01ebcf697fe266e81d4000b365"
       }
     },
     {
@@ -165,8 +165,8 @@
       "source_hash": "sha256:db4e502c6ffa75879e027a1d36c480bf3e52571e4ca317823031d0e474ec30fd",
       "source_anchor": "pub fn resolve(root: &Path, target_rel: &str) -> Vec<ResolvedNote> {",
       "related": {
-        "context-resolution": null,
-        "note-directory-scope": null
+        "context-resolution": "sha256:2943bf58b0f14391c9ee0d55f643b4dadffa088c0a668c5a6acbf134ee8c27a8",
+        "note-directory-scope": "sha256:288cb675a9beb1ac864f5208171df3a2788dd3e06e47f153d1d9681f76e8be1d"
       }
     },
     {
