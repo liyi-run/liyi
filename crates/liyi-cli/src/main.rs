@@ -331,6 +331,12 @@ fn run_context(target: String, root: Option<std::path::PathBuf>) {
             process::exit(2);
         }
     };
+    // Normalize both paths to a common absolute, symlink-resolved form so a
+    // relative `--root .` (or `.`/`..` components in the target) still strips
+    // correctly. Fall back to the un-normalized path when canonicalization
+    // fails (e.g. the target does not exist yet).
+    let root = std::fs::canonicalize(&root).unwrap_or(root);
+    let abs = std::fs::canonicalize(&abs).unwrap_or(abs);
 
     let rel = match abs.strip_prefix(&root) {
         Ok(r) => r.to_string_lossy().replace('\\', "/"),

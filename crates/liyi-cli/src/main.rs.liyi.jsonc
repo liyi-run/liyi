@@ -33,10 +33,10 @@
       "intent": "Parse the target into a path (and optional trailing :line), locate the repo root, resolve applicable notes via the live note scan, print the rendered report to stdout, and exit 0. Exit 2 on usage or resolution errors (bad line number, path outside the repo, missing root).",
       "source_span": [
         304,
-        349
+        355
       ],
       "tree_path": "fn.run_context",
-      "source_hash": "sha256:bd84de6851258e50675c3c168cadf80d4ca70c207a838f384ea975d4aa4f883c",
+      "source_hash": "sha256:4cf6f64065c246654eea0d69ba8cc555065004c96785ae9022f8722bc9eed0da",
       "source_anchor": "fn run_context(target: String, root: Option<std::path::PathBuf>) {"
     },
     {
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        355,
-        357
+        361,
+        363
       ],
       "tree_path": "fn.is_tty",
       "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",

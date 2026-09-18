@@ -217,3 +217,104 @@ fn check_prompt_emits_valid_json() {
         "--prompt should emit a JSON object, got: {text}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// `liyi context`
+// ---------------------------------------------------------------------------
+
+/// A directory-scope note in a marked `README.md` should be resolved and
+/// printed for a source file in the same subtree.
+#[test]
+fn context_prints_directory_scope_note() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    std::fs::write(
+        root.join("README.md"),
+        "<!-- \x40liyi:note billing -->\nAll amounts carry their currency.\n<!-- \x40liyi:end-note billing -->\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/money.rs"), "fn settle() {}\n").unwrap();
+
+    let out = run_in(root, &["context", "src/money.rs", "--root", "."]);
+    assert!(
+        out.status.success(),
+        "context should exit 0: {:?}",
+        stderr(&out)
+    );
+    let text = stdout(&out);
+    assert!(
+        text.contains("billing") && text.contains("All amounts carry their currency."),
+        "context should print the applicable note, got: {text}"
+    );
+}
+
+/// A trailing `:line` component is accepted (MVP resolves file-scoped) and does
+/// not change the resolved notes.
+#[test]
+fn context_accepts_line_suffix() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    std::fs::write(
+        root.join("README.md"),
+        "<!-- \x40liyi:note project -->\nProject-wide invariant.\n<!-- \x40liyi:end-note project -->\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/money.rs"), "fn settle() {}\n").unwrap();
+
+    let out = run_in(root, &["context", "src/money.rs:42", "--root", "."]);
+    assert!(
+        out.status.success(),
+        "context with :line should exit 0: {:?}",
+        stderr(&out)
+    );
+    assert!(
+        stdout(&out).contains("Project-wide invariant."),
+        "context should resolve the note regardless of the :line suffix, got: {}",
+        stdout(&out)
+    );
+}
+
+/// With no marked notes in scope, context reports that none apply and still
+/// exits 0 (resolution is best-effort, never a hard failure).
+#[test]
+fn context_reports_when_no_notes_apply() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    std::fs::write(root.join("README.md"), "# Manual\n\nNo marker here.\n").unwrap();
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/money.rs"), "fn f() {}\n").unwrap();
+
+    let out = run_in(root, &["context", "src/money.rs", "--root", "."]);
+    assert!(
+        out.status.success(),
+        "context with no notes should still exit 0: {:?}",
+        stderr(&out)
+    );
+    assert!(
+        stdout(&out).to_lowercase().contains("no notes"),
+        "context should report that no notes apply, got: {}",
+        stdout(&out)
+    );
+}
+
+/// A target outside the repo root is a usage error (exit 2).
+#[test]
+fn context_rejects_target_outside_root() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let repo = root.join("repo");
+    std::fs::create_dir_all(&repo).unwrap();
+    std::fs::write(root.join("outside.rs"), "fn f() {}\n").unwrap();
+
+    // Root is repo/, but the target lives above it.
+    let repo_arg = repo.to_str().unwrap();
+    let out = run_in(root, &["context", "outside.rs", "--root", repo_arg]);
+    assert_eq!(
+        out.status.code(),
+        Some(2),
+        "a target outside the repo root should be a usage error, stderr: {}",
+        stderr(&out)
+    );
+}
