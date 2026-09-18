@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "SourceMarker",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Enumerate all recognized @liyi: marker types (Note, EndNote, See, Requirement, EndRequirement, Related, Intent, Trivial, Ignore, Nontrivial) with their associated data. Note/EndNote carry an optional group-label name; See carries a required target name (including the =none opt-out sentinel); Requirement/EndRequirement/Related carry a name; Intent carries optional prose and an is_doc flag. Every variant carries a 1-indexed line number.",
       "source_span": [
         7,
@@ -32,7 +32,7 @@
     },
     {
       "item": "MARKER_KEYWORDS",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "List the canonical @liyi:* marker keywords the linter recognizes. This is the single source of truth for marker recognition; only canonical ASCII keywords are accepted (no localized keyword aliases). Order matters: end-requirement must precede requirement so the longer keyword matches first under substring scanning.",
       "source_span": [
         98,
@@ -48,7 +48,7 @@
     },
     {
       "item": "find_marker",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Search a normalized line for any known marker keyword from MARKER_KEYWORDS. Return the matched keyword, the byte offset of the match start, and the byte offset past the matched keyword, or None if no marker is found.",
       "source_span": [
         114,
@@ -142,7 +142,7 @@
     },
     {
       "item": "extract_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract a name argument from the text after a marker keyword: if the first non-whitespace character is '(', take the content up to the matching ')'; otherwise take the first whitespace-delimited token. Return None if no name is present or if the name exceeds MAX_NAME_LEN bytes (security: bounds attacker-controlled text in --prompt output).",
       "source_span": [
         133,
@@ -154,7 +154,7 @@
     },
     {
       "item": "extract_label",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract an optional group label following a @liyi:note or @liyi:end-note marker. Return the first whitespace-delimited token only when it begins with an alphanumeric character; return None otherwise. This deliberately rejects trailing comment terminators (such as --> or */) so a label-less note like '<!-- @liyi:note -->' is treated as anonymous rather than capturing the closer as its name. Reject names exceeding MAX_NAME_LEN bytes.",
       "source_span": [
         162,
@@ -166,7 +166,7 @@
     },
     {
       "item": "extract_see_target",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the target name of a @liyi:see marker. Like extract_label, but additionally accept the =none opt-out sentinel (and any future =-prefixed sentinel) by allowing a leading '=' in addition to an alphanumeric first character, while still rejecting comment terminators. Reject names exceeding MAX_NAME_LEN bytes.",
       "source_span": [
         176,
@@ -178,7 +178,7 @@
     },
     {
       "item": "scan_markers",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Scan all lines of a source file, normalize each line for full-width characters, and return a list of SourceMarker values for every recognized @liyi: marker found. Line numbers are 1-indexed. Markers inside fenced code blocks, inline backtick spans, quoted spans, or immediately after quotation marks are suppressed (NL-quoting). Handles the =doc sentinel for intent markers.",
       "source_span": [
         296,

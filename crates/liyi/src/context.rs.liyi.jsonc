@@ -171,7 +171,7 @@
     },
     {
       "item": "render",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Format resolved notes as the human/agent-readable report: one block per note headed by its name (or an unnamed-note placeholder), annotated with `(via @liyi:see)` when reached by membership, and tagged with the source path, followed by the prose. Emit a clear no-notes message when the list is empty. Output ordering must follow the input order so determinism from resolve is preserved.",
       "source_span": [
         292,
@@ -183,7 +183,7 @@
     },
     {
       "item": "tests",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         314,
@@ -195,7 +195,7 @@
     },
     {
       "item": "tests::write",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         319,
@@ -207,7 +207,7 @@
     },
     {
       "item": "tests::ancestor_dirs_walks_to_root",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         328,
@@ -219,7 +219,7 @@
     },
     {
       "item": "tests::extract_named_block",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         337,
@@ -231,7 +231,7 @@
     },
     {
       "item": "tests::unclosed_block_extends_to_eof",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         347,
@@ -243,7 +243,7 @@
     },
     {
       "item": "tests::directory_scope_includes_ancestor_note",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         357,
@@ -255,7 +255,7 @@
     },
     {
       "item": "tests::nearer_note_shadows_same_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         374,
@@ -267,7 +267,7 @@
     },
     {
       "item": "tests::see_pulls_remote_note",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         396,
@@ -279,7 +279,7 @@
     },
     {
       "item": "tests::see_none_suppresses_directory_scope",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         417,
@@ -291,7 +291,7 @@
     },
     {
       "item": "tests::see_survives_opt_out",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         435,
@@ -303,7 +303,7 @@
     },
     {
       "item": "tests::unmarked_readme_is_invisible",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         461,

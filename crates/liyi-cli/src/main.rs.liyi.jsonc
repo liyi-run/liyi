@@ -17,7 +17,7 @@
     },
     {
       "item": "main",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=doc",
       "source_span": [
         26,
@@ -29,7 +29,7 @@
     },
     {
       "item": "run_context",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Parse the target into a path (and optional trailing :line), locate the repo root, resolve applicable notes via the live note scan, print the rendered report to stdout, and exit 0. Exit 2 on usage or resolution errors (bad line number, path outside the repo, missing root).",
       "source_span": [
         304,
