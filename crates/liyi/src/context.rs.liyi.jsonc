@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "SKIP_DIRS",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         22,
@@ -17,7 +17,7 @@
     },
     {
       "item": "SEE_NONE",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         26,
@@ -29,7 +29,7 @@
     },
     {
       "item": "Membership",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Record how a resolved note reached a location: DirectoryScope (pulled in by directory-subtree cascade) or See (pulled in explicitly by an @liyi:see reference). Used to label and prioritize notes in output; carries no tracking semantics.",
       "source_span": [
         30,
@@ -41,7 +41,7 @@
     },
     {
       "item": "Note",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "A single note discovered by live scan: its optional group-label name, the repo-relative file it lives in, the 1-indexed [opener, closer] line span, and the governing prose between the markers. Must hold no hash, review flag, or any other staleness-tracking field — notes are untracked context.",
       "source_span": [
         39,
@@ -53,7 +53,7 @@
     },
     {
       "item": "ResolvedNote",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         52,
@@ -65,7 +65,7 @@
     },
     {
       "item": "is_note_file",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Decide whether a filename may carry notes in the MVP gate: true only for a dedicated LIYI.md or any README*.md (README.md or README.<suffix>.md). This is the filename half of the marker gate; a matching file still contributes nothing unless it carries a @liyi:note marker.",
       "source_span": [
         60,
@@ -80,7 +80,7 @@
     },
     {
       "item": "parent_dir",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         67,
@@ -92,7 +92,7 @@
     },
     {
       "item": "ancestor_dirs",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return the ancestor directories of a repo-relative path ordered nearest-first and ending at the repo root (empty string). Order is significant: it drives nearest-wins shadowing in directory-scope resolution. For a path directly in the root, returns just [\"\"].",
       "source_span": [
         77,
@@ -104,7 +104,7 @@
     },
     {
       "item": "matching_open",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         90,
@@ -116,7 +116,7 @@
     },
     {
       "item": "extract_note_blocks",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Pair @liyi:note openers with @liyi:end-note closers within one file's scanned markers and return the resulting notes. A closer binds to the nearest open of identical name (anonymous to anonymous). An opener with no matching closer extends to end-of-file (the dedicated-file case). Prose is the text strictly between opener and closer lines, trimmed. Must not read or emit any hash or sidecar state.",
       "source_span": [
         99,
@@ -128,7 +128,7 @@
     },
     {
       "item": "collect_notes",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Walk the working tree rooted at `root` (respecting .gitignore/.liyiignore and skipping VCS dirs), scan every note file (per is_note_file) for note blocks, and return all notes with repo-relative source paths. Pure live scan: reads no sidecars, computes no hashes.",
       "source_span": [
         153,
@@ -143,7 +143,7 @@
     },
     {
       "item": "collect_see",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Scan the target file for @liyi:see markers and return the referenced note names together with a flag indicating whether the opt-out sentinel (=none) is present. MVP is file-scoped: every @liyi:see in the file contributes. The =none sentinel is reported separately and is never returned as a name.",
       "source_span": [
         194,
@@ -155,7 +155,7 @@
     },
     {
       "item": "resolve",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Resolve the notes applicable to a repo-relative target via live scan: directory-scope notes from each ancestor directory with nearest-wins shadowing by name (anonymous notes shadow as a group), plus all notes named by the file's @liyi:see references. An @liyi:see =none opt-out suppresses directory-scope notes but never the explicitly see-referenced ones. Each note appears once; results are ordered deterministically by (source path, span start). Reads no sidecar and computes no hash.",
       "source_span": [
         217,
