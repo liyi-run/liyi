@@ -286,6 +286,52 @@ fn sidecar_path_for_source(source: &Path) -> PathBuf {
     source.with_file_name(format!("{name}{SIDECAR_SUFFIX}"))
 }
 
+/// Expand a list of file/directory paths into agent-instruction files.
+///
+/// A file qualifies when it contains the portable
+/// `START liyi agent instructions` pragma. Directories are walked for files
+/// named `AGENTS.md` (the `liyi init` default); an explicitly-passed file is
+/// included whenever it carries the pragma, so a repository's preferred
+/// location can be migrated directly.
+pub fn resolve_agents_md_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
+    let mut result: Vec<PathBuf> = Vec::new();
+    for p in paths {
+        if p.is_dir() {
+            let walker = WalkBuilder::new(p)
+                .hidden(false)
+                .add_custom_ignore_filename(".liyiignore")
+                .build();
+            for entry in walker {
+                let entry = entry.map_err(|e| format!("walk error: {e}"))?;
+                if entry.file_type().is_some_and(|ft| ft.is_file())
+                    && entry.path().file_name().and_then(|n| n.to_str()) == Some("AGENTS.md")
+                    && has_agents_md_block(entry.path())
+                {
+                    result.push(entry.into_path());
+                }
+            }
+        } else if p.is_file() {
+            if has_agents_md_block(p) {
+                result.push(p.clone());
+            }
+        } else {
+            return Err(format!("path does not exist: {}", p.display()));
+        }
+    }
+    result.sort();
+    result.dedup();
+    Ok(result)
+}
+
+/// Whether `path` contains a portable `AGENTS.md` instruction block.
+///
+/// Unreadable or binary files simply do not qualify.
+fn has_agents_md_block(path: &Path) -> bool {
+    std::fs::read_to_string(path)
+        .map(|text| crate::init::find_agents_md_block(&text).is_some())
+        .unwrap_or(false)
+}
+
 /// Compute `path` relative to `base` using pure lexical processing.
 fn pathdiff(path: &Path, base: &Path) -> Option<String> {
     path.strip_prefix(base)
@@ -458,5 +504,44 @@ mod tests {
         let err = resolve_sidecar_targets(std::slice::from_ref(&source)).unwrap_err();
         assert!(err.contains("no sidecar found"), "got: {err}");
         assert!(err.contains("foo.rs.liyi.jsonc"), "got: {err}");
+    }
+
+    #[test]
+    fn resolve_agents_md_targets_finds_agents_md_in_a_directory() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        fs::write(
+            root.join("AGENTS.md"),
+            "<!-- START liyi agent instructions rev. 1 -->\n<!-- E -->\nbody\n<!-- END liyi agent instructions -->\n",
+        )
+        .unwrap();
+        fs::write(root.join("OTHER.md"), "no pragma here").unwrap();
+
+        let targets = resolve_agents_md_targets(&[root.to_path_buf()]).unwrap();
+        assert_eq!(targets, vec![root.join("AGENTS.md")]);
+    }
+
+    #[test]
+    fn resolve_agents_md_targets_includes_explicit_files_with_pragma() {
+        let tmp = TempDir::new().unwrap();
+        let custom = tmp.path().join("agent-instructions.md");
+        fs::write(
+            &custom,
+            "<!-- START liyi agent instructions rev. 2 -->\n<!-- E -->\nbody\n<!-- END liyi agent instructions -->\n",
+        )
+        .unwrap();
+
+        let targets = resolve_agents_md_targets(std::slice::from_ref(&custom)).unwrap();
+        assert_eq!(targets, vec![custom]);
+    }
+
+    #[test]
+    fn resolve_agents_md_targets_skips_files_without_pragma() {
+        let tmp = TempDir::new().unwrap();
+        let agents = tmp.path().join("AGENTS.md");
+        fs::write(&agents, "# AGENTS.md\n\nno pragma\n").unwrap();
+
+        let targets = resolve_agents_md_targets(std::slice::from_ref(&agents)).unwrap();
+        assert!(targets.is_empty());
     }
 }

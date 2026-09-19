@@ -95,6 +95,30 @@
       "tree_path": "fn.sidecar_path_for_source",
       "source_hash": "sha256:552d2551c532e7542d3d3bce735fcc3715b9af100b67481f282a74df37e49b2c",
       "source_anchor": "fn sidecar_path_for_source(source: &Path) -> PathBuf {"
+    },
+    {
+      "item": "resolve_agents_md_targets",
+      "reviewed": false,
+      "intent": "Expand a list of file/directory paths into agent-instruction files. A file qualifies when it contains the portable `START liyi agent instructions` pragma. For a directory, walk it (respecting .gitignore and .liyiignore) and include files named AGENTS.md that carry the pragma; an explicitly-passed file is included whenever it carries the pragma, so a repository's preferred location can be migrated directly. Error if a path does not exist. Return the deduplicated, sorted target list.",
+      "source_span": [
+        296,
+        324
+      ],
+      "tree_path": "fn.resolve_agents_md_targets",
+      "source_hash": "sha256:b507dd7b8df16e8f06c7800741564e439cb5d0c3780049756e85b0756939659f",
+      "source_anchor": "pub fn resolve_agents_md_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
+    },
+    {
+      "item": "has_agents_md_block",
+      "reviewed": false,
+      "intent": "=self-doc",
+      "source_span": [
+        329,
+        333
+      ],
+      "tree_path": "fn.has_agents_md_block",
+      "source_hash": "sha256:7bf55e6bd57ba5e329ac41f4a57f1186c447fe939b03a3aabc6b9c0132e6dea9",
+      "source_anchor": "fn has_agents_md_block(path: &Path) -> bool {"
     }
   ]
 }

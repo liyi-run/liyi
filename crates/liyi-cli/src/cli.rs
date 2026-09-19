@@ -72,7 +72,7 @@ pub enum Commands {
         prompt: bool,
     },
 
-    /// Migrate sidecar files to the current schema version
+    /// Migrate sidecar files and agent instruction blocks to the current versions
     Migrate {
         /// Sidecar files or directories to migrate (recursive)
         files: Vec<PathBuf>,

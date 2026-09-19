@@ -121,6 +121,84 @@ fn init_creates_agents_md_when_absent() {
         content.contains("立意"),
         "generated AGENTS.md should contain the liyi template block"
     );
+    assert!(
+        content.contains("START liyi agent instructions"),
+        "generated AGENTS.md should carry the pragma, got: {content}"
+    );
+}
+
+#[test]
+fn init_is_idempotent_for_agents_md() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+
+    let first = run_in(root, &["init"]);
+    assert!(first.status.success(), "first init: {:?}", stderr(&first));
+
+    let second = run_in(root, &["init"]);
+    assert!(
+        !second.status.success(),
+        "a second init should refuse rather than duplicate the block"
+    );
+    assert!(stderr(&second).contains("already exists"));
+
+    let content = std::fs::read_to_string(root.join("AGENTS.md")).unwrap();
+    assert_eq!(
+        content.matches("START liyi agent instructions").count(),
+        1,
+        "init must not append a duplicate block"
+    );
+}
+
+#[test]
+fn migrate_rewrites_an_older_agents_md_block() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let agents = root.join("AGENTS.md");
+    std::fs::write(
+        &agents,
+        "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- DON'T EDIT -->\nstale body\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let out = run_in(root, &["migrate", "AGENTS.md"]);
+    assert!(out.status.success(), "migrate: {:?}", stderr(&out));
+
+    let content = std::fs::read_to_string(&agents).unwrap();
+    assert!(
+        content.contains("rev. 1"),
+        "block should be at the current revision, got: {content}"
+    );
+    assert!(
+        content.contains("## The 立意"),
+        "block should carry the template, got: {content}"
+    );
+    assert!(
+        !content.contains("stale body"),
+        "the stale body should be replaced"
+    );
+}
+
+#[test]
+fn migrate_directory_updates_agents_md_and_sidecars() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    std::fs::write(
+        root.join("AGENTS.md"),
+        "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- DON'T EDIT -->\nstale body\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let src = root.join("sample.rs");
+    std::fs::write(&src, "pub fn f() {}\n").unwrap();
+    run_in(root, &["init", "sample.rs"]);
+
+    let out = run_in(root, &["migrate", "."]);
+    assert!(out.status.success(), "migrate: {:?}", stderr(&out));
+
+    let content = std::fs::read_to_string(root.join("AGENTS.md")).unwrap();
+    assert!(content.contains("rev. 1"));
+    assert!(!content.contains("stale body"));
 }
 
 #[test]

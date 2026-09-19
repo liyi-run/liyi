@@ -29,14 +29,14 @@
     },
     {
       "item": "Commands",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "Enumerate all CLI subcommands (Check, Migrate, Init, Context, Approve) with their full set of flags and arguments, providing defaults and mutual constraints. Init includes --no-discover and --trivial-threshold. Context takes a `<path>` or `<path>:<line>` target and an optional --root override. Approve includes mutually exclusive kind filters: --unreviewed-only, --stale-only, --req-only.",
       "source_span": [
         28,
         139
       ],
       "tree_path": "enum.Commands",
-      "source_hash": "sha256:e89ae347b2740462601beeece7d4ec5e24135706e545e8ec19904ec8bcb4c13e",
+      "source_hash": "sha256:9bd42fe639060abbdc278d30ae577ab9958456be4b0147e43f8b391bbead7cc2",
       "source_anchor": "pub enum Commands {"
     }
   ]

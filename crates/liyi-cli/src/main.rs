@@ -1,5 +1,6 @@
 use std::env;
 use std::io::{self, IsTerminal};
+use std::path::PathBuf;
 use std::process;
 
 use clap::Parser;
@@ -115,27 +116,59 @@ fn main() {
                 process::exit(2);
             }
 
-            let targets = match liyi::discovery::resolve_sidecar_targets(&files) {
+            let agents_files = match liyi::discovery::resolve_agents_md_targets(&files) {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("Error: {e}");
                     process::exit(2);
                 }
             };
+            // Explicit agent-instruction files are not source files, so keep
+            // them out of sidecar resolution (which would otherwise demand a
+            // co-located `.liyi.jsonc`).
+            let sidecar_inputs: Vec<PathBuf> = files
+                .iter()
+                .filter(|p| !agents_files.contains(p))
+                .cloned()
+                .collect();
+            let sidecar_targets = if sidecar_inputs.is_empty() {
+                Vec::new()
+            } else {
+                match liyi::discovery::resolve_sidecar_targets(&sidecar_inputs) {
+                    Ok(t) => t,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        process::exit(2);
+                    }
+                }
+            };
 
-            if targets.is_empty() {
-                eprintln!("no .liyi.jsonc files found in the given paths");
+            if sidecar_targets.is_empty() && agents_files.is_empty() {
+                eprintln!(
+                    "no .liyi.jsonc sidecars or agent-instruction blocks found in the given paths"
+                );
                 process::exit(2);
             }
 
             let mut errors = 0;
-            for sidecar_path in &targets {
+            for sidecar_path in &sidecar_targets {
                 match liyi::reanchor::run_reanchor(sidecar_path, None, None, true) {
                     Ok(()) => {
                         println!("Migrated: {}", sidecar_path.display());
                     }
                     Err(e) => {
                         eprintln!("Error ({}): {e}", sidecar_path.display());
+                        errors += 1;
+                    }
+                }
+            }
+            for agents_path in &agents_files {
+                match liyi::init::migrate_agents_md(agents_path) {
+                    Ok(_) => {
+                        println!("Migrated: {}", agents_path.display());
+                    }
+                    Err(e) => {
+                        eprintln!("Error ({}): {e}", agents_path.display());
                         errors += 1;
                     }
                 }

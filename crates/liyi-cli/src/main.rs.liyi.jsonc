@@ -8,8 +8,8 @@
       "reviewed": true,
       "intent": "Reset SIGPIPE to SIG_DFL so that piping output into programs like `head` causes silent termination instead of a panic.",
       "source_span": [
-        15,
-        19
+        16,
+        20
       ],
       "tree_path": "fn.reset_sigpipe",
       "source_hash": "sha256:88c175f1caa9ce830cd8d1f4e54d8942fa5f709dbc2589d8291a7dbe3dcffbd0",
@@ -17,14 +17,14 @@
     },
     {
       "item": "main",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
-        26,
-        294
+        27,
+        327
       ],
       "tree_path": "fn.main",
-      "source_hash": "sha256:b4e0b493e99a15f9fd1cca0946da94ddcf8c800f4b0b4cfce6fadb031de9f39f",
+      "source_hash": "sha256:4ecab6146b1fd1629edd6d58e9a49561d3cccdd166842ec77c3d93f55642ce92",
       "source_anchor": "fn main() {"
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Parse the target into a path (and optional trailing :line), locate the repo root, resolve applicable notes via the live note scan, print the rendered report to stdout, and exit 0. Exit 2 on usage or resolution errors (bad line number, path outside the repo, missing root).",
       "source_span": [
-        304,
-        355
+        337,
+        388
       ],
       "tree_path": "fn.run_context",
       "source_hash": "sha256:4cf6f64065c246654eea0d69ba8cc555065004c96785ae9022f8722bc9eed0da",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        361,
-        363
+        394,
+        396
       ],
       "tree_path": "fn.is_tty",
       "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",
