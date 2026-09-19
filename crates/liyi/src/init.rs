@@ -356,4 +356,60 @@ mod tests {
         fs::write(&path, "# AGENTS.md\n\nNo pragma here.\n").unwrap();
         assert!(!migrate_agents_md(&path).unwrap());
     }
+
+    #[test]
+    fn init_agents_md_creates_a_pragma_wrapped_block() {
+        let tmp = TempDir::new().unwrap();
+        let path = init_agents_md(tmp.path(), false).unwrap();
+        let content = fs::read_to_string(&path).unwrap();
+
+        assert!(
+            content.starts_with("# AGENTS.md\n\n<!-- START liyi agent instructions"),
+            "got: {content}"
+        );
+        assert!(content.contains(REMINDER), "got: {content}");
+        assert!(content.trim_end().ends_with(END_MARKER), "got: {content}");
+        assert_eq!(
+            content.matches(PRAGMA_START_PREFIX).count(),
+            1,
+            "exactly one block"
+        );
+    }
+
+    #[test]
+    fn init_agents_md_appends_to_existing_content_without_a_block() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("AGENTS.md");
+        fs::write(&path, "# House rules\n\nBe nice.\n").unwrap();
+
+        init_agents_md(tmp.path(), false).unwrap();
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.starts_with("# House rules\n\nBe nice.\n"));
+        assert_eq!(content.matches(PRAGMA_START_PREFIX).count(), 1);
+    }
+
+    #[test]
+    fn init_agents_md_is_idempotent_and_force_replaces() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("AGENTS.md");
+        fs::write(
+            &path,
+            "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\nstale body\n<!-- END liyi agent instructions -->\n",
+        )
+        .unwrap();
+
+        // Without --force an existing block is refused.
+        assert!(matches!(
+            init_agents_md(tmp.path(), false),
+            Err(InitError::AlreadyExists(_))
+        ));
+
+        // With --force the stale block is replaced in place.
+        init_agents_md(tmp.path(), true).unwrap();
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.contains(&pragma_line(TEMPLATE_REVISION)));
+        assert!(content.contains("## The 立意"));
+        assert!(!content.contains("stale body"));
+        assert_eq!(content.matches(PRAGMA_START_PREFIX).count(), 1);
+    }
 }

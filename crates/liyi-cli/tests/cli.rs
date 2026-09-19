@@ -125,6 +125,51 @@ fn init_creates_agents_md_when_absent() {
         content.contains("START liyi agent instructions"),
         "generated AGENTS.md should carry the pragma, got: {content}"
     );
+    assert!(
+        content.contains("DON'T EDIT THIS BLOCK"),
+        "generated AGENTS.md should carry the reminder, got: {content}"
+    );
+    assert!(
+        content
+            .trim_end()
+            .ends_with("<!-- END liyi agent instructions -->"),
+        "generated AGENTS.md should close the block, got: {content}"
+    );
+}
+
+#[test]
+fn init_force_replaces_the_agents_md_block() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let agents = root.join("AGENTS.md");
+    std::fs::write(
+        &agents,
+        "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\nstale body\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let refused = run_in(root, &["init"]);
+    assert!(
+        !refused.status.success(),
+        "init should refuse an existing block without --force"
+    );
+
+    let forced = run_in(root, &["init", "--force"]);
+    assert!(
+        forced.status.success(),
+        "init --force: {:?}",
+        stderr(&forced)
+    );
+
+    let content = std::fs::read_to_string(&agents).unwrap();
+    assert!(content.contains("rev. 1"), "got: {content}");
+    assert!(content.contains("## The 立意"), "got: {content}");
+    assert!(!content.contains("stale body"), "got: {content}");
+    assert_eq!(
+        content.matches("START liyi agent instructions").count(),
+        1,
+        "force must replace, not append"
+    );
 }
 
 #[test]
