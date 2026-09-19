@@ -17,14 +17,14 @@
     },
     {
       "item": "main",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=doc",
       "source_span": [
         27,
-        327
+        334
       ],
       "tree_path": "fn.main",
-      "source_hash": "sha256:4ecab6146b1fd1629edd6d58e9a49561d3cccdd166842ec77c3d93f55642ce92",
+      "source_hash": "sha256:9370c0ab92fba386fdcdc65a989afe5726b8ab693927a12b7682803e01ac5dfd",
       "source_anchor": "fn main() {"
     },
     {
@@ -32,8 +32,8 @@
       "reviewed": true,
       "intent": "Parse the target into a path (and optional trailing :line), locate the repo root, resolve applicable notes via the live note scan, print the rendered report to stdout, and exit 0. Exit 2 on usage or resolution errors (bad line number, path outside the repo, missing root).",
       "source_span": [
-        337,
-        388
+        344,
+        395
       ],
       "tree_path": "fn.run_context",
       "source_hash": "sha256:4cf6f64065c246654eea0d69ba8cc555065004c96785ae9022f8722bc9eed0da",
@@ -44,8 +44,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        394,
-        396
+        401,
+        403
       ],
       "tree_path": "fn.is_tty",
       "source_hash": "sha256:021dc096ffc5aa501d5fe90e8fd1835c4ce784a7de59434995a9be221f97e40f",

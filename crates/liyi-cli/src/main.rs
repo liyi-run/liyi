@@ -213,7 +213,14 @@ fn main() {
             None => {
                 let root = env::current_dir().unwrap_or_default();
                 match liyi::init::init_agents_md(&root, force) {
-                    Ok(path) => println!("Initialized: {}", path.display()),
+                    Ok(path) => {
+                        println!("Initialized: {}", path.display());
+                        println!(
+                            "note: these instructions follow the AGENTS.md convention \
+                             (https://agents.md); if your harness does not read AGENTS.md, it is \
+                             your responsibility to place the block where your harness will read it."
+                        );
+                    }
                     Err(e) => {
                         eprintln!("Error: {e}");
                         process::exit(1);

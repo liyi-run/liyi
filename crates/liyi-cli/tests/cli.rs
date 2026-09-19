@@ -138,6 +138,30 @@ fn init_creates_agents_md_when_absent() {
 }
 
 #[test]
+fn init_announces_agents_md_convention() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let out = run_in(tmp.path(), &["init"]);
+    assert!(
+        out.status.success(),
+        "init should exit 0: {:?}",
+        stderr(&out)
+    );
+    let text = stdout(&out);
+    assert!(
+        text.contains("AGENTS.md convention"),
+        "init should announce the AGENTS.md convention, got: {text}"
+    );
+    assert!(
+        text.contains("https://agents.md"),
+        "init note should link the convention, got: {text}"
+    );
+    assert!(
+        text.contains("your responsibility"),
+        "init note should state the harness-placement responsibility, got: {text}"
+    );
+}
+
+#[test]
 fn init_force_replaces_the_agents_md_block() {
     let tmp = tempfile::TempDir::new().unwrap();
     let root = tmp.path();
