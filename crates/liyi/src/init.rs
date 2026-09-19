@@ -9,26 +9,26 @@ use crate::tree_path::{detect_language, discover_items};
 /// so that `liyi init` can extract the portable template block.
 const AGENTS_MD_FULL: &str = include_str!("../../../AGENTS.md");
 
-const TEMPLATE_START: &str = "<!-- liyi:template:start -->\n";
-const TEMPLATE_END: &str = "\n<!-- liyi:template:end -->";
+const TEMPLATE_START: &str = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->\n";
+const TEMPLATE_END: &str = "\n<!-- END liyi agent instructions -->";
 
 /// Extract the portable agent instruction block from the repo's AGENTS.md.
 ///
-/// The block is delimited by `<!-- liyi:template:start -->` and
-/// `<!-- liyi:template:end -->` HTML comment markers.  Panics at
-/// runtime (not compile time) if the markers are missing — but since
-/// the content is baked in via `include_str!`, this is effectively a
-/// build-time guarantee: any AGENTS.md without markers won't produce
-/// a working binary.
+/// The block is delimited by the `START liyi agent instructions rev. N`
+/// pragma and its `DON'T EDIT THIS SECTION` reminder, and closed by
+/// `<!-- END liyi agent instructions -->`. Panics at runtime (not compile
+/// time) if the pragma is missing — but since the content is baked in via
+/// `include_str!`, this is effectively a build-time guarantee: any
+/// AGENTS.md without the pragma won't produce a working binary.
 fn agents_md_block() -> &'static str {
     let start = AGENTS_MD_FULL
         .find(TEMPLATE_START)
-        .expect("AGENTS.md missing <!-- liyi:template:start --> marker")
+        .expect("AGENTS.md missing START liyi agent instructions marker")
         + TEMPLATE_START.len();
     let end = start
         + AGENTS_MD_FULL[start..]
             .find(TEMPLATE_END)
-            .expect("AGENTS.md missing <!-- liyi:template:end --> marker");
+            .expect("AGENTS.md missing END liyi agent instructions marker");
     &AGENTS_MD_FULL[start..end]
 }
 

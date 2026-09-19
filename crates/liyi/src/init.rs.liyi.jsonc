@@ -17,38 +17,38 @@
     },
     {
       "item": "TEMPLATE_START",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=trivial",
       "source_span": [
         12,
         12
       ],
       "tree_path": "const.TEMPLATE_START",
-      "source_hash": "sha256:a2bb1acca95830bc995d5334ba98ad79cb29cf0cbeadb78bf5276b6fff08250b",
-      "source_anchor": "const TEMPLATE_START: &str = \"<!-- liyi:template:start -->\\n\";"
+      "source_hash": "sha256:9293d9ba71f3ec171bb9632f9f989f0c36e58ea11dbc57e33351deb5b7c8792c",
+      "source_anchor": "const TEMPLATE_START: &str = \"<!-- START liyi agent instructions rev. 1 -->\\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->\\n\";"
     },
     {
       "item": "TEMPLATE_END",
-      "reviewed": true,
+      "reviewed": false,
       "intent": "=trivial",
       "source_span": [
         13,
         13
       ],
       "tree_path": "const.TEMPLATE_END",
-      "source_hash": "sha256:b27d30cac4bea8226105bc507779eb865acb57718a13e9f72bd7d834147c942e",
-      "source_anchor": "const TEMPLATE_END: &str = \"\\n<!-- liyi:template:end -->\";"
+      "source_hash": "sha256:f9ac799232fb18d7906b86b9d555a851db02f06bcc5c8492b6f62689f9f40e91",
+      "source_anchor": "const TEMPLATE_END: &str = \"\\n<!-- END liyi agent instructions -->\";"
     },
     {
       "item": "agents_md_block",
-      "reviewed": true,
-      "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md by finding text between <!-- liyi:template:start --> and <!-- liyi:template:end --> markers. Must panic if either marker is missing.",
+      "reviewed": false,
+      "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md by finding the text after the `START liyi agent instructions rev. N` pragma (and its DON'T EDIT reminder) and before the `END liyi agent instructions` marker. Must panic if the pragma or end marker is missing.",
       "source_span": [
         23,
         33
       ],
       "tree_path": "fn.agents_md_block",
-      "source_hash": "sha256:d872315f683788bef2aa149d652ee2b1ee73dc57b0d0920fcab6233fbcc6c9e9",
+      "source_hash": "sha256:c74950abdb98df0773c9f3d8e398b650838beba7b204f86ef748aaadb777ab2c",
       "source_anchor": "fn agents_md_block() -> &'static str {"
     },
     {

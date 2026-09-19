@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 """Keep AGENTS.md's portable template in sync with the design doc's block.
 
-`liyi init` ships the `liyi:template:start ... end` block from `AGENTS.md`
+`liyi init` ships the `START liyi agent instructions` block from `AGENTS.md`
 unchanged, so that block keeps its section heading and `liyi init` needs no
 special-casing. `docs/liyi-design.md` carries the same instruction body
 *without* the heading, so the design doc's own section heading and outline
@@ -28,8 +28,8 @@ import difflib
 import sys
 from pathlib import Path
 
-START = "<!-- liyi:template:start -->"
-END = "<!-- liyi:template:end -->"
+START = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->"
+END = "<!-- END liyi agent instructions -->"
 HEADING = "## The 立意 (Intent Specs) design pattern for agents"
 # @liyi:related agents-md-instructions-section-naming
 

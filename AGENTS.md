@@ -69,7 +69,8 @@ See the contributing guide for full details and examples.
 
 ---
 
-<!-- liyi:template:start -->
+<!-- START liyi agent instructions rev. 1 -->
+<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->
 ## The 立意 (Intent Specs) design pattern for agents
 
 When writing or modifying code:
@@ -404,4 +405,4 @@ When `liyi check` reports stale items, the agent assesses each and writes the re
   }
 }
 ```
-<!-- liyi:template:end -->
+<!-- END liyi agent instructions -->
