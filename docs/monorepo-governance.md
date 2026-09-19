@@ -72,5 +72,5 @@ operations until that boundary exists.
   targeting), `.liyiignore`, and the sidecar discovery rules.
 - `docs/next-steps.md` — Tier 5, "Workspace-aware requirement queries
   (monorepo)".
-- Commit `3f451fcc38f7` — made `liyi migrate` agent-instruction targeting
+- Commit `747b0095299d` — made `liyi migrate` agent-instruction targeting
   mirror `liyi init` (no recursion) for exactly this reason.
