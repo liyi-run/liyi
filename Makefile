@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 
-.PHONY: verify lint fmt-check clippy liyi-check template-sync test \
+.PHONY: verify lint fmt-check clippy liyi-check template-sync template-sync-fix test \
         verify-short lint-short test-short
 
 # Run every pre-commit gate (lint + tests) in one shot.
@@ -27,10 +27,15 @@ clippy:
 liyi-check:
 	cargo run -p liyi-cli -- check --root .
 
-# Verify docs/liyi-design.md's reproduced agent content matches the
-# AGENTS.md template (the source of truth `liyi init` ships downstream).
+# Verify docs/liyi-design.md carries the same liyi:template block as
+# AGENTS.md (the source of truth `liyi init` ships downstream).
 template-sync:
 	python3 scripts/check-template-sync.py
+
+# Copy the AGENTS.md template block over the design doc's, after a
+# template-sync failure. Review the resulting diff before committing.
+template-sync-fix:
+	python3 scripts/check-template-sync.py --sync
 
 test:
 	cargo test --workspace
