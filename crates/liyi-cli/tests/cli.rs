@@ -330,6 +330,35 @@ fn migrate_directory_leaves_heading_less_blocks_alone() {
 }
 
 #[test]
+fn migrate_directory_does_not_recurse_into_ungoverned_subtrees() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let vendored = root.join("3rdparty/vendored");
+    std::fs::create_dir_all(&vendored).unwrap();
+    let old_block = "<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\nstale\n<!-- END liyi agent instructions -->\n";
+    std::fs::write(vendored.join("AGENTS.md"), old_block).unwrap();
+    std::fs::write(
+        root.join("AGENTS.md"),
+        format!("# AGENTS.md\n\n{old_block}"),
+    )
+    .unwrap();
+
+    let out = run_in(root, &["migrate", "."]);
+    assert!(out.status.success(), "migrate: {:?}", stderr(&out));
+
+    assert!(
+        std::fs::read_to_string(root.join("AGENTS.md"))
+            .unwrap()
+            .contains("rev. 1")
+    );
+    assert_eq!(
+        std::fs::read_to_string(vendored.join("AGENTS.md")).unwrap(),
+        old_block,
+        "a vendored/ungoverned subtree must not be rewritten"
+    );
+}
+
+#[test]
 fn init_creates_sidecar_for_source_file() {
     let tmp = tempfile::TempDir::new().unwrap();
     let src = tmp.path().join("sample.rs");

@@ -98,14 +98,14 @@
     },
     {
       "item": "resolve_agents_md_targets",
-      "reviewed": true,
-      "intent": "Expand a list of file/directory paths into agent-instruction files. A file qualifies when it contains the portable `START liyi agent instructions` pragma. For a directory, walk it (respecting .gitignore and .liyiignore) and include files named AGENTS.md that carry the pragma; an explicitly-passed file is included whenever it carries the pragma, so a repository's preferred location can be migrated directly. Error if a path does not exist. Return the deduplicated, sorted target list.",
+      "reviewed": false,
+      "intent": "Expand a list of file/directory paths into agent-instruction files, strictly mirroring `liyi init`'s targeting. A directory contributes exactly its own AGENTS.md (never a recursive walk, so ungoverned subtrees like 3rdparty/ or vendor/ are never touched); an explicitly-passed file is included when it carries the pragma, so a repository's preferred location can be migrated directly. A file qualifies only when it contains the portable `START liyi agent instructions` pragma. Error if a path does not exist. Return the deduplicated, sorted target list.",
       "source_span": [
-        296,
-        324
+        297,
+        316
       ],
       "tree_path": "fn.resolve_agents_md_targets",
-      "source_hash": "sha256:b507dd7b8df16e8f06c7800741564e439cb5d0c3780049756e85b0756939659f",
+      "source_hash": "sha256:e080976caa652aeef085c70cc5038bc72efb5ae22e28ef5f0b8e93f705699287",
       "source_anchor": "pub fn resolve_agents_md_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {"
     },
     {
@@ -113,8 +113,8 @@
       "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
-        329,
-        333
+        321,
+        325
       ],
       "tree_path": "fn.has_agents_md_block",
       "source_hash": "sha256:7bf55e6bd57ba5e329ac41f4a57f1186c447fe939b03a3aabc6b9c0132e6dea9",

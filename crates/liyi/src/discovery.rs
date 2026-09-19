@@ -288,27 +288,19 @@ fn sidecar_path_for_source(source: &Path) -> PathBuf {
 
 /// Expand a list of file/directory paths into agent-instruction files.
 ///
-/// A file qualifies when it contains the portable
-/// `START liyi agent instructions` pragma. Directories are walked for files
-/// named `AGENTS.md` (the `liyi init` default); an explicitly-passed file is
-/// included whenever it carries the pragma, so a repository's preferred
-/// location can be migrated directly.
+/// Targeting strictly mirrors `liyi init`: a directory contributes exactly its
+/// own `AGENTS.md` (never a recursive walk, so ungoverned subtrees such as
+/// `3rdparty/` or `vendor/` are never touched), and an explicitly-passed file
+/// is included so a repository's preferred location can be migrated directly.
+/// A file qualifies only when it carries the portable
+/// `START liyi agent instructions` pragma.
 pub fn resolve_agents_md_targets(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     let mut result: Vec<PathBuf> = Vec::new();
     for p in paths {
         if p.is_dir() {
-            let walker = WalkBuilder::new(p)
-                .hidden(false)
-                .add_custom_ignore_filename(".liyiignore")
-                .build();
-            for entry in walker {
-                let entry = entry.map_err(|e| format!("walk error: {e}"))?;
-                if entry.file_type().is_some_and(|ft| ft.is_file())
-                    && entry.path().file_name().and_then(|n| n.to_str()) == Some("AGENTS.md")
-                    && has_agents_md_block(entry.path())
-                {
-                    result.push(entry.into_path());
-                }
+            let candidate = p.join(crate::init::AGENTS_MD_FILENAME);
+            if has_agents_md_block(&candidate) {
+                result.push(candidate);
             }
         } else if p.is_file() {
             if has_agents_md_block(p) {
@@ -557,5 +549,25 @@ mod tests {
 
         let targets = resolve_agents_md_targets(&[root.to_path_buf()]).unwrap();
         assert_eq!(targets, vec![root.join("AGENTS.md")]);
+    }
+
+    #[test]
+    fn resolve_agents_md_targets_does_not_recurse() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let sub = root.join("subprojects/a");
+        fs::create_dir_all(&sub).unwrap();
+        let block = "<!-- START liyi agent instructions rev. 1 -->\nbody\n<!-- END liyi agent instructions -->\n";
+        fs::write(root.join("AGENTS.md"), block).unwrap();
+        fs::write(sub.join("AGENTS.md"), block).unwrap();
+
+        // A directory contributes only its own AGENTS.md; nested ones are
+        // reachable only by naming their directory, so ungoverned subtrees
+        // (3rdparty/, vendor/) can never be rewritten by a parent walk.
+        let top = resolve_agents_md_targets(&[root.to_path_buf()]).unwrap();
+        assert_eq!(top, vec![root.join("AGENTS.md")]);
+
+        let nested = resolve_agents_md_targets(&[sub.clone()]).unwrap();
+        assert_eq!(nested, vec![sub.join("AGENTS.md")]);
     }
 }

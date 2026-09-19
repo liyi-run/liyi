@@ -15,6 +15,12 @@ const AGENTS_MD_FULL: &str = include_str!("../../../AGENTS.md");
 /// adopter's block to this revision.
 pub const TEMPLATE_REVISION: u32 = 1;
 
+/// File name `liyi init` scaffolds the agent instruction block into.
+///
+/// `liyi migrate` uses this same constant for directory targets, so the two
+/// commands can never disagree about which file they manage.
+pub const AGENTS_MD_FILENAME: &str = "AGENTS.md";
+
 /// Opening words of the `START` pragma; the revision number follows.
 const PRAGMA_START_PREFIX: &str = "<!-- START liyi agent instructions rev. ";
 /// Closing words of the `START` pragma line.
@@ -123,7 +129,7 @@ impl From<std::io::Error> for InitError {
 /// unless `force` is set, in which case the existing block is replaced with the
 /// current revision.
 pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
-    let agents_path = root.join("AGENTS.md");
+    let agents_path = root.join(AGENTS_MD_FILENAME);
     let block = agents_md_block();
 
     if agents_path.is_file() {
