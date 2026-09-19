@@ -62,27 +62,29 @@ impl From<std::io::Error> for InitError {
 
 /// `liyi init` — append agent instruction to `AGENTS.md`.
 ///
-/// Creates the file if it doesn't exist; appends the block if it does.
-/// If `force` is true, overwrites the agent instruction block even if
-/// a `## 立意` section already exists.
+/// Creates the file if it doesn't exist; appends the section heading and the
+/// block if it does. If `force` is true, overwrites the agent instruction block
+/// even if a `## 立意` section already exists.
 pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {
     let agents_path = root.join("AGENTS.md");
+    let section_heading = "## 立意 (Intent Specs)\n\n";
 
     if agents_path.is_file() {
         let content = fs::read_to_string(&agents_path)?;
         if content.contains("## 立意") && !force {
             return Err(InitError::AlreadyExists(agents_path));
         }
-        // Append the block
+        // Append the section heading and the block
         let block = agents_md_block();
         let mut new_content = content;
         new_content.push('\n');
+        new_content.push_str(section_heading);
         new_content.push_str(block);
         fs::write(&agents_path, new_content)?;
     } else {
         // Create new file
         let block = agents_md_block();
-        let content = format!("# AGENTS.md\n\n{block}");
+        let content = format!("# AGENTS.md\n\n{section_heading}{block}");
         fs::write(&agents_path, content)?;
     }
 
@@ -216,8 +218,8 @@ mod tests {
 
         // Must start with the section heading.
         assert!(
-            block.starts_with("## 立意"),
-            "extracted block must start with ## 立意 heading"
+            block.starts_with("When writing or modifying code:"),
+            "extracted block must start with the instruction intro"
         );
 
         // Key invariants: the block contains the sidecar schema and
