@@ -1014,7 +1014,7 @@ The second case matters for the scaffold workflow (see *Tree-sitter item discove
 
 ### `"=self-doc"` in the sidecar — the self-documenting sentinel
 
-`"=trivial"` answers "is this small enough that nothing can hide?" — a *risk* claim about size. But some items are **not** small yet still carry no intent a spec could usefully add: a plain data struct whose fields *are* its meaning, a recursive tree-search whose name fully states its job, a container module whose purpose is the sum of its members. Forcing prose onto these produces a tautology; marking them `"=trivial"` is a lie about their size (the 11-line context struct, the 163-line test module). `"=self-doc"` is the honest label for this class:
+`"=trivial"` answers "is this small enough that nothing can hide?" — a *risk* claim about size. But some items are **not** small yet still carry no intent a spec could usefully add: a plain data struct whose fields *are* its meaning, a recursive tree-search whose name fully states its job, a container module whose purpose is the sum of its members. Forcing prose onto these produces a tautology; marking them `"=trivial"` is a lie about their size (the 11-line context struct, a data-only enum like `RecoveryMethod`). `"=self-doc"` is the honest label for this class:
 
 ```jsonc
 {
