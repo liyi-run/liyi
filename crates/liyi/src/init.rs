@@ -216,8 +216,8 @@ mod tests {
 
         // Must start with the section heading.
         assert!(
-            block.starts_with("## 立意"),
-            "extracted block must start with ## 立意 heading"
+            block.starts_with("## The 立意"),
+            "extracted block must start with the section heading"
         );
 
         // Key invariants: the block contains the sidecar schema and
