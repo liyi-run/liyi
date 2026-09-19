@@ -31,7 +31,7 @@ from pathlib import Path
 START = "<!-- liyi:template:start -->"
 END = "<!-- liyi:template:end -->"
 HEADING = "## The 立意 (Intent Specs) design pattern for agents"
-'''.. @liyi:related agents-md-instructions-section-naming'''
+# @liyi:related agents-md-instructions-section-naming
 
 
 def read(path: Path) -> str:
