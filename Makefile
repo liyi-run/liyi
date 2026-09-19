@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 
-.PHONY: verify lint fmt-check clippy liyi-check test \
+.PHONY: verify lint fmt-check clippy liyi-check template-sync test \
         verify-short lint-short test-short
 
 # Run every pre-commit gate (lint + tests) in one shot.
@@ -14,7 +14,7 @@ verify: lint test
 	@echo "verify: all gates passed"
 
 # Run every pre-commit lint gate (matches CI). Ends with a success banner.
-lint: fmt-check clippy liyi-check
+lint: fmt-check clippy liyi-check template-sync
 	@echo "lint: all gates passed"
 
 fmt-check:
@@ -26,6 +26,11 @@ clippy:
 # Dogfood the project's own linter on this repository.
 liyi-check:
 	cargo run -p liyi-cli -- check --root .
+
+# Verify docs/liyi-design.md's reproduced agent content matches the
+# AGENTS.md template (the source of truth `liyi init` ships downstream).
+template-sync:
+	python3 scripts/check-template-sync.py
 
 test:
 	cargo test --workspace
@@ -57,6 +62,10 @@ lint-short:
 	if ! cargo run --quiet -p liyi-cli -- check --root . >$$LOG 2>&1; then \
 		tail -n 20 $$LOG; rm -f $$LOG; \
 		echo "lint-short: liyi check FAILED — re-run \`make liyi-check\` for the full report"; exit 1; \
+	fi; \
+	if ! python3 scripts/check-template-sync.py >$$LOG 2>&1; then \
+		tail -n 20 $$LOG; rm -f $$LOG; \
+		echo "lint-short: template-sync FAILED — re-run \`make template-sync\` for the full output"; exit 1; \
 	fi; \
 	rm -f $$LOG; \
 	echo "lint-short: all gates passed"
