@@ -90,6 +90,15 @@ When writing or modifying code:
     In either path, **never compute `source_hash` manually** and **never leave `"reviewed": true` on a spec whose `intent` you changed** (see rule 1). When `liyi check --fix` cannot auto-rehash a stale item (e.g., because it has `"reviewed": true`), update `source_span` and `intent`, **set `"reviewed"` to `false`**, and **delete** the `source_hash` field (or set it to `null`). The human will run `liyi check --fix` or `liyi approve --rehash` after reviewing the updated intent. This rule exists because agents consistently produce wrong hashes (trailing-newline differences, encoding mismatches) — the tool reads the actual bytes and is the only authority.
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running as an agent, prefer `liyi check --prompt` for structured JSON output with per-gap resolution instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 
+### Resolving rule conflicts
+
+When two normative instructions here appear to conflict, or a task's correct completion turns on an ambiguity these instructions do not resolve:
+
+1. **Do not guess.** Name the conflicting rules (and any design-doc sections they reference).
+2. **If a human is reachable:** ask once — state the candidate resolutions and your recommendation. Consolidate into a single question rather than a series.
+3. **If no human is reachable** (batch, CI): take the most conservative reading, leave the affected specs `"reviewed": false`, complete the unambiguous parts, and report the unresolved conflict prominently.
+4. **Do not over-apply this.** Where the standard delegates judgment to you — e.g. whether an item qualifies for `=self-doc` under the observer test — reason it out and state your reasoning so a human can veto. That is not a conflict.
+
 ### `.liyi.jsonc` Schema (v0.1)
 
 Sidecar files must conform to the following JSON Schema. The top-level object has three required fields: `"version"` (must be `"0.1"`), `"source"` (repo-relative path to the source file), and `"specs"` (array of item or requirement entries). Each spec entry is either an **item spec** or a **requirement spec**, distinguished by the presence of `"item"` vs `"requirement"`.

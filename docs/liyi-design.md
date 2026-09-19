@@ -1694,6 +1694,10 @@ When writing or modifying code:
 - **Model diversity.** Different model for tests than for code, when possible.
 - **Never modify source code logic** during the protocol. Only create/update `.liyi.jsonc` files, `@liyi:note` blocks (in docs or doc comments), test files, and annotation comments (`@liyi:trivial`, `@liyi:ignore`, `@liyi:requirement`, `@liyi:related`). Annotation comments are metadata, not logic — adding them does not change program behavior.
 
+### Resolving rule conflicts
+
+When two normative rules appear to conflict, or a task's correct completion turns on an ambiguity the convention does not resolve, the agent must not guess. If a human is reachable, name the conflicting rules and ask once, presenting the candidate resolutions and a recommendation. If no human is reachable (batch or CI), take the most conservative reading, leave the affected specs `"reviewed": false`, finish the unambiguous parts, and surface the conflict prominently. This is not a license to stall on judgment the standard explicitly delegates — such as applying the `=self-doc` observer counterfactual — which the agent exercises and states outright for the human to veto.
+
 ### The cognitive load inversion: tool-guided agents
 
 The 11 behavioral rules assume the agent internalizes a complex protocol and executes it reliably. Frontier models (Claude Opus, GPT-4.5) do this well. Budget models (Kimi K2.5, Gemini Flash, GPT-4o-mini) routinely forget steps — dropping AIGC trailers, skipping sidecar updates, ignoring `.liyiignore`. This is not a hypothetical concern; it is empirically observed in production use.
