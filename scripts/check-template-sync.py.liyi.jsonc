@@ -1,0 +1,22 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "check-template-sync.py",
+  "specs": [
+    {
+      "item": "HEADING",
+      "reviewed": false,
+      "intent": "=doc",
+      "source_span": [
+        33,
+        34
+      ],
+      "tree_path": "HEADING",
+      "source_hash": "sha256:33e11b229bb002341da7dbdda738980bcab6bf25a7c1e0f9486a2f50f9d3d0b7",
+      "source_anchor": "HEADING = \"## The 立意 (Intent Specs) design pattern for agents\"",
+      "related": {
+        "agents-md-instructions-section-naming'''": null
+      }
+    }
+  ]
+}

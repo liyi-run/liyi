@@ -70,7 +70,7 @@ See the contributing guide for full details and examples.
 ---
 
 <!-- liyi:template:start -->
-## 立意 (Intent Specs)
+## The 立意 (Intent Specs) design pattern for agents
 
 When writing or modifying code:
 

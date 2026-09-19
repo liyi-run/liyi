@@ -404,8 +404,12 @@ The `source` path is relative to the repository root — the same path you'd pas
 `source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi check --fix`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
 
 <!-- @liyi:requirement version-field-required -->
-`"version"` is required. The linter checks it and rejects unknown versions. This costs nothing now and prevents painful migration when the schema evolves (e.g., adding `"related"` edges, or deferred structured fields). A JSON Schema definition ships alongside the linter for editor validation and autocompletion (see *立意 (Intent Specs)* below). When the schema changes, the linter will accept both `"0.1"` and the new version during a transition window, and `liyi migrate` will upgrade sidecar files in place.
+`"version"` is required. The linter checks it and rejects unknown versions.
 <!-- @liyi:end-requirement version-field-required -->
+
+This costs nothing now and prevents painful migration when the schema evolves, e.g. adding `related` edges, or deferred structured fields.
+A JSON Schema definition is to be shipped alongside the linter for editor validation and autocompletion.
+When the schema changes, a new release of `liyi` is to accept both the currently supported version(s) and the new version during a transition window, and `liyi migrate` will upgrade sidecar files in place.
 
 **`liyi migrate` behavior.** When the schema version changes (e.g., 0.1 → 0.2), `--migrate` reads each `.liyi.jsonc`, adds any newly required fields with default values, removes deprecated fields, updates `"version"` to the new version, and writes the file back. It is idempotent — running it twice produces the same output. It does not re-hash spans or re-infer intent; it only transforms the schema envelope. Migration is always additive in 0.x: no field present in 0.1 will change meaning, only new fields may appear.
 
@@ -1660,15 +1664,19 @@ The linter is tested at three levels:
 
 ---
 
-## The Agent Skill
+## The agent-side design
 
-The agent instructions define the protocol. The CI linter enforces it.
+Half of the 立意 paradigm relies on cooperation from agents' side: instructions, protocols, prompt and harness engineering.
+The deterministic linter and related CI setup serves to both complement and constrain the agents, to provide a unified 立意 workflow as a whole.
 
-### Minimal instruction (for any AGENTS.md)
+### Agent instructions: `AGENTS.md` for adopters
 
-The full AGENTS.md section is ~300 lines: the behavioral rules (the part a human reads once) followed by two JSON schemas (machine-consumed reference that the agent uses to produce valid `.liyi.jsonc` and `triage.json` files). The schemas are not adoption cost — no human needs to memorize them — but they are part of the payload.
-
-The canonical instruction is in *立意 (Intent Specs)* below; `scripts/check-template-sync.py` (run by `make lint`) fails if AGENTS.md's copy drifts, and `make sync-template` rewrites AGENTS.md from this block, adding the `## 立意 (Intent Specs)` heading.
+The canonical instructions for inclusion in 立意-adopting repositories are
+defined in a dedicated appendix section in this design documentation, to be
+reproduced by `liyi init` for easy adoption.
+It consists of the practical instruction for agents (the part a human reads once)
+followed by two JSON schemas (machine-consumed reference that the agent uses to
+produce valid `.liyi.jsonc` and `triage.json` files).
 
 ### The cognitive load inversion: tool-guided agents
 
@@ -2635,9 +2643,15 @@ The agent re-infers (updating `source_span`; the tool recomputes `source_hash`),
 
 ---
 
----
 
-## 立意 (Intent Specs)
+## Appendix: The prescribed `AGENTS.md` content for Liyi-adopting repositories
+
+<!-- @liyi:requirement agents-md-instructions-section-naming -->
+The content is to be placed in a dedicated section named
+"The 立意 (Intent Specs) design pattern for agents", in a 立意-adopting repo's
+`AGENTS.md` (the default location supported by `liyi init`) or the repo's
+preferred location.
+<!-- @liyi:end-requirement agents-md-instructions-section-naming -->
 
 <!-- liyi:template:start -->
 When writing or modifying code:
@@ -2974,7 +2988,8 @@ When `liyi check` reports stale items, the agent assesses each and writes the re
 ```
 <!-- liyi:template:end -->
 
-This schema ships as `liyi.schema.json` in the linter's release artifacts and is published at the `$id` URL. Editors that support JSON Schema (VSCode, IntelliJ, Neovim with `SchemaStore`) will provide validation and autocompletion for `.liyi.jsonc` files when configured with `"$schema": "https://liyi.run/schema/0.1/liyi.schema.json"` at the top of the sidecar, or via a workspace-level `json.schemas` setting.
+The schemas ship as `liyi.schema.json` and `triage.schema.json` in the linter's release artifacts and are to be published at the `$id` URL.
+Editors that support JSON Schema (VSCode, IntelliJ, Neovim with `SchemaStore`) will provide validation and autocompletion for `.liyi.jsonc` files when configured with `"$schema": "https://liyi.run/schema/0.1/liyi.schema.json"` at the top of the sidecar, or via a workspace-level `json.schemas` setting.
 
 ---
 
