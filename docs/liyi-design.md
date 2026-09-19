@@ -995,7 +995,7 @@ The `@liyi:trivial` source annotation tells agents and the linter to skip an ite
 
 Meaning: “I evaluated this item and it’s trivial — small enough to carry no hidden behavior, so a spec would add no value.”
 
-`"=trivial"` is a **risk claim**: the item is too small and simple for anything to go subtly wrong, so a reviewer proves triviality by reading the body. It is *not* a claim that the item is self-evident despite being non-trivial — that is what `"=self-doc"` is for (see below). Do not stretch `"=trivial"` to cover substantial code whose intent happens to be recoverable from its surface form.
+`"=trivial"` is a **risk claim**: the item is too small and simple for anything to go subtly wrong, so a reviewer proves triviality by reading the body. It is *not* a claim that the item is self-evident despite being non-trivial — that is what `"=self-doc"` is for (see below). Do not stretch `"=trivial"` to cover substantial code whose intent happens to be recoverable from its surface form. "Simple" means more than line count: a body that is a single expression is still not trivial if its operand order, short-circuit evaluation, nested calls, or cost are load-bearing — a compound boolean guard with side-effecting operands belongs in prose.
 
 **When to use which:**
 
@@ -1112,7 +1112,7 @@ Every reviewed item that uses `@liyi:intent` gets a comment annotation. For a fi
 Three annotations, on the line before the item definition:
 
 - **`@liyi:ignore`** — the function is deliberately excluded from the convention. Don’t infer intent, don’t report it. Use for internal helpers, legacy functions that won’t be touched.
-- **`@liyi:trivial`** — the function’s intent is self-evident from its signature. A spec would add no value. Use for simple getters, setters, one-line wrappers. Applied by the agent during inference.
+- **`@liyi:trivial`** — the item is too small to carry hidden behavior; a spec would add no value. Use for simple getters/setters, one-line wrappers, and *simple* expressions only — a body is not trivial if its operand order, short-circuit evaluation, nested calls, or cost are load-bearing. Applied by the agent during inference.
 - **`@liyi:nontrivial`** — a human override: “this looks trivial but I want a spec.” The agent must infer a spec and not re-classify as trivial. The linter treats it the same as an unannotated item.
 
 ```python
@@ -1672,7 +1672,7 @@ The full AGENTS.md section is ~300 lines: 10 behavioral rules (the part a human 
 ## 立意 (Intent Specs)
 
 When writing or modifying code:
-1. For each non-trivial item (function, struct, macro invocation, decorated endpoint, etc.), infer what it SHOULD do (not what it does). Write intent to a sidecar file named `<source_filename>.liyi.jsonc` (e.g., `money.rs` → `money.rs.liyi.jsonc`). Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` — the tool fills them in. Do not write `"reviewed"` — that is set by the human via CLI or IDE. Use `"intent": "=doc"` only when the docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary — a docstring that says "Returns the sum" is not adequate; one that says "Must reject mismatched currencies with an error" is. For trivial items (simple getters, one-line wrappers), annotate with `@liyi:trivial` instead of writing a spec. Alternatively, when working sidecar-first, use `"intent": "=trivial"` to mark items as trivial without requiring a source annotation.
+1. For each non-trivial item (function, struct, macro invocation, decorated endpoint, etc.), infer what it SHOULD do (not what it does). Write intent to a sidecar file named `<source_filename>.liyi.jsonc` (e.g., `money.rs` → `money.rs.liyi.jsonc`). Record `source_span` (start/end lines). Do not write `source_hash` or `source_anchor` — the tool fills them in. Do not write `"reviewed"` — that is set by the human via CLI or IDE. Use `"intent": "=doc"` only when the docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary — a docstring that says "Returns the sum" is not adequate; one that says "Must reject mismatched currencies with an error" is. For trivial items (simple getters, one-line wrappers, and simple expressions with no load-bearing operand order, short-circuit side effects, nested-call effects, or cost), annotate with `@liyi:trivial` instead of writing a spec. Alternatively, when working sidecar-first, use `"intent": "=trivial"` to mark items as trivial without requiring a source annotation.
 2. When module-level invariants or governing context are apparent, write a `@liyi:note` block — in the directory's existing module doc (`README.md`, `doc.go`, `mod.rs` doc comment, etc.) or in a dedicated `LIYI.md`, closing embedded blocks with `@liyi:end-note`. A note is a context primitive, not a tracked spec: marker-only, never written to a `.liyi.jsonc` or hashed. Pull a named note into a specific item's context with `@liyi:see <name>`.
 3. If a source item has a `@liyi:related <name>` annotation, record the dependency in `.liyi.jsonc` as `"related": {"<name>": null}`. The tool fills in the requirement's current hash.
 4. For each `@liyi:requirement <name>` block encountered (closed by `@liyi:end-requirement <name>`), ensure it has a corresponding entry in the co-located `.liyi.jsonc` with `"requirement"` and `"source_span"`. (The tool fills in `"source_hash"`.)
@@ -1885,7 +1885,7 @@ The scaffold uses two deterministic AST signals to help the agent prioritize whi
 
 Items with doc comments get `"_has_doc": true` in their `_hints`, signaling the agent that `"intent": "=doc"` may be appropriate if the docstring contains behavioral requirements.
 
-**2. Item size (body line count).** Available directly from `source_span`: `end - start + 1`. Small items (≤ 3–5 lines of body, depending on language idiom) are likely trivial — simple getters, one-line wrappers, delegating constructors. The scaffold emits `"_body_lines": N` in hints. Items below a threshold get `"_likely_trivial": true`.
+**2. Item size (body line count).** Available directly from `source_span`: `end - start + 1`. Small items (≤ 3–5 lines of body, depending on language idiom) are likely trivial — simple getters, one-line wrappers, delegating constructors, and simple expressions. This is a heuristic, not the criterion: a single dense expression can still be non-trivial. The scaffold emits `"_body_lines": N` in hints. Items below a threshold get `"_likely_trivial": true`.
 
 **Combined heuristic:**
 
