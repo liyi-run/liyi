@@ -13,16 +13,6 @@ readiness.
 
 ---
 
-## Tier 1 — Low-hanging fruit (small effort, high polish)
-
-These can each be done in a single focused session without new design work.
-
-| # | Item | Source | Why now |
-|---|------|--------|---------|
-| 1.1 | ~~**Extend `--prompt` to stale/shifted/unreviewed diagnostics**~~ | prompt-mode-design.md | ✅ Done — `liyi check --prompt` now groups actionable diagnostics for `Stale`, `Shifted`, `Unreviewed`, and `ReqChanged` in addition to the original coverage-gap kinds. |
-| 1.2 | ~~**Doc-comment detection for remaining languages**~~ | init-discover-impl.md (Phase 2 gap) | ✅ Done — 15/21 languages now have `doc_comment_detector`. Remaining 5 (Bash, Ruby not feasible; JSON/TOML/YAML not applicable). |
-| 1.3 | ~~**Disambiguate Rust trait impls & ObjC categories in tree_path**~~ | tree_path resolver audit | ✅ Done — `impl Trait for Foo` now encodes as `impl."Trait for Foo"` (distinct from inherent `impl.Foo`); ObjC `@interface Foo (Cat)` encodes as `class."Foo (Cat)"`. Root cause of a mislabeled sidecar spec where two distinct impl blocks shared one tree_path. See item 2.8 for the remaining collision classes. |
-
 > **Note on the 14 unreferenced requirements:** `liyi check` currently reports
 > 7 requirements from lsp-design.md and 7 from sidecar-merge-design.md with no
 > referencing item specs. This is expected — the code that would carry
@@ -31,39 +21,6 @@ These can each be done in a single focused session without new design work.
 > (Tier 4.2) features are implemented.
 
 ## Tier 2 — Next milestones (moderate effort, unlocks downstream value)
-
-### 2A. Approval workflow follow-through (v0.1.x scope)
-
-| # | Item | Source |
-|---|------|--------|
-| 2.1 | ~~**StaleReviewed approval flow**~~ | approve-impl.md |
-| 2.2 | ~~**ReqChanged approval flow**~~ | approve-impl.md |
-
-**Status**: ✅ Done — `liyi approve` now surfaces unreviewed, stale-reviewed,
-and requirement-changed items; the TUI shows source diffs for stale-reviewed
-items and requirement diffs for req-changed items, and the CLI exposes
-`--unreviewed-only`, `--stale-only`, and `--req-only` filters.
-
-**Rationale**: This milestone is complete; keep it here as a shipped v0.1.x
-checkpoint because later roadmap items build on the same review model.
-
-### 2B. Library refactoring for LSP (Step 0)
-
-| # | Item | Source |
-|---|------|--------|
-| 2.3 | ~~**Extract `build_requirement_registry()` as public API**~~ | lsp-design.md Step 0 |
-| 2.4 | ~~**Export `RequirementRegistry` / `RequirementRecord`**~~ | lsp-design.md Step 0 |
-
-**Status**: ✅ Done — `liyi::check` now exposes public `RequirementRegistry`
-and `RequirementRecord`, plus `build_requirement_registry()` (pass 1) and
-`check_sidecars()` (pass 2) that accept a prebuilt registry. `run_check()`
-remains the CLI wrapper and is behavior-compatible. The
-`lsp-check-refactor-exposes-registry` requirement is now referenced by
-`build_requirement_registry`.
-
-**Rationale**: This was the *prerequisite* gate for all LSP work — a pure
-refactor with no behavioral change. With it landed, the LSP crate can cache
-the registry across edits instead of re-scanning the project.
 
 ### 2C. VCS hints (Phase 3 of init-discover)
 
@@ -89,7 +46,7 @@ git2 dependency. Can be worked in parallel with Tier 2B/2D.
 indistinguishable — the second is unaddressable and silently resolves to the
 first. This was the root cause of a mislabeled sidecar spec (an inherent
 `impl Diagnostic` carrying a trait impl's intent). The Rust trait-impl and
-Objective-C category cases are fixed (item 1.3); a full audit of all 20 language
+Objective-C category cases are already fixed; a full audit of all 20 language
 configs found these remaining collision classes:
 
 | Language(s) | Collision | Frequency |
@@ -134,26 +91,6 @@ retire the stale `.h`→C doc comment), and a discovery hook alongside the
 `.liyiignore` cascade. Independent of the LSP work; can parallelize. Design
 authority: `docs/file-directive-design.md` (requirements `file-directive-namespace`,
 `file-language-precedence`, `file-ignore-additive`).
-
-### 2F. `@liyi:note` context primitive + `liyi context` CLI
-
-| # | Item | Source |
-|---|------|--------|
-| 2.10 | ~~**Hard-rename `@liyi:module` → `@liyi:note`; add `@liyi:end-note`, `@liyi:see`; `liyi context <path:line>` MVP**~~ | `docs/note-context-design.md` — ✅ Done — `@liyi:module` removed from the scanner; `Note`/`EndNote`/`See` markers land in `markers.rs`; the live retrieval-graph resolver (directory scope + shadowing, `@liyi:see`, `=none` opt-out) ships in `context.rs`; `liyi context <path>[:line]` is wired in the CLI. Item-precise `@liyi:see` (tree-sitter) stays file-scoped for now; LSP/MCP context surfaces (Tier 3) and challenge mode (Tier 4.4) remain deferred. |
-
-Replaces the presence-only `@liyi:module` marker with a marker-only, untracked
-**context primitive**: notes carry governing prose injected into a reader's
-context, separated from the hash-anchored staleness graph (the "two-graph"
-model). Adds `@liyi:end-note` (block bounding) and `@liyi:see <name>` (item-side
-membership). The near-term consumer is a read-only `liyi context <path:line>`
-command that resolves and prints applicable notes; the LSP/MCP context API
-(Tier 3) is the eventual home, and challenge-mode verification (Tier 4.4) is the
-deferred semantic check — notes never seed adversarial unit tests. The staleness
-engine (`check.rs`) is untouched; the JSON schema is unchanged. This is a
-pre-1.0 breaking rename (no external adopters). Design authority:
-`docs/note-context-design.md` (requirements `note-is-untracked`,
-`note-directory-scope`, `note-see-membership`, `two-graph-separation`,
-`context-resolution`).
 
 ## Tier 3 — v0.2 headline: LSP server
 
