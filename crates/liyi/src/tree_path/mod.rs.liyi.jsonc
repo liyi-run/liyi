@@ -268,8 +268,8 @@
     },
     {
       "item": "find_ancestor_pair",
-      "reviewed": true,
-      "intent": "=trivial",
+      "reviewed": false,
+      "intent": "=self-doc",
       "source_span": [
         934,
         943
