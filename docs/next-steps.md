@@ -6,19 +6,20 @@
 **As of**: 2026-05-30 · **Baseline**: v0.1.0, prompt-mode expansion and approval workflow shipped; doc-comment detection complete for all feasible languages.
 
 This document synthesizes the existing roadmaps (liyi-design.md, lsp-design.md,
-approve-impl.md, init-discover-impl.md, prompt-mode-design.md,
-injection-impl.md, sidecar-merge-design.md) and the repo's current state into a
-single prioritized backlog. Items are grouped into tiers by impact and
-readiness.
+init-discover-impl.md, prompt-mode-design.md, injection-impl.md,
+file-directive-design.md, note-context-design.md, sidecar-merge-design.md) and
+the repo's current state into a single prioritized backlog. Items are grouped
+into tiers by impact and readiness.
 
 ---
 
-> **Note on the 14 unreferenced requirements:** `liyi check` currently reports
-> 7 requirements from lsp-design.md and 7 from sidecar-merge-design.md with no
-> referencing item specs. This is expected — the code that would carry
-> `@liyi:related` edges pointing to these requirements doesn't exist yet.
-> They will be resolved naturally when the LSP (Tier 3) and sidecar merge
-> (Tier 4.2) features are implemented.
+> **Note on unreferenced requirements:** `liyi check` currently reports
+> requirements in several design documents (notably lsp-design.md,
+> sidecar-merge-design.md, file-directive-design.md, and
+> note-context-design.md) that have no referencing item specs. This is expected
+> — the code that would carry `@liyi:related` edges pointing to these
+> requirements doesn't exist yet. They will be resolved naturally when the
+> corresponding features (Tiers 2–4) are implemented.
 
 ## Tier 2 — Next milestones (moderate effort, unlocks downstream value)
 
@@ -33,7 +34,7 @@ readiness.
 **Rationale**: Phase 3 is fully designed and was explicitly "deferred, not
 cancelled." VCS hints significantly improve cold-start triage by telling agents
 which items have churn or bug-fix history. The `git log -L` approach avoids the
-git2 dependency. Can be worked in parallel with Tier 2B/2D.
+git2 dependency. Can be worked in parallel with Tier 2D/2E.
 
 ### 2D. Resolve remaining tree_path name collisions
 
@@ -94,7 +95,8 @@ authority: `docs/file-directive-design.md` (requirements `file-directive-namespa
 
 ## Tier 3 — v0.2 headline: LSP server
 
-Depends on Tier 2B completion.
+Builds on the already-landed `liyi::check` library surface, so the server can
+cache the requirement registry across edits.
 
 | # | Item | Source | Phase |
 |---|------|--------|-------|
@@ -140,14 +142,15 @@ Not designed in detail; captured for completeness.
 ## Suggested sequencing
 
 ```
-Now          Tier 2B   (LSP library refactor)
-             Tier 2C   (VCS hints)          ─── can parallelize ─── Tier 2D (tree_path collision work)
+Now          Tier 2C  (VCS hints)    ─── can parallelize ─── Tier 2D  (tree_path collision work)
+             Tier 2E  (@liyi:file directives)
                 │
-v0.2         Tier 3.1 → 3.2 → 3.3  (LSP)          ← resolves 7 unreferenced lsp-design requirements
+v0.2         Tier 3.1 → 3.2 → 3.3  (LSP)
                 │
-Post-MVP     Tier 4 items by opportunity             ← 4.2 resolves 7 unreferenced merge-design requirements
+Post-MVP     Tier 4 items by opportunity
 ```
 
-Tier 1 is complete. Within Tier 2, 2B must precede Tier 3, while 2C and 2D are
-independent of the LSP refactor and can be scheduled in parallel. Within Tier
-4, items 4.1–4.3 are independent; 4.4 depends on Tier 3.
+Tier 1 is complete and the Tier 2 LSP library refactor has landed, unblocking
+Tier 3. The remaining Tier 2 items (2C, 2D, 2E) are independent of the LSP
+refactor and can be scheduled in parallel. Within Tier 4, items 4.1–4.3 are
+independent; 4.4 depends on Tier 3.
