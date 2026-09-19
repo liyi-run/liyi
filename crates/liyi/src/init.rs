@@ -9,7 +9,7 @@ use crate::tree_path::{detect_language, discover_items};
 /// so that `liyi init` can extract the portable template block.
 const AGENTS_MD_FULL: &str = include_str!("../../../AGENTS.md");
 
-const TEMPLATE_START: &str = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->\n";
+const TEMPLATE_START: &str = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->\n";
 const TEMPLATE_END: &str = "\n<!-- END liyi agent instructions -->";
 
 /// Extract the portable agent instruction block from the repo's AGENTS.md.

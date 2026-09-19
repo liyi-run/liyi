@@ -24,8 +24,8 @@
         12
       ],
       "tree_path": "const.TEMPLATE_START",
-      "source_hash": "sha256:9293d9ba71f3ec171bb9632f9f989f0c36e58ea11dbc57e33351deb5b7c8792c",
-      "source_anchor": "const TEMPLATE_START: &str = \"<!-- START liyi agent instructions rev. 1 -->\\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->\\n\";"
+      "source_hash": "sha256:8d34ecdc56fb1fc11f75843c0e4d88a17c1a6df74fe29fdc091c422984331a91",
+      "source_anchor": "const TEMPLATE_START: &str = \"<!-- START liyi agent instructions rev. 1 -->\\n<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->\\n\";"
     },
     {
       "item": "TEMPLATE_END",

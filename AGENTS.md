@@ -70,7 +70,7 @@ See the contributing guide for full details and examples.
 ---
 
 <!-- START liyi agent instructions rev. 1 -->
-<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->
+<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->
 ## The 立意 (Intent Specs) design pattern for agents
 
 When writing or modifying code:

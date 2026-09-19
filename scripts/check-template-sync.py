@@ -28,7 +28,7 @@ import difflib
 import sys
 from pathlib import Path
 
-START = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS SECTION. IT IS UPDATED ONLY BY `liyi migrate`, FROM A NEWER LIYI RELEASE. -->"
+START = "<!-- START liyi agent instructions rev. 1 -->\n<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->"
 END = "<!-- END liyi agent instructions -->"
 HEADING = "## The 立意 (Intent Specs) design pattern for agents"
 # @liyi:related agents-md-instructions-section-naming
