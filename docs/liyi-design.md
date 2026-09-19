@@ -1689,7 +1689,7 @@ When writing or modifying code:
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running as an agent, prefer `liyi check --prompt` for structured JSON output with per-gap resolution instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 ```
 
-### Key principles
+### Key principles of the intent protocol
 
 - **Adversarial, not confirmatory.** Find bugs, not confirm correctness.
 - **Spec is the referee.** If the spec says one thing and the code does another, the test exposes the gap. The human decides who's right.

@@ -90,6 +90,13 @@ When writing or modifying code:
     In either path, **never compute `source_hash` manually** and **never leave `"reviewed": true` on a spec whose `intent` you changed** (see rule 1). When `liyi check --fix` cannot auto-rehash a stale item (e.g., because it has `"reviewed": true`), update `source_span` and `intent`, **set `"reviewed"` to `false`**, and **delete** the `source_hash` field (or set it to `null`). The human will run `liyi check --fix` or `liyi approve` after reviewing the updated intent. This rule exists because agents consistently produce wrong hashes (trailing-newline differences, encoding mismatches) — the tool reads the actual bytes and is the only authority.
 11. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running as an agent, prefer `liyi check --prompt` for structured JSON output with per-gap resolution instructions. Do not commit with unresolved coverage gaps — CI will reject it.
 
+### Key principles of the intent protocol
+
+- **Adversarial, not confirmatory.** Find bugs, not confirm correctness.
+- **Spec is the referee.** If the spec says one thing and the code does another, the test exposes the gap. The human decides who's right.
+- **Model diversity.** Different model for tests than for code, when possible.
+- **Never modify source code logic** during the protocol. Only create/update `.liyi.jsonc` files, `@liyi:note` blocks (in docs or doc comments), test files, and annotation comments (`@liyi:trivial`, `@liyi:ignore`, `@liyi:requirement`, `@liyi:related`). Annotation comments are metadata, not logic — adding them does not change program behavior.
+
 ### Resolving rule conflicts
 
 When two normative instructions here appear to conflict, or a task's correct completion turns on an ambiguity these instructions do not resolve:
