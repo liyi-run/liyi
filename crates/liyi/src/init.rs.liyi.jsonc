@@ -29,7 +29,7 @@
     },
     {
       "item": "AGENTS_MD_FILENAME",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         22,
@@ -149,7 +149,7 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Create AGENTS.md when absent, writing `# AGENTS.md` plus the portable agent-instruction block. When the file already contains such a block, return AlreadyExists unless force is set, in which case replace the existing block with the current revision; when the file exists without a block, append it after a blank line. Must key off the block pragma, never the section heading, and target AGENTS_MD_FILENAME so `liyi migrate` uses the same file.",
       "source_span": [
         131,

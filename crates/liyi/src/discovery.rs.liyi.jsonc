@@ -98,7 +98,7 @@
     },
     {
       "item": "resolve_agents_md_targets",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Expand a list of file/directory paths into agent-instruction files, strictly mirroring `liyi init`'s targeting. A directory contributes exactly its own AGENTS.md (never a recursive walk, so ungoverned subtrees like 3rdparty/ or vendor/ are never touched); an explicitly-passed file is included when it carries the pragma, so a repository's preferred location can be migrated directly. A file qualifies only when it contains the portable `START liyi agent instructions` pragma. Error if a path does not exist. Return the deduplicated, sorted target list.",
       "source_span": [
         297,
