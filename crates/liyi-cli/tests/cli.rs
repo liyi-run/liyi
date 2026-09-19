@@ -247,6 +247,89 @@ fn migrate_directory_updates_agents_md_and_sidecars() {
 }
 
 #[test]
+fn migrate_is_idempotent_at_the_cli() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let init = run_in(root, &["init"]);
+    assert!(init.status.success(), "init: {:?}", stderr(&init));
+
+    let first = run_in(root, &["migrate", "AGENTS.md"]);
+    assert!(first.status.success(), "migrate: {:?}", stderr(&first));
+    let after_first = std::fs::read_to_string(root.join("AGENTS.md")).unwrap();
+
+    let second = run_in(root, &["migrate", "AGENTS.md"]);
+    assert!(second.status.success(), "migrate: {:?}", stderr(&second));
+    assert_eq!(
+        std::fs::read_to_string(root.join("AGENTS.md")).unwrap(),
+        after_first,
+        "a second migrate must leave the file byte-identical"
+    );
+}
+
+#[test]
+fn migrate_directory_with_only_agents_md_succeeds() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    std::fs::write(
+        root.join("AGENTS.md"),
+        "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\nstale\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let out = run_in(root, &["migrate", "."]);
+    assert!(
+        out.status.success(),
+        "a directory with only an AGENTS.md must still migrate: {:?}",
+        stderr(&out)
+    );
+    let content = std::fs::read_to_string(root.join("AGENTS.md")).unwrap();
+    assert!(content.contains("rev. 1"), "got: {content}");
+}
+
+#[test]
+fn migrate_accepts_an_explicit_custom_location_file() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let custom = root.join("agent-instructions.md");
+    std::fs::write(
+        &custom,
+        "# Instructions\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\n## The 立意 (Intent Specs) design pattern for agents\nstale\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let out = run_in(root, &["migrate", "agent-instructions.md"]);
+    assert!(out.status.success(), "migrate: {:?}", stderr(&out));
+    let content = std::fs::read_to_string(&custom).unwrap();
+    assert!(content.contains("rev. 1"), "got: {content}");
+    assert!(content.starts_with("# Instructions\n\n"), "got: {content}");
+}
+
+#[test]
+fn migrate_directory_leaves_heading_less_blocks_alone() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let root = tmp.path();
+    let design = root.join("liyi-design.md");
+    let design_body = "<!-- START liyi agent instructions rev. 0 -->\nWhen writing or modifying code:\nstale\n<!-- END liyi agent instructions -->\n";
+    std::fs::write(&design, design_body).unwrap();
+    std::fs::write(
+        root.join("AGENTS.md"),
+        "# AGENTS.md\n\n<!-- START liyi agent instructions rev. 0 -->\n<!-- OLD -->\nstale\n<!-- END liyi agent instructions -->\n",
+    )
+    .unwrap();
+
+    let out = run_in(root, &["migrate", "."]);
+    assert!(out.status.success(), "migrate: {:?}", stderr(&out));
+
+    let agents = std::fs::read_to_string(root.join("AGENTS.md")).unwrap();
+    assert!(agents.contains("rev. 1"), "got: {agents}");
+    assert_eq!(
+        std::fs::read_to_string(&design).unwrap(),
+        design_body,
+        "a block that is not named AGENTS.md must be left untouched"
+    );
+}
+
+#[test]
 fn init_creates_sidecar_for_source_file() {
     let tmp = tempfile::TempDir::new().unwrap();
     let src = tmp.path().join("sample.rs");

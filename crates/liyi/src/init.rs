@@ -412,4 +412,21 @@ mod tests {
         assert!(!content.contains("stale body"));
         assert_eq!(content.matches(PRAGMA_START_PREFIX).count(), 1);
     }
+
+    #[test]
+    fn migrate_agents_md_preserves_surrounding_content() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("AGENTS.md");
+        fs::write(
+            &path,
+            "# Before\n\n<!-- START liyi agent instructions rev. 0 -->\nORIGINAL-BODY-MARKER\n<!-- END liyi agent instructions -->\n\n# After\n",
+        )
+        .unwrap();
+
+        migrate_agents_md(&path).unwrap();
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.starts_with("# Before\n\n"), "got: {content}");
+        assert!(content.ends_with("\n\n# After\n"), "got: {content}");
+        assert!(!content.contains("ORIGINAL-BODY-MARKER"), "got: {content}");
+    }
 }

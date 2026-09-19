@@ -544,4 +544,18 @@ mod tests {
         let targets = resolve_agents_md_targets(std::slice::from_ref(&agents)).unwrap();
         assert!(targets.is_empty());
     }
+
+    #[test]
+    fn resolve_agents_md_targets_ignores_custom_named_files_in_directories() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let block = "<!-- START liyi agent instructions rev. 1 -->\nbody\n<!-- END liyi agent instructions -->\n";
+        // A block under a non-default name (e.g. the design doc's heading-less
+        // source) must not be picked up by a directory walk.
+        fs::write(root.join("instructions.md"), block).unwrap();
+        fs::write(root.join("AGENTS.md"), block).unwrap();
+
+        let targets = resolve_agents_md_targets(&[root.to_path_buf()]).unwrap();
+        assert_eq!(targets, vec![root.join("AGENTS.md")]);
+    }
 }
