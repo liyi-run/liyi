@@ -72,8 +72,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo run -p liyi-cli -- check --root .
 
-  template-sync:
-    name: Template sync
+  check-template-sync:
+    name: Check template sync
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

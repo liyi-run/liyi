@@ -88,16 +88,16 @@
       "source_anchor": "  liyi-check:"
     },
     {
-      "item": "jobs::template-sync",
+      "item": "jobs::check-template-sync",
       "reviewed": false,
-      "intent": "Run scripts/check-template-sync.py to verify that docs/liyi-design.md reproduces the AGENTS.md agent template (behavioral rules, key principles, and the .liyi.jsonc schema appendix) without drift. Must fail the PR if any reproduced region diverges from the template.",
+      "intent": "Run scripts/check-template-sync.py to verify that docs/liyi-design.md carries the same liyi:template block as AGENTS.md (the block `liyi init` ships downstream). Must fail the PR if the blocks differ.",
       "source_span": [
         75,
         80
       ],
-      "tree_path": "key.jobs::key.\"template-sync\"",
-      "source_hash": "sha256:6ef01eceeb294b6c907d6e1da02c1b40d1b557b2fe07a634d6a1f88b2ed9567d",
-      "source_anchor": "  template-sync:"
+      "tree_path": "key.jobs::key.\"check-template-sync\"",
+      "source_hash": "sha256:fa834b9241a1a982101e82894486ecafd3aae730ca0021efcd91925205d87182",
+      "source_anchor": "  check-template-sync:"
     }
   ]
 }

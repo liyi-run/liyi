@@ -1668,7 +1668,7 @@ The agent instructions define the protocol. The CI linter enforces it.
 
 The full AGENTS.md section is ~300 lines: the behavioral rules (the part a human reads once) followed by two JSON schemas (machine-consumed reference that the agent uses to produce valid `.liyi.jsonc` and `triage.json` files). The schemas are not adoption cost — no human needs to memorize them — but they are part of the payload.
 
-The section is reproduced verbatim in *立意 (Intent Specs)* below; `scripts/check-template-sync.py` (run by `make lint`) fails if the two copies drift, and `make template-sync-fix` syncs them.
+The section is reproduced verbatim in *立意 (Intent Specs)* below; `scripts/check-template-sync.py` (run by `make lint`) fails if the two copies drift, and `make sync-template` syncs them.
 
 ### The cognitive load inversion: tool-guided agents
 

@@ -82,7 +82,7 @@ def main() -> int:
         )
     )
     print(
-        "\nRe-run with `--sync` (or `make template-sync-fix`) to copy the "
+        "\nRe-run with `--sync` (or `make sync-template`) to copy the "
         "AGENTS.md block over the design doc's."
     )
     return 1
