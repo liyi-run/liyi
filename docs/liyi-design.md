@@ -1666,7 +1666,7 @@ The agent instructions define the protocol. The CI linter enforces it.
 
 ### Minimal instruction (for any AGENTS.md)
 
-The full AGENTS.md section is ~300 lines: 10 behavioral rules (the part a human reads once) followed by two JSON schemas (machine-consumed reference that the agent uses to produce valid `.liyi.jsonc` and `triage.json` files). The schemas are not adoption cost — no human needs to memorize them — but they are part of the payload.
+The full AGENTS.md section is ~300 lines: the behavioral rules (the part a human reads once) followed by two JSON schemas (machine-consumed reference that the agent uses to produce valid `.liyi.jsonc` and `triage.json` files). The schemas are not adoption cost — no human needs to memorize them — but they are part of the payload.
 
 ```markdown
 ## 立意 (Intent Specs)
@@ -1702,7 +1702,7 @@ When two normative rules appear to conflict, or a task's correct completion turn
 
 ### The cognitive load inversion: tool-guided agents
 
-The 11 behavioral rules assume the agent internalizes a complex protocol and executes it reliably. Frontier models (Claude Opus, GPT-4.5) do this well. Budget models (Kimi K2.5, Gemini Flash, GPT-4o-mini) routinely forget steps — dropping AIGC trailers, skipping sidecar updates, ignoring `.liyiignore`. This is not a hypothetical concern; it is empirically observed in production use.
+The behavioral rules assume the agent internalizes a complex protocol and executes it reliably. Frontier models (Claude Opus, GPT-4.5) do this well. Budget models (Kimi K2.5, Gemini Flash, GPT-4o-mini) routinely forget steps — dropping AIGC trailers, skipping sidecar updates, ignoring `.liyiignore`. This is not a hypothetical concern; it is empirically observed in production use.
 
 The conventional response is "write better instructions." This is necessary but insufficient. The deeper architectural response is to **move protocol knowledge from the agent's context window into the tool's output**, so that the agent's job shifts from "internalize and follow rules" to "run command, parse output, execute instructions."
 
@@ -1844,7 +1844,7 @@ liyi init              # scaffold AGENTS.md with the 立意 instruction paragrap
 liyi init --force      # overwrite existing AGENTS.md
 ```
 
-Appends the 立意 agent instruction section (~300 lines: 10 rules + two JSON schemas) to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
+Appends the 立意 agent instruction section (~300 lines: behavioral rules + two JSON schemas) to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
 
 **File initialization:**
 
@@ -2205,7 +2205,7 @@ This section estimates the effort to *build* 立意 itself — the linter, the c
 - A **spec convention** — `@liyi:note` blocks (module intent) + `@liyi:requirement` blocks (named requirements) + `.liyi.jsonc` (item-level intent and requirement tracking, JSONC).
 - A **dependency model** — `@liyi:related` edges from code items to named requirements, with transitive staleness.
 - A **triage protocol** (deferred to 0.2.0) — `liyi check --json` provides rich stale-item context; an agent (using whatever model it already has) assesses each item and writes a structured report; `liyi triage --apply` acts on the report. The binary stays deterministic and offline (see *`liyi` is infrastructure; the agent is the brain*).
-- **Agent instructions** — 10 behavioral rules + two JSON schemas in AGENTS.md (~300 lines; the schemas are machine-consumed reference, not human-read).
+- **Agent instructions** — behavioral rules + two JSON schemas in AGENTS.md (~300 lines; the schemas are machine-consumed reference, not human-read).
 - A **practice** — establish intent before (or alongside) execution.
 - A **challenge mechanism** (deferred to 0.2.0) — on-demand semantic verification of code against intent, or intent against requirement, driven by the agent.
 
@@ -2242,7 +2242,7 @@ Each level is independently valuable. Stop wherever the cost outweighs the benef
 
 | Level | What you do | What you get | Human cost |
 |---|---|---|---|
-| **0. The instruction** | Copy the 立意 section into AGENTS.md (~300 lines: 10 rules the human reads once, two JSON schemas the agent consumes) | Agent writes `.liyi.jsonc` alongside code. You have a persistent record of what each item is meant to do. | 15 minutes |
+| **0. The instruction** | Copy the 立意 section into AGENTS.md (~300 lines: behavioral rules the human reads once, two JSON schemas the agent consumes) | Agent writes `.liyi.jsonc` alongside code. You have a persistent record of what each item is meant to do. | 15 minutes |
 | **1. The review** | Review inferred intent in PRs — set `"reviewed": true` in sidecar (quick) or add `@liyi:intent` in source (explicit) | The review surface for intent is typically ~10% of the code surface — a few lines of spec per item instead of the full implementation. You catch wrong intent before wrong code gets tested. Careless review undermines adversarial testing quality — see *Why careless review is self-limiting* in the Security Model. | Seconds per item |
 | **2. The docs** | Add `## 立意` sections to READMEs / doc comments | Module-level invariants are documented, visible in rendered docs, discoverable by agents and humans. This is just good documentation practice. | 5 min per module |
 | **3. The linter** | Run `liyi check` in CI | Stale specs fail the build. You know which items changed since their intent was written. Deterministic enforcement. | Install a binary |
@@ -2518,7 +2518,7 @@ The risk that absorption *prevents* the open convention from thriving — by pul
 
 ### 6. Agent reliability spectrum
 
-The project's value proposition relies on agents following the AGENTS.md instruction. Empirical evidence shows a wide reliability spectrum: frontier models (Claude Opus 4.6) follow the full 11-rule protocol with high fidelity; budget models (Kimi K2.5, Gemini Flash) routinely forget AIGC trailers, skip sidecar updates, and ignore edge-case rules. This is not a positioning gap or a tooling gap — it is a fundamental characteristic of the current model landscape.
+The project's value proposition relies on agents following the AGENTS.md instruction. Empirical evidence shows a wide reliability spectrum: frontier models (Claude Opus 4.6) follow the full behavioral-rule protocol with high fidelity; budget models (Kimi K2.5, Gemini Flash) routinely forget AIGC trailers, skip sidecar updates, and ignore edge-case rules. This is not a positioning gap or a tooling gap — it is a fundamental characteristic of the current model landscape.
 
 **This observation validates the project rather than undermining it.** The entire tooling layer (schema validation, staleness detection, coverage gap enforcement) exists precisely because agent output cannot be blindly trusted — `liyi check` catches what the agent forgets, so unreliable agents make the linter *more* valuable, not less (argued in full in *The cognitive load inversion: tool-guided agents*).
 
@@ -2528,7 +2528,7 @@ The project's value proposition relies on agents following the AGENTS.md instruc
 2. **Indirection.** The first actionable instruction is "go read another file" (the contributing guide), which itself says "go read the AIGC policy." Multi-hop retrieval fails silently on weaker models.
 3. **Inlined schemas.** ~100 lines of JSON Schema in the middle of the instruction flow wastes context window and confuses models about whether it's an instruction or an example.
 4. **Decision trees.** Rule 10 presents a nuanced choice (direct re-inference vs. triage) with criteria that require sophisticated judgment. Budget models need a default path, not a decision matrix.
-5. **No minimum viable compliance tier.** All 11 rules read as equally mandatory. There is no separation between "you MUST do these 3 things or CI rejects your commit" and "you SHOULD do these 8 things for best results."
+5. **No minimum viable compliance tier.** All the rules read as equally mandatory. There is no separation between "you MUST do the CI-gating essentials or CI rejects your commit" and "you SHOULD do the rest for best results."
 
 **The architectural response** is the cognitive load inversion described in *The cognitive load inversion: tool-guided agents*: move protocol knowledge from the agent's context window into the tool's `--prompt` output, and restructure AGENTS.md into tiers (MUST / SHOULD / REFERENCE) that degrade gracefully across model capability. A budget model that only follows the MUST tier — run `liyi check`, add AIGC trailer, use `--prompt` for fix instructions — still produces commits that pass CI.
 
