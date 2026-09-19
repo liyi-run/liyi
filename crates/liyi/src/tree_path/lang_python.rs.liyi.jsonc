@@ -4,15 +4,27 @@
   "source": "crates/liyi/src/tree_path/lang_python.rs",
   "specs": [
     {
-      "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition) and class (class_definition), using standard name field with no custom name extraction, and python_has_doc_comment detector for triple-quoted docstrings.",
+      "item": "python_node_name",
+      "reviewed": false,
+      "intent": "Custom name extractor for Python module-level constants: for an assignment whose parent expression_statement sits directly under the module root and whose target is a plain identifier, return that identifier; return None for local bindings and attribute assignments inside function or class bodies, and for non-assignment nodes.",
       "source_span": [
-        35,
-        45
+        43,
+        60
+      ],
+      "tree_path": "fn.python_node_name",
+      "source_hash": "sha256:39f4a4f7c22f0ee5657e227e8a58d79f35b432ce04fc4411d2842aceb0a64a3b",
+      "source_anchor": "fn python_node_name(node: &Node, source: &str) -> Option<String> {"
+    },
+    {
+      "item": "CONFIG",
+      "reviewed": false,
+      "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition), class (class_definition), and const (assignment) for module-level constants, use the standard name field for fn/class and the python_node_name callback for const, the python_has_doc_comment detector for triple-quoted docstrings, and expression_statement as a transparent kind so the resolver reaches module-level assignment nodes.",
+      "source_span": [
+        63,
+        80
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:db4a475937b5f454b05d37957988bcaa60f5acfb74c31f86169109b0db1ee398",
+      "source_hash": "sha256:a03265d4a3af69f431ba826d64694c88cd79018d1bcf1bfcfb2714a96bf092f7",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
