@@ -37,11 +37,12 @@ liyi check --root .
 
 ## Harness compatibility
 
-立意 writes its agent instructions to `AGENTS.md`, following the
-[AGENTS.md convention](https://agents.md). Any harness that reads `AGENTS.md`
-works out of the box. If your harness does not read `AGENTS.md`, it is your
-responsibility to find another suitable place for the instruction block and
-make sure it is actually read by your harness.
+立意 adopts the [AGENTS.md convention](https://agents.md) and writes its agent
+instructions to `AGENTS.md` by default.
+Any harness that reads `AGENTS.md` should work out of the box.
+If your harness does not read `AGENTS.md`, it is your responsibility to find
+another suitable place for the instruction block and make sure it is actually
+read by your harness.
 
 ## Progressive Adoption
 
