@@ -311,14 +311,14 @@
     },
     {
       "item": "check_trivial_ignore",
-      "reviewed": true,
-      "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial sentinel, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error.",
+      "reviewed": false,
+      "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial and =self-doc sentinels, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error. Both sentinels are treated identically for tracking.",
       "source_span": [
-        1583,
-        1670
+        1584,
+        1677
       ],
       "tree_path": "fn.check_trivial_ignore",
-      "source_hash": "sha256:434e82e6c548233c1113313ec013030b349da1f922c4f5e8b9a5c5f2a6f4feb5",
+      "source_hash": "sha256:5d17d6d16f123247119356ecf46bd318c1fc9971c64575213ca18fd368781bc6",
       "source_anchor": "fn check_trivial_ignore("
     },
     {
@@ -326,8 +326,8 @@
       "reviewed": true,
       "intent": "Validate existing related edges (emit UnknownRequirement or ReqChanged using computed_hash for cascading staleness), sync source @liyi:related markers into sidecar as MissingRelatedEdge (auto-fix inserts edge with current hash), and fill null hashes on existing edges when --fix is active. Return true if the item was modified.",
       "source_span": [
-        1675,
-        1788
+        1682,
+        1795
       ],
       "tree_path": "fn.check_related_edges",
       "source_hash": "sha256:66f6a7ee8df06a18e9a4e29e19851b775ee70717bc5b01a179afc8738a00aa12",
@@ -342,8 +342,8 @@
       "reviewed": true,
       "intent": "=doc",
       "source_span": [
-        1798,
-        1850
+        1805,
+        1857
       ],
       "tree_path": "fn.detect_requirement_cycles",
       "source_hash": "sha256:c7124f27dcaade014657e1b571274470d11511922c508ca2a3836d7df20e808d",
@@ -354,8 +354,8 @@
       "reviewed": true,
       "intent": "Read a file's contents with caching: return the cached string if already loaded, otherwise read from disk, store in the cache, and return. Return None on I/O failure.",
       "source_span": [
-        1853,
-        1864
+        1860,
+        1871
       ],
       "tree_path": "fn.read_cached",
       "source_hash": "sha256:c5e98a29f80d683b44e3c883feff6cc1eee817296cfa669df07d5c7175deb94f",

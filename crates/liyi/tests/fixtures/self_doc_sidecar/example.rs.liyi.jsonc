@@ -1,0 +1,25 @@
+// liyi v0.1 spec file
+{
+  "version": "0.1",
+  "source": "example.rs",
+  "specs": [
+    {
+      "item": "RecoveryMethod",
+      "reviewed": true,
+      "intent": "=self-doc",
+      "source_span": [1, 5]
+    },
+    {
+      "item": "find_descendant_by_kind",
+      "reviewed": true,
+      "intent": "=self-doc",
+      "source_span": [7, 14]
+    },
+    {
+      "item": "settle_remainder",
+      "reviewed": true,
+      "intent": "=self-doc",
+      "source_span": [17, 23]
+    }
+  ]
+}

@@ -1579,7 +1579,8 @@ fn check_review_status(
     }
 }
 
-/// Check trivial/ignore source markers and the sidecar `=trivial` sentinel.
+/// Check trivial/ignore source markers and the sidecar `=trivial` /
+/// `=self-doc` sentinels.
 fn check_trivial_ignore(
     file: &Path,
     label: &str,
@@ -1630,8 +1631,12 @@ fn check_trivial_ignore(
         }
     }
 
-    // Sidecar "=trivial" sentinel
-    if item.intent == "=trivial" {
+    // Sidecar "=trivial" / "=self-doc" sentinels — both mark the item as
+    // needing no behavioral spec (trivial = too small to hide behavior;
+    // self-doc = intent intrinsic to the surface form) and are tracked
+    // identically: info-level, not stale, skipped by adversarial testing,
+    // and in conflict with an in-span @liyi:nontrivial.
+    if item.intent == "=trivial" || item.intent == "=self-doc" {
         let has_nontrivial = source_markers.iter().any(|m| {
             matches!(m, SourceMarker::Nontrivial { line }
                 if *line >= span_start.saturating_sub(1) && *line <= span_end)
@@ -1642,8 +1647,10 @@ fn check_trivial_ignore(
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::ConflictingTriviality,
                 severity: Severity::Error,
-                message: "\x40liyi:nontrivial in source conflicts with \"=trivial\" in sidecar"
-                    .into(),
+                message: format!(
+                    "\x40liyi:nontrivial in source conflicts with \"{}\" in sidecar",
+                    item.intent
+                ),
                 fix_hint: None,
                 fixed: false,
                 span_start: Some(span_start),
@@ -1657,7 +1664,7 @@ fn check_trivial_ignore(
                 item_or_req: label.to_string(),
                 kind: DiagnosticKind::Trivial,
                 severity: Severity::Info,
-                message: "intent \"=trivial\"".into(),
+                message: format!("intent \"{}\"", item.intent),
                 fix_hint: None,
                 fixed: false,
                 span_start: Some(span_start),

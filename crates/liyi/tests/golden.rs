@@ -870,6 +870,61 @@ fn trivial_sidecar_sentinel() {
 }
 
 // ---------------------------------------------------------------------------
+// =self-doc sidecar sentinel tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn self_doc_sidecar_sentinel() {
+    let (_tmp, root) = fixture_in_tmp("self_doc_sidecar");
+    let flags = CheckFlags {
+        fail_on_stale: false,
+        fail_on_unreviewed: false,
+        fail_on_req_changed: false,
+        fail_on_untracked: false,
+    };
+
+    // First pass: fix to fill in source_hash / source_anchor.
+    let _ = run_check(&root, &[], true, false, &flags);
+
+    // Second pass: check diagnostics.
+    let (diagnostics, exit_code) = run_check(&root, &[], false, false, &flags);
+
+    // RecoveryMethod: plain enum, =self-doc, no source annotation → Trivial info
+    let enum_self_doc = diagnostics
+        .iter()
+        .any(|d| d.item_or_req == "RecoveryMethod" && matches!(d.kind, DiagnosticKind::Trivial));
+    assert!(
+        enum_self_doc,
+        "expected Trivial diagnostic for RecoveryMethod (=self-doc intent), got: {diagnostics:#?}"
+    );
+
+    // find_descendant_by_kind: non-trivial (has a loop) but self-doc → Trivial info,
+    // never flagged stale. This is the case =trivial could not honestly cover.
+    let helper_self_doc = diagnostics.iter().any(|d| {
+        d.item_or_req == "find_descendant_by_kind" && matches!(d.kind, DiagnosticKind::Trivial)
+    });
+    assert!(
+        helper_self_doc,
+        "expected Trivial diagnostic for find_descendant_by_kind (=self-doc intent), got: {diagnostics:#?}"
+    );
+
+    // settle_remainder: @liyi:nontrivial in source + =self-doc in sidecar
+    // → ConflictingTriviality error (side-effecting remainder logic must not
+    // be filed as self-documenting).
+    let has_conflict = diagnostics.iter().any(|d| {
+        d.item_or_req == "settle_remainder"
+            && matches!(d.kind, DiagnosticKind::ConflictingTriviality)
+    });
+    assert!(
+        has_conflict,
+        "expected ConflictingTriviality for settle_remainder, got: {diagnostics:#?}"
+    );
+
+    // ConflictingTriviality should cause check failure
+    assert_eq!(exit_code, LiyiExitCode::CheckFailure);
+}
+
+// ---------------------------------------------------------------------------
 // Init discovery tests
 // ---------------------------------------------------------------------------
 

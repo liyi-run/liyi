@@ -411,7 +411,7 @@ pub fn format_github_actions(d: &Diagnostic, root: &std::path::Path) -> String {
 
     // Append intent text to the message when available and non-sentinel.
     let message = match &d.intent {
-        Some(intent) if intent != "=doc" && intent != "=trivial" => {
+        Some(intent) if intent != "=doc" && intent != "=trivial" && intent != "=self-doc" => {
             format!("{message}%0AIntent: {}", escape(intent))
         }
         _ => message,
