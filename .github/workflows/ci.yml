@@ -71,3 +71,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo run -p liyi-cli -- check --root .
+
+  template-sync:
+    name: Template sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 scripts/check-template-sync.py
