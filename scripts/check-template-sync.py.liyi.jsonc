@@ -4,12 +4,42 @@
   "source": "scripts/check-template-sync.py",
   "specs": [
     {
+      "item": "START",
+      "reviewed": true,
+      "intent": "=self-doc",
+      "source_span": [
+        32,
+        32
+      ],
+      "tree_path": "const.START",
+      "source_hash": "sha256:2a5069ba2b819cef252dde6ec221dd83160f319fe07dff10a6a24b1300e84aac",
+      "source_anchor": "START = \"<!-- START liyi agent instructions rev. 1 -->\\n<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->\"",
+      "related": {
+        "agents-md-instructions-section-naming": "sha256:ba9f88f5edb0b338487e493235b49269cfc4ec74d03ebcfe33e1ec7bdc39d298"
+      }
+    },
+    {
+      "item": "END",
+      "reviewed": true,
+      "intent": "=self-doc",
+      "source_span": [
+        34,
+        34
+      ],
+      "tree_path": "const.END",
+      "source_hash": "sha256:5c2d6107a704fe852e8434e1932942623fada1d315683e0bb7be968ff740eb8a",
+      "source_anchor": "END = \"<!-- END liyi agent instructions -->\"",
+      "related": {
+        "agents-md-instructions-section-naming": "sha256:ba9f88f5edb0b338487e493235b49269cfc4ec74d03ebcfe33e1ec7bdc39d298"
+      }
+    },
+    {
       "item": "HEADING",
       "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
-        33,
-        33
+        36,
+        36
       ],
       "tree_path": "const.HEADING",
       "source_hash": "sha256:b2d628369d56e7a4f2c9cde920a380f6845dc0ef9a4de913b2e90c68e4b13146",
