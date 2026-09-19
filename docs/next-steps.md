@@ -3,7 +3,7 @@
 
 # Prioritized Next Steps
 
-**As of**: 2026-05-30 · **Baseline**: v0.1.0, prompt-mode expansion and approval workflow shipped; doc-comment detection complete for all feasible languages.
+**As of**: 2026-09-19 · **Baseline**: v0.1.0; prompt-mode expansion, approval workflow, doc-comment detection, the LSP library refactor, and the `@liyi:note` context MVP shipped.
 
 This document synthesizes the existing roadmaps (liyi-design.md, lsp-design.md,
 init-discover-impl.md, prompt-mode-design.md, injection-impl.md,
