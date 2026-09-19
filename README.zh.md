@@ -36,6 +36,12 @@ liyi check --root .
 3. **`liyi migrate`** — 当 schema 版本变更时升级 sidecar 文件。幂等。
 4. **由人类复核** — 在 `.liyi.jsonc` 中设置 `"reviewed": true` 以批准，或在源码中添加 `@liyi:intent` 以明确给出人类版本。
 
+## 驾驭框架兼容性
+
+《立意》将智能体指令写入 `AGENTS.md`，并遵循 [AGENTS.md 约定](https://agents.md)。
+凡能读取 `AGENTS.md` 的驾驭框架，均可直接使用。如果你的驾驭框架不读取
+`AGENTS.md`，则由你负责为该指令块寻找合适的存放位置，并确保驾驭框架能够读取它。
+
 ## 渐进式采用
 
 | 级别 | 操作 | 收益 |

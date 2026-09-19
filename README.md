@@ -35,6 +35,14 @@ liyi check --root .
 3. **`liyi migrate`** — upgrades sidecar files when the schema version changes. Idempotent.
 4. **Human reviews** — sets `"reviewed": true` in the sidecar to approve, or adds `@liyi:intent` in source to provide the authoritative human version.
 
+## Harness compatibility
+
+立意 writes its agent instructions to `AGENTS.md`, following the
+[AGENTS.md convention](https://agents.md). Any harness that reads `AGENTS.md`
+works out of the box. If your harness does not read `AGENTS.md`, it is your
+responsibility to find another suitable place for the instruction block and
+make sure it is actually read by your harness.
+
 ## Progressive Adoption
 
 | Level | What you do | What you get |
