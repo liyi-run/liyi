@@ -25,7 +25,8 @@ structure, code style, commit conventions, and the AIGC policy.
 1. **Open an issue first** for non-trivial changes so we can discuss scope.
 2. Keep PRs small and focused — one logical change per PR.
 3. Ensure `make verify` passes — it runs the lint gates (rustfmt check,
-   Clippy, and the project's own linter, which dogfoods itself) plus
+   Clippy, the project's own linter, which dogfoods itself, and the
+   agent-template sync check) plus
    `cargo test --workspace`, aborting at the first failure and ending with a
    `verify: all gates passed` banner. (`make lint` runs just the lint gates.)
    AI agents should prefer the quiet `make verify-short` / `make lint-short`

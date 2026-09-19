@@ -20,12 +20,12 @@ For Rust code:
 - Conform to official rustfmt style.
 - Keep free from Clippy lints.
 
-Before committing, run `make lint` (rustfmt check, Clippy, and the linter's
-own self-check) and ensure it passes, or `make verify` to also run the test
-suite. Both gates abort at the first failure and end with a success banner
-(`lint: all gates passed` / `verify: all gates passed`), so you can confirm
-success by the final line — no need to capture the exit code or redirect
-output to a log.
+Before committing, run `make lint` (rustfmt check, Clippy, the linter's own
+self-check, and the agent-template sync check) and ensure it passes, or
+`make verify` to also run the test suite. Both gates abort at the first
+failure and end with a success banner (`lint: all gates passed` /
+`verify: all gates passed`), so you can confirm success by the final line —
+no need to capture the exit code or redirect output to a log.
 
 **If you are an AI agent, prefer the quiet variants `make lint-short` and
 `make verify-short`.** They run the exact same gates but suppress normal

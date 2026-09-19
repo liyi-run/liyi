@@ -203,12 +203,12 @@ Before finalizing a commit, verify:
 
 For Rust code, additionally verify:
 
-- `make lint` passes (rustfmt check, Clippy, and the linter's own self-check),
-  or `make verify` to run the lint gates plus the test suite. Both abort at the
-  first failing gate and print a success banner on completion
-  (`lint: all gates passed` / `verify: all gates passed`); the banner is the
-  signal that every gate passed, so there is no need to inspect the exit code
-  or redirect output to a log.
+- `make lint` passes (rustfmt check, Clippy, the linter's own self-check, and
+  the agent-template sync check), or `make verify` to run the lint gates plus
+  the test suite. Both abort at the first failing gate and print a success
+  banner on completion (`lint: all gates passed` / `verify: all gates passed`);
+  the banner is the signal that every gate passed, so there is no need to
+  inspect the exit code or redirect output to a log.
 
 > **For AI agents:** prefer the quiet variants `make lint-short` and
 > `make verify-short`. They run the same gates but suppress normal output to
