@@ -27,13 +27,14 @@ clippy:
 liyi-check:
 	cargo run -p liyi-cli -- check --root .
 
-# Verify docs/liyi-design.md carries the same liyi:template block as
-# AGENTS.md (the source of truth `liyi init` ships downstream).
+# Verify AGENTS.md materializes docs/liyi-design.md's liyi:template block.
+# The design doc is the source; AGENTS.md adds the section heading so
+# `liyi init` can ship the block unchanged.
 check-template-sync:
 	python3 scripts/check-template-sync.py
 
-# Copy the AGENTS.md template block over the design doc's, after a
-# check-template-sync failure. Review the resulting diff before committing.
+# Rewrite AGENTS.md's liyi:template block from the design doc's, adding
+# the section heading. Review the resulting diff before committing.
 sync-template:
 	python3 scripts/check-template-sync.py --sync
 
