@@ -974,6 +974,7 @@ This gives agents a DRY option: well-documented code gets `"intent": "=doc"` ins
 |---|---|---|
 | Agent | `"intent": "=doc"` in sidecar | "The docstring captures it" |
 | Agent | `"intent": "=trivial"` in sidecar | “This item is trivial — no behavioral spec warranted” |
+| Agent | `"intent": "=self-doc"` in sidecar | “The code documents itself — a spec would tautologically restate the surface form” |
 | Agent | `"intent": "<prose>"` in sidecar | "Here’s what I infer it should do" |
 | Human | `@liyi:intent=doc` in source | "I confirm the docstring is my intent" |
 | Human | `@liyi:intent <prose>` in source | "Here’s what I say it should do" |
@@ -992,7 +993,9 @@ The `@liyi:trivial` source annotation tells agents and the linter to skip an ite
 }
 ```
 
-Meaning: “I evaluated this item and it’s self-evident — a spec would add no value.”
+Meaning: “I evaluated this item and it’s trivial — small enough to carry no hidden behavior, so a spec would add no value.”
+
+`"=trivial"` is a **risk claim**: the item is too small and simple for anything to go subtly wrong, so a reviewer proves triviality by reading the body. It is *not* a claim that the item is self-evident despite being non-trivial — that is what `"=self-doc"` is for (see below). Do not stretch `"=trivial"` to cover substantial code whose intent happens to be recoverable from its surface form.
 
 **When to use which:**
 
@@ -1008,6 +1011,51 @@ The second case matters for the scaffold workflow (see *Tree-sitter item discove
 **Review interaction.** `liyi approve` displays `=trivial` items with a “trivial” tag. A reviewer who disagrees can override — clearing `"=trivial"` and either writing explicit intent or adding `@liyi:nontrivial` in source to prevent the agent from re-classifying.
 
 **No source-annotation counterpart.** Unlike `=doc`, there is no `@liyi:intent =trivial` source marker. If you’re in the source, use `@liyi:trivial` directly — it’s shorter and the intent is the same. `"=trivial"` is specifically for sidecar-only workflows (scaffold, batch init, third-party code).
+
+### `"=self-doc"` in the sidecar — the self-documenting sentinel
+
+`"=trivial"` answers "is this small enough that nothing can hide?" — a *risk* claim about size. But some items are **not** small yet still carry no intent a spec could usefully add: a plain data struct whose fields *are* its meaning, a recursive tree-search whose name fully states its job, a container module whose purpose is the sum of its members. Forcing prose onto these produces a tautology; marking them `"=trivial"` is a lie about their size (the 11-line context struct, the 163-line test module). `"=self-doc"` is the honest label for this class:
+
+```jsonc
+{
+  "item": "RecoveryMethod",
+  "intent": "=self-doc",
+  "source_span": [6, 10],
+  "tree_path": "enum.RecoveryMethod"
+}
+```
+
+Meaning: “The item documents itself — any prose intent I could write would tautologically restate its surface form. There is nothing implicit hidden behind that form.”
+
+`"=self-doc"` is an **epistemic claim**, distinct from `"=trivial"`'s risk claim. The two are complementary, not interchangeable:
+
+| Sentinel | Claim | Reviewer action |
+|---|---|---|
+| `"=trivial"` | Too small to carry hidden behavior | Read the code, prove triviality |
+| `"=self-doc"` | Intent is intrinsic to the surface form | Read the code, prove nothing implicit hides behind the form |
+| `"=doc"` | Intent is in the docstring | Read the docstring |
+| `"<prose>"` | Intent stated by the agent | Read intent, read code, prove equivalence |
+
+An item can be non-trivial yet self-documenting (a recursive search), or trivial yet not needing the self-doc claim at all (a one-line getter — just use `"=trivial"`). The boundary: **`"=trivial"` = correctness proven by *reading the body*; `"=self-doc"` = correctness proven by *trusting the name/signature without tracing the body*.**
+
+**The self-documenting test (the discipline that keeps the sentinel honest).** "Self-documenting" is a phrase programmers reach for to excuse skipping documentation, so the claim carries a strict bar. `"=self-doc"` holds **only if** a reader who is *competent in the language and paradigm but a stranger to this codebase, its domain, and the authoring session* — holding only the item's name, signature, and **durable co-located context** (its enclosing module, in-scope types, any governing `@liyi:note`) — can recover **every property any observer could correctly rely on**, including properties observable *outside the value domain*: timing, resource use, termination, information flow, nondeterminism, ordering, idempotency. Concretely:
+
+- **The tautology test, over the behavioral surface — not the syntactic one.** A sequence `A; B; C` of side-effecting steps is *not* self-documenting merely because prose would restate the sequence: the *reason for the order*, the *cost of repetition*, and the *partial-failure semantics* are load-bearing and invisible in the sequence. If any true constraint would be *news* to a signature-only reader, prose is required.
+- **The observer counterfactual (the general form — there is no finite effect checklist).** Ask: *is there any observer — a caller, an attacker, a scheduler, a profiler, a regulator — who could distinguish a correct implementation from a plausible-but-wrong one, where the distinction is not visible in the surface?* If yes, it is not self-documenting. A constant-time comparison is pure, deterministic, idempotent, and stateless, yet **fails** this test: the attacker is the observer, and the timing invariant is domain knowledge the stranger-reader does not hold. The listed effect kinds (timing, resources, termination, information flow, nondeterminism, ordering, idempotency) are a **non-exhaustive prompt**, never a boundary — malice moved one dimension over still fails the counterfactual.
+- **Durable context only.** Context counts toward self-documentation only if it travels with the code (same file/module/subtree, or a `@liyi:note`). Context that lives only in the current session, the author's memory, the present set of callers, or a PR discussion does **not** count. If the item is self-evident only to someone holding ephemeral context, it is not self-documenting — promote the premise to a `@liyi:note` (so it *becomes* durable) or write the intent.
+- **Side effects are presumptively disqualifying.** `"=self-doc"` is available by default to pure, total items (data types, pure helpers). A side-effecting function *may* still qualify, but only after the agent has explicitly checked it for hidden ordering, non-idempotency, and extrinsic constraints — and found none.
+
+**Discharge, don't just assert.** Unlike `"=trivial"` (a glance suffices), a `"=self-doc"` claim obliges the agent to have *checked for the disqualifiers* — no observable state change, no order-dependence, no non-idempotency, no cross-call invariant, no non-value-domain effect, no extrinsic constraint it could find. A false `"=self-doc"` is then a lie about work done, not a defensible judgment call — the same standard that stops silent self-approval elsewhere in this design.
+
+**Threat-model boundary (a documented non-goal).** `"=self-doc"` — and 立意 as a whole — guarantees that *hidden intent cannot be silently filed as visible*: every load-bearing property either lives in reviewed prose or is conspicuously absent. It does **not** guarantee that reviewed prose is *true*. When malice is exported out of the item's observable, co-located surface — a remainder swept to a distant or runtime-controlled constant, masked by a plausible-but-false comment ("virtual sink for internal accounting") — the code matches its stated intent and the deception survives every structural check. Catching that requires a security-versed reasoner with a threat model running *on top of* 立意's routing, and even then is best-effort, prior-dependent flagging, never a guarantee. 立意 surfaces hidden intent; it does not verify the honesty of intent deliberately misrepresented via non-co-located or runtime state. This boundary is where the convention ends and adversarial security review begins.
+
+**Linter behavior.** `liyi check` treats `"=self-doc"` exactly like `"=trivial"` for tracking purposes: an info-level diagnostic, not stale, not counted as unreviewed, and skipped by the adversarial testing agent (its intent is intrinsic — there is nothing for a second model to attack). `@liyi:nontrivial` in source conflicts with a sidecar `"=self-doc"` the same way it conflicts with `"=trivial"`. Because a `"=self-doc"` claim on a security- or money-sensitive item is exactly the case where all value-domain checks pass yet a constraint hides in an omitted dimension, reviewers should treat `"=self-doc"` on such items as a conspicuous smell to challenge, never a rubber stamp.
+
+### Derivative items — exclude from inference, do not spec
+
+Some items carry **no independent intent at all**: their entire purpose is to exercise or assert another already-specced item, adding no invariant of their own. The overwhelming case is tests — a test named `see_none_suppresses_directory_scope` asserts a behavioral claim about `resolve`, so its intent *is* `resolve`'s spec. Inferring a per-item entry for each such test produces sidecar noise, a fake review burden (a reviewer has nothing to approve *on*), a hash-tracking liability (every test edit reads as staleness), and circularity (adversarial tests are *generated from* reviewed intent — specifying the tests' own intent is the pipeline eating its tail).
+
+The correct treatment is **exclusion from inference, not a lighter spec**: agents should not write a sidecar entry for clearly-derivative forms at all. This targets the derivative *shape* — "an item whose whole purpose is to exercise or assert another specced item, adding no invariant of its own" — not "tests" by name. A test that encodes a *novel* invariant the code does not otherwise state (a property test asserting a business rule) *does* carry independent intent and should be specced normally. The end state for a derivative item is **no entry**; do not reach for `"=trivial"` or `"=self-doc"` to file it away, as both still leave a row to review and rehash.
 
 ### Why two review paths
 
