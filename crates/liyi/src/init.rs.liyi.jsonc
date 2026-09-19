@@ -16,48 +16,120 @@
       "source_anchor": "const AGENTS_MD_FULL: &str = include_str!(\"../../../AGENTS.md\");"
     },
     {
-      "item": "TEMPLATE_START",
+      "item": "TEMPLATE_REVISION",
       "reviewed": false,
-      "intent": "=trivial",
+      "intent": "=self-doc",
       "source_span": [
-        12,
-        12
+        16,
+        16
       ],
-      "tree_path": "const.TEMPLATE_START",
-      "source_hash": "sha256:8d34ecdc56fb1fc11f75843c0e4d88a17c1a6df74fe29fdc091c422984331a91",
-      "source_anchor": "const TEMPLATE_START: &str = \"<!-- START liyi agent instructions rev. 1 -->\\n<!-- DON'T EDIT THIS BLOCK. REFRESH WITH `liyi migrate` FROM A NEWER LIYI. -->\\n\";"
+      "tree_path": "const.TEMPLATE_REVISION",
+      "source_hash": "sha256:d7c0b12409c8d457e6d0465410f2ef6fde03b25a04f28ade7f4fc3ac7a5f4bc6",
+      "source_anchor": "pub const TEMPLATE_REVISION: u32 = 1;"
     },
     {
-      "item": "TEMPLATE_END",
+      "item": "PRAGMA_START_PREFIX",
       "reviewed": false,
       "intent": "=trivial",
       "source_span": [
-        13,
-        13
+        19,
+        19
       ],
-      "tree_path": "const.TEMPLATE_END",
-      "source_hash": "sha256:f9ac799232fb18d7906b86b9d555a851db02f06bcc5c8492b6f62689f9f40e91",
-      "source_anchor": "const TEMPLATE_END: &str = \"\\n<!-- END liyi agent instructions -->\";"
+      "tree_path": "const.PRAGMA_START_PREFIX",
+      "source_hash": "sha256:5d8a40c558d26e13d92efd83f8debd82257865100f7273e69c9ca8136dd26ce7",
+      "source_anchor": "const PRAGMA_START_PREFIX: &str = \"<!-- START liyi agent instructions rev. \";"
+    },
+    {
+      "item": "PRAGMA_SUFFIX",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        21,
+        21
+      ],
+      "tree_path": "const.PRAGMA_SUFFIX",
+      "source_hash": "sha256:60bb6d7545669e0bc92e5f2e24c8d6889188c43a98f502b88532b4808566c0e0",
+      "source_anchor": "const PRAGMA_SUFFIX: &str = \" -->\";"
+    },
+    {
+      "item": "REMINDER",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        23,
+        24
+      ],
+      "tree_path": "const.REMINDER",
+      "source_hash": "sha256:2797c357b6d27729c53c87772900ee1fa84dcd61aee7f6482bd1919e8345de86",
+      "source_anchor": "const REMINDER: &str ="
+    },
+    {
+      "item": "END_MARKER",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        26,
+        26
+      ],
+      "tree_path": "const.END_MARKER",
+      "source_hash": "sha256:ef40ba603cf9fdf6ad6916acaea2c30fcb80a5c184d400b55b0a1cde221f823e",
+      "source_anchor": "const END_MARKER: &str = \"<!-- END liyi agent instructions -->\";"
+    },
+    {
+      "item": "pragma_line",
+      "reviewed": false,
+      "intent": "=trivial",
+      "source_span": [
+        29,
+        31
+      ],
+      "tree_path": "fn.pragma_line",
+      "source_hash": "sha256:5ee49009ad56ef46c546c72292f8c96500f537d5476f23890bb9c266cf5f77bf",
+      "source_anchor": "fn pragma_line(rev: u32) -> String {"
     },
     {
       "item": "agents_md_block",
       "reviewed": false,
-      "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md by finding the text after the `START liyi agent instructions rev. N` pragma (and its DON'T EDIT reminder) and before the `END liyi agent instructions` marker. Must panic if the pragma or end marker is missing.",
+      "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md, re-rendered at TEMPLATE_REVISION and including the pragma, reminder, and END marker. Must panic if the pragma or end marker is missing.",
       "source_span": [
-        23,
-        33
+        41,
+        55
       ],
       "tree_path": "fn.agents_md_block",
-      "source_hash": "sha256:c74950abdb98df0773c9f3d8e398b650838beba7b204f86ef748aaadb777ab2c",
-      "source_anchor": "fn agents_md_block() -> &'static str {"
+      "source_hash": "sha256:a5d5d49815883b0619f35017aa79ccc1d693fab6e84e0b94254000c4a9ee3d6b",
+      "source_anchor": "fn agents_md_block() -> String {"
+    },
+    {
+      "item": "find_agents_md_block",
+      "reviewed": false,
+      "intent": "Return the byte range from the START pragma through the END marker in text, or None when no block is present. Must not inspect the revision, so a block written by an older liyi is still found.",
+      "source_span": [
+        62,
+        66
+      ],
+      "tree_path": "fn.find_agents_md_block",
+      "source_hash": "sha256:43f12077d2c8da65aee38604f315653d789c09d9ec76366ee431271e51a08772",
+      "source_anchor": "pub fn find_agents_md_block(text: &str) -> Option<(usize, usize)> {"
+    },
+    {
+      "item": "migrate_agents_md",
+      "reviewed": false,
+      "intent": "Rewrite the agent-instruction block in path to the current TEMPLATE_REVISION, preserving the surrounding content, and return Ok(false) when the file has no block. Must be idempotent.",
+      "source_span": [
+        73,
+        89
+      ],
+      "tree_path": "fn.migrate_agents_md",
+      "source_hash": "sha256:4108930e2ab51f6fbb91a3ce5c066f9c9fbefbf07049883a968326645c17310e",
+      "source_anchor": "pub fn migrate_agents_md(path: &Path) -> Result<bool, String> {"
     },
     {
       "item": "InitError",
       "reviewed": true,
       "intent": "Error type with two variants: AlreadyExists (target file exists and --force was not set) and Io (underlying I/O error). Must implement Display and From<io::Error>.",
       "source_span": [
-        37,
-        42
+        93,
+        98
       ],
       "tree_path": "enum.InitError",
       "source_hash": "sha256:90a3bd7254f7d5a74ce2d55135699a5d8a0caedb42a3866f1ab9d5629676210e",
@@ -65,14 +137,14 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": true,
-      "intent": "If AGENTS.md does not exist, create it with a heading and the agent block extracted from the repo's own AGENTS.md via agents_md_block(). If it exists but does not contain '## 立意', append the block. If '## 立意' is present and force is false, return AlreadyExists. If force is true, append regardless.",
+      "reviewed": false,
+      "intent": "Create AGENTS.md when absent, writing `# AGENTS.md` plus the portable agent-instruction block. When the file already contains such a block, return AlreadyExists unless force is set, in which case replace the existing block with the current revision; when the file exists without a block, append it after a blank line. Must key off the block pragma, never the section heading.",
       "source_span": [
-        68,
-        90
+        125,
+        152
       ],
       "tree_path": "fn.init_agents_md",
-      "source_hash": "sha256:71c4198c9e3243a50ecc0e95de56c2d05dc1d6829747f5071859468533b557f7",
+      "source_hash": "sha256:2c815666a33e3001f38c27c303e582e1fae5dfa1d0cad55d5770b5339c6b1d28",
       "source_anchor": "pub fn init_agents_md(root: &Path, force: bool) -> Result<PathBuf, InitError> {"
     },
     {
@@ -80,8 +152,8 @@
       "reviewed": true,
       "intent": "Create a .liyi.jsonc sidecar next to the source file. When discover is true and the language is tree-sitter-supported, pre-populate specs with discovered items including _hints (_has_doc, _body_lines, _likely_trivial based on trivial_threshold). Always scan the source file for @liyi:requirement markers and emit corresponding RequirementSpec entries regardless of file type or discover flag. When discover is false, emit only requirement specs (no items). If the sidecar exists and force is false, return AlreadyExists. Sidecar file name must be <source_filename>.liyi.jsonc.",
       "source_span": [
-        111,
-        207
+        173,
+        269
       ],
       "tree_path": "fn.init_sidecar",
       "source_hash": "sha256:bc2c80e5d18b5780374676c330ec4ff2cc2304ed41be1cb350529fd56d8b3eb6",

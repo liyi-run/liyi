@@ -1820,11 +1820,11 @@ Sets `"reviewed": true` and fixes hashes without prompting.
 **Repository initialization:**
 
 ```bash
-liyi init              # scaffold AGENTS.md with the 立意 instruction paragraph
-liyi init --force      # overwrite existing AGENTS.md
+liyi init              # scaffold AGENTS.md with the 立意 instruction section
+liyi init --force      # replace the agent instruction block with the current revision
 ```
 
-Appends the 立意 agent instruction section (~300 lines: behavioral rules + two JSON schemas) to `AGENTS.md` (creates the file if absent). Does not overwrite existing content unless `--force` is given.
+Writes the portable agent instruction section (~300 lines: behavioral rules + two JSON schemas) into `AGENTS.md`, creating the file if absent, wrapped in the `START liyi agent instructions rev. N` pragma and its `DON'T EDIT` reminder. The pragma makes the block idempotent and migratable rather than heading-dependent: a second `liyi init` refuses instead of duplicating, and `liyi init --force` replaces an existing block with the current revision.
 
 **File initialization:**
 
