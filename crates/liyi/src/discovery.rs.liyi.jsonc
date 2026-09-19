@@ -98,7 +98,7 @@
     },
     {
       "item": "resolve_agents_md_targets",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Expand a list of file/directory paths into agent-instruction files. A file qualifies when it contains the portable `START liyi agent instructions` pragma. For a directory, walk it (respecting .gitignore and .liyiignore) and include files named AGENTS.md that carry the pragma; an explicitly-passed file is included whenever it carries the pragma, so a repository's preferred location can be migrated directly. Error if a path does not exist. Return the deduplicated, sorted target list.",
       "source_span": [
         296,
@@ -110,7 +110,7 @@
     },
     {
       "item": "has_agents_md_block",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         329,

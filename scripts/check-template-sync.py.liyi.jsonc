@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "HEADING",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         33,

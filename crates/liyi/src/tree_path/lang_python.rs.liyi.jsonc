@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "python_node_name",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Custom name extractor for Python module-level constants: for an assignment whose parent expression_statement sits directly under the module root and whose target is a plain identifier, return that identifier; return None for local bindings and attribute assignments inside function or class bodies, and for non-assignment nodes.",
       "source_span": [
         43,
@@ -17,7 +17,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Python language configuration for tree_path resolution: register tree-sitter-python grammar, .py/.pyi extensions, kind mappings for fn (function_definition), class (class_definition), and const (assignment) for module-level constants, use the standard name field for fn/class and the python_node_name callback for const, the python_has_doc_comment detector for triple-quoted docstrings, and expression_statement as a transparent kind so the resolver reaches module-level assignment nodes.",
       "source_span": [
         63,

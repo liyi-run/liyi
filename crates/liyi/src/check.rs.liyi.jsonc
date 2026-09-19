@@ -311,7 +311,7 @@
     },
     {
       "item": "check_trivial_ignore",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Emit Trivial or Ignored info diagnostics for @liyi:trivial and @liyi:ignore markers within the item's span. For the sidecar =trivial and =self-doc sentinels, emit Trivial info unless @liyi:nontrivial is present in the span, in which case emit ConflictingTriviality error. Both sentinels are treated identically for tracking.",
       "source_span": [
         1584,

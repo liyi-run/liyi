@@ -107,7 +107,7 @@
     },
     {
       "item": "format_github_actions",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Format a single diagnostic as a GitHub Actions workflow command (::notice, ::warning, or ::error) with file, line, and title parameters. Maps severity to annotation level, strips the repo root from file paths, escapes %, \\r, \\n per the Actions toolkit spec, uses the item name with a severity icon as the annotation title, and appends the intent text to the message body when present and non-sentinel (not =doc, =trivial, or =self-doc).",
       "source_span": [
         394,

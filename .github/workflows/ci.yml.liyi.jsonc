@@ -89,8 +89,8 @@
     },
     {
       "item": "jobs::check-template-sync",
-      "reviewed": false,
-      "intent": "Run scripts/check-template-sync.py to verify that AGENTS.md materializes docs/liyi-design.md's liyi agent-instructions block, with the section heading added. Must fail the PR if the two diverge.",
+      "reviewed": true,
+      "intent": "Verify that AGENTS.md is derived from docs/liyi-design.md's liyi agent-instructions block, with the section heading added. Must fail the PR if the two diverge.",
       "source_span": [
         75,
         80

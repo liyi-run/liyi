@@ -165,7 +165,7 @@
     },
     {
       "item": "find_descendant_by_kind",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         222,
@@ -177,7 +177,7 @@
     },
     {
       "item": "find_flow_scalar",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         237,

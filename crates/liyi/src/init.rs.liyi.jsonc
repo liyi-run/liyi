@@ -17,8 +17,8 @@
     },
     {
       "item": "TEMPLATE_REVISION",
-      "reviewed": false,
-      "intent": "=self-doc",
+      "reviewed": true,
+      "intent": "=doc",
       "source_span": [
         16,
         16
@@ -29,7 +29,7 @@
     },
     {
       "item": "PRAGMA_START_PREFIX",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         19,
@@ -41,7 +41,7 @@
     },
     {
       "item": "PRAGMA_SUFFIX",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         21,
@@ -53,7 +53,7 @@
     },
     {
       "item": "REMINDER",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         23,
@@ -65,7 +65,7 @@
     },
     {
       "item": "END_MARKER",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=trivial",
       "source_span": [
         26,
@@ -77,8 +77,8 @@
     },
     {
       "item": "pragma_line",
-      "reviewed": false,
-      "intent": "=trivial",
+      "reviewed": true,
+      "intent": "=doc",
       "source_span": [
         29,
         31
@@ -89,7 +89,7 @@
     },
     {
       "item": "agents_md_block",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Extract the portable agent instruction block from the compile-time-included AGENTS.md, re-rendered at TEMPLATE_REVISION and including the pragma, reminder, and END marker. Must panic if the pragma or end marker is missing.",
       "source_span": [
         41,
@@ -101,7 +101,7 @@
     },
     {
       "item": "find_agents_md_block",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Return the byte range from the START pragma through the END marker in text, or None when no block is present. Must not inspect the revision, so a block written by an older liyi is still found.",
       "source_span": [
         62,
@@ -113,7 +113,7 @@
     },
     {
       "item": "migrate_agents_md",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Rewrite the agent-instruction block in path to the current TEMPLATE_REVISION, preserving the surrounding content, and return Ok(false) when the file has no block. Must be idempotent.",
       "source_span": [
         73,
@@ -137,7 +137,7 @@
     },
     {
       "item": "init_agents_md",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Create AGENTS.md when absent, writing `# AGENTS.md` plus the portable agent-instruction block. When the file already contains such a block, return AlreadyExists unless force is set, in which case replace the existing block with the current revision; when the file exists without a block, append it after a blank line. Must key off the block pragma, never the section heading.",
       "source_span": [
         125,

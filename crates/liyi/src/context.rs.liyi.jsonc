@@ -53,7 +53,7 @@
     },
     {
       "item": "ResolvedNote",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         52,
@@ -80,7 +80,7 @@
     },
     {
       "item": "parent_dir",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         67,

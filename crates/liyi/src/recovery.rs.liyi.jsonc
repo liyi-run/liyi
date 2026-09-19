@@ -5,7 +5,7 @@
   "specs": [
     {
       "item": "RecoveryMethod",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         6,

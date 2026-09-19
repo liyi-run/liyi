@@ -101,7 +101,7 @@
     },
     {
       "item": "RequirementInfo",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         232,
@@ -113,7 +113,7 @@
     },
     {
       "item": "CandidateFileCtx",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "=self-doc",
       "source_span": [
         240,
