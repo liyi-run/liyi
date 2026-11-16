@@ -21,7 +21,7 @@ Most teams today:
 - Code changed. The requirements doc didn't. Three months later at audit time, nobody knows which changes affected which compliance clause.
 - The contractor left. Business logic is scattered across code comments, Slack threads, and stale documents.
 
-This isn't a productivity problem. It's an **accountability** problem.
+This is an **accountability** problem.
 
 ---
 
@@ -40,7 +40,7 @@ Mark regulatory clauses or business requirements directly in code with `@liyi:re
 # Screening results must be retained for at least five years.
 ```
 
-Not a separate document. Not an entry in an external system. The requirement is *right there with the code*.
+The requirement is *right there with the code*.
 
 ### Step 2: Bind code to intent
 
@@ -55,7 +55,7 @@ An AI agent infers intent for each code item — what the function *should* do �
 }
 ```
 
-A human reviews the intent and marks `"reviewed": true`. Five lines of intent description instead of fifty lines of implementation — review burden drops by an order of magnitude.
+A human reviews the intent and marks `"reviewed": true`. Five lines of intent description instead of fifty lines of implementation.
 
 ### Step 3: Detect drift
 
@@ -71,7 +71,7 @@ log_screening:      ✓ reviewed, current
 - **Code changed** → intent is marked stale. The reviewer checks: did the change deviate from declared intent?
 - **Both in sync** → green. Pass.
 
-This is what *auditability* means: not a lagging compliance document, but a **live, verifiable chain** — from requirement to intent to code implementation, where every link is change-tracked and drift-detectable.
+This is what *auditability* means: a **live, verifiable chain** from requirement to intent to code implementation, where every link is change-tracked and drift-detectable.
 
 ---
 
@@ -126,7 +126,7 @@ apply_coupon:         ⚠ REQ CHANGED — requirement "discount-rules-v2" update
 render_price:         ✓ current
 ```
 
-Affected code is identified automatically — no global search, no reliance on developer memory. Once each flagged function is addressed and re-reviewed, the `.liyi.jsonc` files become part of the deliverable: proof that "every requirement change was handled."
+Affected code is identified automatically. Once each flagged function is addressed and re-reviewed, the `.liyi.jsonc` files become part of the deliverable: proof that "every requirement change was handled."
 
 ### Legacy system governance
 
