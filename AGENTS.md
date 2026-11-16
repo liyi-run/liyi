@@ -13,6 +13,58 @@ If the session language is unclear, default to the Chinese version.
 
 The contributing guide covers project structure, content workflows, code style, commit message conventions, AIGC policy compliance, and the validation checklist. All of those rules are authoritative and must be followed.
 
+## Overarching thinking and writing style
+
+Target terse human writing style that trusts the readers to be competent and able to work out the canonical definitions or referenced content for themselves.
+
+DO NOT MAKE REDUNDANT REFERENCES, MAKE OVERLY SPECIFIC REFERENCES, LIBERALLY USE CARDINAL NUMBERS, OR LIBERALLY CROSS-REFERENCE ACROSS SECTIONS OR DOCUMENTS, as they drift *very easily*.
+
+The terse writing style also applies to commit messages. DO NOT SIMPLY LIST EVERY CHANGE. DO NOT MENTION DETAILS UNLESS ABSOLUTELY NECESSARY.
+
+For example, this commit message:
+
+```plain
+docs(feasibility): tighten wording
+
+Apply the terse writing style from AGENTS.md: drop the redundant term
+list, the "五项" and "三份版本" enumerations, and other count-based
+enumerations; unify top-3 references; trim explanatory tails.
+```
+
+Is better off as two commits:
+
+```plain
+# 1st commit
+docs(feasibility): unify the spellings of "top-3"
+
+<no message body except AIGC disclosure content>
+
+# 2nd commit
+docs(feasibility): fix AI-speak identified in AGENTS.md
+
+Dropped the redundant term list, count-based enumerations, and explanatory
+tails.
+```
+
+Similarly for this:
+
+```plain
+Refer to the following lists instead of stating how many subcommands, steps,
+prohibitions, statuses, or rules exist, so the text stays correct when those
+lists change.
+```
+
+This would fare better:
+
+```plain
+Refer to the relevant lists instead of stating how many of the respective
+entities exist, so the text stays correct when those lists change.
+```
+
+These are only present in the agent directives because such writing style
+is primarily an artifact of 2025-2026 LLMs and is rarely found in human
+output.
+
 ## Code style (quick reference)
 
 For Rust code:
