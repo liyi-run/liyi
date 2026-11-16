@@ -300,14 +300,14 @@ quotes and unescapes YAML escape sequences.
 4. Write tests in the new file's `#[cfg(test)]` module.
 
 No changes to `lang_yaml.rs`, `mod.rs`, or any existing profile. The
-three-step process is the same regardless of whether the dialect is another
+process is the same regardless of whether the dialect is another
 YAML variant (GitLab CI, CircleCI, K8s) or a completely different host
 language (HTML, Vue).
 
 ### Future: K8s awareness
 
 Kubernetes manifests don't embed shell in the same way as CI files, but they
-do have structured semantics. Two possible extensions:
+do have structured semantics. Possible extensions:
 
 - **Command injection:** `spec.containers[*].command` and `args` may contain
   shell when used with `/bin/sh -c`. An `InjectionRule` with
@@ -317,8 +317,8 @@ do have structured semantics. Two possible extensions:
 - **Schema-aware kind mappings:** Kubernetes has well-known resource structures
   (Deployment, Service, ConfigMap). A future extension could provide richer
   `kind_map` entries that use the `apiVersion`/`kind` fields to select
-  resource-specific vocabularies. This is beyond injection — it's dialect-aware
-  grammar config — and would require a separate design pass.
+  resource-specific vocabularies. Dialect-aware grammar config is beyond
+  injection and would require a separate design pass.
 
 ### Future: non-YAML hosts
 
