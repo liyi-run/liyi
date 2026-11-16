@@ -6,11 +6,11 @@ Establish intent before execution · 2026-03-12
 
 ## The Idea
 
-AI agents write most of your code, and you can't read it all. Intent is ephemeral — it lives in prompts, PR descriptions, Slack threads, and context windows; when a different agent or human touches the code six months later, the intent is gone. The code is a fact; what it was *meant* to do is a memory. 立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable. The tool doesn't compete with what your framework already declares; it captures what your framework *can't*.
+AI agents write most of your code, and you can't read it all. Intent is ephemeral — it lives in prompts, PR descriptions, Slack threads, and context windows; when a different agent or human touches the code six months later, the intent is gone. The code is a fact; what it was *meant* to do is a memory. 立意 captures the intent that exists in people's heads — business requirements, domain invariants, implicit assumptions — and makes it persistent, structured, and adversarially testable. The tool captures what your framework *can't*.
 
 But this is not only an AI-era problem. Even before agents wrote code, intent decayed through organizational entropy: knowledge systems are replaced (Redmine → JIRA, wiki migrations that lose history), documentation becomes read-only when its owners leave the company, design documents are superseded by newer ones without cross-links, and departments restructure in ways that scramble permissions and institutional memory. The code outlives all of these. Git is the longest-lived artifact store in most organizations — repositories survive team turnover, tool migrations, and organizational restructuring that makes every other knowledge system unreliable. Intent that lives in the repository has the same lifespan as the code it describes. Intent that lives anywhere else has a shorter one.
 
-Frameworks already declare some intent: middleware stacks declare auth and rate-limiting, type systems declare structural constraints, decorators declare routing. 立意 targets the layer that no framework captures: *what the business logic should do*, *why a domain constraint exists*, *what assumptions the original author held but never wrote down*. This is the 20% of code that carries 80% of the risk — and where review compression matters most.
+Frameworks already declare some intent: middleware stacks declare auth and rate-limiting, type systems declare structural constraints, decorators declare routing. 立意 targets the layer that no framework captures: *what the business logic should do*, *why a domain constraint exists*, *what assumptions the original author held but never wrote down*. This is the 20% of code that carries 80% of the risk.
 
 立意 is the practice of making this intent explicit and persistent — written down, reviewable, challengeable, and durable across sessions, context windows, and team turnover:
 
@@ -84,7 +84,7 @@ Return cached result if key exists."
 fn charge_order(...)
 ```
 
-The requirement is prescriptive and stable — it changes when the business rule changes. The intent is descriptive and tracks the implementation — it changes when the code changes. When the requirement changes, all related intents are flagged. When the code changes, only that item's intent is flagged. The two layers give you both top-down traceability and bottom-up staleness detection.
+The requirement is prescriptive and stable — it changes when the business rule changes. The intent is descriptive and tracks the implementation — it changes when the code changes. When the requirement changes, all related intents are flagged. When the code changes, only that item's intent is flagged.
 
 ---
 
@@ -106,7 +106,7 @@ It occurred to the designer that 立意, a practice every Chinese student learns
 
 ## Origin
 
-The three convictions at 立意's core — requirements as first-class tracked artifacts, natural-language intent persisted alongside code, and generated results frozen with their generative context — trace to a thought experiment called PMLang (2021–2023). Working in a Go shop writing billing and payment systems, the designer wanted product managers to write executable domain logic directly: PMs and programmers would agree on a core set of business-logic primitives, programmers would implement pattern matching and materialization, and NL prose following the Gherkin pattern would become executable, testable code. First-class requirement blocks captured what the business needed; first-class prompt blocks captured the NL instruction; frozen inference preserved the (then-scarce) correct AI output alongside the prompt that produced it.
+The convictions at 立意's core — requirements as first-class tracked artifacts, natural-language intent persisted alongside code, and generated results frozen with their generative context — trace to a thought experiment called PMLang (2021–2023). Working in a Go shop writing billing and payment systems, the designer wanted product managers to write executable domain logic directly: PMs and programmers would agree on a core set of business-logic primitives, programmers would implement pattern matching and materialization, and NL prose following the Gherkin pattern would become executable, testable code. First-class requirement blocks captured what the business needed; first-class prompt blocks captured the NL instruction; frozen inference preserved the (then-scarce) correct AI output alongside the prompt that produced it.
 
 The same billing/payment environment also demonstrated how fragile external knowledge systems are. The team's earlier project-management platform (Redmine) had been migrated to JIRA without preserving change history or redirect links, leaving ancient but load-bearing decisions (transaction type semantics, settlement window rules) effectively unrecoverable. Confluence pages authored by departed engineers became read-only artifacts — technically accessible but impossible to correct. Design documents were superseded by newer versions, yet the older versions were rarely updated to reflect this, creating a maze of partially-authoritative prose. These observations reinforced the conviction that intent which outlives the people who wrote it must live in the most durable layer available — the source repository — not in a knowledge system whose own lifespan is uncertain.
 
@@ -138,7 +138,7 @@ Tool-generated artifacts live in a `.liyi/` directory at the repository root:
 └── (future: cache files, intermediate state)
 ```
 
-`.liyi/` is `.gitignore`'d by default — the triage report is derived from sidecars + source + LLM, not a source of truth. Teams that want audit trails can commit it or archive it as a CI build artifact. This follows the same pattern as `.mypy_cache/`, `.ruff_cache/`, or `.pytest_cache/` — a project-level workspace for tool-generated artifacts that shouldn't pollute the source tree.
+`.liyi/` is `.gitignore`'d by default — the triage report is derived from sidecars + source + LLM, not a source of truth. Teams that want audit trails can commit it or archive it as a CI build artifact. This follows the same pattern as `.mypy_cache/`, `.ruff_cache/`, or `.pytest_cache/`.
 
 The `.liyi/` directory is distinct from `.liyi.jsonc` sidecar files (which are co-located with source, committed, and are source of truth). Sidecars are durable; `.liyi/` contents are ephemeral.
 
@@ -146,10 +146,10 @@ The `.liyi/` directory is distinct from `.liyi.jsonc` sidecar files (which are c
 
 立意 operates on one checkout. The linter walks one tree; the agent reads one codebase; specs reference repo-relative paths.
 
-This scope constraint has different implications for the two pillars (see *The Two Pillars* above). The tool treats both uniformly (same schema, same hash-based staleness), but their locality rules differ — intents must be co-located with code; requirements can be centralized.
+This scope constraint has different implications for the two pillars. The tool treats both uniformly (same schema, same hash-based staleness), but their locality rules differ — intents must be co-located with code; requirements can be centralized.
 
 - **Monorepo**: both intents and requirements flow freely. The linter walks the whole tree. Module-level invariants can span directories. The intent dependency graph (future) resolves to local paths.
-- **Polyrepo**: item-level intents stop at the repo boundary — each repo specs its own code, including its assumptions about dependencies (“I call `verify_token` and expect it to return `Claims` or error”). Requirements, however, can be shared across repos via the centralized requirements pattern described below.
+- **Polyrepo**: item-level intents stop at the repo boundary — each repo specs its own code, including its assumptions about dependencies (“I call `verify_token` and expect it to return `Claims` or error”). Requirements, however, can be shared across repos via the centralized requirements pattern.
 
 Cross-repo intent *sharing* can be useful context — an agent reading a dependency’s shipped `.liyi.jsonc` from a package tree gathers context to write its own specs — but it’s not a transitive obligation. The intent informs; it doesn’t cascade. No mechanism for cross-repo intent enforcement is planned.
 
@@ -161,7 +161,7 @@ Cross-repo intent *sharing* can be useful context — an agent reading a depende
 
 **Requirements are different.** A requirement’s `source_span` references *its own prose*, not implementation code. Its staleness is tracked via hash comparison on `related` edges — downstream items record the requirement’s hash and are flagged when it changes. The requirement doesn’t need to live next to the code that satisfies it; it needs to be readable by the linter (i.e., present in the checkout) and owned by the authority that defines the invariant.
 
-System-level constraints — “all inter-service communication uses mTLS,” “no service charges a customer twice for the same order” — are not just ADRs. They are first-class `@liyi:requirement` candidates: hash-tracked, linked to implementations via `@liyi:related`, with deterministic staleness detection when the requirement changes. Treating them as untracked prose throws away the requirement mechanism the design provides.
+System-level constraints — “all inter-service communication uses mTLS,” “no service charges a customer twice for the same order” — are not just ADRs. They are first-class `@liyi:requirement` candidates: hash-tracked, linked to implementations via `@liyi:related`, with deterministic staleness detection when the requirement changes.
 
 #### Centralized requirements via submodule
 
@@ -360,10 +360,10 @@ Go 1.19+ doc comments support `#` headings. Since godoc has no markup comment sy
 
 The `@liyi:note` string is the only thing the resolver looks for. Everything else — heading style, file choice, comment syntax — is team preference. `@liyi:end-note` bounds the prose when the note shares a file with other content; in a dedicated file it is optional.
 
-A note is **untracked**: the resolver does not hash it, does not require a sidecar entry, and never reports it as stale (see `docs/note-context-design.md`, *Notes are untracked*). It is consumed by the context-injection surface (`liyi context <path:line>`, and later LSP/MCP), not by the staleness engine.
+A note is **untracked**: the resolver does not hash it, does not require a sidecar entry, and never reports it as stale (see `docs/note-context-design.md`). It is consumed by the context-injection surface (`liyi context <path:line>`, and later LSP/MCP), not by the staleness engine.
 
 - Optional. Not every directory needs one. The agent writes one when cross-function invariants are apparent.
-- A note's default scope is its directory subtree, shadowed by deeper notes; items opt into a named note with `@liyi:see <name>`. See `docs/note-context-design.md`.
+- A note's default scope is its directory subtree, shadowed by deeper notes; items opt into a named note with `@liyi:see <name>`.
 
 ### Item-level: `.liyi.jsonc`
 
@@ -401,7 +401,7 @@ The `source` path is relative to the repository root — the same path you'd pas
 }
 ```
 
-`source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest (see *Per-item staleness* and *Structural identity via `tree_path`* below). Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi check --fix`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary (see *`"=doc"` in the sidecar* below).
+`source_hash`, `source_anchor`, and `tree_path` are tool-managed — the agent writes only `source_span` and the tool fills in the rest. Agents MAY write `tree_path` if they can infer the AST path, but the tool will overwrite it with the canonical form on the next `liyi check --fix`. `"intent": "=doc"` is a reserved sentinel meaning "the docstring already captures intent" — the agent uses it when the source docstring contains behavioral requirements (constraints, error conditions, properties), not just a functional summary.
 
 <!-- @liyi:requirement version-field-required -->
 `"version"` is required. The linter checks it and rejects unknown versions.
@@ -415,7 +415,7 @@ When the schema changes, a new release of `liyi` is to accept both the currently
 
 It also refreshes the prescribed agent instructions in a repository's `AGENTS.md`: it locates the region delimited by the `START liyi agent instructions rev. N` / `END liyi agent instructions` pragma and rewrites it from the template embedded in the running `liyi`, bumping the revision. Targeting mirrors `liyi init`: a directory argument contributes only its own `AGENTS.md`, never a recursive walk, so ungoverned subtrees (e.g. `3rdparty/`, `vendor/`) are never rewritten; a file argument migrates exactly that file, which is how a repository's preferred location is refreshed. The rest of the file is left untouched and the operation is idempotent. The revision changes only when a newer `liyi` release ships a different instruction template — not on every release.
 
-After human review — either the human adds `@liyi:intent` in the source file (see *Source-level intent* below), or sets `"reviewed": true` in the sidecar via CLI or IDE code action. Both paths mark the item as reviewed. When `"reviewed"` is set to `true`, `"confidence"` is removed — a human voucher replaces agent self-assessment. If the source later changes and the agent re-infers (producing a new unreviewed spec), `"confidence"` reappears:
+After human review — either the human adds `@liyi:intent` in the source file, or sets `"reviewed": true` in the sidecar via CLI or IDE code action. Both paths mark the item as reviewed. When `"reviewed"` is set to `true`, `"confidence"` is removed — a human voucher replaces agent self-assessment. If the source later changes and the agent re-infers (producing a new unreviewed spec), `"confidence"` reappears:
 
 ```jsonc
 {
@@ -443,7 +443,7 @@ After human review — either the human adds `@liyi:intent` in the source file (
 
 The testing agent reads NL. It doesn't need `preconditions`, `postconditions`, `properties`, and `examples` as separate structured arrays. A single `intent` string:
 
-- Is faster for the human to review (one paragraph, not five fields).
+- Is faster for the human to review (one paragraph, not a set of structured fields).
 - Is easier for the agent to generate (free-form NL, not a bespoke schema).
 - Is sufficient for adversarial test generation (the testing agent extracts what it needs from prose).
 - Can contain structured information if the author wants ("Must be commutative" is a property; "Rate must be positive" is a precondition) — but doesn't mandate it.
@@ -471,7 +471,7 @@ The agent records each item's line range (`source_span`) when writing the spec. 
 
 **Blast radius of line-number shifts.** Any edit that changes line numbers — inserting, deleting, or splitting lines — invalidates every spec whose `source_span` falls at or below the edit point. The span now points to different lines, the hash mismatches, and the linter flags them all stale. Add an import at line 3 in a file with 20 specs, and all 20 go stale. This is the real cost of line-number-based spans.
 
-The correct mitigation is language-aware span anchoring — resolving spec positions by AST node identity (e.g., "the function named `add_money` in this file") rather than line numbers. This is what `tree_path` provides (see *Structural identity via `tree_path`* below).
+The correct mitigation is language-aware span anchoring — resolving spec positions by AST node identity (e.g., "the function named `add_money` in this file") rather than line numbers. This is what `tree_path` provides.
 
 Without a `tree_path`, the fallback is: batch false positives on any line-shifting edit, corrected on the next agent inference pass. The damage is transient and mechanical — the agent re-reads the file, re-records spans, re-hashes — but noisy in CI until it does. Still fewer false positives than file-level hashing (where a docstring typo marks every spec in the file stale with no way to distinguish which items actually changed).
 
@@ -610,7 +610,7 @@ The linter handles malformed or outdated specs defensively. Every case below pro
 
 Not all items exist literally in source. Macros, decorators, derive attributes, metaclasses, and code generators can create items that have no visible `fn`/`def`/`func` in the source tree.
 
-The convention handles this in three layers:
+The convention handles this in layers:
 
 **Generated output files** (protobuf bindings, OpenAPI clients, GraphQL types) — already covered by `.liyiignore`. Intent belongs to the schema or definition file, not the generated output. Spec the `.proto`, not `*.pb.go`.
 
@@ -637,7 +637,7 @@ The agent understands macros semantically — it knows `#[derive(Serialize)]` ge
 
 **Long-range dependencies.** `source_span` is a *local* heuristic. It catches changes to the item itself. It does not catch action at a distance — a change to a decorator’s definition, a schema file, a base class, or a trait impl that alters the behavior of the specced code without touching its source lines.
 
-This is an inherent limitation of per-item staleness (tests have it too — a passing test doesn’t mean its transitive dependencies haven’t changed semantics). The convention addresses it at two other layers:
+This is an inherent limitation of per-item staleness (tests have it too — a passing test doesn’t mean its transitive dependencies haven’t changed semantics). The convention addresses it at other layers:
 
 - **Module-level intent** (`@liyi:note`) captures cross-cutting invariants (“all serialization must round-trip cleanly,” “no endpoint is accessible without authentication”). These invariants remain valid and testable regardless of where the change happened.
 - **Adversarial testing** is the designed safety net for semantic drift. A test generated from “must reject unauthenticated requests” will catch a change to `require_auth`’s behavior even though the specced function’s `source_hash` didn’t change.
@@ -648,7 +648,7 @@ This is an inherent limitation of per-item staleness (tests have it too — a pa
 
 ## Requirements and Dependency Edges
 
-This section covers the mechanics of the prescriptive pillar — requirements and the `@liyi:related` edges that connect them to code items. For the conceptual distinction between requirements and intents, see *The Two Pillars* above.
+This section covers the mechanics of the prescriptive pillar — requirements and the `@liyi:related` edges that connect them to code items.
 
 ### `@liyi:requirement` — named requirements
 
@@ -797,7 +797,7 @@ $ liyi check --fix
   billing_handler [10, 35]: ↕ SHIFTED [10,35]→[12,37], hash updated
 ```
 
-This handles the common cases: missing hashes on fresh sidecars, positional shifts after line-changing edits, and re-hashing after the human has reviewed a change and confirmed "the intent still holds." The tool computes the new hash; the human never touches it.
+This handles the common cases: missing hashes on fresh sidecars, positional shifts after line-changing edits, and re-hashing after the human has reviewed a change and confirmed "the intent still holds."
 
 If lines shifted and tree-sitter recovery isn't available, `--fix` uses the span-shift heuristic (±100 lines, delta propagation) to auto-correct. If neither tree-sitter nor the heuristic can locate the item, the spec remains `STALE` for the agent or human to re-record the span.
 
@@ -829,7 +829,7 @@ The linter detects cycles (A → B → A) and reports them as errors without loo
 
 **Use this sparingly.** Most teams should use flat requirements — one level of `@liyi:requirement` blocks with `@liyi:related` edges from code items. Requirement hierarchies are for organizations that already think in terms of system requirements decomposing into subsystem requirements (defense, aerospace, regulated industries). If you don't already have a requirement hierarchy, don't build one just because the tool allows it — the cascading noise from deep trees (a change at the root flags everything below) can be worse than the traceability it provides.
 
-Requirement hierarchies combine naturally with the centralized requirements pattern (see *Scope: per-checkout* above). A requirements repo can define top-level system requirements that decompose into subsystem requirements, all consumed by downstream repos via submodule. The hierarchy lives in the requirements repo; downstream repos reference leaf requirements via `@liyi:related`. A change at the root cascades through the hierarchy within the requirements repo and transitively flags all downstream items — the full traceability chain, across repo boundaries, using the existing mechanism.
+Requirement hierarchies combine naturally with the centralized requirements pattern. A requirements repo can define top-level system requirements that decompose into subsystem requirements, all consumed by downstream repos via submodule. The hierarchy lives in the requirements repo; downstream repos reference leaf requirements via `@liyi:related`. A change at the root cascades through the hierarchy within the requirements repo and transitively flags all downstream items — the full traceability chain, across repo boundaries, using the existing mechanism.
 
 ### Cross-cutting concerns and aspect-oriented invariants
 
@@ -880,7 +880,7 @@ This is a *human decision*, not an inference — the annotation says "I want thi
 
 ### Review scaling and complexity
 
-Both pillars (see *The Two Pillars* above) are first-class artifacts, and being first-class is what makes review compression possible — you review a few lines of hashed, tracked intent instead of the full implementation. The review surface per item is typically ~10% of the code surface. This ratio holds across codebase sizes, but the absolute numbers scale linearly — a 100k LOC codebase with ~2,000 non-trivial items produces ~10,000 lines of intent, not 5.
+Both pillars are first-class artifacts, and being first-class is what makes review compression possible — you review a few lines of hashed, tracked intent instead of the full implementation. The review surface per item is typically ~10% of the code surface. This ratio holds across codebase sizes, but the absolute numbers scale linearly — a 100k LOC codebase with ~2,000 non-trivial items produces ~10,000 lines of intent, not 5.
 
 **Hierarchical requirements compress the review surface further.** When requirements and `@liyi:note` blocks organize intent into layers, reviewers don't need to read every item spec for every change:
 
@@ -892,7 +892,7 @@ Both pillars (see *The Two Pillars* above) are first-class artifacts, and being 
 
 For a targeted change (one item modified), the reviewer reads the item's spec and walks its `related` edges to check the relevant requirements — a cost proportional to the item's edge count (typically 1–3), not to the total number of items. This is effectively O(d) where d is the item's requirement count.
 
-**Blast radius of a requirement change** is O(k) where k is the requirement's fan-out — the number of items with `related` edges to it. Well-factored requirements keep k ≈ 10–30. Cross-cutting concerns (if edges are placed on every item instead of on the middleware — see *Cross-cutting concerns* above) can push k into the hundreds.
+**Blast radius of a requirement change** is O(k) where k is the requirement's fan-out — the number of items with `related` edges to it. Well-factored requirements keep k ≈ 10–30. Cross-cutting concerns (if edges are placed on every item instead of on the middleware) can push k into the hundreds.
 
 **The `related` graph is a bipartite DAG, not a tree.** Items can reference multiple requirements, and requirements can be referenced by items across multiple modules. The graph has bounded cascade depth in the current schema: requirements don't depend on other requirements (unless explicitly hierarchical), so cascades are bounded to depth 1 in the common case. If requirement hierarchies are used, cascades walk the hierarchy — the linter detects cycles to prevent unbounded traversal.
 
@@ -903,7 +903,7 @@ For a targeted change (one item modified), the reviewer reads the item's spec an
 | Routine review (1 module) | Module block + a few item specs, ~20–40 lines |
 | Full audit of all requirements | O(R) where R = requirement count — the requirement layer, not all item specs |
 
-This is the genuine scaling story: per-item review is ~10× cheaper than reading the code; hierarchical requirements (when used) add a second layer of compression for targeted reviews. The combination delivers 50–100× review compression relative to raw code for the common case of incremental changes — but this depends on well-structured requirements and the middleware convention described above.
+Per-item review is ~10× cheaper than reading the code; hierarchical requirements (when used) add a second layer of compression for targeted reviews. The combination delivers 50–100× review compression relative to raw code for the common case of incremental changes — but this depends on well-structured requirements and the middleware convention.
 
 ---
 
@@ -911,7 +911,7 @@ This is the genuine scaling story: per-item review is ~10× cheaper than reading
 
 Review in 立意 has two paths: a quick sidecar approval (`"reviewed": true`) for when the agent got it right, and source-level `@liyi:intent` annotations for when the human wants to state intent explicitly. The linter considers an item reviewed if **either** path is satisfied.
 
-The sidecar path is the default for ergonomics — zero source noise. The source path is the override for safety and precision — conspicuous in code review, with the human's own words. Teams choose their default based on trust model (see *Security Model → Two paths, two trust profiles* for the friction/conspicuousness analysis and the forgery threat model).
+The sidecar path is the default for ergonomics — zero source noise. The source path is the override for safety and precision — conspicuous in code review, with the human's own words. Teams choose their default based on trust model (see *Security Model* for the friction/conspicuousness analysis and the forgery threat model).
 
 ### `@liyi:intent` — source-level intent (the explicit override)
 
@@ -954,7 +954,7 @@ def convert_currency(amount: Money, target: Currency, rate: float) -> Money:
     """
 ```
 
-The linter treats `@liyi:intent=doc` identically to `@liyi:intent <prose>` — the item is reviewed. The adversarial testing agent reads the docstring as the authoritative intent. One annotation, zero duplication.
+The linter treats `@liyi:intent=doc` identically to `@liyi:intent <prose>` — the item is reviewed. The adversarial testing agent reads the docstring as the authoritative intent.
 
 The `=doc` suffix is part of the marker, not a separate parameter — the linter matches the full string.
 
@@ -1001,7 +1001,7 @@ The `@liyi:trivial` source annotation tells agents and the linter to skip an ite
 
 Meaning: “I evaluated this item and it’s trivial — small enough to carry no hidden behavior, so a spec would add no value.”
 
-`"=trivial"` is a **risk claim**: the item is too small and simple for anything to go subtly wrong, so a reviewer proves triviality by reading the body. It is *not* a claim that the item is self-evident despite being non-trivial — that is what `"=self-doc"` is for (see below). Do not stretch `"=trivial"` to cover substantial code whose intent happens to be recoverable from its surface form. "Simple" means more than line count: a body that is a single expression is still not trivial if its operand order, short-circuit evaluation, nested calls, or cost are load-bearing — a compound boolean guard with side-effecting operands belongs in prose.
+`"=trivial"` is a **risk claim**: the item is too small and simple for anything to go subtly wrong, so a reviewer proves triviality by reading the body. It is *not* a claim that the item is self-evident despite being non-trivial — that is what `"=self-doc"` is for. Do not stretch `"=trivial"` to cover substantial code whose intent happens to be recoverable from its surface form. "Simple" means more than line count: a body that is a single expression is still not trivial if its operand order, short-circuit evaluation, nested calls, or cost are load-bearing — a compound boolean guard with side-effecting operands belongs in prose.
 
 **When to use which:**
 
@@ -1053,7 +1053,7 @@ An item can be non-trivial yet self-documenting (a recursive search), or trivial
 
 **Discharge, don't just assert.** Unlike `"=trivial"` (a glance suffices), a `"=self-doc"` claim obliges the agent to have *checked for the disqualifiers* — no observable state change, no order-dependence, no non-idempotency, no cross-call invariant, no non-value-domain effect, no extrinsic constraint it could find. A false `"=self-doc"` is then a lie about work done, not a defensible judgment call — the same standard that stops silent self-approval elsewhere in this design.
 
-**Threat-model boundary (a documented non-goal).** `"=self-doc"` — and 立意 as a whole — guarantees that *hidden intent cannot be silently filed as visible*: every load-bearing property either lives in reviewed prose or is conspicuously absent. It does **not** guarantee that reviewed prose is *true*. When malice is exported out of the item's observable, co-located surface — a remainder swept to a distant or runtime-controlled constant, masked by a plausible-but-false comment ("virtual sink for internal accounting") — the code matches its stated intent and the deception survives every structural check. Catching that requires a security-versed reasoner with a threat model running *on top of* 立意's routing, and even then is best-effort, prior-dependent flagging, never a guarantee. 立意 surfaces hidden intent; it does not verify the honesty of intent deliberately misrepresented via non-co-located or runtime state. This boundary is where the convention ends and adversarial security review begins.
+**Threat-model boundary (a documented non-goal).** `"=self-doc"` — and 立意 as a whole — guarantees that *hidden intent cannot be silently filed as visible*: every load-bearing property either lives in reviewed prose or is conspicuously absent. It does **not** guarantee that reviewed prose is *true*. When malice is exported out of the item's observable, co-located surface — a remainder swept to a distant or runtime-controlled constant, masked by a plausible-but-false comment ("virtual sink for internal accounting") — the code matches its stated intent and the deception survives every structural check. Catching that requires a security-versed reasoner with a threat model running *on top of* 立意's routing, and even then is best-effort, prior-dependent flagging, never a guarantee. 立意 surfaces hidden intent; it does not verify the honesty of intent deliberately misrepresented via non-co-located or runtime state.
 
 **Linter behavior.** `liyi check` treats `"=self-doc"` exactly like `"=trivial"` for tracking purposes: an info-level diagnostic on a spec that is still human-reviewed and staleness-tracked like any other (a source change re-opens the self-doc claim for re-approval), and it is skipped by the adversarial testing agent (its intent is intrinsic — there is nothing for a second model to attack). `@liyi:nontrivial` in source conflicts with a sidecar `"=self-doc"` the same way it conflicts with `"=trivial"`. Because a `"=self-doc"` claim on a security- or money-sensitive item is exactly the case where all value-domain checks pass yet a constraint hides in an omitted dimension, reviewers should treat `"=self-doc"` on such items as a conspicuous smell to challenge, never a rubber stamp.
 
@@ -1115,7 +1115,7 @@ Every reviewed item that uses `@liyi:intent` gets a comment annotation. For a fi
 
 ### Item-level: inline annotations
 
-Three annotations, on the line before the item definition:
+These go on the line before the item definition:
 
 - **`@liyi:ignore`** — the function is deliberately excluded from the convention. Don’t infer intent, don’t report it. Use for internal helpers, legacy functions that won’t be touched.
 - **`@liyi:trivial`** — the item is too small to carry hidden behavior; a spec would add no value. Use for simple getters/setters, one-line wrappers, and *simple* expressions only — a body is not trivial if its operand order, short-circuit evaluation, nested calls, or cost are load-bearing. Applied by the agent during inference.
@@ -1149,14 +1149,14 @@ During inference, the agent should annotate trivial items with `@liyi:trivial` r
 
 Marker *keywords* are canonical ASCII: `@liyi:ignore`, `@liyi:trivial`, `@liyi:nontrivial`, `@liyi:note`, `@liyi:see`, `@liyi:file`, `@liyi:requirement`, `@liyi:end-requirement`, `@liyi:related`, `@liyi:intent`. There is one spelling per marker — no localized keyword aliases. The linter holds these keyword strings in a flat const list (`MARKER_KEYWORDS` in `crates/liyi/src/markers.rs`).
 
-This is a deliberate scope decision. An earlier design accepted localized keyword aliases (Chinese, Japanese, Korean, Spanish, French, Portuguese) via a static lookup table, in the spirit of Cucumber/Gherkin's `Given`/`Dado`/`假如`. The value was marginal — a keyword is learned once (~8 tokens of vocabulary) — while the costs compounded with adoption: `grep` and tooling fragment across a dozen spellings of the same marker, every new language is a translation-and-review treadmill, and visually similar glyphs invite silent bugs (a real instance: `有関`, mixing the Chinese `有` with the Japanese `関`, matched no alias and produced an inert marker that no check flagged). Fixing the keyword spelling removes all three costs without touching anything users actually express in their own language.
+This is a deliberate scope decision. An earlier design accepted localized keyword aliases (Chinese, Japanese, Korean, Spanish, French, Portuguese) via a static lookup table, in the spirit of Cucumber/Gherkin's `Given`/`Dado`/`假如`. The value was marginal — a keyword is learned once (~8 tokens of vocabulary) — while the costs compounded with adoption: `grep` and tooling fragment across a dozen spellings of the same marker, every new language is a translation-and-review treadmill, and visually similar glyphs invite silent bugs (a real instance: `有関`, mixing the Chinese `有` with the Japanese `関`, matched no alias and produced an inert marker that no check flagged). Fixing the keyword spelling removes these costs without touching anything users actually express in their own language.
 
 The high-value, genuinely multilingual surfaces are untouched:
 
 - **Intent prose** in `.liyi.jsonc` and `@liyi:note` text is natural language, processed by LLMs that handle any language natively. A Japanese team writes `"intent": "同じ通貨の2つの金額を加算する。交換法則を満たすこと。"` and everything works: the linter never reads intent prose, the testing agent does.
-- **Requirement and `@liyi:note` names** carry no character-set restriction — `multi-currency-addition`, `多币种加法`, and `인출한도` are all valid (see *Naming and scope* above).
+- **Requirement and `@liyi:note` names** carry no character-set restriction — `multi-currency-addition`, `多币种加法`, and `인출한도` are all valid.
 
-Full-width punctuation is still tolerated for the marker itself: the linter normalizes full-width `＠`, `：`, `（`, `）` to their ASCII equivalents before matching, so a CJK input method that emits full-width punctuation around the ASCII keyword is still recognized — see *Marker normalization* in the CI Linter section.
+Full-width punctuation is still tolerated for the marker itself: the linter normalizes full-width `＠`, `：`, `（`, `）` to their ASCII equivalents before matching, so a CJK input method that emits full-width punctuation around the ASCII keyword is still recognized — see *Marker normalization*.
 
 ### File-level: `.liyiignore`
 
@@ -1188,7 +1188,7 @@ Agent instructions are probabilistic — in practice, compliance is inconsistent
 
 ### File discovery
 
-The linter needs to know which files are in scope. Two declarative mechanisms, no config file:
+The linter needs to know which files are in scope. Inclusion and exclusion are declarative, with no config file:
 
 - **Include**: CLI positional args. `liyi check src/ lib/` means "only check items in these subtrees." Default with no args: CWD, recursive.
 - **Exclude**: `.gitignore` is always respected (the Rust `ignore` crate handles this natively). `.liyiignore` adds project-specific exclusions on top.
@@ -1212,17 +1212,17 @@ The linter checks the *quality* of existing specs, not the *coverage* of the cod
 
 What it does *not* do: detect items that have no spec and no annotation at *check time*. The linter enforces quality of what the agent wrote, not completeness of what exists. However, `liyi init` now uses tree-sitter to discover all items in supported languages and pre-populate sidecar entries (see *Tree-sitter item discovery in scaffold*). This shifts the coverage problem from check-time detection to init-time discovery: if `liyi init` ran on a file, every item has a spec entry; the agent fills in intent or marks items `"=trivial"`. A future `liyi check --coverage` mode could compare the set of tree-sitter-discovered items against existing sidecar entries to report missing specs — the infrastructure exists, only the check-time wiring is deferred.
 
-This limitation applies to *item coverage* — detecting unlabeled code definitions that lack specs. A narrower and mechanically solvable gap exists: *annotation coverage* — ensuring that every explicit `@liyi:requirement` and `@liyi:related` marker in source has a corresponding entry in the co-located sidecar. See *Annotation coverage* below.
+This limitation applies to *item coverage* — detecting unlabeled code definitions that lack specs. A narrower and mechanically solvable gap exists: *annotation coverage* — ensuring that every explicit `@liyi:requirement` and `@liyi:related` marker in source has a corresponding entry in the co-located sidecar.
 
 **Caveat: green linter ≠ full coverage.** A passing `liyi check` means every *existing* spec is current and not stale. It does not mean every item in the codebase has a spec. Files the agent never touched will have no `.liyi.jsonc` at all, and the linter won't complain. The `liyi init` scaffold with tree-sitter item discovery mitigates this — it ensures comprehensive initial coverage — but teams should be aware that `liyi check` guards quality, not completeness.
 
 ### Annotation coverage: deterministic enforcement of source markers
 
-The AGENTS.md instruction tells agents to create sidecar entries for every `@liyi:requirement` block (rule 4) and to record `"related"` edges for every `@liyi:related` annotation (rule 3). But agent compliance is probabilistic — in practice, inconsistent and unverifiable. Without deterministic enforcement, gaps are invisible: a developer writes `@liyi:requirement auth-check` in a source comment, the agent doesn't create the `requirementSpec` in the sidecar, and nobody notices. The requirement is declared but untracked. The `related` graph has a blind spot — if the requirement later changes, items that should be flagged `REQ CHANGED` aren't, because the edge was never recorded.
+The AGENTS.md instruction tells agents to create sidecar entries for every `@liyi:requirement` block and to record `"related"` edges for every `@liyi:related` annotation. But agent compliance is probabilistic — in practice, inconsistent and unverifiable. Without deterministic enforcement, gaps are invisible: a developer writes `@liyi:requirement auth-check` in a source comment, the agent doesn't create the `requirementSpec` in the sidecar, and nobody notices. The requirement is declared but untracked. The `related` graph has a blind spot — if the requirement later changes, items that should be flagged `REQ CHANGED` aren't, because the edge was never recorded.
 
 The existing `Untracked` diagnostic partially addresses this for requirements — it flags `@liyi:requirement` markers that have no corresponding `requirementSpec` in any sidecar. The complementary check for `@liyi:related` edges fills the remaining gap.
 
-**Annotation coverage checks.** `liyi check` performs four cross-referencing checks on source annotations vs. sidecar entries:
+**Annotation coverage checks.** `liyi check` performs cross-referencing checks on source annotations vs. sidecar entries:
 
 | Check | Source | Sidecar | Diagnostic |
 |---|---|---|---|
@@ -1231,7 +1231,7 @@ The existing `Untracked` diagnostic partially addresses this for requirements �
 | Dangling related edge | — | `"related": {"<name>": ...}` references a requirement name not found in any sidecar | `ERROR: unknown requirement` (existing) |
 | Stale related hash | — | `"related": {"<name>": "<hash>"}` where hash differs from the requirement's current `source_hash` | `REQ CHANGED` (existing) |
 
-All four checks are deterministic — text scan of source markers plus JSON parse of sidecars, no LLM reasoning required. The first two are *coverage* checks (annotation exists in source but not in sidecar); the last two are *consistency* checks (sidecar entry exists but is invalid or stale).
+These checks are deterministic — text scan of source markers plus JSON parse of sidecars, no LLM reasoning required. The first two are *coverage* checks (annotation exists in source but not in sidecar); the last two are *consistency* checks (sidecar entry exists but is invalid or stale).
 
 The `--fail-on-untracked` flag (default: true) controls whether `UNTRACKED` and `MISSING RELATED` diagnostics trigger exit 1. When enabled, CI rejects merges where source annotations exist without corresponding sidecar entries.
 
@@ -1263,7 +1263,7 @@ The `--fail-on-untracked` flag (default: true) controls whether `UNTRACKED` and 
 }
 ```
 
-Three output modes share the same detection engine:
+The output modes share the same detection engine:
 
 | Mode | Audience | Format |
 |---|---|---|
@@ -1278,8 +1278,6 @@ The `--prompt` flag is a *formatter*, not a different check. All modes exit nonz
 **Paired AGENTS.md directive.** The coverage checks are deterministic; the resolution is the agent's responsibility. An additional AGENTS.md rule closes the loop:
 
 > 11\. Before committing, run `liyi check`. If it reports coverage gaps (missing requirement specs, missing related edges), resolve **all** gaps in the same commit. When running in agent mode, consume the `liyi check --prompt` output and apply its instructions. Do not commit with unresolved coverage gaps — CI will reject it.
-
-This makes the gap between source annotations and sidecar entries CI-gateable: the linter detects gaps deterministically, the agent resolves them, and CI enforces that no gaps survive to merge.
 
 **What's deterministic and what's not.** Detection of coverage gaps is fully deterministic — text scanning and set comparison. Resolution (writing the missing sidecar entry with correct `source_span` and `intent`) is agent-authored and probabilistic. This is the correct separation of concerns: the linter guarantees that every explicit annotation has a sidecar entry, but the *quality* of that entry remains a review concern — which is what `"reviewed": false` already models.
 
@@ -1383,13 +1381,13 @@ In **documentation and prose** — Markdown files, design docs, READMEs, contrib
 4. **Preceding quote characters.** If the character immediately before the `@` is a quotation mark — ASCII quotes (`'`, `"`), typographic quotes (`'`, `'`, `"`, `"`), CJK brackets (`「`, `」`), or guillemets (`«`, `»`) — the marker is rejected. This is defence-in-depth with rule 3, and additionally covers single-quote mentions (`'@liyi:note'`) that rule 3 deliberately excludes to avoid false positives from apostrophes in prose.
 <!-- @liyi:end-requirement markdown-fenced-block-skip -->
 
-Together, these four checks cover every conventional way that prose references a technical term without asserting it. The scanner remains line-oriented — fenced block state is a single boolean; inline code detection is a character count within one line; quoted-span detection is a per-line open/close toggle; preceding-char is a one-character lookbehind. No Markdown parser is needed.
+Together, these checks cover every conventional way that prose references a technical term without asserting it. The scanner remains line-oriented — fenced block state is a single boolean; inline code detection is a character count within one line; quoted-span detection is a per-line open/close toggle; preceding-char is a one-character lookbehind. No Markdown parser is needed.
 
 **Residual gap.** An unquoted, unfenced, unbackticked mention of a marker string in bare flowing prose (e.g., the linter looks for @liyi:note without any quoting) will be matched as a real marker. The fix is editorial: backtick the technical term (`` `@liyi:note` ``), which is standard Markdown practice. For files where editorial cleanup is impractical, `.liyiignore` remains available.
 
 **Why not a separate prefix (`@metaliyi:`, etc.)?** An alternate prefix for self-referential use was considered and rejected. It would require a mode switch (env var, config file, or CLI flag) to tell the scanner which prefix to use, splitting the convention into two variants. The NL-quoting approach is simpler: one prefix, one alias table, one scanner — and the disambiguation rule (backtick your mentions) is already standard technical writing practice.
 
-**The self-reference is not accidental — it is inherent.** The convention is a fixpoint of its own application: applying 立意 ("establish intent before execution") to the development of 立意 yields 立意. Beyond the dogfooding above, the AGENTS.md instruction that agents follow to write specs is itself a spec of how specs should be written, and the intent-first orchestration pattern (see *Adoption Story*) is 立意 applied to its own development task. Every 立意-enabled workflow inherently bootstraps the same cycle — state what you intend, persist it, verify against it — because the convention occupies this fixpoint. This explains why dogfooding works naturally rather than requiring special-casing, and why teams adopting the convention discover the same recursive structure regardless of their starting point.
+**The self-reference is not accidental — it is inherent.** The convention is a fixpoint of its own application: applying 立意 ("establish intent before execution") to the development of 立意 yields 立意. Beyond the dogfooding above, the AGENTS.md instruction that agents follow to write specs is itself a spec of how specs should be written, and the intent-first orchestration pattern (see *Adoption Story*) is 立意 applied to its own development task. Every 立意-enabled workflow inherently bootstraps the same cycle — state what you intend, persist it, verify against it — because the convention occupies this fixpoint.
 
 ### Deferred to 0.2.0: `liyi triage` — agent-driven staleness assessment
 
@@ -1399,7 +1397,7 @@ When `liyi check` reports stale items, the next question is: *does it matter?* A
 
 By 2026, every developer workflow that would adopt 立意 already has a model configured — Copilot in VS Code, Cursor, aider, CI pipelines with Codex, custom agent setups. Asking the user to configure *another* set of API keys and model preferences inside `liyi` is friction that buys nothing. The agent that's already running can do the triage.
 
-**How triage works.** Three paths to the same report:
+**How triage works.** Each path produces the same report:
 
 | Path | Who assembles the prompt? | Who calls the LLM? | Who validates? |
 |---|---|---|---|
@@ -1407,7 +1405,7 @@ By 2026, every developer workflow that would adopt 立意 already has a model co
 | CI with `--prompt` | `liyi triage --prompt` | Team's LLM wrapper | `liyi triage --validate` |
 | Custom pipeline | Team's own template | Team's own code | `liyi triage --validate` |
 
-All three paths converge on the same report schema and the same `--validate` / `--apply` commands.
+All paths converge on the same report schema and the same `--validate` / `--apply` commands.
 
 **`liyi triage` subcommands:**
 
@@ -1558,7 +1556,7 @@ flowchart TD
     Apply --> HumanB["Human reviews<br/><i>reads triage report or PR comment,<br/>accepts suggested intents or fixes code</i>"]
 ```
 
-The split is clean: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report. No mode mixing. Each command has one job.
+The split is clean: `liyi check` is always deterministic and offline; `liyi triage` consumes an agent-produced report.
 
 **Direct re-inference: the fast path.** Triage adds value when many items are stale and a human needs to prioritize — a refactor that touches 30 functions, a CI pipeline processing a large PR. But during interactive editing — an agent making focused changes to 2-3 functions in a single session — triage is overhead. The agent already knows what it changed and why.
 
@@ -1658,7 +1656,7 @@ Exit code 2 (internal error) takes precedence over exit code 1 (check failure). 
 
 ### Testing strategy for the linter
 
-The linter is tested at three levels:
+The linter is tested at these levels:
 
 - **Golden-file tests.** A `tests/fixtures/` directory contains small synthetic repos — source files, `.liyi.jsonc` sidecars, `.liyiignore` files, annotation markers — with a corresponding `.expected` file containing the expected `liyi check` output. Each fixture exercises one scenario (stale, shifted, unreviewed, orphaned, malformed, etc.). The test runner runs `liyi check` on each fixture and diffs against expected output. This is the primary regression guard.
 - **Property-based tests for span-shift detection.** The ±100-line scan window and delta-propagation logic are exercised with randomized inputs: insert N lines at random positions, verify that the linter correctly identifies SHIFTED spans and auto-corrects them. This catches off-by-one errors in the heuristic.
@@ -1669,7 +1667,7 @@ The linter is tested at three levels:
 ## The agent-side design
 
 Half of the 立意 paradigm relies on cooperation from agents' side: instructions, protocols, prompt and harness engineering.
-The deterministic linter and related CI setup serves to both complement and constrain the agents, to provide a unified 立意 workflow as a whole.
+The deterministic linter and related CI setup both complement and constrain the agents.
 
 ### Agent instructions: `AGENTS.md` for adopters
 
@@ -1690,7 +1688,7 @@ This is the **`--prompt` pattern**: the tool assembles a self-contained, actiona
 
 **The inversion.** The traditional flow: agent follows rules → tool validates. The inverted flow: tool tells agent what to do → agent executes → tool validates. The rules describe the *why*; the `--prompt` output provides the *what*. Budget models only need the *what*.
 
-Two instances of this pattern exist in the current design:
+This pattern appears in:
 
 | Command | What the tool does for the agent |
 |---|---|
@@ -1699,7 +1697,7 @@ Two instances of this pattern exist in the current design:
 
 Both follow the same principle: the tool knows the protocol; the agent just needs to know which command to run.
 
-**`--prompt` as operational contract.** This pattern extends beyond coverage gaps to every actionable diagnostic (see *`--prompt` scope* above for the full set), keeping `--prompt` as the operational contract that tells budget models *what* to do while the behavioral rules remain human-facing documentation of *why*.
+**`--prompt` as operational contract.** This pattern extends beyond coverage gaps to every actionable diagnostic, keeping `--prompt` as the operational contract that tells budget models *what* to do while the behavioral rules remain human-facing documentation of *why*.
 
 **Tiered instruction design.** The AGENTS.md instruction should be reorganized into tiers that degrade gracefully across model capability:
 
@@ -1832,13 +1830,13 @@ Writes the portable agent instruction section (~300 lines: behavioral rules + tw
 liyi init src/money.rs   # discover items, create pre-populated money.rs.liyi.jsonc
 ```
 
-When a tree-sitter grammar is available for the source language (21 languages supported — see *Structural identity via `tree_path`*), `liyi init` parses the file, walks the AST for item nodes, and emits a sidecar with pre-populated spec entries. Each entry has `item`, `source_span`, `tree_path`, and `"intent": ""` — the agent fills in `"intent"` (or writes `"=trivial"` / `"=doc"`), and optionally deletes items it deems unnecessary. This turns the agent’s job from “create everything from scratch + understand the JSON schema” to “annotate a pre-built inventory.”
+When a tree-sitter grammar is available for the source language (see *Structural identity via `tree_path`*), `liyi init` parses the file, walks the AST for item nodes, and emits a sidecar with pre-populated spec entries. Each entry has `item`, `source_span`, `tree_path`, and `"intent": ""` — the agent fills in `"intent"` (or writes `"=trivial"` / `"=doc"`), and optionally deletes items it deems unnecessary. This turns the agent’s job from “create everything from scratch + understand the JSON schema” to “annotate a pre-built inventory.”
 
 For unsupported languages (no tree-sitter grammar), `liyi init` falls back to the original behavior — a skeleton sidecar with `version`, `source`, and an empty `specs` array.
 
 #### Tree-sitter item discovery in scaffold
 
-The scaffold uses two deterministic AST signals to help the agent prioritize which items need intent specs:
+The scaffold uses deterministic AST signals to help the agent prioritize which items need intent specs:
 
 **1. Doc comment attachment.** Items with doc comments attached are almost certainly non-trivial — someone wrote prose about them. The scaffold detects this per-language via the `doc_comment_detector` callback in `LanguageConfig`:
 
@@ -2092,7 +2090,7 @@ Challenge code against intent "add_money":
 
 **What challenge is not.** It is not a replacement for the linter (deterministic, no LLM), for triage (batch assessment of stale items), or for adversarial testing (generates persistent test files). It is zero-commitment verification — challenge when you're curious, skip when you're not. No pipeline, no batch process, no test files to maintain.
 
-**Why this matters.** Without challenge, the reviewer's options for verifying intent are: read the code (defeats the purpose of intent-level review) or trust the agent (defeats the purpose of 立意). Challenge gives a third option: ask a second model to verify. This closes the trust gap between reviewing intent and trusting it blindly. It also makes the requirements feature (Level 5) worth the investment — the payoff is no longer just "you get flagged when the requirement hash changes" but "you can verify whether your intent actually covers the requirement."
+**Why this matters.** Without challenge, the reviewer's options for verifying intent are: read the code (defeats the purpose of intent-level review) or trust the agent (defeats the purpose of 立意). Challenge gives a third option: ask a second model to verify. This closes the trust gap between reviewing intent and trusting it blindly. It also makes the requirements feature worth the investment — the payoff is no longer just "you get flagged when the requirement hash changes" but "you can verify whether your intent actually covers the requirement."
 
 ---
 
@@ -2104,7 +2102,7 @@ Review has two paths — `"reviewed": true` in the sidecar (quick approval) and 
 
 立意's security model guards against **accidental staleness and oversight**, not against **deliberate forgery**.
 
-- **In scope:** An agent writes specs. The human forgets to review them — items remain unreviewed. The linter catches this (`--fail-on-unreviewed`). Adversarial testing is the indirect defense against *careless* review — see below.
+- **In scope:** An agent writes specs. The human forgets to review them — items remain unreviewed. The linter catches this (`--fail-on-unreviewed`). Adversarial testing is the indirect defense against *careless* review.
 - **In scope:** Code changes silently. The spec's hash no longer matches. The linter catches this deterministically.
 - **Out of scope (sidecar path):** An agent writes `"reviewed": true` on a spec it just generated. The linter reads file contents, not authorship — it can't distinguish "human set this" from "agent set this."
 - **Out of scope (source path):** An agent writes `@liyi:intent` directly in source, and the human approves the PR without noticing.
@@ -2123,13 +2121,13 @@ Adversarial testing is the indirect defense against careless review. The reasoni
 
 **What's honest about this.** The feedback loop depends on someone *reading the tests*. If the team also rubber-stamps adversarial test output, the signal is lost — the defense has no teeth. The claim is that vague intent produces *visibly* weak tests, making the failure mode detectable. It's not that vague intent *automatically* triggers an alert.
 
-**What's genuinely useful.** When the intent is specific and correct — "must reject mismatched currencies with an error, not a panic; must be commutative; must not overflow silently" — the adversarial tests are sharp: test with mismatched currencies, test commutativity with randomized inputs, test near `i64::MAX`. The quality difference between tests from good intent vs. tests from rubber-stamped intent is large enough to notice when the tests are generated side by side. Teams that adopt Level 6 (adversarial testing) are choosing to read those tests — the cost of that level is test review, and weak tests are the signal that the intent review was skipped.
+**What's genuinely useful.** When the intent is specific and correct — "must reject mismatched currencies with an error, not a panic; must be commutative; must not overflow silently" — the adversarial tests are sharp: test with mismatched currencies, test commutativity with randomized inputs, test near `i64::MAX`. The quality difference between tests from good intent vs. tests from rubber-stamped intent is large enough to notice when the tests are generated side by side. Teams that adopt adversarial testing are choosing to read those tests — the cost is test review, and weak tests are the signal that the intent review was skipped.
 
 This is a probabilistic defense, not a deterministic one. It complements the linter (deterministic, catches staleness) rather than replacing it. The document does not claim adversarial testing catches all rubber-stamping — it claims the combination of linter + adversarial testing makes careless review more costly than careful review, because careful review produces tests that actually find bugs.
 
 ### Two paths, two trust profiles
 
-**Sidecar review (`"reviewed": true`)** is low-friction but low-conspicuousness. The `"reviewed"` flip is a one-line JSON change in a sidecar file — easy to miss in a PR diff, and in single-commit workflows the intermediate `false` state may never be a Git snapshot. This is the same "unsolvable at file level" problem discussed in earlier iterations of this design: determining "did a human actually look at this?" requires either a witnessed interaction or a multi-snapshot VCS workflow, both of which add friction that contradicts near-zero adoption cost.
+**Sidecar review (`"reviewed": true`)** is low-friction but low-conspicuousness. The `"reviewed"` flip is a one-line JSON change in a sidecar file — easy to miss in a PR diff, and in single-commit workflows the intermediate `false` state may never be a Git snapshot. This is the same "unsolvable at file level" problem: determining "did a human actually look at this?" requires either a witnessed interaction or a multi-snapshot VCS workflow, both of which add friction that contradicts near-zero adoption cost.
 
 **Source intent (`@liyi:intent`)** is higher-friction but high-conspicuousness. An agent forging review must write the annotation in the actual source file — visible in the primary review surface (source diffs), attributable via `git blame`, and protectable via CODEOWNERS. This is significantly harder to sneak past a reviewer than a sidecar boolean.
 
@@ -2156,9 +2154,9 @@ These are existing VCS-level controls. The linter does not replicate them — it
 
 The core value proposition — agents write specs alongside code — depends on agents reliably following the AGENTS.md instruction. This is an ecosystem dependency, not a design flaw.
 
-Agent instruction compliance in 2026 is inconsistent. Different agent platforms read different instruction files (AGENTS.md, `.github/copilot-instructions.md`, `.cursor/rules/`, etc.), and compliance varies by model, provider, and context window pressure. If a major agent platform stops reading AGENTS.md or ignores the instruction, Level 0 of the adoption ladder breaks.
+Agent instruction compliance in 2026 is inconsistent. Different agent platforms read different instruction files (AGENTS.md, `.github/copilot-instructions.md`, `.cursor/rules/`, etc.), and compliance varies by model, provider, and context window pressure. If a major agent platform stops reading AGENTS.md or ignores the instruction, the instruction-only level of the adoption ladder breaks.
 
-The progressive adoption model mitigates this: the linter (Level 3) works regardless of agent compliance — a human can write `.liyi.jsonc` files by hand, and `liyi check` will verify them. But the efficiency argument ("the agent writes specs for free alongside code") depends on the agent actually doing it.
+The progressive adoption model mitigates this: the linter works regardless of agent compliance — a human can write `.liyi.jsonc` files by hand, and `liyi check` will verify them. But the efficiency argument ("the agent writes specs for free alongside code") depends on the agent actually doing it.
 
 This is the same class of dependency every AGENTS.md-based convention shares. 立意 doesn't introduce it; it inherits it. The linter is the hedge — even if agents become unreliable instruction followers, the convention and linter remain useful for human-authored specs.
 
@@ -2166,7 +2164,7 @@ This is the same class of dependency every AGENTS.md-based convention shares. �
 
 ## Build Effort (for this project)
 
-This section estimates the effort to *build* 立意 itself — the linter, the convention docs, the demo repo. This is not the adopter's cost; adopters install the linter and copy the agent instruction (see Adoption Story below).
+This section estimates the effort to *build* 立意 itself — the linter, the convention docs, the demo repo. This is not the adopter's cost; adopters install the linter and copy the agent instruction.
 
 | Deliverable | Effort (human) | Effort (with agent) |
 |---|---|---|
@@ -2208,7 +2206,7 @@ But not all code is equally risky. Frameworks already declare infrastructure int
 
 The dangerous layer is different: business logic, domain invariants, semantic constraints, implicit assumptions. "Cancel order must refund if payment was captured within 7 days, otherwise issue store credit." "The pricing engine must never silently round in the merchant's favor." "This function must be idempotent." This intent lives in PMs' heads, design documents, Jira tickets, Slack threads, and context windows. When a different agent or human touches the code six months later, the intent is gone. The code is a fact; what it was *meant* to do is a memory.
 
-This is not only an AI-era problem — it is a durability problem. The knowledge systems meant to preserve intent are themselves fragile — platform migrations lose history, document owners leave and their pages become read-only, design docs are superseded, and restructuring scatters institutional memory (the *Origin* section tells this story in full). The 5% of decisions that still matter after years — billing semantics, settlement rules, transaction type inventories — are precisely the ones that live in the most fragile layer, while the code outlives every knowledge system that was supposed to explain it. The only reliable source of truth is the repository itself.
+This is not only an AI-era problem — it is a durability problem. The knowledge systems meant to preserve intent are themselves fragile — platform migrations lose history, document owners leave and their pages become read-only, design docs are superseded, and restructuring scatters institutional memory. The 5% of decisions that still matter after years — billing semantics, settlement rules, transaction type inventories — are precisely the ones that live in the most fragile layer, while the code outlives every knowledge system that was supposed to explain it. The only reliable source of truth is the repository itself.
 
 Meanwhile, the same model writes the tests. Same training data, same blind spots. The tests confirm the implementation; they don't challenge it.
 
@@ -2287,7 +2285,7 @@ The tagline says *establish intent before execution*. The greenfield and brownfi
 | `@liyi:requirement` blocks | Excellent — can exist before code (see *Prescriptive specs without code*) | Orchestrator |
 | Item-level `.liyi.jsonc` | Post-hoc only — `source_span` requires code to exist | Sub-agents |
 
-The forward workflow is a two-phase process: requirements first (prescriptive, orchestrator), item specs after (descriptive, sub-agents). The two phases have different authors, different review semantics, and different staleness triggers — which is exactly how the *Two Pillars* table frames the distinction.
+The forward workflow is a two-phase process: requirements first (prescriptive, orchestrator), item specs after (descriptive, sub-agents). The two phases have different authors, different review semantics, and different staleness triggers.
 
 **This is a convention, not new tooling.** Nothing in `liyi` the binary needs to change. The forward-edge story is an AGENTS.md instruction pattern: "When asked to implement a new module, first write `@liyi:requirement` blocks and a `@liyi:note` section, then implement." The linter already handles requirements-before-code. The value is in naming this as a first-class adoption path.
 
@@ -2306,8 +2304,6 @@ The forward workflow is a two-phase process: requirements first (prescriptive, o
 - **vs. AWS Kiro** (2025): Code OSS-based IDE with EARS notation specs, a primary agent with hooks automation, running on Amazon Bedrock. Single-agent, infrastructure-integrated, AWS-native. No file-based spec persistence outside the IDE; no vendor-neutral convention.
 - **vs. project management tools (JIRA + Confluence, Linear + Notion, etc.):** These capture *provenance* — why code was written, when, under which ticket. A well-maintained JIRA epic → Confluence design doc chain provides real traceability. What they lack: *locality* (the intent is four hops away — blame → PR → ticket → epic → design doc § 3.2.1), *granularity* (design docs describe system-level behavior, not per-function contracts), *staleness detection* (someone refactors the billing validation and the design doc still says the old thing — no tool detects the drift), and *durability* (the knowledge system itself is replaced faster than the code — see *Origin*). 立意 is not a replacement for project management — tickets and design docs serve planning, coordination, and audit purposes that sidecars don't. But for the specific question "what should this function do right now?", a co-located sidecar is more local, more granular, more staleness-aware, and more durable than any external system.
 
-The spec-driven development space is no longer hypothetical — GitHub Spec Kit and Kiro are shipping, and Augment briefly shipped (then deprecated) its "Intent" workspace. No existing tool occupies 立意's exact niche: an open, vendor-neutral, file-based convention for AI-inferred intent specs, human-reviewed, with a deterministic CI linter and an adversarial testing pipeline. The closest analogue is GitHub Spec Kit (open, agent-agnostic), but it lacks enforcement, staleness tracking, and the descriptive direction. The closest in thesis was Augment's living specs (spec-driven, verification), but that was a proprietary product — now folded into a broader orchestration platform — not an open convention.
-
 ### Selling points
 
 - **Captures the gap.** Frameworks declare infrastructure intent (auth, rate limiting, routing). Type systems declare structural constraints. 立意 captures what neither can: business logic invariants, domain constraints, implicit assumptions — the intent that lives in people's heads and is most dangerous when lost.
@@ -2319,7 +2315,7 @@ The spec-driven development space is no longer hypothetical — GitHub Spec Kit 
 - **No lock-in.** `.liyi.jsonc` files are plain JSONC. `@liyi:note` markers are comments. Delete them and nothing breaks.
 - **Any programming language.** The checking process doesn't parse source code — it reads line ranges from `source_span`, hashes them, compares. `.liyi.jsonc` is JSONC. `@liyi:note` markers use whatever comment syntax the host format already provides. Works with any language, any framework, any build system, any design pattern.
 - **Hardware RTL too.** The convention applies at the RTL level (Verilog, SystemVerilog, VHDL, Chisel) with no design changes — sidecars co-locate with `.v`/`.vhd`/`.scala` files, `source_span` and `source_hash` work on any text, and tree-sitter grammars exist for Verilog and VHDL. In hardware domains where requirements traceability is a compliance obligation (DO-254, ISO 26262, IEC 61508), 立意 functions as a lightweight shim between a requirements management system and RTL source: a `liyi import-reqif` command (deferred, speculative) can consume ReqIF — the open OMG standard (ReqIF 1.2, `formal/2016-07-01`) that DOORS, Polarion, and other tools export — and emit `@liyi:requirement` blocks, connecting managed requirements to RTL implementations with hash-based staleness detection. The tool doesn't replace DOORS; it fills the last mile that DOORS doesn't cover.
-- **Any human language.** Intent prose, requirement text, and requirement/note names are natural language — write them in your team’s working language (`"intent": "..."`, `@liyi:requirement 多币种加法`). Marker *keywords* are canonical ASCII (`@liyi:ignore`, not a localized alias), so tooling and `grep` stay simple. The project’s Chinese cultural origin isn’t a barrier — it’s an invitation.
+- **Any human language.** Intent prose, requirement text, and requirement/note names are natural language — write them in your team’s working language (`"intent": "..."`, `@liyi:requirement 多币种加法`). Marker *keywords* are canonical ASCII (`@liyi:ignore`, not a localized alias), so tooling and `grep` stay simple.
 
 ### Who this is for
 
@@ -2367,15 +2363,15 @@ What the day-to-day experience looks like once all deliverables exist:
 3. **CI runs `liyi check`.** The linter verifies that existing specs aren't stale (source hash matches) and reports unreviewed specs. Stale specs fail the build.
 4. **Handle staleness.** When stale items are flagged, the agent takes one of two paths. **Direct re-inference** (the fast path): the agent re-reads the source, updates `source_span` and `intent` in the sidecar, and leaves `"reviewed"` unset — appropriate during interactive editing with few stale items. **Triage** (the batch path, optional): the agent assesses each stale item as cosmetic, semantic, or intent violation, writes `.liyi/triage.json`, and `liyi triage --apply` auto-fixes cosmetics. Triage is most valuable for large PRs, CI pipelines, or when stale items have human-reviewed intent (`"reviewed": true` or `@liyi:intent`).
 5. **Adversarial testing (optional).** A different model reads the reviewed intents and generates tests designed to break the implementation. Different training data, different blind spots.
-6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent re-infers or triages, the human re-reviews. The cycle is fast because reviewing intent is fast.
+6. **Iterate.** When source changes, the hash mismatches, the spec is flagged stale, the agent re-infers or triages, the human re-reviews.
 
 **Steady state.** A team in steady state has reviewed intents for its critical-path items (not all items — trivial getters and simple wrappers use `@liyi:ignore`). The linter runs in CI and catches stale specs before they rot. Intent survives turnover: a new team member or agent reads the `.liyi.jsonc` files and understands what the code is *meant* to do, without reading every implementation.
 
 ### Migrating an existing project
 
-`liyi init` is the bootstrap command (see the *Adoption paths* diagram above for the visual overview).
+`liyi init` is the bootstrap command.
 
-1. **`liyi init`** — scaffolds the 立意 agent instruction section into `AGENTS.md`. This is the equivalent of the project’s own [commit 6b98652](https://github.com/liyi-run/liyi/commit/6b98652), adapted for downstream repos (no self-referential dogfooding language).
+1. **`liyi init`** — scaffolds the 立意 agent instruction section into `AGENTS.md`. This is the equivalent of the project’s own [bootstrap commit](https://github.com/liyi-run/liyi/commit/6b98652), adapted for downstream repos (no self-referential dogfooding language).
 2. **`liyi init src/foo.rs`** — creates skeleton `.liyi.jsonc` sidecars populated with `_hints` (tree-sitter-derived signals: body size, docstring presence, trivial suggestion). The agent reads hints to prioritize inference effort. VCS-derived hint signals are planned for a future release.
 3. **Agent infers intent**, guided by hints, directory by directory. The agent reads each source file, infers intent for non-trivial items, writes `.liyi.jsonc` sidecar files, and adds `@liyi:note` blocks to existing READMEs or doc comments (or creates `LIYI.md` where none exist).
 4. **Incremental review.** Everything starts unreviewed. Review at your own pace — on first touch, by directory, or by criticality.
@@ -2421,7 +2417,7 @@ This risk is no longer speculative. Three concrete incumbents now occupy overlap
 
 That Context Engine is, in its current iteration, a hosted *retrieval* service: the MCP plugin authenticates to an Augment tenant and calls proprietary embedding/retrieval models server-side — there is no offline mode, and a subscription is required. It is also *descriptive* — it answers "where is this / how does this work" against the code's **current** state — which is orthogonal to 立意's *prescriptive* question of what code **should** do and whether it has drifted. The two could even coexist in one MCP host: Augment retrieves the code, 立意 asserts its reviewed intent. This is the recurring pattern across all three pivots — retrieval and orchestration, never a durable intent baseline.
 
-Across all three pivots, Augment ships **products and a platform** — closed, hosted, credential-bound. 立意 is a **convention** — a way of organizing intent artifacts that any tool can produce and consume. The distinction is structural:
+Across these pivots, Augment ships **products and a platform** — closed, hosted, credential-bound. 立意 is a **convention** — a way of organizing intent artifacts that any tool can produce and consume. The distinction is structural:
 
 1. **Durability.** Augment's "living specs" (in the deprecated Intent workspace) auto-updated *within a workspace session*. 立意 specs are files in the repo that survive sessions, agents, context windows, and team turnover. Stop using Augment and your specs are orphaned; delete 立意 files and nothing breaks.
 2. **Trust model.** Augment's living specs were *optimistic* — the agent kept them accurate automatically. 立意's staleness model is *pessimistic* — it flags when code changed and intent didn't, forcing a human decision. These are philosophically opposite: Augment trusts agents; 立意 trusts humans.
@@ -2439,7 +2435,7 @@ Across all three pivots, Augment ships **products and a platform** — closed, h
 
 ### 3. Adversarial testing and review: hypothesis status
 
-The strongest differentiator — "a second model, reading reviewed intent, catches bugs the first model missed" — is explicitly a hypothesis for *automated test generation*, not a demonstrated capability. The design correctly treats it as level 6 (last, optional) and doesn't make it load-bearing. Every prior level delivers value independently.
+The strongest differentiator — "a second model, reading reviewed intent, catches bugs the first model missed" — is explicitly a hypothesis for *automated test generation*, not a demonstrated capability. The design treats it as the last, optional level and doesn't make it load-bearing. Every prior level delivers value independently.
 
 However, there is empirical evidence for the broader mechanism at the *design review* level. This design document itself is the product of tens of rounds of adversarial review between agents and the human designer — surfacing structural risks (AOP density, middleware blast radius, scaling complexity), refining claims (the "5 vs 50" framing evolved into a calibrated ratio and scaling analysis), and identifying adoption pitfalls (infrastructure annotation noise, framework redundancy). The adversarial dialogue produced genuine design improvements that no single pass could have found.
 
@@ -2450,7 +2446,7 @@ The gap between "adversarial design review with a skilled interlocutor" and "aut
 
 **Empirical grounding for the mechanism.** The *underlying* mechanism — "a different model, reading a claim it didn't author, catches errors the original missed" — is no longer only architectural reasoning. A growing body of work substantiates each link in the chain (collected in [adversarial-testing-evidences.md](adversarial-testing-evidences.md)):
 
-- **Correlated errors are real and capability-scaling.** Kim et al., *Correlated Errors in Large Language Models* (ICML 2025, arXiv:2506.07962), document that LLMs agree ~60% of the time *when both are wrong*, with correlation increasing as models get more capable. A model reviewing its own (or a same-family sibling's) output shares the failure mode — self-review provides weak evidence of correctness. This is the precise failure 立意 routes around by recommending a different model for test generation than the one that wrote the code (AGENTS.md rule 9).
+- **Correlated errors are real and capability-scaling.** Kim et al., *Correlated Errors in Large Language Models* (ICML 2025, arXiv:2506.07962), document that LLMs agree ~60% of the time *when both are wrong*, with correlation increasing as models get more capable. A model reviewing its own (or a same-family sibling's) output shares the failure mode — self-review provides weak evidence of correctness. This is the precise failure 立意 routes around by recommending a different model for test generation than the one that wrote the code.
 - **Output diversity collapses within a model.** Wu et al., *Generative Monoculture in Large Language Models* (arXiv:2407.02209), show LLM outputs narrow sharply relative to their training distribution, and that alignment tuning (RLHF) exacerbates the narrowing. A single model is structurally unlikely to generate a test that challenges an assumption it already baked into the code.
 - **Cross-model adversarial review catches what same-model review cannot — in production.** Agarwal, *Refute-or-Promote* (arXiv:2604.19049), reports a 31-day real-world campaign (4 CVEs, accepted ISO C++ defects, merged upstream fixes) in which adversarial review killed ~79% of candidates (83% prospective on the consolidated-protocol subset). Two findings bear directly on this design: (1) a cross-family critic found correctness errors in 3 of 19 *same-family-approved* fixes and surfaced bugs same-family review missed; (2) 80+ agents — including dedicated adversarial reviewers — unanimously endorsed a vulnerability that did not exist, killed only by a single empirical test. The first result is direct evidence for "different model, different blind spots"; the second is a sharp warning that adversarial *reasoning* catches reasoning errors but not empirical ones — which is exactly why the payoff in this design is an executable *test*, not a second model's opinion.
 
@@ -2464,7 +2460,7 @@ The success criterion remains: at least one team reports catching a real defect 
 
 Line-number-based spans mean any edit that changes line counts (adding an import, inserting a blank line) invalidates every spec whose `source_span` falls at or below the edit point. This is mitigated in layers: `tree_path` structural anchoring resolves spans by AST identity regardless of how lines shifted (primary), the span-shift heuristic auto-corrects uniform shifts and reports `SHIFTED` rather than `STALE` (fallback), and `liyi check --fix` plus agent re-inference clean up the rest. The mechanics are detailed in *Per-item staleness via `source_span`* and *Structural identity via `tree_path`*.
 
-The residual friction is for items without a `tree_path` (macros, generated code, languages without a tree-sitter grammar): between agent sessions, manual edits that shift lines without a re-inference produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge), but it's friction nonetheless.
+The residual friction is for items without a `tree_path` (macros, generated code, languages without a tree-sitter grammar): between agent sessions, manual edits that shift lines without a re-inference produce CI noise until the developer runs `liyi check --fix`. This is the same class of friction as lockfile conflicts (run `pnpm install` after merge).
 
 ### 5. Convention absorption and licensing
 
@@ -2494,7 +2490,7 @@ Copyleft (GPL, AGPL, MPL) would protect the **linter binary** from being embedde
 
 **This is a deliberate trade.** The designer accepts that Augment (or anyone) can reimplement the convention, absorb it into a proprietary product, and monetize it without contributing back. By the project's own success criteria — "the practice of persisting AI-inferred intent gains traction, whether through this project's tooling or through the idea spreading independently" — that scenario is a form of success. The convention spreading inside a walled garden is less good than the convention spreading openly, but better than the convention not spreading at all.
 
-The risk that absorption *prevents* the open convention from thriving — by pulling potential adopters into a proprietary implementation — is real but mitigated by the same dynamics that keep `.editorconfig` alive despite every IDE having its own formatting settings: the open tool is simpler, works everywhere, and has no vendor lock-in. The bet is that simplicity and universality outweigh product polish.
+The risk that absorption *prevents* the open convention from thriving — by pulling potential adopters into a proprietary implementation — is real but mitigated by the same dynamics that keep `.editorconfig` alive despite every IDE having its own formatting settings: the open tool is simpler, works everywhere, and has no vendor lock-in.
 
 ### 6. Agent reliability spectrum
 
@@ -2641,7 +2637,7 @@ multi-currency-addition: ✓ requirement, tracked
 add_money: ⚠ STALE — source changed since spec was written
 ```
 
-The agent re-infers (updating `source_span`; the tool recomputes `source_hash`), the human re-reviews. Cycle complete.
+The agent re-infers (updating `source_span`; the tool recomputes `source_hash`), the human re-reviews.
 
 ---
 

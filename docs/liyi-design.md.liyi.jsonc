@@ -114,8 +114,8 @@
     {
       "requirement": "liyi-check-exit-code",
       "source_span": [
-        1323,
-        1329
+        1321,
+        1327
       ],
       "source_hash": "sha256:2cb6ab36efd4724e3f7e7021bf36233633357e9fddbd1a231bc7b7ed07137d65",
       "source_anchor": "<!-- @liyi:requirement liyi-check-exit-code -->"
@@ -123,8 +123,8 @@
     {
       "requirement": "marker-normalization",
       "source_span": [
-        1356,
-        1358
+        1354,
+        1356
       ],
       "source_hash": "sha256:f1786541ac9be4533a36924a80c578a749024a4980fbc323417c2d5640ed6306",
       "source_anchor": "<!-- @liyi:requirement marker-normalization -->"
@@ -132,8 +132,8 @@
     {
       "requirement": "quine-escape-in-source",
       "source_span": [
-        1370,
-        1372
+        1368,
+        1370
       ],
       "source_hash": "sha256:b929750d0d3c9ce24a6f814d7a1db15f2fc03983efa2647cfcf6a7462d2c8b81",
       "source_anchor": "<!-- @liyi:requirement quine-escape-in-source -->"
@@ -141,8 +141,8 @@
     {
       "requirement": "markdown-fenced-block-skip",
       "source_span": [
-        1376,
-        1384
+        1374,
+        1382
       ],
       "source_hash": "sha256:d75bbcedd7757ae66541f99c329df0460e21a6ac02c056e06156d4aacc8dd749",
       "source_anchor": "<!-- @liyi:requirement markdown-fenced-block-skip -->"
@@ -150,8 +150,8 @@
     {
       "requirement": "fix-never-modifies-human-fields",
       "source_span": [
-        1593,
-        1595
+        1591,
+        1593
       ],
       "source_hash": "sha256:2101e1597493adb25b7743b3b2f983f672f967e2e24ae18ef07ece70ccfb76bb",
       "source_anchor": "<!-- @liyi:requirement fix-never-modifies-human-fields -->"
@@ -159,8 +159,8 @@
     {
       "requirement": "fix-semantic-drift-protection",
       "source_span": [
-        1597,
-        1599
+        1595,
+        1597
       ],
       "source_hash": "sha256:7c7bcb74ddf40462f9162ada24feeffa60e080adae3f4a69d37dde5fb23ac81b",
       "source_anchor": "<!-- @liyi:requirement fix-semantic-drift-protection -->"
@@ -168,8 +168,8 @@
     {
       "requirement": "agents-md-instructions-section-naming",
       "source_span": [
-        2651,
-        2659
+        2647,
+        2655
       ],
       "source_hash": "sha256:ba9f88f5edb0b338487e493235b49269cfc4ec74d03ebcfe33e1ec7bdc39d298",
       "source_anchor": "<!-- @liyi:requirement agents-md-instructions-section-naming -->"
