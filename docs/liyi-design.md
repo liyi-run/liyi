@@ -1848,7 +1848,7 @@ The scaffold uses deterministic AST signals to help the agent prioritize which i
 | Java | `java_has_doc_comment` | Walks `prev_sibling` chain, checks `block_comment` for `/**` prefix; skips `modifiers` siblings |
 | JavaScript | `js_has_doc_comment` | Checks `prev_sibling` for `comment` kind with `/**` prefix |
 | TypeScript/TSX | Reuses `js_has_doc_comment` | Same as JavaScript |
-| Dart | `dart_has_doc_comment` | Checks `prev_sibling` for `documentation_block_comment` or `comment` with `///` prefix |
+| Dart | `dart_has_doc_comment` | Climbs declaration wrappers, then checks the declaration's `prev_sibling` for `documentation_comment` |
 | Kotlin | `kotlin_has_doc_comment` | Walks `prev_sibling` chain, checks `block_comment` for `/**`, `line_comment` for `///`; skips `modifiers`/`annotation` siblings |
 | Swift | `swift_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `///` prefix, `multiline_comment` for `/**` prefix; skips `modifiers` |
 | C | `c_has_doc_comment` | Walks `prev_sibling` chain, checks `comment` for `/**` or `///` prefix; skips non-comment siblings |

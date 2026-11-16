@@ -27,17 +27,40 @@ fn dart_node_name(node: &Node, source: &str) -> Option<String> {
 }
 
 /// Detect Dart doc comments (`///` or `/** ... */` before a declaration).
+///
+/// Doc comments attach to the outermost declaration node (`class_declaration`,
+/// `function_declaration`, `member_declaration`, etc.), while tracked items are
+/// the inner signature nodes (`function_signature`, `getter_signature`, ...).
+/// Climb through the wrapper layers first, then inspect the declaration's
+/// preceding siblings.
 fn dart_has_doc_comment(node: &Node, source: &str) -> bool {
-    let mut sibling = node.prev_sibling();
+    let mut declaration = *node;
+    while let Some(parent) = declaration.parent()
+        && matches!(
+            parent.kind(),
+            "declaration"
+                | "method_declaration"
+                | "method_signature"
+                | "function_declaration"
+                | "getter_declaration"
+                | "setter_declaration"
+                | "member_declaration"
+                | "class_member"
+        )
+    {
+        declaration = parent;
+    }
+
+    let mut sibling = declaration.prev_sibling();
     while let Some(s) = sibling {
         match s.kind() {
+            "documentation_comment" => return true,
             "comment" => {
                 let text = &source[s.byte_range()];
-                if text.starts_with("///") {
+                if text.starts_with("///") || text.starts_with("/**") {
                     return true;
                 }
             }
-            "documentation_block_comment" => return true,
             "annotation" => {
                 // Skip annotations (e.g., @override) preceding the item
                 sibling = s.prev_sibling();
@@ -77,7 +100,7 @@ pub(super) static CONFIG: LanguageConfig = LanguageConfig {
     custom_name: Some(dart_node_name),
     doc_comment_detector: Some(dart_has_doc_comment),
     transparent_kinds: &[
-        "class_member",
+        "member_declaration",
         "method_signature",
         "declaration",
         "method_declaration",
@@ -333,6 +356,39 @@ int get globalCount => 42;
 
         let re_resolved = resolve_tree_path(SAMPLE_DART, &path, Language::Dart).unwrap();
         assert_eq!(re_resolved, span);
+    }
+
+    #[test]
+    fn discover_dart_doc_comments() {
+        let src = r#"/// Class docs.
+@deprecated
+class Point {
+  /// Method docs.
+  @override
+  void move() {}
+
+  /** Getter docs. */
+  int get x => 0;
+
+  void reset() {}
+}
+
+/// Top-level docs.
+void main() {}
+"#;
+        let items = discover_items(src, Language::Dart);
+        let has_doc = |name: &str| {
+            items
+                .iter()
+                .find(|i| i.name == name)
+                .unwrap_or_else(|| panic!("missing item {name}"))
+                .has_doc_comment
+        };
+        assert_eq!(has_doc("Point"), Some(true));
+        assert_eq!(has_doc("Point::move"), Some(true));
+        assert_eq!(has_doc("Point::x"), Some(true));
+        assert_eq!(has_doc("Point::reset"), Some(false));
+        assert_eq!(has_doc("main"), Some(true));
     }
 
     #[test]

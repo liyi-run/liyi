@@ -17,26 +17,26 @@
     },
     {
       "item": "dart_has_doc_comment",
-      "reviewed": true,
-      "intent": "Detect whether a Dart doc comment (/// line comment or /** */ documentation_block_comment) immediately precedes a declaration node. Must skip past annotation siblings (@override, @deprecated, etc.) to find doc comments that precede the annotation chain.",
+      "reviewed": false,
+      "intent": "Detect whether a Dart doc comment (/// line comment or /** */ block comment) is attached to a declaration. Tracked items are inner signature nodes, so climb through the declaration wrapper nodes before inspecting preceding siblings. Treat tree-sitter-dart's documentation_comment node kind as a doc comment, and skip annotation siblings such as @override.",
       "source_span": [
-        30,
-        51
+        36,
+        74
       ],
       "tree_path": "fn.dart_has_doc_comment",
-      "source_hash": "sha256:9f0fafae6cbcfc7454eb728b44c1aff2930ab2956d00e4fd5c9fc04a78a8d011",
+      "source_hash": "sha256:0495ba8328a4417c16e2b32ddc21055bcf951bb76b1c8ec2696c0ffe98dc9264",
       "source_anchor": "fn dart_has_doc_comment(node: &Node, source: &str) -> bool {"
     },
     {
       "item": "CONFIG",
-      "reviewed": true,
-      "intent": "Define the Dart language configuration for tree_path resolution: register tree-sitter-dart grammar, .dart extension, kind mappings for fn (function_signature), class (class_declaration), mixin, extension, extension_type, enum, getter, setter, constructor (4 variants). Use class_body, extension_body, enum_body body fields for container descent. Wire custom dart_node_name and dart_has_doc_comment callbacks. Declare class_member, method_signature, declaration, method_declaration, function_declaration, getter_declaration, and setter_declaration as transparent wrapper kinds so resolve_segments can see through tree-sitter-dart 0.2.0's added declaration wrapper layers to find inner signature nodes.",
+      "reviewed": false,
+      "intent": "Define the Dart language configuration for tree_path resolution: register the tree-sitter-dart grammar, .dart extension, and kind mappings for fn (function_signature), class, mixin, extension, extension_type, enum, getter, setter, and the constructor variants. Use class_body, extension_body, and enum_body for container descent, and wire the custom dart_node_name and dart_has_doc_comment callbacks. Declare member_declaration, method_signature, declaration, method_declaration, function_declaration, getter_declaration, and setter_declaration as transparent wrapper kinds so resolve_segments can see through declaration wrappers to inner signature nodes.",
       "source_span": [
-        54,
-        88
+        77,
+        111
       ],
       "tree_path": "static.CONFIG",
-      "source_hash": "sha256:bd7157650e183a0233bbb3ab72c6abd14f9980776829ab9602c56ad885ee3d5e",
+      "source_hash": "sha256:f63518d7883b9aeab3bcb1f8d7469c613fe47e3a9c1a4c0cf0709d0fef0d84c8",
       "source_anchor": "pub(super) static CONFIG: LanguageConfig = LanguageConfig {"
     }
   ]
