@@ -56,8 +56,6 @@ For any **major feature or refactoring work** (anything beyond a localized fix o
 2. **English-only throwaway roadmap.** Capture the plan in a temporary planning note named `docs/throwaway-*.md`. It records the milestone model, the ordered list of logical changes, and the intended commit sequence. These notes are English-only (they are working artifacts, exempt from the bilingual requirement) and carry an SPDX header plus a `**Status:**` line stating they are temporary and will be deleted or folded into a permanent doc once the work lands.
 3. **Implementation.** Work through the roadmap **one commit per logical change**, then delete the throwaway note (or fold it into `docs/next-steps.md` / the relevant design doc).
 
-This keeps large changes reviewable, makes the plan inspectable before execution, and prevents half-finished planning prose from leaking into the published design.
-
 ### Agent skill template
 
 - The agent skill template is a deliverable of this project — a set of files (AGENTS.md, contributing guides, AIGC policy) that downstream repositories can adopt and customize.
@@ -70,7 +68,7 @@ This keeps large changes reviewable, makes the plan inspectable before execution
 
 ### Bilingual requirement
 
-- All documentation must be provided in **English and Chinese** to maximize outreach.
+- All documentation must be provided in **English and Chinese**.
 - When creating or modifying a document, always sync the change to the other language version in the same commit or an immediately following commit.
 - Code identifiers and commit messages remain in English.
 
@@ -105,7 +103,7 @@ This invariant is documented as `@liyi:requirement quine-escape-in-source` in th
 
 ### Chinese writing style
 
-When writing Chinese content, avoid **topic-comment sentence structures**. Use **subject-predicate constructions** with appropriate prepositions or particles instead, so that readers of all backgrounds can understand the text more easily.
+When writing Chinese content, avoid **topic-comment sentence structures**. Use **subject-predicate constructions** with appropriate prepositions or particles instead.
 
 Specific rules:
 
