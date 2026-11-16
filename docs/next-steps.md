@@ -5,11 +5,9 @@
 
 **As of**: 2026-09-19 · **Baseline**: v0.1.0; prompt-mode expansion, approval workflow, doc-comment detection, the LSP library refactor, and the `@liyi:note` context MVP shipped.
 
-This document synthesizes the existing roadmaps (liyi-design.md, lsp-design.md,
-init-discover-impl.md, prompt-mode-design.md, injection-impl.md,
-file-directive-design.md, note-context-design.md, sidecar-merge-design.md) and
-the repo's current state into a single prioritized backlog. Items are grouped
-into tiers by impact and readiness.
+This document synthesizes the existing roadmaps and the repo's current state
+into a single prioritized backlog. Items are grouped into tiers by impact and
+readiness.
 
 ---
 
@@ -89,9 +87,9 @@ fixing extension-ambiguous cases like `.h` (C vs C++) and extensionless files.
 you own. Implementation surface: `markers.rs` (new `File` variant + `key=value`
 parse), `detect_language_with_meta(path, content)` in `tree_path/mod.rs` (and
 retire the stale `.h`→C doc comment), and a discovery hook alongside the
-`.liyiignore` cascade. Independent of the LSP work; can parallelize. Design
-authority: `docs/file-directive-design.md` (requirements `file-directive-namespace`,
-`file-language-precedence`, `file-ignore-additive`).
+`.liyiignore` cascade. Independent of the LSP work; can parallelize. Governed
+by requirements `file-directive-namespace`, `file-language-precedence`,
+`file-ignore-additive`.
 
 ## Tier 3 — v0.2 headline: LSP server
 
@@ -126,7 +124,7 @@ by opportunity.
 
 ## Tier 5 — Speculative / future-direction
 
-Not designed in detail; captured for completeness.
+Not designed in detail.
 
 | Item | Source |
 |------|--------|
