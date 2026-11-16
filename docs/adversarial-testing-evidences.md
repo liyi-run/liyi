@@ -67,7 +67,7 @@
 
 ## 🛠️ Industrial Tools & Case Studies
 
-- **secure-review** (2026-05-14) — CLI/GitHub Action for cross-model code review. Design grounded in research showing SAST alone is nearly blind to AI-generated code, and same-model self-review loops often regress. Operationalizes the cross-model-review pattern.
+- **secure-review** (2026-05-14) — CLI/GitHub Action for cross-model code review. Design grounded in research showing SAST alone is nearly blind to AI-generated code, and same-model self-review loops often regress.
   [ref:37]
 
 - **Refute-or-Promote** (2026-04-21) — Inference-time reliability pattern combining Stratified Context Hunting (SCH) for candidate generation, adversarial kill mandates, context asymmetry, and a Cross-Model Critic (CMC). Directly addresses the precision crisis in LLM-assisted defect discovery.
