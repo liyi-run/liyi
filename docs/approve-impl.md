@@ -41,13 +41,11 @@ The following constraints are normative for the implementation.
 
 ### What gets surfaced
 
-`liyi approve` now surfaces three candidate kinds:
+`liyi approve` now surfaces the following candidate kinds:
 
 1. **Unreviewed** — specs where `reviewed` is `false` (or absent) and no `@liyi:intent` marker exists in source
 2. **StaleReviewed** — reviewed items whose `source_hash` no longer matches the current source span
 3. **ReqChanged** — reviewed items whose stored related-edge hash no longer matches the current hash of a referenced requirement
-
-These are the three review queues the design calls for: first-time human confirmation, implementation drift, and requirement drift.
 
 ### Candidate collection (`approve.rs`)
 
@@ -63,7 +61,7 @@ An optional `--item` filter restricts candidates to a single item name, and CLI 
 
 ### TUI (`tui_approve.rs`)
 
-The interactive TUI presents one candidate at a time with three panes:
+The interactive TUI presents one candidate at a time with the following panes:
 
 1. **Header:** item name, source file, line range, progress counter
 2. **Intent pane:** shows the proposed intent text. If a previously approved intent exists, shows a word-level diff (using the `similar` crate with Patience algorithm) with red/green highlighting
@@ -111,11 +109,11 @@ This is a gap: liyi exists precisely because developers cannot be trusted to "ju
 
 ### Design
 
-Extend `liyi approve` to surface **requirement-changed items** alongside unreviewed items. The same TUI, same decision loop, broader scope.
+Extend `liyi approve` to surface **requirement-changed items** alongside unreviewed items.
 
 #### Candidate types
 
-The `ApprovalCandidate` struct gains a discriminant (or a new sibling type) to distinguish three review modes:
+The `ApprovalCandidate` struct gains a discriminant (or a new sibling type) to distinguish review modes:
 
 1. **Unreviewed** (existing): agent-inferred intent, no human confirmation yet
 2. **ReqChanged** (new): reviewed item whose related requirement text changed
@@ -169,7 +167,7 @@ liyi approve [paths...]
     --stale-only    Only show stale-reviewed items
 ```
 
-Without `--req-only`, `--unreviewed-only`, or `--stale-only`, all three kinds are interleaved (unreviewed first, then stale-reviewed, then req-changed). The progress bar shows the combined count.
+Without `--req-only`, `--unreviewed-only`, or `--stale-only`, all kinds are interleaved (unreviewed first, then stale-reviewed, then req-changed). The progress bar shows the combined count.
 
 #### Ordering
 
@@ -203,7 +201,7 @@ Neither path provides the ergonomic, interactive review that `liyi approve` offe
 
 ### Design
 
-Extend `liyi approve` to surface **stale reviewed items** alongside unreviewed and ReqChanged items. The same TUI, same decision loop, broader scope.
+Extend `liyi approve` to surface **stale reviewed items** alongside unreviewed and ReqChanged items.
 
 <!-- @liyi:related stale-reviewed-demands-human-judgment -->
 <!-- @liyi:related fix-semantic-drift-protection -->
