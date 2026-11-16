@@ -6,8 +6,8 @@
     {
       "requirement": "note-is-untracked",
       "source_span": [
-        102,
-        113
+        100,
+        111
       ],
       "source_hash": "sha256:60d2cd16faf066360e7c4d7814aedcdc4728fe01ebcf697fe266e81d4000b365",
       "source_anchor": "<!-- @liyi:requirement note-is-untracked -->"
@@ -15,8 +15,8 @@
     {
       "requirement": "note-directory-scope",
       "source_span": [
-        117,
-        134
+        115,
+        132
       ],
       "source_hash": "sha256:288cb675a9beb1ac864f5208171df3a2788dd3e06e47f153d1d9681f76e8be1d",
       "source_anchor": "<!-- @liyi:requirement note-directory-scope -->"
@@ -24,8 +24,8 @@
     {
       "requirement": "note-see-membership",
       "source_span": [
-        148,
-        160
+        146,
+        158
       ],
       "source_hash": "sha256:c824ffe6b24822e7ec1ca3dca495d53942ddcf204af4b6bc99e58c34fa54be22",
       "source_anchor": "<!-- @liyi:requirement note-see-membership -->"
@@ -33,8 +33,8 @@
     {
       "requirement": "two-graph-separation",
       "source_span": [
-        168,
-        181
+        166,
+        179
       ],
       "source_hash": "sha256:d31895d6ff4257ae76f55b9d2ed210d10cdad009a4a1239b0aeb0c82c58d6d48",
       "source_anchor": "<!-- @liyi:requirement two-graph-separation -->"
@@ -42,8 +42,8 @@
     {
       "requirement": "context-resolution",
       "source_span": [
-        243,
-        255
+        240,
+        252
       ],
       "source_hash": "sha256:2943bf58b0f14391c9ee0d55f643b4dadffa088c0a668c5a6acbf134ee8c27a8",
       "source_anchor": "<!-- @liyi:requirement context-resolution -->"

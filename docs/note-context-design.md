@@ -21,9 +21,9 @@ context when they touch the code it governs.
 
 The redesign reframes module-level intent away from the staleness engine. A note
 is **marker-only and untracked**: it has no sidecar entry, no `source_hash`, no
-`reviewed` flag, and is never seeded into adversarial unit tests. Its value is
-*delivery* — getting the right prose in front of the right reader at the right
-moment — not *verification*.
+`reviewed` flag, and is never seeded into adversarial unit tests. Its value lies
+in *delivery*, not *verification*: getting the right prose in front of the right
+reader at the right moment.
 
 This is a **hard rename**, not an additive alias. `@liyi:module` is retired.
 Pre-1.0 (currently v0.1), with no external adopters yet, the break is acceptable
@@ -37,7 +37,8 @@ and the migration is mechanical.
 the linter only checked *presence* of the marker in a directory and never
 consumed the prose. That left it in an awkward middle ground — it looked like a
 tracked intent artifact (sibling to item specs and requirements) but carried
-none of the machinery (no hash, no review, no staleness). Two problems followed:
+none of the machinery (no hash, no review, no staleness). The ambiguity caused
+problems:
 
 1. **Wrong mental model.** Treating module prose as a *staleness* artifact
    invites the question "is this module spec stale?", which has no good answer:
@@ -92,12 +93,9 @@ however, magic: a `LIYI.md` still carries an explicit `@liyi:note` marker like
 any other note-bearing file. The marker requirement is deliberate — it keeps the
 scanning rule uniform (one gate, no per-filename special cases) and keeps the
 data self-describing (the block announces what it is, even when copied out of its
-file). `LIYI.md` is therefore a *convention for where notes live*, not a second
-parsing path.
+file). `LIYI.md` is therefore a *convention for where notes live*.
 
 ### Notes are untracked
-
-This is the central design commitment.
 
 <!-- @liyi:requirement note-is-untracked -->
 **A note has zero sidecar footprint and is never hash-tracked.** Notes are
@@ -207,7 +205,7 @@ need a rule for which channel a given paragraph belongs in. The rule is about th
   the code, but the code does not exist to satisfy the prose. This is why a note
   is untracked — there is nothing to verify drift against.
 
-Three practical tests make the call concrete:
+Practical tests make the call concrete:
 
 1. **The re-approval smell test.** Imagine editing the paragraph. If the prospect
    of `liyi check` then reporting ten to fifty `REQ-CHANGED` items — each
@@ -237,8 +235,7 @@ most prose is cleanly one or the other.
 
 ## Consumption
 
-A note is only as useful as the surface that delivers it. The near-term consumer
-is a CLI query; richer surfaces follow.
+The near-term consumer is a CLI query; richer surfaces follow.
 
 <!-- @liyi:requirement context-resolution -->
 **Context resolution for a location returns the applicable notes, deterministic-
@@ -257,7 +254,7 @@ surfaces) is built on.
 ### `liyi context <path:line>` (MVP)
 
 The first consumer is a read-only command that prints the resolved notes for a
-location — usable by an agent before editing, or by a human in review:
+location:
 
 ```text
 $ liyi context crates/liyi/src/money.rs:42
@@ -272,18 +269,17 @@ Rounding requires an explicit mode argument; banker's rounding is the default.
 ### Later surfaces (deferred)
 
 - **LSP / MCP context API.** The same resolution contract exposed as an editor
-  hover / agent tool call, so context arrives without an explicit command. This
-  is the eventual home (cross-ref `docs/next-steps.md`, LSP tier).
+  hover / agent tool call, so context arrives without an explicit command.
 - **Challenge mode.** Verifying that code actually honors note prose is a
   *challenge*-style check (deferred, LSP-dependent), not an adversarial unit
   test. Notes never seed unit tests — their breadth makes generated assertions
-  noisy. See `docs/next-steps.md` (challenge mode).
+  noisy.
 
 ---
 
 ## Migration from `@liyi:module`
 
-Mechanical, pre-1.0, no external adopters:
+Mechanical:
 
 1. `@liyi:module` → `@liyi:note` (optionally add a name).
 2. Add `@liyi:end-note` where a note shares a file with other content.
@@ -307,5 +303,5 @@ The JSON schema is **unchanged**: notes have no sidecar representation, so no
 - `crates/liyi/src/check.rs`: the staleness engine is **untouched** — notes do
   not enter it. Remove the presence-only `@liyi:module` directory check.
 
-This document is the design authority; the scheduled implementation plan will
-track requirement coverage (see `docs/next-steps.md`).
+The scheduled implementation plan will track requirement coverage (see
+`docs/next-steps.md`).
