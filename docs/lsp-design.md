@@ -10,7 +10,7 @@
 
 ## Motivation
 
-The CLI is batch-oriented — a human or CI runs `liyi check`, reads diagnostics, acts on them. An LSP server makes the same information appear in real time: diagnostics surface in the Problems panel as the developer types, code actions offer one-click approval and reanchoring, and inlay hints render intent inline beside the code it describes. The goal is to reduce the feedback loop from "save, run linter, read output, go back to editor" to "see it live."
+The CLI is batch-oriented — a human or CI runs `liyi check`, reads diagnostics, acts on them. An LSP server makes the same information appear in real time: diagnostics surface in the Problems panel as the developer types, code actions offer one-click approval and reanchoring, and inlay hints render intent inline beside the code it describes.
 
 The library crate (`liyi`) already exposes the right primitives. Most operations — sidecar parsing, item discovery, span resolution, shift detection, approval candidate collection — are pure functions that take file contents and return structured results. The LSP server is a thin async wrapper that caches project state and maps library types to LSP protocol types.
 
@@ -287,7 +287,7 @@ Create `crates/liyi-lsp/` with `Cargo.toml`, `main.rs`. Implement `initialize`/`
 
 ### Step 2: Phase 1 — Diagnostics
 
-Implement file watching, sidecar pair resolution, incremental re-checking, diagnostic publishing. This is the core value — everything after is incremental.
+Implement file watching, sidecar pair resolution, incremental re-checking, diagnostic publishing.
 
 **Acceptance criteria:**
 - Opening a workspace publishes diagnostics for all files with issues
