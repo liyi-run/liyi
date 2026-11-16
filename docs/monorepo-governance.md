@@ -2,8 +2,8 @@
 
 # Monorepo governance boundary — backlog
 
-**Status:** Backlog. Recorded so the gap is not lost; not yet designed in
-detail, and no requirement is declared yet.
+**Status:** Backlog. Not yet designed in detail; no requirement is declared
+yet.
 
 ## The gap
 
@@ -70,7 +70,6 @@ operations until that boundary exists.
 
 - `docs/liyi-design.md` — *`liyi migrate` behavior* (strict agent-file
   targeting), `.liyiignore`, and the sidecar discovery rules.
-- `docs/next-steps.md` — Tier 5, "Workspace-aware requirement queries
-  (monorepo)".
+- `docs/next-steps.md` — "Workspace-aware requirement queries (monorepo)".
 - Commit `747b0095299d` — made `liyi migrate` agent-instruction targeting
   mirror `liyi init` (no recursion) for exactly this reason.
