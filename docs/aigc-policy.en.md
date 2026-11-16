@@ -39,7 +39,7 @@ Something else. You can use either English or Chinese.
 一个新的段落。您可自由使用中文或英文。
 ```
 
-This format is a suggestion and template; as long as the explanatory text is clearly human-authored and expresses its meaning clearly, the boundary between human-created content and AIGC shall be defined by that explanatory text.
+This serves as a necessary clarification of the AI-generated content. This format is a suggestion and template; as long as the explanatory text is clearly human-authored and expresses its meaning clearly, the boundary between human-created content and AIGC shall be defined by that explanatory text.
 
 ## AIGC Commit Message Format
 
