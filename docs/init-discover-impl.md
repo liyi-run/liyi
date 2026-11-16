@@ -12,7 +12,7 @@
 
 Today `liyi init <source-file>` emits a skeleton sidecar with `"specs": []`. The agent must discover every function, struct, and class by reading the source itself. This wastes token budget on mechanical work that tree-sitter can do deterministically and instantaneously.
 
-Smart scaffold pre-populates the `specs` array with every item discovered in the AST, complete with `source_span`, `tree_path`, and optional `_hints`. The agent's job shifts from *discovering structure* to *inferring intent* — a better use of its reasoning capability.
+Smart scaffold pre-populates the `specs` array with every item discovered in the AST, complete with `source_span`, `tree_path`, and optional `_hints`. The agent's job shifts from *discovering structure* to *inferring intent*.
 
 ---
 
@@ -135,7 +135,7 @@ Language-specific detection:
 | JavaScript/TypeScript | `/** ... */` | Previous sibling is `comment` starting with `/**` |
 | Java | `/** ... */` | Previous sibling is `block_comment` starting with `/**` |
 
-For languages without a detector, `_has_doc` is simply not emitted (graceful degradation per constraint above).
+For languages without a detector, `_has_doc` is simply not emitted (graceful degradation).
 
 ### VCS signal gathering
 
