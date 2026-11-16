@@ -12,8 +12,8 @@
 
 ## Motivation
 
-立意 already has two file-granularity controls, but they live in different
-places and cover different needs:
+立意 already has file-granularity controls in different places, covering
+different needs:
 
 - `.liyiignore` excludes whole files from discovery, gitignore-style, from an
   out-of-band sidecar file. It works for files you cannot annotate (generated
@@ -23,7 +23,7 @@ places and cover different needs:
   a file to declare "parse me as X" when the extension is ambiguous, absent, or
   misleading.
 
-Two concrete gaps motivate a unified, *in-file* directive:
+These gaps motivate a unified, *in-file* directive:
 
 1. **Extension ambiguity.** `.h` is claimed by the C++ grammar, but a given
    header may be plain C; a `.txt`, a `.in` template, or an extensionless script
@@ -46,8 +46,8 @@ families.
 A `@liyi:file` directive is a marker followed by one space-separated sub-key,
 optionally with a `key=value` argument. It is written in the host language's
 comment syntax, exactly like every other 立意 marker, and is subject to the
-same full-width normalization rules. Like every 立意 marker, its keyword
-is canonical ASCII (there are no localized keyword aliases).
+same full-width normalization rules; its keyword is canonical ASCII (there are
+no localized keyword aliases).
 
 ```rust
 // @liyi:file language=c
@@ -63,9 +63,9 @@ is canonical ASCII (there are no localized keyword aliases).
 ```
 
 Directives are recognized anywhere a marker scan reaches, but the **conventional
-placement is the file header** (first comment block), where it is visible and
-survives refactors of the body. Multiple `@liyi:file` directives may appear in
-one file; they accumulate (e.g. a `language=` and an `ignore` together).
+placement is the file header** (first comment block). Multiple `@liyi:file`
+directives may appear in one file; they accumulate (e.g. a `language=` and an
+`ignore` together).
 
 ### Sub-keys (v0.2)
 
@@ -154,8 +154,6 @@ is canonical ASCII; sub-key *values* such as language names are stable tokens
 
 ## Implementation surface (non-normative)
 
-For the eventual implementation:
-
 - `crates/liyi/src/markers.rs`: add a `File { sub_key, value, line }` variant to
   `SourceMarker`, extend the alias table with `@liyi:file` (escaped `\x40` per
   *quine-escape-in-source*), and parse the `<sub-key>[=<value>]` argument.
@@ -164,9 +162,8 @@ For the eventual implementation:
   before falling back to `detect_language(path)`. Fix the stale doc comment that
   claims `.h` is C while `lang_cpp` claims the `h` extension.
 - `crates/liyi/src/discovery.rs`: consult `@liyi:file ignore` alongside the
-  `.liyiignore` cascade (`discovery.rs:104`), unioning exclusions.
+  `.liyiignore` cascade, unioning exclusions.
 - Diagnostics: unknown sub-key → warning; `language=<unknown>` → error.
 
-This document is the design authority; the implementation plan and its
-requirement coverage will be tracked when the work is scheduled (see
-`docs/next-steps.md`).
+The implementation plan and its requirement coverage will be tracked when the
+work is scheduled (see `docs/next-steps.md`).
