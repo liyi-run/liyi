@@ -51,9 +51,9 @@ from classifying each field by its source of truth:
 | `item` / `requirement` | Identity key | Match key |
 | `version`, `source` | File-level metadata | Take post-merge value |
 
-The first five rows are fully derivable — conflicts in these fields are always
-auto-resolvable by re-derivation. `related` hashes, `intent`, `reviewed`, and
-`confidence` carry human-authored or human-gated semantics that require care.
+Fields whose merge strategy is *Re-derive* are fully derivable — conflicts in
+them are always auto-resolvable. `related` hashes, `intent`, `reviewed`, and `confidence` carry
+human-authored or human-gated semantics that require care.
 
 ---
 
@@ -507,8 +507,7 @@ git commit
 | Key difference | Lockfile has no human fields | Sidecars mix derived and human fields → need the two-tier strategy |
 
 The key difference — human-authored fields in sidecars — is why liyi cannot
-simply "accept either side and regenerate." The two-tier approach (discard
-derived, merge human) handles this cleanly.
+simply "accept either side and regenerate."
 
 ---
 
