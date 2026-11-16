@@ -20,7 +20,7 @@ The formal schema is at `schema/prompt.schema.json`.
 
 1. **Agent-consumable:** The output is structured enough for an agent to parse programmatically, but also includes human-readable instructions for context.
 2. **Self-contained:** Each gap entry contains all information needed to resolve it without additional file discovery.
-3. **Actionable:** Instructions are specific and actionable — "Add X to Y" not "Something is wrong."
+3. **Actionable:** Instructions say "Add X to Y", not "Something is wrong."
 
 ## Non-Goals
 
@@ -210,7 +210,7 @@ A final `group_items()` pass groups them by `(type_name, template pointer)`, pre
 
 1. `liyi check --prompt` on a fixture with gaps produces valid JSON matching `schema/prompt.schema.json`.
 2. `liyi check --prompt` on a clean repo produces `{"groups": [], "exit_code": 0, ...}`.
-3. The JSON includes groups for all seven diagnostic types: `missing_requirement_spec`, `missing_related_edge`, `req_no_related`, `stale_spec`, `shifted_span`, `unreviewed_spec`, and `req_changed`.
+3. The JSON includes groups for the following diagnostic types: `missing_requirement_spec`, `missing_related_edge`, `req_no_related`, `stale_spec`, `shifted_span`, `unreviewed_spec`, and `req_changed`.
 4. `--prompt` will be mutually exclusive with `--json` (when implemented).
 5. Exit code behavior is identical to default mode (respects all `--fail-on-*` flags).
 6. When error-class diagnostics are present, `exit_code` is `2` even if `groups` is empty.
