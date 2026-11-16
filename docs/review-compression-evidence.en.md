@@ -20,8 +20,7 @@ surface.** Pure intent prose is 3.3% of the source by line count.
 
 But the aggregate hides a more interesting finding. Most code
 *compresses* under review, but two categories *inflate*: GitHub Actions
-workflows and `schema.rs` produce more intent prose than source. This
-is counter-intuitive but important — see [Review inflation](#review-inflation-when-intent-exceeds-source).
+workflows and `schema.rs` produce more intent prose than source.
 
 ---
 
@@ -38,7 +37,7 @@ repository and collects:
 3. **Spec content** — parsed from the JSONC sidecars: item name,
    `intent` text, `=doc` / `=trivial` sentinels, `reviewed` status.
 
-Three levels of compression are reported:
+Compression is reported at these levels:
 
 | Level | What it measures | Includes |
 |---|---|---|
@@ -117,7 +116,7 @@ is consumed by the linter, not by the reviewer.
 ## Interpretation
 
 The design document claims "~10% of the code surface" as the per-item
-review cost. This measurement shows two complementary results:
+review cost. This measurement shows:
 
 1. **Full sidecar ratio ≈ 24%** — the complete JSON sidecar (including
    structural metadata the reviewer doesn't need to read) is about
@@ -161,9 +160,8 @@ it describes:
 | `crates/liyi/src/schema.rs` | 23 | 34 | 147.8% |
 
 This was initially dismissed as a trivial edge case ("the spec metadata
-exceeds tiny source files"). On closer inspection it is something more
-fundamental, and it inverts the usual intuition about where intent
-specs pay off.
+exceeds tiny source files"). On closer inspection it inverts the usual
+intuition about where intent specs pay off.
 
 **Most code is a translation of a formal system.** A parser maps a
 grammar to an AST; a hashing routine implements a named digest; a
@@ -226,9 +224,8 @@ exactly the files where skipping the spec would be most dangerous.
 The 30.5× figure is real, but it is measured on the most favorable
 possible subject. liyi's own codebase is not a representative sample of
 the repositories that would adopt the convention — it is the *ceiling*
-the convention can reach when intent exists before the code. Three
-confounds make it an outlier, and each one runs in the optimistic
-direction.
+the convention can reach when intent exists before the code. Each confound
+below runs in the optimistic direction.
 
 **1. Reverse causality — the code was compiled from the intent.** This
 codebase was bootstrapped from a polished design document; much of the
@@ -268,17 +265,14 @@ number cannot be borrowed to advertise the brownfield experience,
 because greenfield skipped the very cost that dominates brownfield —
 writing the first doc.
 
-**What this means.** This document measures the value of the ledger
-once it exists; it does not measure the cost of bootstrapping one, and
-bootstrapping cost is the whole question for an existing project. The
-honest claim is narrow: *when intent is captured before or alongside
-code, the review surface compresses by roughly 30× on this codebase.*
-The experiment that would speak to brownfield adoption is different in
-kind — take a real repository with no intent docs, run LLM inference
-plus incremental human promotion across many pull requests, and measure
-how many cycles pass before the reviewed core covers the hot paths and
-compression begins to bite. That number is not in this document, and it
-should not be inferred from the one that is.
+**What this means.** The honest claim is narrow: *when intent is captured
+before or alongside code, the review surface compresses by roughly 30× on
+this codebase.* The experiment that would speak to brownfield adoption is
+different in kind — take a real repository with no intent docs, run LLM
+inference plus incremental human promotion across many pull requests, and
+measure how many cycles pass before the reviewed core covers the hot paths
+and compression begins to bite. That number is not in this document, and
+it should not be inferred from the one that is.
 
 ---
 
