@@ -17,7 +17,7 @@
     },
     {
       "item": "dart_has_doc_comment",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Detect whether a Dart doc comment (/// line comment or /** */ block comment) is attached to a declaration. Tracked items are inner signature nodes, so climb through the declaration wrapper nodes before inspecting preceding siblings. Treat tree-sitter-dart's documentation_comment node kind as a doc comment, and skip annotation siblings such as @override.",
       "source_span": [
         36,
@@ -29,7 +29,7 @@
     },
     {
       "item": "CONFIG",
-      "reviewed": false,
+      "reviewed": true,
       "intent": "Define the Dart language configuration for tree_path resolution: register the tree-sitter-dart grammar, .dart extension, and kind mappings for fn (function_signature), class, mixin, extension, extension_type, enum, getter, setter, and the constructor variants. Use class_body, extension_body, and enum_body for container descent, and wire the custom dart_node_name and dart_has_doc_comment callbacks. Declare member_declaration, method_signature, declaration, method_declaration, function_declaration, getter_declaration, and setter_declaration as transparent wrapper kinds so resolve_segments can see through declaration wrappers to inner signature nodes.",
       "source_span": [
         77,
